@@ -4452,35 +4452,45 @@ function _renderPodio(lista, podio, setor) {
   const scoreLabel = isAll ? 'Média' : 'Score';
   const scoreKey   = isAll ? 'scoreMedia' : 'score';
 
-  // Ordena pelo campo correto
   const sorted = [...podio].sort((a, b) => (b[scoreKey] ?? b.score) - (a[scoreKey] ?? a.score));
   const top3   = sorted.slice(0, 3);
   const resto  = sorted.slice(3);
   const rkClass = ['gold','silver','bronze'];
-  const rkLabel = ['1º','2º','3º'];
 
-  const top3Html = `<div class="podio-top3">
-    ${top3.map((p, i) => {
-      const val   = p[scoreKey] ?? p.score;
-      const cor   = val >= 70 ? 'var(--good)' : val >= 45 ? 'var(--warn)' : 'var(--danger)';
-      const isMe  = _player?.uid && p.uid === _player.uid;
-      const sub   = isAll
-        ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
-        : `${icones[p.sector]||'🏢'} ${p.companyName}`;
-      return `<div class="podio-top3-card podio-top3-${i+1} ${isMe ? 'podio-top3-me' : ''}" data-sector="${p.sector||''}">
-        <div class="podio-top3-pos ${rkClass[i]}">${rkLabel[i]}</div>
+  // Escada: ordem visual = 2º (esquerda) · 1º (centro) · 3º (direita)
+  const visualOrder = [
+    top3[1] ? { p: top3[1], pos: 2, cls: 'podio-top3-2', rk: 'silver' } : null,
+    top3[0] ? { p: top3[0], pos: 1, cls: 'podio-top3-1', rk: 'gold'   } : null,
+    top3[2] ? { p: top3[2], pos: 3, cls: 'podio-top3-3', rk: 'bronze' } : null,
+  ].filter(Boolean);
+
+  const _card = ({ p, pos, cls, rk }) => {
+    const val  = p[scoreKey] ?? p.score;
+    const isMe = _player?.uid && p.uid === _player.uid;
+    const sub  = isAll
+      ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
+      : `${icones[p.sector]||'🏢'} ${p.companyName}`;
+    return `<div class="podio-top3-card ${cls} ${isMe ? 'podio-top3-me' : ''}" data-sector="${p.sector||''}">
+      <div class="podio-top3-player">
+        ${isMe ? '<div class="podio-top3-you">Você</div>' : ''}
         <div class="podio-top3-avatar">${(p.player||'?').charAt(0).toUpperCase()}</div>
         <div class="podio-top3-name">${p.player}</div>
         <div class="podio-top3-company">${sub}</div>
-        <div class="podio-top3-score" style="color:${cor}">${val}</div>
+        <div class="podio-top3-score">${val}</div>
         <div class="podio-top3-score-label">${scoreLabel}</div>
-        ${isMe ? '<div class="podio-top3-you">Você</div>' : ''}
-      </div>`;
-    }).join('')}
-  </div>`;
+      </div>
+      <div class="podio-top3-step">
+        <span class="podio-top3-pos ${rk}">${pos}º</span>
+      </div>
+    </div>`;
+  };
+
+  const top3Html = `
+    <div class="podio-top3">${visualOrder.map(_card).join('')}</div>
+    <div class="podio-base"></div>`;
 
   const restoHtml = resto.length ? `
-    <div class="hist-section-label" style="margin-top:4px">Ranking completo</div>
+    <div class="hist-section-label">A partir do 4º lugar</div>
     ${resto.map((p, i) => {
       const val  = p[scoreKey] ?? p.score;
       const cor  = val >= 70 ? 'var(--good)' : val >= 45 ? 'var(--warn)' : 'var(--danger)';

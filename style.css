@@ -799,59 +799,129 @@ body::after{
 }
 @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
 
+/* ── PÓDIO ESCADA ───────────────────────────────── */
 .podio-top3 {
-  display: flex; gap: 8px; padding: 0 0 4px; align-items: flex-end;
+  display: flex;
+  align-items: flex-end;
   justify-content: center;
+  gap: 0;
+  padding: 16px 12px 0;
+  width: 100%;
 }
+
+/* Cada coluna = player card em cima + degrau embaixo */
 .podio-top3-card {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  background: var(--bg2); border: 1px solid var(--line2);
-  border-radius: var(--r2); padding: 12px 8px 10px;
-  transition: border-color .18s; cursor: default;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+  transition: opacity .2s;
 }
 .podio-top3-card.hidden { display: none; }
-.podio-top3-1 {
-  border-color: rgba(212,168,83,.35);
-  box-shadow: 0 0 20px rgba(212,168,83,.08);
-  transform: translateY(-6px);
+
+/* Player info (acima do degrau) */
+.podio-top3-player {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 0 4px;
 }
-.podio-top3-2 { border-color: rgba(138,156,176,.2); }
-.podio-top3-3 { border-color: rgba(192,120,64,.2); }
-.podio-top3-me {
-  border-color: var(--s-bd-accent) !important;
-  box-shadow: 0 0 16px var(--s-glow) !important;
+
+/* Degrau — altura varia por posição */
+.podio-top3-step {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px 6px 0 0;
+  position: relative;
 }
+.podio-top3-1 .podio-top3-step {
+  height: 80px;
+  background: linear-gradient(180deg, rgba(212,168,83,.18) 0%, rgba(212,168,83,.06) 100%);
+  border: 1px solid rgba(212,168,83,.35); border-bottom: none;
+  box-shadow: 0 0 24px rgba(212,168,83,.12), inset 0 1px 0 rgba(212,168,83,.2);
+}
+.podio-top3-2 .podio-top3-step {
+  height: 56px;
+  background: linear-gradient(180deg, rgba(138,156,176,.14) 0%, rgba(138,156,176,.04) 100%);
+  border: 1px solid rgba(138,156,176,.25); border-bottom: none;
+}
+.podio-top3-3 .podio-top3-step {
+  height: 40px;
+  background: linear-gradient(180deg, rgba(192,120,64,.14) 0%, rgba(192,120,64,.04) 100%);
+  border: 1px solid rgba(192,120,64,.22); border-bottom: none;
+}
+
+/* Número da posição dentro do degrau */
 .podio-top3-pos {
-  font-family: var(--serif); font-size: .75rem; font-weight: 800;
-  letter-spacing: .06em; margin-bottom: 2px;
+  font-family: var(--serif); font-size: 1rem; font-weight: 800;
+  letter-spacing: .04em;
 }
-.podio-top3-pos.gold   { color: #D4A853; }
+.podio-top3-pos.gold   { color: #D4A853; text-shadow: 0 0 12px rgba(212,168,83,.5); }
 .podio-top3-pos.silver { color: #8A9CB0; }
 .podio-top3-pos.bronze { color: #C07840; }
+
+/* Avatar */
 .podio-top3-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--s-bg-accent); border: 1.5px solid var(--s-bd-accent);
+  width: 40px; height: 40px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--serif); font-size: 1rem; font-weight: 700; color: var(--s-text);
+  font-family: var(--serif); font-size: 1.1rem; font-weight: 700;
 }
+.podio-top3-1 .podio-top3-avatar {
+  width: 46px; height: 46px; font-size: 1.3rem;
+  background: rgba(212,168,83,.15); border: 2px solid rgba(212,168,83,.5);
+  color: #D4A853; box-shadow: 0 0 16px rgba(212,168,83,.2);
+}
+.podio-top3-2 .podio-top3-avatar {
+  background: rgba(138,156,176,.12); border: 1.5px solid rgba(138,156,176,.35);
+  color: #8A9CB0;
+}
+.podio-top3-3 .podio-top3-avatar {
+  background: rgba(192,120,64,.12); border: 1.5px solid rgba(192,120,64,.3);
+  color: #C07840;
+}
+
 .podio-top3-name {
-  font-size: .75rem; font-weight: 700; color: var(--t1);
+  font-size: .74rem; font-weight: 700; color: var(--t1);
   text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 90px;
+  max-width: 88px;
 }
+.podio-top3-1 .podio-top3-name { font-size: .8rem; }
+
 .podio-top3-company {
-  font-size: .62rem; color: var(--t3);
+  font-size: .6rem; color: var(--t3);
   text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 90px;
+  max-width: 88px;
 }
 .podio-top3-score {
-  font-family: var(--serif); font-size: 1.4rem; font-weight: 800; line-height: 1;
+  font-family: var(--serif); font-weight: 800; line-height: 1;
+  color: var(--t1);
+}
+.podio-top3-1 .podio-top3-score { font-size: 1.5rem; color: #D4A853; }
+.podio-top3-2 .podio-top3-score { font-size: 1.25rem; }
+.podio-top3-3 .podio-top3-score { font-size: 1.1rem; }
+
+.podio-top3-score-label {
+  font-size: .55rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--t3);
 }
 .podio-top3-you {
-  font-size: .6rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  font-size: .55rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
   color: var(--s-text); background: var(--s-bg-accent);
-  padding: 2px 8px; border-radius: var(--rpill);
+  padding: 2px 7px; border-radius: var(--rpill);
 }
+.podio-top3-me .podio-top3-step {
+  border-color: var(--s-bd-accent) !important;
+  box-shadow: 0 0 20px var(--s-glow) !important;
+}
+
+/* Linha base que conecta os 3 degraus */
+.podio-base {
+  height: 4px;
+  background: linear-gradient(90deg, rgba(192,120,64,.3), rgba(212,168,83,.5), rgba(138,156,176,.3));
+  border-radius: 0 0 4px 4px;
+  margin-bottom: 12px;
+}
+
 .podio-item-me {
   border-color: var(--s-bd-accent);
   background: var(--s-bg-accent);
