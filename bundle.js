@@ -3296,10 +3296,22 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
 
   LS.remove(SK.SESSION);
 
-  // Salva no Firestore em background (apenas para contas reais)
-  if (!isGuest && _player?.uid && window.GSPSync) {
-    window.GSPSync.salvarPartida(_player.uid, entrada).catch(() => {});
-    window.GSPSync.salvarNoPodio(_player.uid, entrada).catch(() => {});
+  // Salva no Firestore — aguarda Firebase estar pronto se necessário
+  if (!isGuest && _player?.uid) {
+    const _salvarNoFirestore = () => {
+      if (window.GSPSync) {
+        window.GSPSync.salvarPartida(_player.uid, entrada).catch(() => {});
+        window.GSPSync.salvarNoPodio(_player.uid, entrada).catch(() => {});
+      }
+    };
+    if (window.GSPSync) {
+      _salvarNoFirestore();
+    } else {
+      // Firebase ainda carregando — espera o evento de pronto (até 5s)
+      const handler = () => { _salvarNoFirestore(); };
+      window.addEventListener('gsp:firebase-ready', handler, { once: true });
+      setTimeout(() => window.removeEventListener('gsp:firebase-ready', handler), 5000);
+    }
   }
 }
 
