@@ -264,14 +264,24 @@ window.GSPSync = {
     } catch (e) { console.warn("[GSP] salvarNoPodio:", e.message); }
   },
 
-  async carregarPodio(sector = null, maximo = 20) {
+  async carregarPodio(sector = null, maximo = 50) {
     if (!db) return [];
     try {
+      // Busca mais entradas para deduplicate por uid/player
       const constraints = [orderBy("score", "desc"), limit(maximo)];
       if (sector && sector !== "all") constraints.unshift(where("sector", "==", sector));
       const q    = query(collection(db, "podio"), ...constraints);
       const snap = await getDocs(q);
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const all  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Deduplicar: mantém apenas o melhor score por jogador (uid ou nome)
+      const seen = new Map();
+      for (const entry of all) {
+        const key = entry.uid || entry.player;
+        if (!seen.has(key) || entry.score > seen.get(key).score) {
+          seen.set(key, entry);
+        }
+      }
+      return Array.from(seen.values()).sort((a, b) => b.score - a.score).slice(0, 20);
     } catch (e) { console.warn("[GSP] carregarPodio:", e.message); return []; }
   },
 

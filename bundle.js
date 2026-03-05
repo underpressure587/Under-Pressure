@@ -3065,7 +3065,8 @@ const LS = {
 };
 const SK = {
   PLAYER:"gsp_player", PODIO:"gsp_podio",
-  HISTORICO:"gsp_historico", SESSION:"gsp_session", SETTINGS:"gsp_settings",
+  HISTORICO:"gsp_historico", HIST_GUEST:"gsp_historico_guest",
+  SESSION:"gsp_session", SETTINGS:"gsp_settings",
 };
 
 /* ════════════════════════════════════════════════════
@@ -3269,45 +3270,118 @@ function descartarSessao() {
    PÓDIO / HISTÓRICO DE JOGOS
 ════════════════════════════════════════════════════ */
 function _registrarResultado(score, scoreGestor, sector, companyName) {
-  const entrada = {
-    player: _player?.nome || "Convidado",
+  const isGuest  = _player?.tipo === 'guest' || !_player?.uid;
+  const histKey  = isGuest ? SK.HIST_GUEST : SK.HISTORICO;
+  const entrada  = {
+    player: _player?.nome || 'Convidado',
     score, scoreGestor, sector, companyName, ts: Date.now(),
+    uid: _player?.uid || null,
   };
-  const podio = LS.get(SK.PODIO) || [];
-  podio.push(entrada);
-  podio.sort((a, b) => b.score - a.score);
-  LS.set(SK.PODIO, podio.slice(0, 10));
-  const hist = LS.get(SK.HISTORICO) || [];
+
+  // Salva no histórico local
+  const hist = LS.get(histKey) || [];
   hist.unshift(entrada);
-  LS.set(SK.HISTORICO, hist.slice(0, 20));
+  LS.set(histKey, hist.slice(0, 30));
+
+  // Atualiza pódio local deduplicado por jogador
+  const podio = LS.get(SK.PODIO) || [];
+  const existIdx = podio.findIndex(p => (p.uid && p.uid === entrada.uid) || p.player === entrada.player);
+  if (existIdx >= 0) {
+    if (entrada.score > podio[existIdx].score) podio[existIdx] = entrada;
+  } else {
+    podio.push(entrada);
+  }
+  podio.sort((a, b) => b.score - a.score);
+  LS.set(SK.PODIO, podio.slice(0, 20));
+
   LS.remove(SK.SESSION);
+
+  // Salva no Firestore em background (apenas para contas reais)
+  if (!isGuest && _player?.uid && window.GSPSync) {
+    window.GSPSync.salvarPartida(_player.uid, entrada).catch(() => {});
+    window.GSPSync.salvarNoPodio(_player.uid, entrada).catch(() => {});
+  }
 }
 
 /* irParaPodio: definição única e correta abaixo (com data-sector) */
 
 function irParaHistoricoJogos() {
   mostrarTela("screen-historico-jogos");
-  const hist  = LS.get(SK.HISTORICO) || [];
-  const lista = document.getElementById("historico-jogos-lista");
+  const isGuest = _player?.tipo === "guest" || !_player?.uid;
+  const histKey = isGuest ? SK.HIST_GUEST : SK.HISTORICO;
+  const lista   = document.getElementById("historico-jogos-lista");
   if (!lista) return;
-  if (!hist.length) { lista.innerHTML = `<div class="podio-empty">Nenhum jogo registrado ainda.</div>`; return; }
-  const icones = { tecnologia:"🚀",varejo:"🛒",logistica:"🚚",industria:"🏭" };
-  lista.innerHTML = hist.map(p => {
-    const data = new Date(p.ts).toLocaleDateString("pt-BR");
-    const hora = new Date(p.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
-    const cor  = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
-    return `<div class="podio-item">
-      <div style="font-size:1.4rem">${icones[p.sector]||"🏢"}</div>
-      <div class="podio-player">
-        <div class="podio-player-name">${p.companyName}</div>
-        <div class="podio-player-meta">${p.player} · ${data} ${hora}</div>
+
+  // Renderiza imediatamente com dados locais
+  _renderHistorico(lista, LS.get(histKey) || [], isGuest);
+
+  // Se logado, sincroniza Firestore em background e re-renderiza se tiver novo
+  if (!isGuest && _player?.uid && window.GSPSync) {
+    window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
+      if (!histFS?.length) return;
+      const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
+      LS.set(SK.HISTORICO, c);
+      _renderHistorico(lista, c, false);
+    }).catch(() => {});
+  }
+}
+
+function _renderHistorico(lista, hist, isGuest) {
+  const icones = { tecnologia:"🚀", varejo:"🛒", logistica:"🚚", industria:"🏭" };
+  const labels = { tecnologia:"Tecnologia", varejo:"Varejo", logistica:"Logística", industria:"Indústria" };
+
+  if (isGuest) {
+    lista.innerHTML = `
+      <div class="hist-guest-banner">
+        <div class="hist-guest-icon">☁️</div>
+        <div class="hist-guest-title">Histórico na nuvem</div>
+        <div class="hist-guest-desc">Crie uma conta para salvar seu histórico online e acessar em qualquer dispositivo.</div>
+        <button class="btn btn-primary hist-guest-btn" onclick="BetaUI.irParaAuth()">Criar conta grátis</button>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-        <div class="podio-score" style="color:${cor};font-size:1.2rem">${p.score}</div>
-        <div style="font-size:.62rem;color:var(--text-muted);font-family:var(--f-game)">Gestor ${p.scoreGestor}</div>
+      ${hist.length ? '<div class="hist-section-label">Sessão atual (local)</div>' + hist.map(p => _histCard(p, icones, labels)).join('') : ''}`;
+    return;
+  }
+
+  if (!hist.length) {
+    lista.innerHTML = `<div class="podio-empty">Nenhuma partida registrada ainda.<br>Complete um mandato para ver seu histórico aqui.</div>`;
+    return;
+  }
+
+  // Agrupa por setor para estatísticas rápidas
+  const totalJogos = hist.length;
+  const melhor     = Math.max(...hist.map(h => h.score));
+  const media      = Math.round(hist.reduce((a, h) => a + h.score, 0) / totalJogos);
+
+  lista.innerHTML = `
+    <div class="hist-stats-row">
+      <div class="hist-stat"><span class="hist-stat-val">${totalJogos}</span><span class="hist-stat-label">Partidas</span></div>
+      <div class="hist-stat"><span class="hist-stat-val" style="color:var(--s-text)">${melhor}</span><span class="hist-stat-label">Melhor</span></div>
+      <div class="hist-stat"><span class="hist-stat-val">${media}</span><span class="hist-stat-label">Média</span></div>
+    </div>
+    <div class="hist-section-label">Últimas partidas</div>
+    ${hist.map(p => _histCard(p, icones, labels)).join('')}`;
+}
+
+function _histCard(p, icones, labels) {
+  const data    = new Date(p.ts).toLocaleDateString("pt-BR");
+  const hora    = new Date(p.ts).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
+  const cor     = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
+  const badge   = p.score >= 70 ? "hist-badge-great" : p.score >= 45 ? "hist-badge-ok" : "hist-badge-bad";
+  const label   = p.score >= 70 ? "Excelente" : p.score >= 45 ? "Regular" : "Crítico";
+  return `<div class="hist-card">
+    <div class="hist-card-left">
+      <div class="hist-card-sector">${icones[p.sector]||"🏢"}</div>
+      <div class="hist-card-info">
+        <div class="hist-card-company">${p.companyName}</div>
+        <div class="hist-card-meta">${labels[p.sector]||p.sector} · ${data} às ${hora}</div>
       </div>
-    </div>`;
-  }).join("");
+    </div>
+    <div class="hist-card-right">
+      <div class="hist-card-score" style="color:${cor}">${p.score}</div>
+      <div class="hist-badge ${badge}">${label}</div>
+      <div class="hist-card-gestor">Gestor: ${p.scoreGestor}</div>
+    </div>
+  </div>`;
 }
 
 /* ════════════════════════════════════════════════════
@@ -4307,36 +4381,89 @@ function filtrarPodio(setor) {
   document.querySelectorAll('.podio-filter').forEach(b => {
     b.classList.toggle('active', b.dataset.filter === setor);
   });
-  document.querySelectorAll('.podio-item').forEach(item => {
+  // Filtra itens da lista e cards do top3
+  document.querySelectorAll('.podio-item, .podio-top3-card').forEach(item => {
     item.classList.toggle('hidden', setor !== 'all' && item.dataset.sector !== setor);
   });
 }
 
 function irParaPodio() {
-  mostrarTela('screen-podio');
-  const podio = LS.get(SK.PODIO) || [];
-  const lista = document.getElementById('podio-lista');
+  mostrarTela("screen-podio");
+  _podioFiltro = "all";
+  document.querySelectorAll(".podio-filter").forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
+  const lista = document.getElementById("podio-lista");
   if (!lista) return;
+
+  // Renderiza imediatamente com cache local
+  const localPodio = LS.get(SK.PODIO) || [];
+  _renderPodio(lista, localPodio);
+
+  // Busca Firestore em background (dados globais e deduplicados)
+  if (window.GSPSync) {
+    lista.insertAdjacentHTML("afterbegin", `<div id="podio-sync-msg" class="podio-sync">🔄 Atualizando ranking global...</div>`);
+    window.GSPSync.carregarPodio().then(podioFS => {
+      const msg = document.getElementById("podio-sync-msg");
+      if (msg) msg.remove();
+      if (podioFS?.length) {
+        const c = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));
+        LS.set(SK.PODIO, c);
+        _renderPodio(lista, c);
+        if (_podioFiltro !== "all") filtrarPodio(_podioFiltro);
+      }
+    }).catch(() => {
+      const msg = document.getElementById("podio-sync-msg");
+      if (msg) msg.remove();
+    });
+  }
+}
+
+function _renderPodio(lista, podio) {
+  const icones = { tecnologia:"🚀", varejo:"🛒", logistica:"🚚", industria:"🏭" };
+  const labels = { tecnologia:"Tecnologia", varejo:"Varejo", logistica:"Logística", industria:"Indústria" };
+
   if (!podio.length) {
-    lista.innerHTML = '<div class="podio-empty">Nenhum jogo finalizado ainda.<br>Complete seu primeiro mandato para aparecer aqui.</div>';
+    lista.innerHTML = `<div class="podio-empty">Nenhuma partida no ranking ainda.<br>Complete um mandato para aparecer aqui.</div>`;
     return;
   }
-  const medalhas = ['🥇','🥈','🥉'];
-  const rkClass  = ['gold','silver','bronze'];
-  const icones   = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
-  lista.innerHTML = podio.map((p, i) => {
-    const data = new Date(p.ts).toLocaleDateString('pt-BR');
-    const cor  = p.score >= 70 ? 'var(--good)' : p.score >= 45 ? 'var(--warn)' : 'var(--danger)';
-    return `<div class="podio-item" data-sector="${p.sector}">
-      <div class="podio-rank ${rkClass[i]||''}">${medalhas[i]||i+1}</div>
-      <div class="podio-player">
-        <div class="podio-player-name">${p.player}</div>
-        <div class="podio-player-meta">${icones[p.sector]||'🏢'} ${p.companyName} · ${data}</div>
-      </div>
-      <div class="podio-score" style="color:${cor}">${p.score}</div>
-    </div>`;
-  }).join('');
-  if (_podioFiltro !== 'all') filtrarPodio(_podioFiltro);
+
+  // Top 3 destacados + restante em lista
+  const top3  = podio.slice(0, 3);
+  const resto = podio.slice(3);
+  const rkClass = ["gold","silver","bronze"];
+  const rkLabel = ["1º","2º","3º"];
+
+  const top3Html = `<div class="podio-top3">
+    ${top3.map((p, i) => {
+      const cor = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
+      const isMe = _player?.uid && p.uid === _player.uid;
+      return `<div class="podio-top3-card podio-top3-${i+1} ${isMe ? "podio-top3-me" : ""}" data-sector="${p.sector}">
+        <div class="podio-top3-pos ${rkClass[i]}">${rkLabel[i]}</div>
+        <div class="podio-top3-avatar">${p.player.charAt(0).toUpperCase()}</div>
+        <div class="podio-top3-name">${p.player}</div>
+        <div class="podio-top3-company">${icones[p.sector]||"🏢"} ${p.companyName}</div>
+        <div class="podio-top3-score" style="color:${cor}">${p.score}</div>
+        ${isMe ? '<div class="podio-top3-you">Você</div>' : ""}
+      </div>`;
+    }).join("")}
+  </div>`;
+
+  const restoHtml = resto.length ? `
+    <div class="hist-section-label" style="margin-top:4px">Ranking completo</div>
+    ${resto.map((p, i) => {
+      const cor  = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
+      const isMe = _player?.uid && p.uid === _player.uid;
+      const data = new Date(p.ts).toLocaleDateString("pt-BR");
+      return `<div class="podio-item ${isMe ? "podio-item-me" : ""}" data-sector="${p.sector}">
+        <div class="podio-rank">${i + 4}</div>
+        <div class="podio-player">
+          <div class="podio-player-name">${p.player} ${isMe ? '<span class="podio-you-tag">Você</span>' : ""}</div>
+          <div class="podio-player-meta">${icones[p.sector]||"🏢"} ${p.companyName} · ${data}</div>
+        </div>
+        <div class="podio-score" style="color:${cor}">${p.score}</div>
+      </div>`;
+    }).join("")}` : "";
+
+  lista.innerHTML = top3Html + restoHtml;
 }
 
 /* ════════════════════════════════════════════════════
