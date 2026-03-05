@@ -4044,6 +4044,9 @@ function irParaSlide(step) {
 ════════════════════════════════════════════════════ */
 async function irParaPerfil() {
   mostrarTela('screen-perfil');
+  // Relê do localStorage para garantir uid/email após login Google ou email
+  const playerSalvo = LS.get(SK.PLAYER);
+  if (playerSalvo) _player = playerSalvo;
   const isGuest = _player?.tipo === "guest" || !_player?.uid;
 
   // Sincroniza histórico do Firestore se logado

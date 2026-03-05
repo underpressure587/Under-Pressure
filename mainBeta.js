@@ -54,8 +54,22 @@ let _timerSegs        = 0;
 /* ════════════════════════════════════════════════════
    BOOT
 ════════════════════════════════════════════════════ */
-function _boot() {
+async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false };
+
+  // Processa retorno do redirect do Google (mobile/GitHub Pages)
+  if (window.GSPAuth?.isReady()) {
+    try {
+      const redirectPlayer = await window.GSPAuth.processarRedirectGoogle();
+      if (redirectPlayer) {
+        await _loginOk(redirectPlayer);
+        return;
+      }
+    } catch(e) {
+      console.warn("[GSP] Erro ao processar redirect Google:", e.message);
+    }
+  }
+
   const saved = LS.get(SK.PLAYER);
   if (saved) {
     _player = saved;
@@ -213,6 +227,7 @@ async function authGoogle() {
   }
   try {
     const player = await window.GSPAuth.loginGoogle();
+    if (!player) return; // redirect em andamento — página vai recarregar
     mostrarSucesso("Login com Google realizado!");
     _loginOk(player);
   } catch(e) {
@@ -298,7 +313,7 @@ function irComoConvidado() {
   mostrarTela("screen-home");
 }
 
-
+function _atualizarHome() {
   const el = document.getElementById("home-player-name");
   if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;
   const av = document.getElementById("home-avatar-icon");

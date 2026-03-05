@@ -13,7 +13,8 @@ import { initializeApp }
 
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail,
+  signInWithPopup, signInWithRedirect, getRedirectResult,
+  GoogleAuthProvider, sendPasswordResetEmail,
   onAuthStateChanged, signOut, updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -78,10 +79,39 @@ window.GSPAuth = {
 
   async loginGoogle() {
     if (!_firebaseReady) throw new Error("Firebase não configurado.");
-    const cred = await signInWithPopup(auth, googleProvider);
-    const nome = cred.user.displayName || cred.user.email.split("@")[0];
-    await GSPAuth._salvarPerfil(cred.user, nome);
-    return { uid: cred.user.uid, nome, email: cred.user.email, tipo: "user" };
+    try {
+      const cred = await signInWithPopup(auth, googleProvider);
+      const nome = cred.user.displayName || cred.user.email.split("@")[0];
+      await GSPAuth._salvarPerfil(cred.user, nome);
+      return { uid: cred.user.uid, nome, email: cred.user.email, tipo: "user" };
+    } catch(e) {
+      const useRedirect = [
+        "auth/popup-blocked",
+        "auth/popup-closed-by-user",
+        "auth/cancelled-popup-request",
+        "auth/operation-not-supported-in-this-environment",
+        "auth/web-storage-unsupported",
+      ].includes(e.code);
+      if (useRedirect) {
+        await signInWithRedirect(auth, googleProvider);
+        return null; // página vai recarregar após redirect
+      }
+      throw e;
+    }
+  },
+
+  async processarRedirectGoogle() {
+    if (!_firebaseReady) return null;
+    try {
+      const cred = await getRedirectResult(auth);
+      if (!cred || !cred.user) return null;
+      const nome = cred.user.displayName || cred.user.email.split("@")[0];
+      await GSPAuth._salvarPerfil(cred.user, nome);
+      return { uid: cred.user.uid, nome, email: cred.user.email, tipo: "user" };
+    } catch(e) {
+      console.warn("[GSP] processarRedirectGoogle:", e.message);
+      return null;
+    }
   },
 
   async recuperarSenha(email) {
