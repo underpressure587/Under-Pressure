@@ -38,7 +38,7 @@ const firebaseConfig = {
 let app, auth, db, googleProvider;
 let _firebaseReady = false;
 
-if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyCvCkfLd4EyxGlpZJdw1oKBuQBKsHo037E") {
+if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "COLE_AQUI") {
   try {
     app            = initializeApp(firebaseConfig);
     auth           = getAuth(app);
