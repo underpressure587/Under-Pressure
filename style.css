@@ -2653,3 +2653,68 @@ body::after{
 
 }
 
+/* ══════════════════════════════════════════════════
+   TELA DE CARREGAMENTO
+══════════════════════════════════════════════════ */
+#screen-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg1);
+}
+
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: loadingFadeIn .4s ease both;
+}
+
+@keyframes loadingFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.loading-logo {
+  font-size: 3rem;
+  animation: loadingPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes loadingPulse {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%       { transform: scale(1.12); opacity: .7; }
+}
+
+.loading-title {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--t1);
+  letter-spacing: .06em;
+}
+
+.loading-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--s-bg-accent);
+  border-top-color: var(--s-primary);
+  animation: loadingSpin .9s linear infinite;
+  position: relative;
+}
+
+@keyframes loadingSpin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-msg {
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--t3);
+  min-height: 1.2em;
+  transition: opacity .3s;
+}
+

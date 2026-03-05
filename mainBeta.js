@@ -54,14 +54,35 @@ let _timerSegs        = 0;
 /* ════════════════════════════════════════════════════
    BOOT
 ════════════════════════════════════════════════════ */
+function _setLoadingMsg(msg) {
+  const el = document.getElementById('loading-msg');
+  if (el) el.textContent = msg;
+}
+
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false };
 
+  // Mostra loading enquanto inicializa
+  mostrarTela('screen-loading');
+  _setLoadingMsg('Iniciando...');
+
+  // Aguarda Firebase estar pronto (até 3s)
+  if (window.GSPAuth) {
+    _setLoadingMsg('Conectando ao servidor...');
+    let tentativas = 0;
+    while (!window.GSPAuth.isReady() && tentativas < 30) {
+      await new Promise(r => setTimeout(r, 100));
+      tentativas++;
+    }
+  }
+
   // Processa retorno do redirect do Google (mobile/GitHub Pages)
   if (window.GSPAuth?.isReady()) {
+    _setLoadingMsg('Verificando login...');
     try {
       const redirectPlayer = await window.GSPAuth.processarRedirectGoogle();
       if (redirectPlayer) {
+        _setLoadingMsg('Carregando seus dados...');
         await _loginOk(redirectPlayer);
         return;
       }
@@ -72,6 +93,7 @@ async function _boot() {
 
   const saved = LS.get(SK.PLAYER);
   if (saved) {
+    _setLoadingMsg('Carregando seus dados...');
     _player = saved;
     _verificarSessaoSalva();
     _atualizarHome();
@@ -82,6 +104,7 @@ async function _boot() {
     }
     return;
   }
+
   mostrarTela('screen-login');
 }
 
