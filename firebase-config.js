@@ -215,9 +215,12 @@ window.GSPSync = {
 
   async salvarPartida(uid, entrada) {
     if (!uid) throw new Error('uid ausente');
-    if (!auth.currentUser) throw new Error('auth.currentUser nulo — usuário não autenticado no módulo');
-    const token = await auth.currentUser.getIdToken(true);
-    if (!token) throw new Error('token vazio');
+    if (!auth.currentUser) throw new Error('sem sessão ativa');
+    // Usa token em cache (sem forçar renovação que trava)
+    const token = await Promise.race([
+      auth.currentUser.getIdToken(false),
+      new Promise((_, r) => setTimeout(() => r(new Error('token timeout')), 3000))
+    ]);
     const url = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/(default)/documents/usuarios/${uid}/historico`;
     const body = {
       fields: {
@@ -261,9 +264,11 @@ window.GSPSync = {
 
   async salvarNoPodio(uid, entrada) {
     if (!uid) throw new Error('uid ausente');
-    if (!auth.currentUser) throw new Error('auth.currentUser nulo');
-    const token = await auth.currentUser.getIdToken(true);
-    if (!token) throw new Error('token vazio');
+    if (!auth.currentUser) throw new Error('sem sessão ativa');
+    const token = await Promise.race([
+      auth.currentUser.getIdToken(false),
+      new Promise((_, r) => setTimeout(() => r(new Error('token timeout')), 3000))
+    ]);
     const url = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/(default)/documents/podio`;
     const body = {
       fields: {
