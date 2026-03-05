@@ -214,25 +214,11 @@ window.GSPSync = {
   ─────────────────────────────────────────────────*/
 
   async salvarPartida(uid, entrada) {
-    if (!db || !uid) return;
-    try {
-      // Salva a partida na subcoleção
-      await addDoc(
-        collection(db, "usuarios", uid, "historico"),
-        { ...entrada, ts: serverTimestamp() }
-      );
-      // Atualiza estatísticas do perfil
-      const perfilRef  = doc(db, "usuarios", uid);
-      const perfilSnap = await getDoc(perfilRef);
-      if (perfilSnap.exists()) {
-        const d = perfilSnap.data();
-        await updateDoc(perfilRef, {
-          mandatos:      (d.mandatos  || 0) + 1,
-          melhorScore:   Math.max(d.melhorScore || 0, entrada.score),
-          ultimaPartida: serverTimestamp()
-        });
-      }
-    } catch (e) { console.warn("[GSP] salvarPartida:", e.message); }
+    if (!db || !uid) throw new Error('db ou uid ausente');
+    await addDoc(
+      collection(db, "usuarios", uid, "historico"),
+      { ...entrada, ts: serverTimestamp() }
+    );
   },
 
   async carregarHistorico(uid, maximo = 20) {
