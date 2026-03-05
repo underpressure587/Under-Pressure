@@ -3085,6 +3085,34 @@ let _prevIndicators   = {}; // track trends
 /* ════════════════════════════════════════════════════
    BOOT
 ════════════════════════════════════════════════════ */
+function _setFirebaseStatus(estado) {
+  // estados: 'connecting' | 'online' | 'offline'
+  const dot   = document.getElementById('firebase-status-dot');
+  const label = document.getElementById('firebase-status-label');
+  if (!dot || !label) return;
+  dot.className = 'firebase-dot firebase-dot--' + estado;
+  const textos = { connecting: 'Conectando', online: 'Online', offline: 'Offline' };
+  label.textContent = textos[estado] || estado;
+  label.style.color = estado === 'online' ? '#2ecc71' : estado === 'offline' ? '#e74c3c' : 'var(--t3)';
+}
+
+// Escuta o evento do firebase-config.js
+window.addEventListener('gsp:firebase-ready', () => {
+  if (window.GSPSync && window.GSPAuth?.isReady()) {
+    _setFirebaseStatus('online');
+  } else {
+    _setFirebaseStatus('offline');
+  }
+}, { once: true });
+
+// Timeout — se não responder em 6s, marca offline
+setTimeout(() => {
+  const dot = document.getElementById('firebase-status-dot');
+  if (dot?.classList.contains('firebase-dot--connecting')) {
+    _setFirebaseStatus('offline');
+  }
+}, 6000);
+
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false };
 

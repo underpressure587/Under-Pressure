@@ -153,6 +153,39 @@ body::after{
 }
 @keyframes gridFade{ 0%{opacity:.3} 100%{opacity:.7} }
 
+/* ── FIREBASE STATUS ───────────────────────────────── */
+.firebase-status {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: var(--rpill);
+  background: var(--bg2); border: 1px solid var(--line2);
+  cursor: default; user-select: none;
+}
+.firebase-status-label {
+  font-size: .62rem; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--t3);
+  transition: color .3s;
+}
+.firebase-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  transition: background .3s, box-shadow .3s;
+}
+.firebase-dot--connecting {
+  background: var(--t3);
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+.firebase-dot--online {
+  background: #2ecc71;
+  box-shadow: 0 0 6px rgba(46,204,113,.6);
+}
+.firebase-dot--offline {
+  background: #e74c3c;
+  box-shadow: 0 0 6px rgba(231,76,60,.4);
+}
+@keyframes dotPulse {
+  0%,100% { opacity: .4; transform: scale(.9); }
+  50%      { opacity: 1;  transform: scale(1.1); }
+}
+
 /* ── APP ────────────────────────────────────────────── */
 #app{
   position:relative; z-index:1; width:100%; max-width:430px;
