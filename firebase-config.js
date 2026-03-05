@@ -214,34 +214,16 @@ window.GSPSync = {
   ─────────────────────────────────────────────────*/
 
   async salvarPartida(uid, entrada) {
-    if (!uid) throw new Error('uid ausente');
-    if (!auth.currentUser) throw new Error('sem sessão ativa');
-    // Usa token em cache (sem forçar renovação que trava)
-    const token = await Promise.race([
-      auth.currentUser.getIdToken(false),
-      new Promise((_, r) => setTimeout(() => r(new Error('token timeout')), 3000))
-    ]);
-    const url = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/(default)/documents/usuarios/${uid}/historico`;
-    const body = {
-      fields: {
-        player:      { stringValue: entrada.player || '' },
-        score:       { integerValue: String(entrada.score || 0) },
-        scoreGestor: { integerValue: String(entrada.scoreGestor || 0) },
-        sector:      { stringValue: entrada.sector || '' },
-        companyName: { stringValue: entrada.companyName || '' },
-        ts:          { integerValue: String(entrada.ts || Date.now()) },
-        uid:         { stringValue: uid },
-      }
-    };
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify(body)
+    if (!db || !uid) throw new Error('db/uid ausente');
+    return addDoc(collection(db, 'usuarios', uid, 'historico'), {
+      player:      entrada.player || '',
+      score:       entrada.score  || 0,
+      scoreGestor: entrada.scoreGestor || 0,
+      sector:      entrada.sector || '',
+      companyName: entrada.companyName || '',
+      uid,
+      ts: serverTimestamp(),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err?.error?.message || res.status);
-    }
   },
 
   async carregarHistorico(uid, maximo = 20) {
@@ -263,33 +245,16 @@ window.GSPSync = {
   ─────────────────────────────────────────────────*/
 
   async salvarNoPodio(uid, entrada) {
-    if (!uid) throw new Error('uid ausente');
-    if (!auth.currentUser) throw new Error('sem sessão ativa');
-    const token = await Promise.race([
-      auth.currentUser.getIdToken(false),
-      new Promise((_, r) => setTimeout(() => r(new Error('token timeout')), 3000))
-    ]);
-    const url = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/(default)/documents/podio`;
-    const body = {
-      fields: {
-        uid:         { stringValue: uid },
-        player:      { stringValue: entrada.player || '' },
-        score:       { integerValue: String(entrada.score || 0) },
-        scoreGestor: { integerValue: String(entrada.scoreGestor || 0) },
-        sector:      { stringValue: entrada.sector || '' },
-        companyName: { stringValue: entrada.companyName || '' },
-        ts:          { integerValue: String(entrada.ts || Date.now()) },
-      }
-    };
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify(body)
+    if (!db || !uid) throw new Error('db/uid ausente');
+    return addDoc(collection(db, 'podio'), {
+      uid,
+      player:      entrada.player || '',
+      score:       entrada.score  || 0,
+      scoreGestor: entrada.scoreGestor || 0,
+      sector:      entrada.sector || '',
+      companyName: entrada.companyName || '',
+      ts: serverTimestamp(),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err?.error?.message || res.status);
-    }
   },
 
   /**
