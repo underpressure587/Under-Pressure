@@ -4378,90 +4378,129 @@ let _podioFiltro = 'all';
 
 function filtrarPodio(setor) {
   _podioFiltro = setor;
-  document.querySelectorAll('.podio-filter').forEach(b => {
-    b.classList.toggle('active', b.dataset.filter === setor);
-  });
-  // Filtra itens da lista e cards do top3
-  document.querySelectorAll('.podio-item, .podio-top3-card').forEach(item => {
-    item.classList.toggle('hidden', setor !== 'all' && item.dataset.sector !== setor);
-  });
-}
-
-function irParaPodio() {
-  mostrarTela("screen-podio");
-  _podioFiltro = "all";
-  document.querySelectorAll(".podio-filter").forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
-  const lista = document.getElementById("podio-lista");
+  document.querySelectorAll('.podio-filter').forEach(b =>
+    b.classList.toggle('active', b.dataset.filter === setor)
+  );
+  // Quando muda o filtro, re-renderiza o pódio com os dados corretos
+  const lista = document.getElementById('podio-lista');
   if (!lista) return;
-
-  // Renderiza imediatamente com cache local
-  const localPodio = LS.get(SK.PODIO) || [];
-  _renderPodio(lista, localPodio);
-
-  // Busca Firestore em background (dados globais e deduplicados)
-  if (window.GSPSync) {
-    lista.insertAdjacentHTML("afterbegin", `<div id="podio-sync-msg" class="podio-sync">🔄 Atualizando ranking global...</div>`);
-    window.GSPSync.carregarPodio().then(podioFS => {
-      const msg = document.getElementById("podio-sync-msg");
-      if (msg) msg.remove();
-      if (podioFS?.length) {
-        const c = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));
-        LS.set(SK.PODIO, c);
-        _renderPodio(lista, c);
-        if (_podioFiltro !== "all") filtrarPodio(_podioFiltro);
-      }
-    }).catch(() => {
-      const msg = document.getElementById("podio-sync-msg");
-      if (msg) msg.remove();
-    });
+  const cache = _podioCache[setor] || [];
+  if (cache.length) {
+    _renderPodio(lista, cache, setor);
+  } else {
+    // Sem cache para este setor — busca no Firestore
+    _buscarEAtualizarPodio(lista, setor);
   }
 }
 
-function _renderPodio(lista, podio) {
-  const icones = { tecnologia:"🚀", varejo:"🛒", logistica:"🚚", industria:"🏭" };
-  const labels = { tecnologia:"Tecnologia", varejo:"Varejo", logistica:"Logística", industria:"Indústria" };
+// Cache por setor para não rebuscar dados já carregados
+let _podioCache = {};
+
+function irParaPodio() {
+  mostrarTela('screen-podio');
+  _podioFiltro = 'all';
+  _podioCache  = {};
+  document.querySelectorAll('.podio-filter').forEach(b =>
+    b.classList.toggle('active', b.dataset.filter === 'all')
+  );
+  const lista = document.getElementById('podio-lista');
+  if (!lista) return;
+
+  // Renderiza imediatamente com cache local (modo "all" = score médio)
+  const local = LS.get(SK.PODIO) || [];
+  if (local.length) _renderPodio(lista, local, 'all');
+
+  // Busca Firestore em background
+  _buscarEAtualizarPodio(lista, 'all');
+}
+
+function _buscarEAtualizarPodio(lista, setor) {
+  if (!window.GSPSync) return;
+
+  const msgId = 'podio-sync-msg';
+  if (!document.getElementById(msgId)) {
+    const el = document.createElement('div');
+    el.id = msgId; el.className = 'podio-sync';
+    el.textContent = '🔄 Atualizando ranking...';
+    lista.prepend(el);
+  }
+
+  window.GSPSync.carregarPodio(setor).then(podioFS => {
+    document.getElementById(msgId)?.remove();
+    const c = (podioFS || []).map(p => ({
+      ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now())
+    }));
+    _podioCache[setor] = c;
+    // Só atualiza o cache global "all" para localStorage
+    if (setor === 'all' || !setor) LS.set(SK.PODIO, c);
+    // Só re-renderiza se este ainda for o filtro ativo
+    if (_podioFiltro === (setor || 'all')) _renderPodio(lista, c, setor);
+  }).catch(() => {
+    document.getElementById(msgId)?.remove();
+  });
+}
+
+function _renderPodio(lista, podio, setor) {
+  const isAll  = !setor || setor === 'all';
+  const icones = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
 
   if (!podio.length) {
     lista.innerHTML = `<div class="podio-empty">Nenhuma partida no ranking ainda.<br>Complete um mandato para aparecer aqui.</div>`;
     return;
   }
 
-  // Top 3 destacados + restante em lista
-  const top3  = podio.slice(0, 3);
-  const resto = podio.slice(3);
-  const rkClass = ["gold","silver","bronze"];
-  const rkLabel = ["1º","2º","3º"];
+  const scoreLabel = isAll ? 'Média' : 'Score';
+  const scoreKey   = isAll ? 'scoreMedia' : 'score';
+
+  // Ordena pelo campo correto
+  const sorted = [...podio].sort((a, b) => (b[scoreKey] ?? b.score) - (a[scoreKey] ?? a.score));
+  const top3   = sorted.slice(0, 3);
+  const resto  = sorted.slice(3);
+  const rkClass = ['gold','silver','bronze'];
+  const rkLabel = ['1º','2º','3º'];
 
   const top3Html = `<div class="podio-top3">
     ${top3.map((p, i) => {
-      const cor = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
-      const isMe = _player?.uid && p.uid === _player.uid;
-      return `<div class="podio-top3-card podio-top3-${i+1} ${isMe ? "podio-top3-me" : ""}" data-sector="${p.sector}">
+      const val   = p[scoreKey] ?? p.score;
+      const cor   = val >= 70 ? 'var(--good)' : val >= 45 ? 'var(--warn)' : 'var(--danger)';
+      const isMe  = _player?.uid && p.uid === _player.uid;
+      const sub   = isAll
+        ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
+        : `${icones[p.sector]||'🏢'} ${p.companyName}`;
+      return `<div class="podio-top3-card podio-top3-${i+1} ${isMe ? 'podio-top3-me' : ''}" data-sector="${p.sector||''}">
         <div class="podio-top3-pos ${rkClass[i]}">${rkLabel[i]}</div>
-        <div class="podio-top3-avatar">${p.player.charAt(0).toUpperCase()}</div>
+        <div class="podio-top3-avatar">${(p.player||'?').charAt(0).toUpperCase()}</div>
         <div class="podio-top3-name">${p.player}</div>
-        <div class="podio-top3-company">${icones[p.sector]||"🏢"} ${p.companyName}</div>
-        <div class="podio-top3-score" style="color:${cor}">${p.score}</div>
-        ${isMe ? '<div class="podio-top3-you">Você</div>' : ""}
+        <div class="podio-top3-company">${sub}</div>
+        <div class="podio-top3-score" style="color:${cor}">${val}</div>
+        <div class="podio-top3-score-label">${scoreLabel}</div>
+        ${isMe ? '<div class="podio-top3-you">Você</div>' : ''}
       </div>`;
-    }).join("")}
+    }).join('')}
   </div>`;
 
   const restoHtml = resto.length ? `
     <div class="hist-section-label" style="margin-top:4px">Ranking completo</div>
     ${resto.map((p, i) => {
-      const cor  = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
+      const val  = p[scoreKey] ?? p.score;
+      const cor  = val >= 70 ? 'var(--good)' : val >= 45 ? 'var(--warn)' : 'var(--danger)';
       const isMe = _player?.uid && p.uid === _player.uid;
-      const data = new Date(p.ts).toLocaleDateString("pt-BR");
-      return `<div class="podio-item ${isMe ? "podio-item-me" : ""}" data-sector="${p.sector}">
+      const data = new Date(p.ts).toLocaleDateString('pt-BR');
+      const sub  = isAll
+        ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''} · melhor: ${p.scoreMelhor ?? val}`
+        : `${icones[p.sector]||'🏢'} ${p.companyName} · ${data}`;
+      return `<div class="podio-item ${isMe ? 'podio-item-me' : ''}" data-sector="${p.sector||''}">
         <div class="podio-rank">${i + 4}</div>
         <div class="podio-player">
-          <div class="podio-player-name">${p.player} ${isMe ? '<span class="podio-you-tag">Você</span>' : ""}</div>
-          <div class="podio-player-meta">${icones[p.sector]||"🏢"} ${p.companyName} · ${data}</div>
+          <div class="podio-player-name">${p.player}${isMe ? ' <span class="podio-you-tag">Você</span>' : ''}</div>
+          <div class="podio-player-meta">${sub}</div>
         </div>
-        <div class="podio-score" style="color:${cor}">${p.score}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+          <div class="podio-score" style="color:${cor}">${val}</div>
+          <div class="podio-score-sublabel">${scoreLabel}</div>
+        </div>
       </div>`;
-    }).join("")}` : "";
+    }).join('')}` : '';
 
   lista.innerHTML = top3Html + restoHtml;
 }

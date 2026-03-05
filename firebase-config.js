@@ -264,24 +264,65 @@ window.GSPSync = {
     } catch (e) { console.warn("[GSP] salvarNoPodio:", e.message); }
   },
 
-  async carregarPodio(sector = null, maximo = 50) {
+  /**
+   * Retorna dados do pódio já agregados por jogador:
+   * - sector = null/"all": ordena por SCORE MÉDIO de todas as partidas
+   * - sector específico:   ordena pelo MELHOR SCORE naquele setor
+   * Cada entrada retornada representa UM jogador (sem duplicatas).
+   */
+  async carregarPodio(sector = null) {
     if (!db) return [];
     try {
-      // Busca mais entradas para deduplicate por uid/player
-      const constraints = [orderBy("score", "desc"), limit(maximo)];
+      // Busca todas as entradas (até 200) para agregar corretamente
+      const constraints = [orderBy("ts", "desc"), limit(200)];
       if (sector && sector !== "all") constraints.unshift(where("sector", "==", sector));
-      const q    = query(collection(db, "podio"), ...constraints);
-      const snap = await getDocs(q);
+      const snap = await getDocs(query(collection(db, "podio"), ...constraints));
       const all  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // Deduplicar: mantém apenas o melhor score por jogador (uid ou nome)
-      const seen = new Map();
-      for (const entry of all) {
-        const key = entry.uid || entry.player;
-        if (!seen.has(key) || entry.score > seen.get(key).score) {
-          seen.set(key, entry);
+
+      // Agrupa por jogador
+      const map = new Map();
+      for (const e of all) {
+        const key = e.uid || e.player;
+        if (!map.has(key)) {
+          map.set(key, { uid: e.uid, player: e.player, jogos: [], melhorPorSetor: {} });
+        }
+        const g = map.get(key);
+        g.jogos.push(e);
+        const s = e.sector;
+        if (!g.melhorPorSetor[s] || e.score > g.melhorPorSetor[s].score) {
+          g.melhorPorSetor[s] = e;
         }
       }
-      return Array.from(seen.values()).sort((a, b) => b.score - a.score).slice(0, 20);
+
+      const result = Array.from(map.values()).map(g => {
+        const scores  = g.jogos.map(j => j.score);
+        const media   = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+        const melhor  = Math.max(...scores);
+        // Entrada representativa = jogo com melhor score geral
+        const rep     = g.jogos.reduce((a, b) => b.score > a.score ? b : a);
+        return {
+          ...rep,
+          uid:           g.uid,
+          player:        g.player,
+          scoreMedia:    media,
+          scoreMelhor:   melhor,
+          totalJogos:    g.jogos.length,
+          melhorPorSetor: g.melhorPorSetor,
+          // score usado para ordenação depende do modo chamado
+          score: sector && sector !== "all"
+            ? (g.melhorPorSetor[sector]?.score ?? 0)
+            : media,
+          // companyName da melhor partida no setor (se filtrado)
+          companyName: sector && sector !== "all"
+            ? (g.melhorPorSetor[sector]?.companyName ?? rep.companyName)
+            : rep.companyName,
+        };
+      });
+
+      return result
+        .filter(p => p.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20);
     } catch (e) { console.warn("[GSP] carregarPodio:", e.message); return []; }
   },
 
