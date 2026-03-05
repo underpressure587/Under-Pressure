@@ -3296,23 +3296,10 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
 
   LS.remove(SK.SESSION);
 
-  // Salva no Firestore — mostra resultado na tela
-  const _debugInfo = [
-    'Conta: ' + (isGuest ? 'convidado' : 'logado'),
-    'UID: ' + (_player?.uid ? _player.uid.slice(0,8) : 'nenhum'),
-    'Sync: ' + (!!window.GSPSync),
-    'Auth: ' + (window.GSPAuth?.isReady()),
-  ].join(' | ');
-
+  // Salva no Firestore em background (apenas para contas reais)
   if (!isGuest && _player?.uid && window.GSPSync) {
-    Promise.all([
-      window.GSPSync.salvarPartida(_player.uid, entrada),
-      window.GSPSync.salvarNoPodio(_player.uid, entrada)
-    ])
-      .then(() => mostrarSucesso('✅ Salvo na nuvem!'))
-      .catch(e => mostrarErroCritico('❌ Erro ao salvar: ' + (e?.message || e?.code || JSON.stringify(e)) + ' | ' + _debugInfo));
-  } else {
-    mostrarAviso('⚠️ Não salvo: ' + _debugInfo);
+    window.GSPSync.salvarPartida(_player.uid, entrada).catch(() => {});
+    window.GSPSync.salvarNoPodio(_player.uid, entrada).catch(() => {});
   }
 }
 
