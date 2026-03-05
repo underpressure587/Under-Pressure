@@ -227,22 +227,47 @@ body::after{
 .btn-xs:hover{ border-color:var(--s-primary); color:var(--s-text); }
 
 .btn-back{
-  background: linear-gradient(135deg, var(--bg2), var(--bg3));
+  background: transparent;
   border: 1px solid var(--line2);
-  color: var(--t2);
-  width: 36px; height: 36px; border-radius: 50%;
+  color: var(--t3);
+  width: 38px; height: 38px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 1.3rem; line-height: 1;
-  font-weight: 300; letter-spacing: 0;
-  transition: all .2s; flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  cursor: pointer; font-size: .75rem; line-height: 1;
+  transition: all .22s cubic-bezier(.4,0,.2,1);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.btn-back::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--s-gradient);
+  opacity: 0;
+  transition: opacity .22s;
+  border-radius: inherit;
+}
+.btn-back::after {
+  content: '';
+  display: block;
+  width: 9px; height: 9px;
+  border-left: 1.8px solid currentColor;
+  border-bottom: 1.8px solid currentColor;
+  transform: rotate(45deg) translate(1px, -1px);
+  transition: transform .22s cubic-bezier(.4,0,.2,1), border-color .22s;
+  position: relative; z-index: 1;
 }
 .btn-back:hover {
   color: var(--s-text);
   border-color: var(--s-primary);
-  transform: translateX(-2px);
-  box-shadow: 0 0 12px var(--s-glow);
+  box-shadow: 0 0 16px var(--s-glow), inset 0 1px 0 rgba(255,255,255,.06);
+  transform: translateX(-1px);
 }
+.btn-back:hover::before { opacity: .12; }
+.btn-back:hover::after {
+  transform: rotate(45deg) translate(-1px, -1px);
+  border-color: var(--s-text);
+}
+.btn-back:active { transform: translateX(-1px) scale(.95); }
 
 /* ── INPUT ──────────────────────────────────────────── */
 .input-field{
