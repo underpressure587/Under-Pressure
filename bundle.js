@@ -3084,10 +3084,61 @@ let _prevIndicators   = {}; // track trends
 /* ════════════════════════════════════════════════════
    BOOT
 ════════════════════════════════════════════════════ */
-function _boot() {
+async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false };
+
+  // Exibe loading imediatamente e deixa o browser pintar
+  mostrarTela('screen-loading');
+  _setLoadingMsg('Iniciando...');
+  await new Promise(r => requestAnimationFrame(r));
+
+  // Aguarda o Firebase inicializar (até 3s)
+  if (window.GSPAuth) {
+    _setLoadingMsg('Conectando ao servidor...');
+    let t = 0;
+    while (!window.GSPAuth.isReady() && t < 30) {
+      await new Promise(r => setTimeout(r, 100));
+      t++;
+    }
+  }
+
+  if (window.GSPAuth?.isReady()) {
+    // 1) Tenta capturar retorno de redirect do Google (mobile / popup bloqueado)
+    _setLoadingMsg('Verificando autenticação...');
+    try {
+      const rPlayer = await window.GSPAuth.processarRedirectGoogle();
+      if (rPlayer) {
+        await _loginOk(rPlayer);
+        return;
+      }
+    } catch(e) {
+      console.warn('[GSP] processarRedirectGoogle:', e.message);
+    }
+
+    // 2) Verifica se já existe uma sessão Firebase ativa (usuário não fez logout)
+    _setLoadingMsg('Verificando sessão ativa...');
+    try {
+      const fbUser = await window.GSPAuth.waitForAuthReady();
+      if (fbUser) {
+        const player = {
+          uid:   fbUser.uid,
+          nome:  fbUser.displayName || fbUser.email?.split('@')[0] || 'Jogador',
+          email: fbUser.email,
+          tipo:  'user'
+        };
+        await _loginOk(player);
+        return;
+      }
+    } catch(e) {
+      console.warn('[GSP] waitForAuthReady:', e.message);
+    }
+  }
+
+  // 3) Verifica dados locais (convidado / login offline)
   const saved = LS.get(SK.PLAYER);
   if (saved) {
+    _setLoadingMsg('Carregando perfil...');
+    await new Promise(r => requestAnimationFrame(r));
     _player = saved;
     _verificarSessaoSalva();
     _atualizarHome();
@@ -3098,7 +3149,13 @@ function _boot() {
     }
     return;
   }
+
   mostrarTela('screen-login');
+}
+
+function _setLoadingMsg(msg) {
+  const el = document.getElementById('loading-msg');
+  if (el) el.textContent = msg;
 }
 
 /* ════════════════════════════════════════════════════
@@ -4567,10 +4624,26 @@ async function authGoogle() {
     return;
   }
   try {
+    // Mostra loading ANTES do popup — requestAnimationFrame garante que o browser pinta
+    mostrarTela('screen-loading');
+    _setLoadingMsg('Conectando ao Google...');
+    await new Promise(r => requestAnimationFrame(r));
+
     const player = await window.GSPAuth.loginGoogle();
+
+    if (!player) {
+      // Redirect em andamento — página vai recarregar, _boot() vai capturar
+      _setLoadingMsg('Redirecionando para o Google...');
+      return;
+    }
+
+    _setLoadingMsg('Carregando seus dados...');
     mostrarSucesso("Login com Google realizado!");
-    _loginOk(player);
+    await _loginOk(player);
   } catch(e) {
+    // Em caso de erro, volta para a tela de auth
+    mostrarTela('screen-auth');
+    authMudarAba('login');
     mostrarErroCritico(_traduzirErroFirebase(e.code));
   }
 }
@@ -4600,26 +4673,39 @@ async function authRecuperar() {
 async function _loginOk(player) {
   _player = player;
   LS.set(SK.PLAYER, _player);
+
+  // Garante tela de loading visível com mensagem atual
+  mostrarTela('screen-loading');
+  _setLoadingMsg('Preparando seu perfil...');
+  await new Promise(r => requestAnimationFrame(r));
+
   if (_player?.uid && window.GSPSync) {
     try {
+      _setLoadingMsg('Sincronizando histórico...');
       const histFS = await window.GSPSync.carregarHistorico(_player.uid);
       if (histFS.length > 0) {
         const hist = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
         LS.set(SK.HISTORICO, hist);
       }
+      _setLoadingMsg('Carregando pódio...');
       const podioFS = await window.GSPSync.carregarPodio();
       if (podioFS.length > 0) {
         const podio = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));
         LS.set(SK.PODIO, podio);
       }
+      _setLoadingMsg('Verificando sessão em andamento...');
       const sessFS = await window.GSPSync.carregarSessao(_player.uid);
       if (sessFS) {
         LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
       }
     } catch (e) {
       console.warn("[GSP] Erro ao carregar dados do Firestore:", e.message);
+      mostrarAviso("Não foi possível carregar dados da nuvem. Usando dados locais.");
     }
   }
+
+  _setLoadingMsg('Entrando no painel...');
+  await new Promise(r => requestAnimationFrame(r));
   _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela("screen-home");
