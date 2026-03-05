@@ -232,29 +232,16 @@ body::after{
   color: var(--t2);
   width: 36px; height: 36px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: .9rem; transition: all .2s;
-  flex-shrink: 0;
+  cursor: pointer; font-size: 1.3rem; line-height: 1;
+  font-weight: 300; letter-spacing: 0;
+  transition: all .2s; flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0,0,0,.25);
-  position: relative;
-  overflow: hidden;
-}
-.btn-back::after {
-  content: '';
-  display: block;
-  width: 8px; height: 8px;
-  border-left: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg) translateX(2px);
-  transition: transform .2s;
 }
 .btn-back:hover {
   color: var(--s-text);
   border-color: var(--s-primary);
   transform: translateX(-2px);
   box-shadow: 0 0 12px var(--s-glow);
-}
-.btn-back:hover::after {
-  transform: rotate(45deg) translateX(0px);
 }
 
 /* ── INPUT ──────────────────────────────────────────── */
@@ -2203,15 +2190,12 @@ body::after{
   #screen-auth {
     align-items: center;
     justify-content: center;
-    background: var(--bg);
-  }
-
-  #screen-auth::before {
-    background: radial-gradient(ellipse 70% 50% at 50% 0%, var(--s-glow) 0%, transparent 65%);
+    overflow-y: auto;
   }
 
   .auth-wrap {
     max-width: 480px;
+    width: 100%;
     margin: auto;
     padding: var(--sp4) var(--sp4) 32px;
     background: var(--bg1);
@@ -2222,10 +2206,10 @@ body::after{
       0 24px 64px rgba(0,0,0,.5),
       0 4px 16px rgba(0,0,0,.3);
     min-height: unset;
+    align-self: center;
   }
 
   .auth-topbar { margin-bottom: 10px; }
-
   .auth-logo-row { margin-bottom: 14px; }
 
   .auth-logo-img {
