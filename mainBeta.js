@@ -76,9 +76,10 @@ async function _boot() {
     }
   }
 
-  // Processa retorno do redirect do Google (mobile/GitHub Pages)
   if (window.GSPAuth?.isReady()) {
-    _setLoadingMsg('Verificando login...');
+    _setLoadingMsg('Verificando autenticação...');
+
+    // Passo 1: Processar retorno do redirect do Google (mobile / browsers que bloqueiam popup)
     try {
       const redirectPlayer = await window.GSPAuth.processarRedirectGoogle();
       if (redirectPlayer) {
@@ -89,11 +90,32 @@ async function _boot() {
     } catch(e) {
       console.warn("[GSP] Erro ao processar redirect Google:", e.message);
     }
+
+    // Passo 2: Verificar se o Firebase já tem uma sessão ativa (ex: usuário não fez logout,
+    // ou voltou após redirect — getRedirectResult às vezes resolve via onAuthStateChanged)
+    _setLoadingMsg('Verificando sessão ativa...');
+    try {
+      const firebaseUser = await window.GSPAuth.waitForAuthReady();
+      if (firebaseUser) {
+        _setLoadingMsg('Carregando seus dados...');
+        const player = {
+          uid:   firebaseUser.uid,
+          nome:  firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Jogador',
+          email: firebaseUser.email,
+          tipo:  'user'
+        };
+        await _loginOk(player);
+        return;
+      }
+    } catch(e) {
+      console.warn("[GSP] Erro ao verificar sessão Firebase:", e.message);
+    }
   }
 
+  // Passo 3: Verificar dados locais (convidado ou login offline)
   const saved = LS.get(SK.PLAYER);
   if (saved) {
-    _setLoadingMsg('Carregando seus dados...');
+    _setLoadingMsg('Carregando perfil local...');
     _player = saved;
     _verificarSessaoSalva();
     _atualizarHome();
@@ -249,11 +271,25 @@ async function authGoogle() {
     return;
   }
   try {
+    // Mostra loading para feedback visual imediato
+    mostrarTela('screen-loading');
+    _setLoadingMsg('Conectando ao Google...');
+
     const player = await window.GSPAuth.loginGoogle();
-    if (!player) return; // redirect em andamento — página vai recarregar
+
+    if (!player) {
+      // Redirect em andamento — página vai recarregar automaticamente
+      _setLoadingMsg('Redirecionando para o Google...');
+      return;
+    }
+
+    _setLoadingMsg('Carregando seus dados...');
     mostrarSucesso("Login com Google realizado!");
-    _loginOk(player);
+    await _loginOk(player);
   } catch(e) {
+    // Volta para a tela de auth em caso de erro
+    mostrarTela('screen-auth');
+    authMudarAba('login');
     mostrarErroCritico(_traduzirErroFirebase(e.code));
   }
 }
@@ -288,22 +324,29 @@ async function _loginOk(player) {
   _player = player;
   LS.set(SK.PLAYER, _player);
 
+  // Garante que a tela de loading esteja visível com mensagem
+  mostrarTela('screen-loading');
+  _setLoadingMsg('Preparando seu perfil...');
+
   // Se logado com conta real, sincroniza dados do Firestore
   if (_player?.uid && window.GSPSync) {
     try {
       // Carrega historico pessoal
+      _setLoadingMsg('Sincronizando histórico...');
       const histFS = await window.GSPSync.carregarHistorico(_player.uid);
       if (histFS.length > 0) {
         const hist = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
         LS.set(SK.HISTORICO, hist);
       }
       // Carrega podio global
+      _setLoadingMsg('Carregando pódio...');
       const podioFS = await window.GSPSync.carregarPodio();
       if (podioFS.length > 0) {
         const podio = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));
         LS.set(SK.PODIO, podio);
       }
       // Carrega sessao em andamento do Firestore
+      _setLoadingMsg('Verificando sessão em andamento...');
       const sessFS = await window.GSPSync.carregarSessao(_player.uid);
       if (sessFS) {
         LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
@@ -314,6 +357,7 @@ async function _loginOk(player) {
     }
   }
 
+  _setLoadingMsg('Entrando no painel...');
   _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela("screen-home");

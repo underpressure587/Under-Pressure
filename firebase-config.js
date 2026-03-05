@@ -131,6 +131,22 @@ window.GSPAuth = {
     });
   },
 
+  /**
+   * Aguarda o Firebase resolver o estado de autenticação atual.
+   * Essencial para detectar sessões ativas após redirect do Google.
+   * Resolve com o usuário Firebase autenticado ou null (timeout: 6s).
+   */
+  waitForAuthReady() {
+    if (!_firebaseReady || !auth) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const unsub = onAuthStateChanged(auth, (user) => {
+        unsub();
+        resolve(user);
+      });
+      setTimeout(() => resolve(null), 6000);
+    });
+  },
+
   async _salvarPerfil(user, nome) {
     if (!db) return;
     try {
