@@ -3096,22 +3096,21 @@ function _setFirebaseStatus(estado) {
   label.style.color = estado === 'online' ? '#2ecc71' : estado === 'offline' ? '#e74c3c' : 'var(--t3)';
 }
 
-// Escuta o evento do firebase-config.js
-window.addEventListener('gsp:firebase-ready', () => {
-  if (window.GSPSync && window.GSPAuth?.isReady()) {
-    _setFirebaseStatus('online');
-  } else {
-    _setFirebaseStatus('offline');
-  }
-}, { once: true });
-
-// Timeout — se não responder em 6s, marca offline
-setTimeout(() => {
-  const dot = document.getElementById('firebase-status-dot');
-  if (dot?.classList.contains('firebase-dot--connecting')) {
-    _setFirebaseStatus('offline');
-  }
-}, 6000);
+// Verifica status do Firebase por polling (evita problema de timing com type=module)
+(function _pollFirebase() {
+  let tentativas = 0;
+  const intervalo = setInterval(() => {
+    tentativas++;
+    if (window.GSPSync && window.GSPAuth?.isReady()) {
+      clearInterval(intervalo);
+      _setFirebaseStatus('online');
+    } else if (window._gspFirebaseReady === false || tentativas >= 40) {
+      // Firebase falhou ou timeout de 4s (40 × 100ms)
+      clearInterval(intervalo);
+      _setFirebaseStatus('offline');
+    }
+  }, 100);
+})();
 
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false };
@@ -3335,10 +3334,13 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
     if (window.GSPSync) {
       _salvarNoFirestore();
     } else {
-      // Firebase ainda carregando — espera o evento de pronto (até 5s)
-      const handler = () => { _salvarNoFirestore(); };
-      window.addEventListener('gsp:firebase-ready', handler, { once: true });
-      setTimeout(() => window.removeEventListener('gsp:firebase-ready', handler), 5000);
+      // Firebase ainda carregando — tenta por até 5s
+      let t = 0;
+      const poll = setInterval(() => {
+        t++;
+        if (window.GSPSync) { clearInterval(poll); _salvarNoFirestore(); }
+        else if (t >= 50) clearInterval(poll);
+      }, 100);
     }
   }
 }

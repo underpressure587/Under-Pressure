@@ -47,15 +47,15 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "COLE_AQUI") {
     googleProvider = new GoogleAuthProvider();
     _firebaseReady = true;
     console.log("[GSP] Firebase inicializado com sucesso.");
-    // Notifica o bundle.js que o Firebase está pronto
-    window.dispatchEvent(new CustomEvent('gsp:firebase-ready'));
+    window._gspFirebaseReady = true;
   } catch (e) {
     console.warn("[GSP] Erro ao inicializar Firebase:", e.message);
-    window.dispatchEvent(new CustomEvent('gsp:firebase-ready'));
+    window._gspFirebaseReady = false;
+    window._gspFirebaseError = e.message;
   }
 } else {
   console.info("[GSP] Firebase não configurado — modo local ativo.");
-  window.dispatchEvent(new CustomEvent('gsp:firebase-ready'));
+  window._gspFirebaseReady = false;
 }
 
 /* ═══════════════════════════════════════════════════════
