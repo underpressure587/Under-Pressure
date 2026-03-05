@@ -389,11 +389,11 @@ body::after{
   filter: drop-shadow(0 0 10px var(--s-glow));
 }
 .auth-logo-img {
-  width: 80px;
-  height: 80px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
   border-radius: 50%;
-  filter: drop-shadow(0 0 14px rgba(229,160,40,.4));
+  filter: drop-shadow(0 0 10px rgba(229,160,40,.4));
 }
 
 /* Abas */
@@ -565,12 +565,14 @@ body::after{
 
 .auth-guest-btn {
   color: var(--t3) !important;
-  font-size: .78rem !important;
-  padding: 12px !important;
+  font-size: .82rem !important;
+  padding: 14px 20px !important;
   border: none !important;
   text-decoration: underline;
   width: 100% !important;
   text-align: center !important;
+  display: block !important;
+  white-space: nowrap !important;
 }
 .auth-guest-btn:hover { color: var(--t2) !important; }
 
