@@ -4100,22 +4100,11 @@ function irParaSlide(step) {
 ════════════════════════════════════════════════════ */
 async function irParaPerfil() {
   mostrarTela('screen-perfil');
-  // Relê do localStorage para garantir uid/email após login Google ou email
   const playerSalvo = LS.get(SK.PLAYER);
   if (playerSalvo) _player = playerSalvo;
   const isGuest = _player?.tipo === "guest" || !_player?.uid;
 
-  // Sincroniza histórico do Firestore se logado
-  if (!isGuest && _player?.uid && window.GSPSync) {
-    try {
-      const histFS = await window.GSPSync.carregarHistorico(_player.uid);
-      if (histFS.length > 0) {
-        const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
-        LS.set(SK.HISTORICO, c);
-      }
-    } catch(e) {}
-  }
-
+  // Renderiza IMEDIATAMENTE com dados locais
   const hist = LS.get(isGuest ? SK.HIST_GUEST : SK.HISTORICO) || [];
   const nome = _player?.nome || 'Jogador';
 
@@ -4245,6 +4234,39 @@ async function irParaPerfil() {
     });
   }
   sessionStorage.setItem('gsp_prev_unlocked', JSON.stringify(conquistas.filter(c => c.unlocked).map(c => c.nome)));
+
+  // Sincroniza Firestore em background — não bloqueia a UI
+  if (!isGuest && _player?.uid && window.GSPSync) {
+    window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
+      if (histFS.length > 0) {
+        const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
+        const localHist = LS.get(SK.HISTORICO) || [];
+        // Só re-renderiza se vier dado novo do servidor
+        if (c.length !== localHist.length) {
+          LS.set(SK.HISTORICO, c);
+          // Re-renderiza apenas os stats silenciosamente
+          const total2  = c.length;
+          const melhor2 = total2 ? Math.max(...c.map(h => h.score)) : 0;
+          const media2  = total2 ? Math.round(c.reduce((a,h) => a + h.score, 0) / total2) : 0;
+          const boas2   = c.filter(h => h.score >= 70).length;
+          const setorCount2 = {};
+          c.forEach(h => { setorCount2[h.sector] = (setorCount2[h.sector] || 0) + 1; });
+          const favEntry2 = Object.entries(setorCount2).sort((a,b) => b[1]-a[1])[0];
+          const icones2 = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
+          const favLabel2 = favEntry2 ? `${icones2[favEntry2[0]]||''} ${favEntry2[0]}` : '—';
+          const subEl = document.getElementById('perfil-subtitulo');
+          if (subEl) subEl.textContent = `${total2} mandato${total2 !== 1 ? 's' : ''} concluído${total2 !== 1 ? 's' : ''}`;
+          const statsEl2 = document.getElementById('perfil-stats');
+          if (statsEl2) statsEl2.innerHTML = [
+            { val: total2 ? melhor2 : '—', label: 'Melhor Score' },
+            { val: total2 ? media2  : '—', label: 'Score Médio'  },
+            { val: boas2,                  label: 'Excelentes (70+)' },
+            { val: favLabel2,              label: 'Setor Favorito' },
+          ].map(s => `<div class="perfil-stat"><div class="perfil-stat-val">${s.val}</div><div class="perfil-stat-label">${s.label}</div></div>`).join('');
+        }
+      }
+    }).catch(() => {});
+  }
 }
 
 function _copiarId(id) {
