@@ -215,8 +215,9 @@ window.GSPSync = {
 
   async salvarPartida(uid, entrada) {
     if (!uid) throw new Error('uid ausente');
-    const token = await auth.currentUser?.getIdToken();
-    if (!token) throw new Error('sem token de autenticação');
+    if (!auth.currentUser) throw new Error('auth.currentUser nulo — usuário não autenticado no módulo');
+    const token = await auth.currentUser.getIdToken(true);
+    if (!token) throw new Error('token vazio');
     const url = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/(default)/documents/usuarios/${uid}/historico`;
     const body = {
       fields: {
@@ -260,8 +261,9 @@ window.GSPSync = {
 
   async salvarNoPodio(uid, entrada) {
     if (!uid) throw new Error('uid ausente');
-    const token = await auth.currentUser?.getIdToken();
-    if (!token) throw new Error('sem token de autenticação');
+    if (!auth.currentUser) throw new Error('auth.currentUser nulo');
+    const token = await auth.currentUser.getIdToken(true);
+    if (!token) throw new Error('token vazio');
     const url = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/(default)/documents/podio`;
     const body = {
       fields: {
