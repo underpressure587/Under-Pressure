@@ -3091,21 +3091,32 @@ async function _boot() {
   _setLoadingMsg('Iniciando...');
   await new Promise(r => requestAnimationFrame(r));
 
+  // ── FAST PATH: se já tem dados locais, entra imediatamente ──────────────
+  const saved = LS.get(SK.PLAYER);
+  if (saved) {
+    _player = saved;
+    _verificarSessaoSalva();
+    _atualizarHome();
+    if (!localStorage.getItem('gsp_tutorial_done')) {
+      mostrarTela('screen-tutorial');
+    } else {
+      mostrarTela('screen-home');
+    }
+    // Sincroniza Firebase em background — não bloqueia a entrada
+    _sincronizarFirebaseBackground(saved);
+    return;
+  }
+
+  // ── SLOW PATH: sem dados locais, precisa autenticar ─────────────────────
   if (window.GSPAuth) {
     _setLoadingMsg('Verificando autenticação...');
-
-    // Aguarda Firebase inicializar E resolve estado de auth de uma vez só (até 2.5s)
-    // onAuthStateChanged já captura sessão ativa + retorno de redirect do Google
     const fbUser = await new Promise((resolve) => {
       let resolved = false;
       const done = (val) => { if (!resolved) { resolved = true; resolve(val); } };
-
-      // Tenta processar redirect do Google em paralelo
       if (window.GSPAuth.isReady()) {
         window.GSPAuth.processarRedirectGoogle().catch(() => {});
         window.GSPAuth.waitForAuthReady().then(done).catch(() => done(null));
       } else {
-        // Firebase ainda não inicializou — aguarda até 2.5s
         let t = 0;
         const poll = setInterval(() => {
           t++;
@@ -3113,13 +3124,9 @@ async function _boot() {
             clearInterval(poll);
             window.GSPAuth.processarRedirectGoogle().catch(() => {});
             window.GSPAuth.waitForAuthReady().then(done).catch(() => done(null));
-          } else if (t >= 25) {
-            clearInterval(poll);
-            done(null);
-          }
+          } else if (t >= 25) { clearInterval(poll); done(null); }
         }, 100);
       }
-
       setTimeout(() => done(null), 2500);
     });
 
@@ -3135,21 +3142,21 @@ async function _boot() {
     }
   }
 
-  // Sem sessão Firebase — verifica dados locais
-  const saved = LS.get(SK.PLAYER);
-  if (saved) {
-    _player = saved;
-    _verificarSessaoSalva();
-    _atualizarHome();
-    if (!localStorage.getItem('gsp_tutorial_done')) {
-      mostrarTela('screen-tutorial');
-    } else {
-      mostrarTela('screen-home');
-    }
-    return;
-  }
-
   mostrarTela('screen-login');
+}
+
+// Sincroniza sessão Firebase em background sem bloquear a UI
+function _sincronizarFirebaseBackground(player) {
+  if (!player?.uid || !window.GSPAuth?.isReady() || !window.GSPSync) return;
+  Promise.all([
+    window.GSPSync.carregarHistorico(player.uid),
+    window.GSPSync.carregarPodio(),
+    window.GSPSync.carregarSessao(player.uid)
+  ]).then(([histFS, podioFS, sessFS]) => {
+    if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) })));
+    if (podioFS?.length > 0) LS.set(SK.PODIO, podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
+    if (sessFS) LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
+  }).catch(() => {});
 }
 
 function _setLoadingMsg(msg) {
@@ -4695,37 +4702,13 @@ async function _loginOk(player) {
   _player = player;
   LS.set(SK.PLAYER, _player);
 
-  mostrarTela('screen-loading');
-  _setLoadingMsg('Carregando seus dados...');
-  await new Promise(r => requestAnimationFrame(r));
-
-  if (_player?.uid && window.GSPSync) {
-    try {
-      // Dispara as 3 chamadas ao Firestore em paralelo — 3x mais rápido
-      const [histFS, podioFS, sessFS] = await Promise.all([
-        window.GSPSync.carregarHistorico(_player.uid),
-        window.GSPSync.carregarPodio(),
-        window.GSPSync.carregarSessao(_player.uid)
-      ]);
-
-      if (histFS.length > 0) {
-        LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) })));
-      }
-      if (podioFS.length > 0) {
-        LS.set(SK.PODIO, podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
-      }
-      if (sessFS) {
-        LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
-      }
-    } catch (e) {
-      console.warn("[GSP] Erro ao carregar dados do Firestore:", e.message);
-      mostrarAviso("Não foi possível carregar dados da nuvem. Usando dados locais.");
-    }
-  }
-
+  // Entra no painel imediatamente — sem esperar Firestore
   _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela("screen-home");
+
+  // Sincroniza dados em background (não bloqueia a UI)
+  _sincronizarFirebaseBackground(player);
 }
 
 window.BetaUI = {

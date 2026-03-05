@@ -2650,10 +2650,13 @@ body::after{
    TELA DE CARREGAMENTO
 ══════════════════════════════════════════════════ */
 #screen-loading {
-  display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg1);
+}
+/* Garante que loading some quando não está ativa — especificidade de ID precisa de override */
+#screen-loading:not(.active) {
+  display: none !important;
 }
 
 .loading-wrap {
