@@ -143,7 +143,7 @@ window.GSPAuth = {
         unsub();
         resolve(user);
       });
-      setTimeout(() => resolve(null), 6000);
+      setTimeout(() => resolve(null), 2000);
     });
   },
 
