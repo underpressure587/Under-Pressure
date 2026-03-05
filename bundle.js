@@ -4381,14 +4381,41 @@ function filtrarPodio(setor) {
   document.querySelectorAll('.podio-filter').forEach(b =>
     b.classList.toggle('active', b.dataset.filter === setor)
   );
-  // Quando muda o filtro, re-renderiza o pódio com os dados corretos
   const lista = document.getElementById('podio-lista');
   if (!lista) return;
-  const cache = _podioCache[setor] || [];
-  if (cache.length) {
-    _renderPodio(lista, cache, setor);
+
+  const isAll = !setor || setor === 'all';
+
+  if (isAll) {
+    // "Todos" — usa cache 'all' ou localStorage
+    const dados = _podioCache['all'] || LS.get(SK.PODIO) || [];
+    _renderPodio(lista, dados, 'all');
+    return;
+  }
+
+  // Filtro por setor — filtra os dados 'all' já carregados localmente
+  const dadosAll = _podioCache['all'] || LS.get(SK.PODIO) || [];
+  if (dadosAll.length) {
+    // Filtra por setor e reordena pelo melhor score naquele setor
+    const filtrados = dadosAll
+      .filter(p => p.sector === setor || (p.melhorPorSetor && p.melhorPorSetor[setor]))
+      .map(p => {
+        const entradaSetor = p.melhorPorSetor?.[setor];
+        return {
+          ...p,
+          score:       entradaSetor?.score       ?? p.score,
+          companyName: entradaSetor?.companyName ?? p.companyName,
+          sector:      setor,
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+    _renderPodio(lista, filtrados, setor);
+  }
+
+  // Busca Firestore em background para dados mais precisos do setor
+  if (_podioCache[setor]) {
+    _renderPodio(lista, _podioCache[setor], setor);
   } else {
-    // Sem cache para este setor — busca no Firestore
     _buscarEAtualizarPodio(lista, setor);
   }
 }
@@ -4452,7 +4479,15 @@ function _renderPodio(lista, podio, setor) {
   const scoreLabel = isAll ? 'Média' : 'Score';
   const scoreKey   = isAll ? 'scoreMedia' : 'score';
 
-  const sorted = [...podio].sort((a, b) => (b[scoreKey] ?? b.score) - (a[scoreKey] ?? a.score));
+  // Garante campos de agregação para dados locais (sem scoreMedia/scoreMelhor)
+  const normalized = podio.map(p => ({
+    ...p,
+    scoreMedia:  p.scoreMedia  ?? p.score,
+    scoreMelhor: p.scoreMelhor ?? p.score,
+    totalJogos:  p.totalJogos  ?? 1,
+  }));
+
+  const sorted = [...normalized].sort((a, b) => (b[scoreKey] ?? b.score) - (a[scoreKey] ?? a.score));
   const top3   = sorted.slice(0, 3);
   const resto  = sorted.slice(3);
   const rkClass = ['gold','silver','bronze'];
