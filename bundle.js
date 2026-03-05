@@ -3096,21 +3096,21 @@ function _setFirebaseStatus(estado) {
   label.style.color = estado === 'online' ? '#2ecc71' : estado === 'offline' ? '#e74c3c' : 'var(--t3)';
 }
 
-// Verifica status do Firebase por polling (evita problema de timing com type=module)
-(function _pollFirebase() {
+// Inicia polling do Firebase só após DOM pronto
+window.addEventListener('DOMContentLoaded', function _pollFirebase() {
   let tentativas = 0;
   const intervalo = setInterval(() => {
     tentativas++;
     if (window.GSPSync && window.GSPAuth?.isReady()) {
       clearInterval(intervalo);
       _setFirebaseStatus('online');
-    } else if (window._gspFirebaseReady === false || tentativas >= 40) {
-      // Firebase falhou ou timeout de 4s (40 × 100ms)
+    } else if (tentativas >= 60) {
+      // Timeout de 6s sem resposta
       clearInterval(intervalo);
       _setFirebaseStatus('offline');
     }
   }, 100);
-})();
+});
 
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false };
