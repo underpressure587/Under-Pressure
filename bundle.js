@@ -3323,23 +3323,25 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
 
   LS.remove(SK.SESSION);
 
-  // Salva no Firestore — aguarda Firebase estar pronto se necessário
+  // Salva no Firestore com feedback visível
   if (!isGuest && _player?.uid) {
     const _salvarNoFirestore = () => {
-      if (window.GSPSync) {
-        window.GSPSync.salvarPartida(_player.uid, entrada).catch(() => {});
-        window.GSPSync.salvarNoPodio(_player.uid, entrada).catch(() => {});
-      }
+      if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
+      Promise.all([
+        window.GSPSync.salvarPartida(_player.uid, entrada),
+        window.GSPSync.salvarNoPodio(_player.uid, entrada)
+      ])
+        .then(() => mostrarSucesso('☁️ Salvo na nuvem!'))
+        .catch(e => mostrarAviso('❌ Erro: ' + (e?.code || e?.message || 'desconhecido')));
     };
     if (window.GSPSync) {
       _salvarNoFirestore();
     } else {
-      // Firebase ainda carregando — tenta por até 5s
       let t = 0;
       const poll = setInterval(() => {
         t++;
         if (window.GSPSync) { clearInterval(poll); _salvarNoFirestore(); }
-        else if (t >= 50) clearInterval(poll);
+        else if (t >= 50) { clearInterval(poll); mostrarAviso('⚠️ Firebase não conectado'); }
       }, 100);
     }
   }
