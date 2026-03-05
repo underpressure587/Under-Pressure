@@ -3327,12 +3327,14 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
   if (!isGuest && _player?.uid) {
     const _salvarNoFirestore = () => {
       if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
+      const _statusEl = () => document.getElementById('result-cloud-status');
+      if (_statusEl()) _statusEl().textContent = '☁️ Salvando na nuvem...';
       Promise.all([
         window.GSPSync.salvarPartida(_player.uid, entrada),
         window.GSPSync.salvarNoPodio(_player.uid, entrada)
       ])
-        .then(() => mostrarSucesso('☁️ Salvo na nuvem!'))
-        .catch(e => mostrarAviso('❌ Erro: ' + (e?.code || e?.message || 'desconhecido')));
+        .then(() => { if (_statusEl()) _statusEl().textContent = '✅ Salvo na nuvem!'; })
+        .catch(e => { if (_statusEl()) _statusEl().textContent = '❌ Erro: ' + (e?.code || e?.message || 'desconhecido'); });
     };
     if (window.GSPSync) {
       _salvarNoFirestore();
