@@ -43,7 +43,7 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
   try {
     app            = initializeApp(firebaseConfig);
     auth           = getAuth(app);
-    db = initializeFirestore(app, {});
+    db = initializeFirestore(app, { experimentalForceLongPolling: true });
     googleProvider = new GoogleAuthProvider();
     _firebaseReady = true;
     console.log("[GSP] Firebase inicializado com sucesso.");
@@ -154,11 +154,9 @@ window.GSPAuth = {
   async _salvarPerfil(user, nome) {
     if (!db) return;
     try {
-      const ref  = doc(db, "usuarios", user.uid);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
-        await setDoc(ref, { nome, email: user.email, criadoEm: serverTimestamp(), mandatos: 0, melhorScore: 0 });
-      }
+      await setDoc(doc(db, "usuarios", user.uid), {
+        nome, email: user.email, criadoEm: serverTimestamp(), mandatos: 0, melhorScore: 0
+      }, { merge: true });
     } catch (e) { console.warn("[GSP] _salvarPerfil:", e.message); }
   },
 };
