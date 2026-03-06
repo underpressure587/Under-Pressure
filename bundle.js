@@ -3104,7 +3104,7 @@ window.addEventListener('DOMContentLoaded', function _pollFirebase() {
     if (window.GSPSync && window.GSPAuth?.isReady()) {
       clearInterval(intervalo);
       _setFirebaseStatus('online');
-    } else if (tentativas >= 60) {
+    } else if (tentativas >= 80) {
       // Timeout de 6s sem resposta
       clearInterval(intervalo);
       _setFirebaseStatus('offline');
@@ -4995,4 +4995,13 @@ window.BetaUI = {
   compartilharResultado,
 };
 
-window.addEventListener("DOMContentLoaded", _boot);
+window.addEventListener("DOMContentLoaded", function() {
+  let t = 0;
+  const wait = setInterval(() => {
+    t++;
+    if (window.GSPAuth || t >= 80) {
+      clearInterval(wait);
+      _boot();
+    }
+  }, 100);
+});
