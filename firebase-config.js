@@ -27,7 +27,7 @@ import {
 
 /* ─── COLE SUA CONFIGURAÇÃO AQUI ─────────────────────── */
 const firebaseConfig = {
-  apiKey:            "AIzaSyCvCkfLd4EyxGlpZJdw1oKBuQBKsHo037E",
+  apiKey:            "AIzaSyDE8lxqub56BHKGeCRbsNK6NkC7h7ufrMw",
   authDomain:        "under-pressure-49320.firebaseapp.com",
   projectId:         "under-pressure-49320",
   storageBucket:     "under-pressure-49320.firebasestorage.app",
