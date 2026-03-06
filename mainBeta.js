@@ -1,1586 +1,177 @@
-/* ═══════════════════════════════════════════════════════
-   GESTÃO SOB PRESSÃO · MAIN v5.1
-   ─────────────────────────────────────────────────────
-   · Sistema de jogador com persistência (localStorage)
-   · Pódio global e histórico de jogos
-   · Restauração de sessão interrompida
-   · Timer opcional por rodada (90s)
-   · Glossário com 20 termos de gestão
-   · Benchmarks de mercado nos indicadores
-   · Memória narrativa (referências a decisões passadas)
-   · Painel de recomendações dinâmicas
-   · Modo revisão pós-jogo com decisões cruciais
-   · Tela de jogo em 3 abas: HISTÓRIA · DESAFIOS · HISTÓRICO
-═══════════════════════════════════════════════════════ */
-
-import { registrarUI, iniciar, iniciarRodadas, processarEscolha, EMPRESAS }
-  from "./core/engine.js";
-import BetaIndicadores from "./core/indicadores.js";
-import BetaState       from "./core/state.js";
-
-/* ════════════════════════════════════════════════════
-   PERSISTÊNCIA
-════════════════════════════════════════════════════ */
-const LS = {
-  get:    k      => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-  set:    (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
-  remove: k      => { try { localStorage.removeItem(k); } catch {} },
-};
-const SK = {
-  PLAYER:   "gsp_player",
-  PODIO:    "gsp_podio",          // só usuários logados
-  HISTORICO:"gsp_historico",      // só usuários logados
-  SESSION:  "gsp_session",
-  SETTINGS: "gsp_settings",
-  HIST_GUEST:"gsp_historico_guest", // histórico exclusivo do convidado
-  SESS_GUEST:"gsp_session_guest",   // sessão exclusiva do convidado
-};
-
-/* Helpers: retorna a chave certa dependendo do tipo de jogador */
-function _skHistorico() { return _player?.tipo === "guest" ? SK.HIST_GUEST : SK.HISTORICO; }
-function _skSession()   { return _player?.tipo === "guest" ? SK.SESS_GUEST : SK.SESSION;   }
-
-/* ════════════════════════════════════════════════════
-   ESTADO LOCAL
-════════════════════════════════════════════════════ */
-let _player   = null;
-let _settings = { timer: false };
-let _setorSelecionado = null;
-let _escolhaFeita     = false;
-let _feedbackCallback = null;
-let _timerInterval    = null;
-let _timerSegs        = 0;
-
-/* ════════════════════════════════════════════════════
-   BOOT
-════════════════════════════════════════════════════ */
-function _setLoadingMsg(msg) {
-  const el = document.getElementById('loading-msg');
-  if (el) el.textContent = msg;
-}
-
-async function _boot() {
-  _settings = LS.get(SK.SETTINGS) || { timer: false };
-
-  // Mostra loading enquanto inicializa
-  mostrarTela('screen-loading');
-  _setLoadingMsg('Iniciando...');
-
-  // Aguarda Firebase estar pronto (até 3s)
-  if (window.GSPAuth) {
-    _setLoadingMsg('Conectando ao servidor...');
-    let tentativas = 0;
-    while (!window.GSPAuth.isReady() && tentativas < 30) {
-      await new Promise(r => setTimeout(r, 100));
-      tentativas++;
-    }
-  }
-
-  if (window.GSPAuth?.isReady()) {
-    _setLoadingMsg('Verificando autenticação...');
-
-    // Passo 1: Processar retorno do redirect do Google (mobile / browsers que bloqueiam popup)
-    try {
-      const redirectPlayer = await window.GSPAuth.processarRedirectGoogle();
-      if (redirectPlayer) {
-        _setLoadingMsg('Carregando seus dados...');
-        await _loginOk(redirectPlayer);
-        return;
-      }
-    } catch(e) {
-      console.warn("[GSP] Erro ao processar redirect Google:", e.message);
-    }
-
-    // Passo 2: Verificar se o Firebase já tem uma sessão ativa (ex: usuário não fez logout,
-    // ou voltou após redirect — getRedirectResult às vezes resolve via onAuthStateChanged)
-    _setLoadingMsg('Verificando sessão ativa...');
-    try {
-      const firebaseUser = await window.GSPAuth.waitForAuthReady();
-      if (firebaseUser) {
-        _setLoadingMsg('Carregando seus dados...');
-        const player = {
-          uid:   firebaseUser.uid,
-          nome:  firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Jogador',
-          email: firebaseUser.email,
-          tipo:  'user'
-        };
-        await _loginOk(player);
-        return;
-      }
-    } catch(e) {
-      console.warn("[GSP] Erro ao verificar sessão Firebase:", e.message);
-    }
-  }
-
-  // Passo 3: Verificar dados locais (convidado ou login offline)
-  const saved = LS.get(SK.PLAYER);
-  if (saved) {
-    _setLoadingMsg('Carregando perfil local...');
-    _player = saved;
-    _verificarSessaoSalva();
-    _atualizarHome();
-    if (!localStorage.getItem('gsp_tutorial_done')) {
-      mostrarTela('screen-tutorial');
-    } else {
-      mostrarTela('screen-home');
-    }
-    return;
-  }
-
-  mostrarTela('screen-login');
-}
-
-/* ════════════════════════════════════════════════════
-   NAVEGAÇÃO
-════════════════════════════════════════════════════ */
-function mostrarTela(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  const el = document.getElementById(id);
-  if (el) el.classList.add("active");
-  // Remove tema de setor em todas as telas fora do jogo
-  const TELAS_JOGO = ["screen-intro","screen-game","screen-feedback","screen-result"];
-  if (!TELAS_JOGO.includes(id)) _aplicarTemaSetor(null);
-  window.scrollTo(0, 0);
-}
-function voltar(tela) { mostrarTela(tela); }
-
-/* ════════════════════════════════════════════════════
-   LOGIN / IDENTIDADE
-════════════════════════════════════════════════════ */
-function irParaLogin()  { mostrarTela("screen-auth"); authMudarAba("login"); }
-function irParaAuth()   { mostrarTela("screen-auth"); authMudarAba("login"); }
-
-/* ── TROCAR ABA DE AUTH ── */
-function authMudarAba(aba) {
-  ["login","cadastro","recuperar"].forEach(a => {
-    const f = document.getElementById(`auth-form-${a}`);
-    const b = document.getElementById(`tab-${a === "login" ? "login" : "register"}-btn`);
-    if (f) f.style.display = "none";
-    if (b) b.classList.remove("active");
-  });
-  const form = document.getElementById(`auth-form-${aba}`);
-  if (form) form.style.display = "flex";
-  if (aba === "login") document.getElementById("tab-login-btn")?.classList.add("active");
-  if (aba === "cadastro") document.getElementById("tab-register-btn")?.classList.add("active");
-  // Limpar erros
-  ["auth-login-err","auth-reg-err","auth-rec-err","auth-rec-ok"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.textContent = ""; el.style.display = ""; }
-  });
-}
-
-/* ── TOGGLE SHOW/HIDE PASSWORD ── */
-function authTogglePass(inputId, btn) {
-  const inp = document.getElementById(inputId);
-  if (!inp) return;
-  if (inp.type === "password") { inp.type = "text"; btn.textContent = "🙈"; }
-  else { inp.type = "password"; btn.textContent = "👁"; }
-}
-
-/* ── LOADING STATE ── */
-function _authSetLoading(prefix, on) {
-  const btn = document.getElementById(`auth-${prefix}-btn`);
-  const lbl = document.getElementById(`auth-${prefix}-label`);
-  const spn = document.getElementById(`auth-${prefix}-spinner`);
-  if (btn) btn.disabled = on;
-  if (lbl) lbl.style.opacity = on ? "0.4" : "1";
-  if (spn) spn.style.display = on ? "inline" : "none";
-}
-
-function _authShowErr(id, msg) {
-  const el = document.getElementById(id);
-  if (el) { el.textContent = msg; el.style.display = "block"; }
-}
-
-/* ── MENSAGENS DE ERRO FIREBASE em PT-BR ── */
-function _traduzirErroFirebase(code) {
-  const map = {
-    "auth/email-already-in-use":    "Este e-mail já está em uso.",
-    "auth/invalid-email":           "E-mail inválido.",
-    "auth/weak-password":           "A senha deve ter pelo menos 6 caracteres.",
-    "auth/user-not-found":          "Usuário não encontrado.",
-    "auth/wrong-password":          "Senha incorreta.",
-    "auth/invalid-credential":      "E-mail ou senha incorretos.",
-    "auth/too-many-requests":       "Muitas tentativas. Tente novamente mais tarde.",
-    "auth/network-request-failed":  "Falha de rede. Verifique sua conexão.",
-    "auth/popup-closed-by-user":    "Login cancelado.",
-    "auth/user-disabled":           "Esta conta foi desativada.",
-  };
-  return map[code] || "Ocorreu um erro. Tente novamente.";
-}
-
-/* ── ENTRAR COM E-MAIL/SENHA ── */
-async function authLogin() {
-  const email = document.getElementById("auth-login-email")?.value.trim();
-  const senha = document.getElementById("auth-login-pass")?.value;
-  if (!email) { _authShowErr("auth-login-err", "Digite seu e-mail."); return; }
-  if (!senha)  { _authShowErr("auth-login-err", "Digite sua senha."); return; }
-
-  // Se Firebase não configurado → modo local (nome = parte do e-mail)
-  if (!window.GSPAuth?.isReady()) {
-    const nome = email.split("@")[0];
-    _loginOk({ nome, email, tipo: "user" });
-    return;
-  }
-
-  _authSetLoading("login", true);
-  try {
-    const player = await window.GSPAuth.login({ email, senha });
-    _loginOk(player);
-  } catch(e) {
-    const msg = _traduzirErroFirebase(e.code);
-    _authShowErr("auth-login-err", msg);
-    mostrarErroCritico(msg);
-  } finally {
-    _authSetLoading("login", false);
-  }
-}
-
-/* ── CADASTRAR ── */
-async function authCadastrar() {
-  const nome  = document.getElementById("auth-reg-nome")?.value.trim();
-  const email = document.getElementById("auth-reg-email")?.value.trim();
-  const senha = document.getElementById("auth-reg-pass")?.value;
-  if (!nome)  { _authShowErr("auth-reg-err", "Digite seu nome."); return; }
-  if (!email) { _authShowErr("auth-reg-err", "Digite seu e-mail."); return; }
-  if (!senha || senha.length < 6) { _authShowErr("auth-reg-err", "A senha deve ter ao menos 6 caracteres."); return; }
-
-  if (!window.GSPAuth?.isReady()) {
-    _loginOk({ nome, email, tipo: "user" });
-    return;
-  }
-
-  _authSetLoading("reg", true);
-  try {
-    const player = await window.GSPAuth.cadastrar({ nome, email, senha });
-    mostrarSucesso("Conta criada com sucesso!");
-    _loginOk(player);
-  } catch(e) {
-    const msg = _traduzirErroFirebase(e.code);
-    _authShowErr("auth-reg-err", msg);
-    mostrarErroCritico(msg);
-  } finally {
-    _authSetLoading("reg", false);
-  }
-}
-
-/* ── GOOGLE ── */
-async function authGoogle() {
-  if (!window.GSPAuth?.isReady()) {
-    mostrarErro("Configure o Firebase para usar o login com Google.");
-    return;
-  }
-  try {
-    // Mostra loading para feedback visual imediato
-    mostrarTela('screen-loading');
-    _setLoadingMsg('Conectando ao Google...');
-
-    const player = await window.GSPAuth.loginGoogle();
-
-    if (!player) {
-      // Redirect em andamento — página vai recarregar automaticamente
-      _setLoadingMsg('Redirecionando para o Google...');
-      return;
-    }
-
-    _setLoadingMsg('Carregando seus dados...');
-    mostrarSucesso("Login com Google realizado!");
-    await _loginOk(player);
-  } catch(e) {
-    // Volta para a tela de auth em caso de erro
-    mostrarTela('screen-auth');
-    authMudarAba('login');
-    mostrarErroCritico(_traduzirErroFirebase(e.code));
-  }
-}
-
-/* ── RECUPERAR SENHA ── */
-async function authRecuperar() {
-  const email = document.getElementById("auth-rec-email")?.value.trim();
-  if (!email) { _authShowErr("auth-rec-err", "Digite seu e-mail."); return; }
-
-  if (!window.GSPAuth?.isReady()) {
-    _authShowErr("auth-rec-err", "Firebase não configurado.");
-    return;
-  }
-
-  _authSetLoading("rec", true);
-  try {
-    await window.GSPAuth.recuperarSenha(email);
-    const ok = document.getElementById("auth-rec-ok");
-    if (ok) { ok.style.display = "block"; ok.textContent = "✅ E-mail enviado! Verifique sua caixa de entrada."; }
-    mostrarSucesso("E-mail de recuperação enviado!");
-  } catch(e) {
-    const msg = _traduzirErroFirebase(e.code);
-    _authShowErr("auth-rec-err", msg);
-    mostrarErroCritico(msg);
-  } finally {
-    _authSetLoading("rec", false);
-  }
-}
-
-/* ── PÓS LOGIN ── */
-async function _loginOk(player) {
-  _player = player;
-  LS.set(SK.PLAYER, _player);
-
-  // Garante que a tela de loading esteja visível com mensagem
-  mostrarTela('screen-loading');
-  _setLoadingMsg('Preparando seu perfil...');
-
-  // Se logado com conta real, sincroniza dados do Firestore
-  if (_player?.uid && window.GSPSync) {
-    try {
-      // Carrega historico pessoal
-      _setLoadingMsg('Sincronizando histórico...');
-      const histFS = await window.GSPSync.carregarHistorico(_player.uid);
-      if (histFS.length > 0) {
-        const hist = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
-        LS.set(SK.HISTORICO, hist);
-      }
-      // Carrega podio global
-      _setLoadingMsg('Carregando pódio...');
-      const podioFS = await window.GSPSync.carregarPodio();
-      if (podioFS.length > 0) {
-        const podio = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));
-        LS.set(SK.PODIO, podio);
-      }
-      // Carrega sessao em andamento do Firestore
-      _setLoadingMsg('Verificando sessão em andamento...');
-      const sessFS = await window.GSPSync.carregarSessao(_player.uid);
-      if (sessFS) {
-        LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
-      }
-    } catch (e) {
-      console.warn("[GSP] Erro ao carregar dados do Firestore:", e.message);
-      mostrarAviso("Não foi possível carregar dados da nuvem. Usando dados locais.");
-    }
-  }
-
-  _setLoadingMsg('Entrando no painel...');
-  _verificarSessaoSalva();
-  _atualizarHome();
-  mostrarTela("screen-home");
-}
-
-async function sair() {
-  if (window.GSPAuth?.isReady()) { try { await window.GSPAuth.logout(); } catch {} }
-  LS.remove(SK.PLAYER);
-  // Limpa dados do usuário logado (convidado tem chaves próprias, não precisa limpar)
-  LS.remove(SK.SESSION);
-  LS.remove(SK.HISTORICO);
-  LS.remove(SK.PODIO);
-  _player = null;
-  mostrarTela("screen-login");
-}
-
-function irComoConvidado() {
-  _player = { nome: "Convidado", tipo: "guest" };
-  _atualizarHome();
-  mostrarTela("screen-home");
-}
-
-function _atualizarHome() {
-  const el = document.getElementById("home-player-name");
-  if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;
-  const av = document.getElementById("home-avatar-icon");
-  if (av && _player?.nome) av.textContent = _player.nome.charAt(0).toUpperCase();
-}
-
-/* ════════════════════════════════════════════════════
-   SESSÃO PERSISTENTE
-════════════════════════════════════════════════════ */
-function _salvarSessao() {
-  const state = BetaState.get();
-  if (!state || state.phase === "result") {
-    LS.remove(_skSession());
-    // Limpa sessao do Firestore (só logados)
-    if (_player?.uid && _player.tipo !== "guest" && window.GSPSync) {
-      window.GSPSync.limparSessao(_player.uid).catch(() => {});
-    }
-    return;
-  }
-  const dadosSessao = {
-    sector: state.sector, companyName: state.companyName,
-    currentRound: state.currentRound, totalRounds: state.totalRounds,
-    ts: Date.now(),
-  };
-  // Usa chave separada para convidado
-  LS.set(_skSession(), dadosSessao);
-  // Sincroniza com Firestore só para usuários logados
-  if (_player?.uid && _player.tipo !== "guest" && window.GSPSync) {
-    window.GSPSync.salvarSessao(_player.uid, dadosSessao).catch(() => {});
-  }
-}
-
-function _verificarSessaoSalva() {
-  const sess   = LS.get(_skSession());
-  const banner = document.getElementById("session-restore-banner");
-  const texto  = document.getElementById("session-restore-text");
-  if (sess && banner && texto) {
-    const mins  = Math.round((Date.now() - sess.ts) / 60000);
-    const tempo = mins < 60 ? `${mins} min atrás` : `${Math.round(mins/60)}h atrás`;
-    texto.textContent = `Jogo em andamento: ${sess.companyName} (${sess.sector}) — Rodada ${sess.currentRound + 1}/${sess.totalRounds} · salvo ${tempo}`;
-    banner.style.display = "";
-  } else if (banner) {
-    banner.style.display = "none";
-  }
-}
-
-function restaurarSessao() {
-  const sess = LS.get(_skSession());
-  if (!sess) return;
-  iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
-}
-
-function descartarSessao() {
-  LS.remove(_skSession());
-  const banner = document.getElementById("session-restore-banner");
-  if (banner) banner.style.display = "none";
-  // Limpa também no Firestore (só logados)
-  if (_player?.uid && _player.tipo !== "guest" && window.GSPSync) {
-    window.GSPSync.limparSessao(_player.uid).catch(() => {});
-  }
-}
-
-/* ════════════════════════════════════════════════════
-   PÓDIO / HISTÓRICO DE JOGOS
-════════════════════════════════════════════════════ */
-function _registrarResultado(score, scoreGestor, sector, companyName) {
-  const entrada = {
-    player: _player?.nome || "Convidado",
-    score, scoreGestor, sector, companyName, ts: Date.now(),
-  };
-  const isGuest = _player?.tipo === "guest" || !_player?.uid;
-
-  if (isGuest) {
-    // Convidado: salva SÓ no histórico próprio, nunca no pódio
-    const hist = LS.get(SK.HIST_GUEST) || [];
-    hist.unshift(entrada);
-    LS.set(SK.HIST_GUEST, hist.slice(0, 20));
-    LS.remove(SK.SESS_GUEST);
-  } else {
-    // Usuário logado: salva local no pódio e histórico compartilhado
-    const podio = LS.get(SK.PODIO) || [];
-    podio.push(entrada);
-    podio.sort((a, b) => b.score - a.score);
-    LS.set(SK.PODIO, podio.slice(0, 10));
-    const hist = LS.get(SK.HISTORICO) || [];
-    hist.unshift(entrada);
-    LS.set(SK.HISTORICO, hist.slice(0, 20));
-    LS.remove(SK.SESSION);
-    // Sincroniza com Firestore
-    if (_player?.uid && window.GSPSync) {
-      window.GSPSync.salvarPartida(_player.uid, entrada).catch(() => {});
-      window.GSPSync.salvarNoPodio(_player.uid, entrada).catch(() => {});
-      window.GSPSync.limparSessao(_player.uid).catch(() => {});
-    }
-  }
-}
-
-function _renderPodioLista(podio) {
-  const lista = document.getElementById("podio-lista");
-  if (!lista) return;
-  if (!podio.length) {
-    lista.innerHTML = `<div class="podio-empty">Nenhum jogo finalizado ainda.<br>Complete seu primeiro mandato para aparecer aqui.</div>`;
-    return;
-  }
-  const medalhas = ["🥇","🥈","🥉"];
-  const rkClass  = ["gold","silver","bronze"];
-  const icones   = { tecnologia:"🚀",varejo:"🛒",logistica:"🚚",industria:"🏭" };
-  lista.innerHTML = podio.map((p, i) => {
-    const ts   = p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now());
-    const data = new Date(ts).toLocaleDateString("pt-BR");
-    const cor  = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
-    return `<div class="podio-item">
-      <div class="podio-rank ${rkClass[i]||''}">${medalhas[i]||i+1}</div>
-      <div class="podio-player">
-        <div class="podio-player-name">${p.player}</div>
-        <div class="podio-player-meta">${icones[p.sector]||"🏢"} ${p.companyName} · ${data}</div>
-      </div>
-      <div class="podio-score" style="color:${cor}">${p.score}</div>
-    </div>`;
-  }).join("");
-}
-
-async function irParaPodio() {
-  mostrarTela("screen-podio");
-  // Mostra local imediatamente
-  const podioLocal = LS.get(SK.PODIO) || [];
-  _renderPodioLista(podioLocal);
-  // Depois tenta buscar do Firestore (podio global com todos os jogadores)
-  if (window.GSPSync) {
-    try {
-      const podioFS = await window.GSPSync.carregarPodio(_podioFiltro !== "all" ? _podioFiltro : null);
-      if (podioFS.length > 0) {
-        const convertido = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));
-        LS.set(SK.PODIO, convertido.slice(0, 20));
-        _renderPodioLista(convertido);
-      }
-    } catch (e) {
-      mostrarAviso("Erro ao buscar pódio online. Exibindo dados locais.");
-    }
-  }
-}
-
-function _renderHistoricoLista(hist) {
-  const lista = document.getElementById("historico-jogos-lista");
-  if (!lista) return;
-  if (!hist.length) { lista.innerHTML = `<div class="podio-empty">Nenhum jogo registrado ainda.</div>`; return; }
-  const icones = { tecnologia:"🚀",varejo:"🛒",logistica:"🚚",industria:"🏭" };
-  lista.innerHTML = hist.map(p => {
-    const ts   = p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now());
-    const data = new Date(ts).toLocaleDateString("pt-BR");
-    const hora = new Date(ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
-    const cor  = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
-    return `<div class="podio-item">
-      <div style="font-size:1.4rem">${icones[p.sector]||"🏢"}</div>
-      <div class="podio-player">
-        <div class="podio-player-name">${p.companyName}</div>
-        <div class="podio-player-meta">${p.player} · ${data} ${hora}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-        <div class="podio-score" style="color:${cor};font-size:1.2rem">${p.score}</div>
-        <div style="font-size:.62rem;color:var(--text-muted);font-family:var(--f-game)">Gestor ${p.scoreGestor}</div>
-      </div>
-    </div>`;
-  }).join("");
-}
-
-async function irParaHistoricoJogos() {
-  mostrarTela("screen-historico-jogos");
-  const isGuest = _player?.tipo === "guest" || !_player?.uid;
-
-  if (isGuest) {
-    // Convidado: mostra só o próprio histórico local, nunca de outros
-    const histGuest = LS.get(SK.HIST_GUEST) || [];
-    _renderHistoricoLista(histGuest);
-    return;
-  }
-
-  // Usuário logado: mostra local primeiro, depois sincroniza Firestore
-  const histLocal = LS.get(SK.HISTORICO) || [];
-  _renderHistoricoLista(histLocal);
-  if (_player?.uid && window.GSPSync) {
-    try {
-      const lista = document.getElementById("historico-jogos-lista");
-      if (lista) lista.innerHTML = `<div class="podio-empty" style="color:var(--t3)">⏳ Carregando histórico...</div>`;
-      const histFS = await window.GSPSync.carregarHistorico(_player.uid);
-      if (histFS.length > 0) {
-        const convertido = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
-        LS.set(SK.HISTORICO, convertido);
-        _renderHistoricoLista(convertido);
-      } else {
-        _renderHistoricoLista(histLocal);
-      }
-    } catch (e) {
-      mostrarAviso("Erro ao buscar histórico. Exibindo dados locais.");
-      _renderHistoricoLista(histLocal);
-    }
-  }
-}
-
-/* ════════════════════════════════════════════════════
-   SETOR / INÍCIO
-════════════════════════════════════════════════════ */
-function irParaSetores() {
-  // Limpar estado anterior de seleção
-  document.querySelectorAll(".sector-card").forEach(b => b.classList.remove("selected"));
-  const sh = document.getElementById("sector-hidden");
-  const cn = document.getElementById("companyName");
-  if (sh) sh.value = "";
-  if (cn) cn.value = "";
-  mostrarTela("screen-sector");
-}
-
-function _aplicarTemaSetor(sector) {
-  const app = document.getElementById('app');
-  if (app) {
-    if (sector) app.setAttribute('data-sector', sector);
-    else app.removeAttribute('data-sector');
-  }
-}
-
-function selecionarSetor(sector) {
-  _setorSelecionado = sector;
-  document.querySelectorAll(".sector-card").forEach(b => b.classList.remove("selected"));
-  document.querySelector(`[data-sector="${sector}"]`)?.classList.add("selected");
-  document.getElementById("sector-hidden").value = sector;
-  // Tema só é aplicado quando o jogo começa
-}
-
-function lancarJogo() {
-  const sector      = document.getElementById("sector-hidden").value;
-  const companyNameEl = document.getElementById("companyName");
-  const companyName = companyNameEl.value.trim();
-  if (!sector) { mostrarErro("Selecione o tipo de empresa antes de continuar."); return; }
-  if (!companyName) {
-    companyNameEl.focus();
-    companyNameEl.classList.add("input-error-shake");
-    setTimeout(() => companyNameEl.classList.remove("input-error-shake"), 600);
-    mostrarErro("Digite o nome da empresa antes de continuar.");
-    return;
-  }
-  iniciar(sector, _player?.nome || "Jogador", companyName);
-}
-
-/* ════════════════════════════════════════════════════
-   INTRO
-════════════════════════════════════════════════════ */
-// Guarda dados da intro para exibir na aba Empresa durante o jogo
-let _introCache = null;
-
-function mostrarIntro(state, empresa) {
-  _aplicarTemaSetor(state.sector);
-  mostrarTela("screen-intro");
-  const intro = state.introAtual;
-  if (!intro) { comecaJogo(); return; }
-  // Salva para uso posterior na aba Empresa
-  _introCache = { intro, empresa, sector: state.sector, situacao: state.situacaoAtual };
-  document.getElementById("intro-badge").textContent     = empresa.nome || state.sector;
-  document.getElementById("intro-titulo").textContent    = intro.titulo    || "Bem-vindo";
-  document.getElementById("intro-subtitulo").textContent = intro.subtitulo || "";
-  const secoes = document.getElementById("intro-secoes");
-  if (secoes) secoes.innerHTML = (intro.secoes || []).map(s => `
-    <div class="intro-secao">
-      <div class="intro-secao-header">
-        <span class="intro-secao-icone">${s.icone||"📌"}</span>
-        <span class="intro-secao-titulo">${s.titulo}</span>
-      </div>
-      <div class="intro-secao-corpo">${s.corpo}</div>
-    </div>`).join("");
-  const criseEl = document.getElementById("intro-crise");
-  const crise   = state.situacaoAtual;
-  if (crise && criseEl) {
-    criseEl.style.display = "";
-    criseEl.innerHTML = `
-      <div class="intro-crise-header">
-        <span class="intro-crise-badge">⚠ CRISE ATIVA</span>
-        <span class="intro-crise-titulo">${crise.titulo}</span>
-      </div>
-      <div class="intro-crise-texto">${crise.historia}</div>`;
-  } else if (criseEl) { criseEl.style.display = "none"; }
-  const preview = document.getElementById("intro-indicators-preview");
-  if (preview) {
-    preview.innerHTML = Object.entries(state.indicators).map(([k, v]) => {
-      const cor = BetaIndicadores.corNivel(v);
-      return `<div class="intro-ind-item">
-        <span>${BetaIndicadores.LABELS[k]||k}</span>
-        <span style="color:${cor};font-weight:700">${v}/20</span>
-      </div>`;
-    }).join("");
-  }
-}
-
-function comecaJogo() {
-  iniciarRodadas();
-  _renderEmpresaTab();
-}
-
-function _renderEmpresaTab() {
-  const el = document.getElementById("empresa-tab-content");
-  if (!el || !_introCache) return;
-  const { intro, empresa, sector, situacao } = _introCache;
-  const icones = { tecnologia:"🚀", industria:"🏭", logistica:"🚚", varejo:"🛒" };
-  let html = `
-    <div class="empresa-tab-header">
-      <span class="empresa-tab-badge">${icones[sector]||"🏢"} ${empresa.nome || sector}</span>
-      <h2 class="empresa-tab-titulo">${intro.titulo || ""}</h2>
-      ${intro.subtitulo ? `<p class="empresa-tab-sub">${intro.subtitulo}</p>` : ""}
-    </div>`;
-  if (intro.secoes?.length) {
-    html += intro.secoes.map(s => `
-      <div class="empresa-tab-secao">
-        <div class="empresa-tab-secao-header">
-          <span class="empresa-tab-secao-icone">${s.icone||"📌"}</span>
-          <span class="empresa-tab-secao-titulo">${s.titulo}</span>
-        </div>
-        <div class="empresa-tab-secao-corpo">${s.corpo}</div>
-      </div>`).join("");
-  }
-  if (situacao) {
-    html += `
-      <div class="empresa-tab-crise">
-        <div class="empresa-tab-crise-header">
-          <span class="empresa-tab-crise-badge">⚠ CRISE ATIVA</span>
-          <span class="empresa-tab-crise-titulo">${situacao.titulo}</span>
-        </div>
-        <div class="empresa-tab-crise-corpo">${situacao.historia}</div>
-      </div>`;
-  }
-  el.innerHTML = html;
-}
-
-/* ════════════════════════════════════════════════════
-   BENCHMARKS DE MERCADO
-════════════════════════════════════════════════════ */
-const BENCHMARKS = {
-  varejo:    { financeiro:11,rh:10,clientes:12,processos:10,margem:9,estoque:11,marca:10,digital:9 },
-  logistica: { financeiro:11,rh:10,clientes:12,processos:11,sla:12,frota:10,seguranca:11,tecnologia:9 },
-  industria: { financeiro:11,rh:10,clientes:11,processos:11,seguranca:10,manutencao:10,qualidade:12,conformidade:11 },
-  tecnologia:{ financeiro:11,clima:11,satisfacao:12,qualidade:11,produtividade:10,reputacao:10,inovacao:9,seguranca:10 },
-};
-
-function _bench(sector, key) { return BENCHMARKS[sector]?.[key] ?? null; }
-
-/* ════════════════════════════════════════════════════
-   SIDEBAR — INDICADORES + GESTOR
-════════════════════════════════════════════════════ */
-function renderSidebar(state, empresa) {
-  // Atualiza nome da empresa no header do jogo
-  const nameEl = document.getElementById("game-company-name");
-  if (nameEl) nameEl.textContent = `${state.companyName} · ${empresa?.nome||""}`;
-
-  // Barra de progresso das rodadas
-  const progBar = document.getElementById("game-progress-bar");
-  if (progBar) {
-    const pct = Math.round((state.currentRound / state.totalRounds) * 100);
-    progBar.style.width = `${pct}%`;
-  }
-
-  const roundBadge = document.getElementById("game-round-badge");
-  if (roundBadge) {
-    const faseLabel = { fundacao:"Diagnóstico",crescimento:"Crescimento",
-                        crise:"⚠ Crise",consolidacao:"Consolidação",expansao:"Expansão" };
-    const fase = state.storyState?.faseEmpresa;
-    roundBadge.textContent = `Rod. ${state.currentRound+1}/${state.totalRounds} · ${faseLabel[fase]||""}`;
-  }
-  const grid = document.getElementById("game-indicators-grid");
-  if (grid) {
-    grid.innerHTML = Object.entries(state.indicators).map(([k, v]) => {
-      const pct   = (v/20)*100;
-      const cor   = BetaIndicadores.corNivel(v);
-      const label = BetaIndicadores.LABELS[k] || k;
-      const b     = _bench(state.sector, k);
-      const benchHtml = b ? `<span class="game-ind-bench">Méd: ${b}</span>` : "";
-      return `<div class="game-ind-row">
-        <div class="game-ind-top">
-          <span class="game-ind-name">${label}</span>
-          <span class="game-ind-val" style="color:${cor}">${v}</span>
-        </div>
-        <div class="game-ind-track"><div class="game-ind-bar" style="width:${pct}%;background:${cor}"></div></div>
-        ${benchHtml}
-      </div>`;
-    }).join("");
-  }
-  const strip = document.getElementById("game-gestor-strip");
-  if (strip) {
-    const g = state.gestor;
-    const esgCor = g.esgotamento>=7?"var(--danger)":g.esgotamento>=5?"var(--warn)":"var(--good)";
-    const capCor = g.capitalPolitico<=2?"var(--danger)":"var(--purple)";
-    const repCor = g.reputacaoInterna<=2?"var(--danger)":"var(--purple)";
-    strip.innerHTML = `
-      <div class="gestor-pill" onclick="BetaUI.abrirTooltipIndicador('reputacaoInterna')">
-        <span class="gestor-pill-label">Reputação ⓘ</span>
-        <span class="gestor-pill-val" style="color:${repCor}">${g.reputacaoInterna}/10</span>
-      </div>
-      <div class="gestor-pill" onclick="BetaUI.abrirTooltipIndicador('capitalPolitico')">
-        <span class="gestor-pill-label">Cap. Político ⓘ</span>
-        <span class="gestor-pill-val" style="color:${capCor}">${g.capitalPolitico}/10</span>
-      </div>
-      <div class="gestor-pill" onclick="BetaUI.abrirTooltipIndicador('esgotamento')">
-        <span class="gestor-pill-label">Esgotamento ⓘ</span>
-        <span class="gestor-pill-val" style="color:${esgCor}">${g.esgotamento}/10</span>
-      </div>`;
-  }
-  _salvarSessao();
-}
-
-/* ════════════════════════════════════════════════════
-   RODADA
-════════════════════════════════════════════════════ */
-function renderRodada(state) {
-  _escolhaFeita = false;
-  const round = state.gameRounds[state.currentRound];
-  if (!round) return;
-
-  const faseLabel = { fundacao:"Diagnóstico",crescimento:"Crescimento",
-                      crise:"⚠ Crise",consolidacao:"Consolidação",expansao:"Expansão" };
-  const fase = state.storyState?.faseEmpresa;
-  document.getElementById("hist-round-badge").textContent =
-    `Rodada ${state.currentRound+1} · ${faseLabel[fase]||""}`;
-  document.getElementById("hist-round-title").textContent = round.title || "";
-  document.getElementById("hist-round-desc").textContent  = _enriquecerDescricao(round.description||"", state);
-
-  // Evento ativo
-  const ev     = state.activeEvents?.find(e => e.expiresAt >= state.currentRound);
-  const banner = document.getElementById("hist-event");
-  const evTxt  = document.getElementById("hist-event-text");
-  if (ev && banner && evTxt) { banner.classList.add("visible"); evTxt.textContent = `${ev.titulo} — ${ev.descricao}`; }
-  else if (banner) banner.classList.remove("visible");
-
-  // Choices
-  const choices = state.choicesAtivas || round.choices;
-  const lista   = document.getElementById("choices-list");
-  lista.innerHTML = choices.map((c, i) => {
-    const letra = String.fromCharCode(65+i);
-    const risco = c.risco ? `<span class="choice-risk risk-${c.risco}">${c.risco.toUpperCase()}</span>` : "";
-    return `<button class="choice-card" onclick="BetaUI.escolher(${i})" id="choice-btn-${i}">
-      <span class="choice-letter">${letra}</span>
-      <span class="choice-text">${c.text}</span>
-      ${risco}
-    </button>`;
-  }).join("");
-
-  // Histórico + recomendações
-  _renderHistoricoTab(state);
-
-  // Timer
-  _iniciarTimer();
-
-  // Sempre começa na aba HISTÓRIA
-  mudarTab("historia");
-  mostrarTela("screen-game");
-}
-
-/* ── Abas ──────────────────────────────────────────── */
-function mudarTab(aba) {
-  ["historia","desafios","historico","empresa"].forEach(t => {
-    document.getElementById(`tab-${t}`)?.classList.remove("active");
-    document.getElementById(`gtab-${t}`)?.classList.remove("active");
-  });
-  document.getElementById(`tab-${aba}`)?.classList.add("active");
-  document.getElementById(`gtab-${aba}`)?.classList.add("active");
-}
-
-/* ── Histórico + Recomendações ─────────────────────── */
-function _renderHistoricoTab(state) {
-  const histEl = document.getElementById("historico-indicadores");
-  const recEl  = document.getElementById("recomendacoes-panel");
-  if (histEl) {
-    const ultimas = state.history?.slice(-6).reverse() || [];
-    if (!ultimas.length) {
-      histEl.innerHTML = `<span style="color:var(--text-muted);font-size:.78rem;">Tome decisões para ver as mudanças aqui.</span>`;
-    } else {
-      histEl.innerHTML = ultimas.map(h => {
-        const efeitos = Object.entries(h.efeitos||{}).filter(([,v])=>v!==0).slice(0,3)
-          .map(([k,v])=>`<span class="efeito-tag ${v>0?'efeito-pos':'efeito-neg'}">${v>0?"+":""}${v} ${BetaIndicadores.LABELS[k]||k}</span>`)
-          .join(" ");
-        const emo = h.avaliacao==="boa"?"✅":h.avaliacao==="ruim"?"❌":"⚠️";
-        return `<div class="historico-item">
-          <div class="historico-item-round">${emo} Rod.${h.rodada} — ${h.titulo}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${efeitos}</div>
-        </div>`;
-      }).join("");
-    }
-  }
-  if (recEl) {
-    const recs = _gerarRecomendacoes(state);
-    recEl.innerHTML = recs.length
-      ? recs.map(r=>`<div class="rec-item"><div class="rec-item-title">${r.titulo}</div><div class="rec-item-desc">${r.desc}</div></div>`).join("")
-      : `<span style="color:var(--text-muted);font-size:.78rem;">Recomendações aparecem conforme o jogo avança.</span>`;
-  }
-}
-
-/* ════════════════════════════════════════════════════
-   MEMÓRIA NARRATIVA
-════════════════════════════════════════════════════ */
-function _enriquecerDescricao(desc, state) {
-  const hist  = state.history || [];
-  const flags = state.storyState?.flags || [];
-  const g     = state.gestor;
-  const refs  = [];
-  if (hist.length && state.currentRound > 2) {
-    const ultimaRuim = hist.filter(h=>h.avaliacao==="ruim").slice(-1)[0];
-    if (ultimaRuim) refs.push(`O impacto de "${ultimaRuim.escolha.slice(0,48)}..." ainda repercute na organização.`);
-  }
-  if (g.esgotamento >= 7) refs.push("Você sente o peso acumulado das rodadas anteriores.");
-  if (flags.includes("lideranca_toxica")) refs.push("A tensão interna criada pelas últimas decisões é perceptível.");
-  if (!refs.length) return desc;
-  return `[${refs[0]}]\n\n${desc}`;
-}
-
-/* ════════════════════════════════════════════════════
-   RECOMENDAÇÕES
-════════════════════════════════════════════════════ */
-function _gerarRecomendacoes(state) {
-  const ind  = state.indicators;
-  const bench= BENCHMARKS[state.sector] || {};
-  const recs = [];
-  Object.entries(ind).forEach(([k, v]) => {
-    const b = bench[k]; if (!b) return;
-    const label = BetaIndicadores.LABELS[k] || k;
-    if (v < b-3) recs.push({ titulo:`⚠ ${label} abaixo do mercado`, desc:`${label} (${v}) está ${b-v} pts abaixo da média do setor (${b}).` });
-    else if (v > b+3) recs.push({ titulo:`✅ ${label} acima da média`, desc:`${label} (${v}) está ${v-b} pts acima da média do setor (${b}). Mantenha.` });
-  });
-  const g = state.gestor;
-  if (g.esgotamento >= 7) recs.push({ titulo:"🔋 Esgotamento crítico", desc:"Priorize decisões que reduzam pressão e resgatem capital político." });
-  if (g.capitalPolitico <= 3) recs.push({ titulo:"🏛 Capital político baixo", desc:"O conselho está desconfiante. Decisões com retorno financeiro ou de clientes recuperam credibilidade." });
-  return recs.slice(0, 4);
-}
-
-/* ════════════════════════════════════════════════════
-   ESCOLHA / TIMER
-════════════════════════════════════════════════════ */
-function escolher(idx) {
-  if (_escolhaFeita) return;
-  _escolhaFeita = true;
-  _pararTimer();
-  // Destaca a opção escolhida e desabilita todas
-  document.querySelectorAll(".choice-card").forEach((b, i) => {
-    b.disabled = true;
-    if (i === idx) b.style.borderColor = "var(--gold)";
-  });
-  processarEscolha(idx);
-}
-
-function _iniciarTimer() {
-  _pararTimer();
-  if (!_settings.timer) return;
-  _timerSegs = 90;
-  const el = document.getElementById("timer-display");
-  if (!el) return;
-  el.classList.add("active"); el.classList.remove("danger");
-  el.textContent = `⏱ ${_timerSegs}s`;
-  _timerInterval = setInterval(() => {
-    _timerSegs--;
-    el.textContent = `⏱ ${_timerSegs}s`;
-    if (_timerSegs <= 10) el.classList.add("danger");
-    if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }
-  }, 1000);
-}
-
-function _pararTimer() {
-  clearInterval(_timerInterval); _timerInterval = null;
-  const el = document.getElementById("timer-display");
-  if (el) { el.classList.remove("active","danger"); el.textContent = ""; }
-}
-
-/* ════════════════════════════════════════════════════
-   FEEDBACK
-════════════════════════════════════════════════════ */
-function mostrarFeedback(data, callback) {
-  _feedbackCallback = callback;
-  mostrarTela("screen-feedback");
-  const corMap   = { boa:"var(--good)", media:"var(--warn)", ruim:"var(--danger)" };
-  const iconMap  = { boa:"✅", media:"⚠️", ruim:"❌" };
-  const labelMap = { boa:"BOA DECISÃO", media:"DECISÃO COM TRADE-OFFS", ruim:"MÁ DECISÃO" };
-  const badgeClass = { boa:"verdict-boa", media:"verdict-media", ruim:"verdict-ruim" };
-  const badge = document.getElementById("fb-veredito-badge");
-  if (badge) { badge.className=`verdict-badge ${badgeClass[data.avaliacao]||"verdict-media"}`; badge.textContent=iconMap[data.avaliacao]||"⚠️"; }
-  const lbl = document.getElementById("fb-veredito-label");
-  if (lbl) { lbl.textContent=labelMap[data.avaliacao]||"DECISÃO"; lbl.style.color=corMap[data.avaliacao]; }
-  document.getElementById("fb-veredito-sub").textContent   = data.avaliacao==="boa"?"Decisão acertada":data.avaliacao==="ruim"?"Decisão equivocada":"Decisão com trade-offs";
-  document.getElementById("fb-escolha-texto").textContent  = data.escolhaTexto||"";
-  document.getElementById("fb-explicacao-texto").textContent = data.ensinamento||"";
-  // Impactos
-  const grid = document.getElementById("fb-impactos-grid");
-  if (grid) grid.innerHTML = Object.entries(data.efeitos||{}).filter(([,v])=>v!==0).map(([k,v])=>{
-    const cor=v>0?"var(--good)":"var(--danger)"; const nome=BetaIndicadores.LABELS[k]||k;
-    return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v>0?"+":""}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;
-  }).join("")||`<span style="font-size:.8rem;color:var(--text-muted)">Sem impacto direto.</span>`;
-  // Melhor alternativa
-  const altEl = document.getElementById("fb-melhor-alt");
-  if (altEl) {
-    const melhor = data.melhorAlternativa;
-    if (melhor && melhor.text !== data.escolhaTexto) {
-      altEl.style.display = "";
-      document.getElementById("fb-alt-texto").textContent = melhor.text;
-      document.getElementById("fb-alt-ensinamento").textContent = melhor.ensinamento||"";
-      const efEl = document.getElementById("fb-alt-efeitos");
-      if (efEl) efEl.innerHTML = Object.entries(melhor.effects||{}).filter(([,v])=>v!==0).map(([k,v])=>{
-        const cor=v>0?"var(--good)":"var(--danger)"; const nome=BetaIndicadores.LABELS[k]||k;
-        return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor};font-size:.8rem">${v>0?"+":""}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;
-      }).join("");
-    } else { altEl.style.display="none"; }
-  }
-  // Gestor
-  const gestorEl=document.getElementById("fb-gestor"), gestorGrid=document.getElementById("fb-gestor-grid");
-  if (gestorEl && gestorGrid) {
-    const eg=data.efeitosGestor||{}, temEfeito=Object.values(eg).some(v=>v!==0);
-    if (temEfeito) {
-      gestorEl.style.display="";
-      const labels={reputacaoInterna:"🧑 Reputação",capitalPolitico:"🏛 Cap. Político",esgotamento:"🔋 Esgotamento"};
-      gestorGrid.innerHTML=Object.entries(eg).filter(([,v])=>v!==0).map(([k,v])=>{
-        const ruim=k==="esgotamento"?v>0:v<0; const cor=ruim?"var(--danger)":"var(--purple)";
-        return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v>0?"+":""}${v}</span><span class="fb-chip-nome">${labels[k]||k}</span></div>`;
-      }).join("");
-    } else { gestorEl.style.display="none"; }
-  }
-  // Stakeholder
-  const stEl=document.getElementById("fb-stakeholder");
-  if (data.stakeholderReacao && stEl) {
-    stEl.style.display="";
-    document.getElementById("fb-st-icon").textContent=data.stakeholderReacao.icone||"👤";
-    document.getElementById("fb-st-nome").textContent=data.stakeholderReacao.nome||"";
-    document.getElementById("fb-st-txt").textContent=data.stakeholderReacao.texto||"";
-  } else if (stEl) { stEl.style.display="none"; }
-  // Evento
-  const evEl=document.getElementById("fb-evento"), evTxt=document.getElementById("fb-evento-texto");
-  if (data.eventoAtivo && evEl) { evEl.style.display=""; evTxt.textContent=`${data.eventoAtivo.titulo} amplificou os efeitos desta rodada.`; }
-  else if (evEl) { evEl.style.display="none"; }
-  // Notificações
-  const notifEl=document.getElementById("fb-notif"), notifLst=document.getElementById("fb-notif-lista");
-  if (notifEl && notifLst) {
-    const notifs=[...(data.novasFlags||[]).map(f=>_textoFlag(f)),...(data.novasConquistas||[]).map(c=>`🏆 ${c}`)];
-    if (notifs.length) { notifEl.style.display=""; notifLst.innerHTML=notifs.map(n=>`<div class="fb-notif-row">${n}</div>`).join(""); }
-    else { notifEl.style.display="none"; }
-  }
-  // Histórico rápido
-  const histEl=document.getElementById("fb-historico"), histLst=document.getElementById("fb-historico-lista");
-  if (histEl && histLst && data.historico?.length) {
-    histEl.style.display="";
-    histLst.innerHTML=data.historico.slice(0,3).map(h=>{
-      const emo=h.avaliacao==="boa"?"✅":h.avaliacao==="ruim"?"❌":"⚠️";
-      return `<div class="historico-item"><div class="historico-item-round">${emo} Rod.${h.rodada} — ${h.titulo}</div></div>`;
-    }).join("");
-  } else if (histEl) { histEl.style.display="none"; }
-}
-
-function avancar() {
-  if (_feedbackCallback) { const cb=_feedbackCallback; _feedbackCallback=null; cb(); }
-}
-
-/* ════════════════════════════════════════════════════
-   RESULTADO FINAL
-════════════════════════════════════════════════════ */
-function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
-                           history, companyName, empresa, sector, epilogo, decisoesCruciais }) {
-  mostrarTela("screen-result");
-  _registrarResultado(score, scoreGestor, sector, companyName);
-  const titulos={fim:score>=70?"Mandato Concluído com Êxito":score>=45?"Mandato Concluído":"Mandato com Dificuldades",gameover:"Colapso Operacional",mandato_conselho:"Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};
-  const subs={fim:"Você completou as 15 rodadas. Veja o balanço do seu mandato.",gameover:"Um indicador zerou. A empresa entrou em colapso.",mandato_conselho:"Seu capital político se esgotou e o conselho encerrou seu mandato.",mandato_burnout:"O esgotamento chegou ao limite e você precisou se afastar."};
-  const motivoLabels = {fim:"Relatório Final",gameover:"Colapso Operacional",
-    mandato_conselho:"Mandato Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};
-  document.getElementById("result-motivo-label").textContent = motivoLabels[motivo] || motivo.replace(/_/g," ").toUpperCase();
-  document.getElementById("result-title").textContent    = titulos[motivo]||"Mandato Encerrado";
-  document.getElementById("result-subtitle").textContent = subs[motivo]||"";
-  const corEmp=score>=70?"var(--good)":score>=45?"var(--warn)":"var(--danger)";
-  const corGes=scoreGestor>=70?"var(--purple)":scoreGestor>=45?"var(--warn)":"var(--danger)";
-  const numEl=document.getElementById("result-score-num"), mgEl=document.getElementById("result-manager-num");
-  if (numEl){numEl.textContent=score; numEl.style.color=corEmp;}
-  if (mgEl) {mgEl.textContent=scoreGestor; mgEl.style.color=corGes;}
-  // Epílogo
-  const epilogoSec=document.getElementById("result-epilogo-section"), epilogoEl=document.getElementById("result-epilogo");
-  if (epilogo && epilogoEl && epilogoSec) {
-    epilogoSec.style.display="";
-    epilogoEl.innerHTML=`<div class="result-epilogo-titulo">${epilogo.titulo}</div><div class="result-epilogo-desc">${epilogo.descricao}</div>`;
-  } else if (epilogoSec) { epilogoSec.style.display="none"; }
-  // Indicadores com benchmark
-  const indEl=document.getElementById("result-indicators");
-  if (indEl) {
-    const bench=BENCHMARKS[sector]||{};
-    indEl.innerHTML=Object.entries(indicators).map(([k,v])=>{
-      const cor=BetaIndicadores.corNivel(v), label=BetaIndicadores.LABELS[k]||k, b=bench[k];
-      const diff=b?(v>b?`+${v-b} acima`:v<b?`${v-b} abaixo`:"na média"):"";
-      return `<div class="result-ind-card">
-        <div class="result-ind-label">${label}</div>
-        <div class="result-ind-val" style="color:${cor}">${v}<span style="font-size:.7rem;color:var(--text-muted)">/20</span></div>
-        ${diff?`<div class="result-ind-level" style="color:${cor}">${diff}</div>`:""}
-      </div>`;
-    }).join("");
-  }
-  // Gestor final
-  const gestorGrid=document.getElementById("result-gestor-grid");
-  if (gestorGrid) {
-    const g=gestor, esgCor=g.esgotamento>=7?"var(--danger)":g.esgotamento>=5?"var(--warn)":"var(--good)";
-    gestorGrid.innerHTML=`
-      <div class="gestor-item"><div class="gestor-item-val" style="color:var(--purple)">${g.reputacaoInterna}</div><div class="gestor-item-label">Reputação Interna</div></div>
-      <div class="gestor-item"><div class="gestor-item-val" style="color:var(--purple)">${g.capitalPolitico}</div><div class="gestor-item-label">Capital Político</div></div>
-      <div class="gestor-item"><div class="gestor-item-val" style="color:${esgCor}">${g.esgotamento}</div><div class="gestor-item-label">Esgotamento</div></div>`;
-  }
-  // Decisões cruciais — modo revisão
-  const cruciaisSec=document.getElementById("result-cruciais-section"), cruciaisLst=document.getElementById("result-cruciais-lista");
-  if (cruciaisSec && cruciaisLst && decisoesCruciais?.length) {
-    cruciaisSec.style.display="";
-    cruciaisLst.innerHTML=decisoesCruciais.map(d=>{
-      const emo=d.avaliacao==="boa"?"✅":d.avaliacao==="ruim"?"❌":"⚠️";
-      const efeitos=Object.entries(d.efeitos||{}).filter(([,v])=>v!==0).map(([k,v])=>{
-        const cor=v>0?"var(--good)":"var(--danger)"; const nome=BetaIndicadores.LABELS[k]||k;
-        return `<span style="color:${cor};font-size:.65rem;margin-right:8px">${v>0?"+":""}${v} ${nome}</span>`;
-      }).join("");
-      return `<div class="crucial-item">
-        <div class="crucial-round">${emo} Rodada ${d.rodada} — ${d.titulo}</div>
-        <div class="crucial-escolha">"${d.escolha}"</div>
-        <div style="margin:6px 0">${efeitos}</div>
-        ${d.ensinamento?`<div style="font-size:.75rem;color:var(--text-muted);line-height:1.4;font-style:italic">${d.ensinamento}</div>`:""}
-      </div>`;
-    }).join("");
-  } else if (cruciaisSec) { cruciaisSec.style.display="none"; }
-}
-
-/* ════════════════════════════════════════════════════
-   GLOSSÁRIO
-════════════════════════════════════════════════════ */
-const GLOSSARIO_TERMOS = [
-  { termo:"SLA", def:"Service Level Agreement. Acordo de Nível de Serviço que define metas de prazo e qualidade entre operadora e cliente." },
-  { termo:"Capital Político", def:"Credibilidade do gestor junto ao conselho e stakeholders. Cai com decisões ruins, sobe com resultados e alinhamento estratégico." },
-  { termo:"Esgotamento", def:"Nível de desgaste do gestor. Ao atingir 10, o gestor precisa se afastar por burnout e o mandato é encerrado." },
-  { termo:"Benchmark", def:"Referência média do mercado para cada indicador. Exibido abaixo das barras durante o jogo para contextualizar seu desempenho." },
-  { termo:"IFA", def:"Índice de Frequência de Acidentes. Mede acidentes de trabalho por milhão de horas trabalhadas. Benchmark nacional: 8,2." },
-  { termo:"TMS", def:"Transportation Management System. Sistema de gerenciamento de transporte utilizado por operadoras logísticas para rastreamento e roteirização." },
-  { termo:"ISO 9001", def:"Norma internacional de gestão da qualidade. Exigida por clientes industriais como condição contratual de fornecimento." },
-  { termo:"Payback", def:"Prazo em que um investimento se paga com a economia ou receita gerada. Ex: painéis solares com payback de 4,5 anos." },
-  { termo:"NPS", def:"Net Promoter Score. Mede a lealdade e satisfação dos clientes com base em probabilidade de recomendação." },
-  { termo:"Dark Store", def:"Loja física convertida em centro de distribuição para e-commerce, sem atendimento presencial ao cliente final." },
-  { termo:"Hedge Cambial", def:"Instrumento financeiro que trava o custo do câmbio, protegendo empresas com custos em moeda estrangeira." },
-  { termo:"Click-and-Collect", def:"Modelo onde o cliente compra online e retira em loja física, eliminando o custo de frete e gerando tráfego para as lojas." },
-  { termo:"Kanban", def:"Sistema de produção puxada. Produz apenas o que foi vendido ou consumido, reduzindo estoque e lead time." },
-  { termo:"CIPA", def:"Comissão Interna de Prevenção de Acidentes. Obrigatória por lei em empresas a partir de 20 funcionários." },
-  { termo:"ESG", def:"Environmental, Social and Governance. Práticas ambientais, sociais e de governança avaliadas por investidores e clientes empresariais." },
-  { termo:"CAT", def:"Comunicação de Acidente de Trabalho. Documento obrigatório emitido pelo empregador nos casos de acidente laboral." },
-  { termo:"Interdependência", def:"Relação causal entre indicadores. Ex: na logística, frota deteriorada → segurança cai → RH cai → financeiro cai." },
-  { termo:"Imprevisto", def:"Evento aleatório que amplifica os efeitos de decisões durante a rodada em que está ativo. Pesos influenciados pelo estado do gestor." },
-  { termo:"Flag", def:"Padrão de comportamento detectado ao longo do mandato. Influencia eventos futuros e o epílogo. Ex: Liderança Tóxica, Crescimento Saudável." },
-  { termo:"Margem Operacional", def:"Lucro operacional dividido pela receita líquida. Indica quanto de cada real vendido se converte em lucro da operação." },
-];
-
-function openGlossary() {
-  const el=document.getElementById("overlay-glossary"), content=document.getElementById("glossary-content");
-  if (el) el.style.display="";
-  if (content) content.innerHTML=GLOSSARIO_TERMOS.map(g=>
-    `<div class="glossary-term"><div class="glossary-term-word">${g.termo}</div><div class="glossary-term-def">${g.def}</div></div>`
-  ).join("");
-}
-function closeGlossary() { const el=document.getElementById("overlay-glossary"); if(el) el.style.display="none"; }
-
-/* ════════════════════════════════════════════════════
-   CONFIGURAÇÕES
-════════════════════════════════════════════════════ */
-function openSettings() {
-  const el=document.getElementById("overlay-settings"); if(el) el.style.display="";
-  _atualizarToggleTimer();
-}
-function closeSettings() { const el=document.getElementById("overlay-settings"); if(el) el.style.display="none"; }
-function toggleTimerSetting() { _settings.timer=!_settings.timer; LS.set(SK.SETTINGS,_settings); _atualizarToggleTimer(); }
-function _atualizarToggleTimer() {
-  const btn=document.getElementById("toggle-timer-btn"); if(!btn) return;
-  btn.textContent=_settings.timer?"ON":"OFF"; btn.className=`toggle-btn ${_settings.timer?"on":"off"}`;
-}
-
-/* ════════════════════════════════════════════════════
-   UTILIDADES
-════════════════════════════════════════════════════ */
-function toggleFullscreen() {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
-  else document.exitFullscreen?.();
-}
-
-function reiniciar() { LS.remove(_skSession()); _aplicarTemaSetor(null); mostrarTela("screen-home"); }
-
-function mostrarErro(msg)        { _showToast(msg, "info",  3200); }
-function mostrarSucesso(msg)     { _showToast(msg, "ok",    2800); }
-function mostrarAviso(msg)       { _showToast(msg, "aviso", 3200); }
-function mostrarErroCritico(msg) { _showToast(msg, "erro",  3500); }
-
-function _showToast(msg, tipo = "info", duracao = 3200) {
-  const container = document.getElementById("toast");
-  if (!container) return;
-  const div = document.createElement("div");
-  div.className = "toast-msg";
-  const cores = {
-    erro:  { bg:"rgba(231,76,60,.92)",  borda:"rgba(231,76,60,.5)",  icone:"❌" },
-    aviso: { bg:"rgba(243,156,18,.92)", borda:"rgba(243,156,18,.5)", icone:"⚠️" },
-    ok:    { bg:"rgba(46,204,113,.92)", borda:"rgba(46,204,113,.5)", icone:"✅" },
-    info:  { bg:"var(--bg4)",           borda:"var(--line2)",        icone:"ℹ️" },
-  };
-  const c = cores[tipo] || cores.info;
-  div.style.cssText = `background:${c.bg};border-color:${c.borda};`;
-  div.textContent = `${c.icone} ${msg}`;
-  container.appendChild(div);
-  setTimeout(() => {
-    div.classList.add("removing");
-    setTimeout(() => div.remove(), 220);
-  }, duracao);
-}
-
-function _textoFlag(flag) {
-  const MAPA={
-    lideranca_toxica:"⚠️ Liderança Tóxica — padrão de decisões prejudicou o time",
-    crescimento_sem_caixa:"⚠️ Decisões ruins drenaram o caixa",
-    demissao_em_massa:"⚠️ Ondas de corte afetaram a cultura organizacional",
-    rh_negligenciado:"⚠️ RH negligenciado — nenhuma decisão favoreceu o time",
-    ignorou_seguranca:"⚠️ Vulnerabilidades de segurança foram ignoradas",
-    crescimento_saudavel:"🟢 Sequência de 5 decisões corretas",
-    investiu_em_inovacao:"🟢 Cultura de inovação estabelecida",
-    gestor_de_crise:"🔥 Empresa recuperada de situação crítica",
-    gestor_esgotado:"🔋 Esgotamento em nível crítico",
-  };
-  return MAPA[flag] || `🔔 ${flag}`;
-}
-
-/* ════════════════════════════════════════════════════
-   REGISTRO NO ENGINE + BOOT
-════════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════════
-   TUTORIAL
-════════════════════════════════════════════════════ */
-let _tutorialStep = 0;
-const _TUTORIAL_TOTAL = 4;
-
-function pularTutorial() {
-  localStorage.setItem('gsp_tutorial_done', '1');
-  _verificarSessaoSalva();
-  _atualizarHome();
-  mostrarTela('screen-home');
-}
-
-function tutorialStep(dir) {
-  const slides = document.querySelectorAll('.tutorial-slide');
-  const dots   = document.querySelectorAll('.tut-dot');
-  slides[_tutorialStep]?.classList.remove('active');
-  dots[_tutorialStep]?.classList.remove('active');
-  _tutorialStep = Math.max(0, _tutorialStep + dir);
-  if (_tutorialStep >= _TUTORIAL_TOTAL) { pularTutorial(); return; }
-  slides[_tutorialStep]?.classList.add('active');
-  dots[_tutorialStep]?.classList.add('active');
-  const prevBtn = document.getElementById('tut-prev');
-  const nextBtn = document.getElementById('tut-next');
-  if (prevBtn) prevBtn.style.display = _tutorialStep > 0 ? '' : 'none';
-  if (nextBtn) nextBtn.textContent = _tutorialStep === _TUTORIAL_TOTAL - 1 ? 'Começar →' : 'Próximo →';
-}
-
-/* ════════════════════════════════════════════════════
-   PERFIL DO JOGADOR
-════════════════════════════════════════════════════ */
-async function irParaPerfil() {
-  mostrarTela('screen-perfil');
-  const isGuest = _player?.tipo === "guest" || !_player?.uid;
-
-  if (!isGuest && _player?.uid && window.GSPSync) {
-    // Usuário logado: sincroniza do Firestore
-    try {
-      const histFS = await window.GSPSync.carregarHistorico(_player.uid);
-      if (histFS.length > 0) {
-        const convertido = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
-        LS.set(SK.HISTORICO, convertido);
-      }
-    } catch (e) { /* usa dados locais */ }
-  }
-  // Convidado lê só o histórico próprio, logado lê o compartilhado
-  const hist = LS.get(isGuest ? SK.HIST_GUEST : SK.HISTORICO) || [];
-  const nome = _player?.nome || 'Jogador';
-  const av   = document.getElementById('perfil-avatar');
-  if (av) av.textContent = nome.charAt(0).toUpperCase();
-  const pn = document.getElementById('perfil-nome');
-  if (pn) pn.textContent = nome;
-  const total  = hist.length;
-  const melhor = total ? Math.max(...hist.map(h => h.score)) : 0;
-  const media  = total ? Math.round(hist.reduce((a,h) => a + h.score, 0) / total) : 0;
-  const boas   = hist.filter(h => h.score >= 70).length;
-  const setorCount = {};
-  hist.forEach(h => { setorCount[h.sector] = (setorCount[h.sector] || 0) + 1; });
-  const favEntry = Object.entries(setorCount).sort((a,b) => b[1]-a[1])[0];
-  const icones = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
-  const favLabel = favEntry ? `${icones[favEntry[0]]||''} ${favEntry[0]}` : '—';
-  const sub = document.getElementById('perfil-subtitulo');
-  if (sub) sub.textContent = `${total} mandato${total !== 1 ? 's' : ''} concluído${total !== 1 ? 's' : ''}`;
-  const statsEl = document.getElementById('perfil-stats');
-  if (statsEl) statsEl.innerHTML = [
-    { val: total ? melhor : '—', label: 'Melhor Score' },
-    { val: total ? media  : '—', label: 'Score Médio'  },
-    { val: boas,                 label: 'Mandatos Excelentes (70+)' },
-    { val: favLabel,             label: 'Setor Favorito' },
-  ].map(s => `<div class="perfil-stat">
-    <div class="perfil-stat-val">${s.val}</div>
-    <div class="perfil-stat-label">${s.label}</div>
-  </div>`).join('');
-  const cqEl = document.getElementById('perfil-conquistas');
-  if (cqEl) {
-    if (isGuest) {
-      cqEl.innerHTML = `
-        <div class="conquistas-guest-lock">
-          <div class="conquistas-lock-icon">🔒</div>
-          <div class="conquistas-lock-title">Conquistas bloqueadas</div>
-          <div class="conquistas-lock-desc">Crie uma conta para desbloquear conquistas, salvar seu progresso e competir no pódio.</div>
-          <button class="btn btn-primary conquistas-lock-btn" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button>
-        </div>`;
-    } else {
-      const conquistas = _calcularConquistas(hist);
-      cqEl.innerHTML = conquistas.map(c => `
-        <div class="perfil-conquista ${c.unlocked ? 'unlocked' : ''}">
-          <div class="perfil-conquista-icon">${c.unlocked ? c.icon : '🔒'}</div>
-          <div>
-            <div class="perfil-conquista-nome">${c.nome}</div>
-            <div class="perfil-conquista-desc">${c.desc}</div>
-          </div>
-        </div>`).join('');
-    }
-  }
-}
-
-function _calcularConquistas(hist) {
-  const total  = hist.length;
-  const melhor = total ? Math.max(...hist.map(h => h.score)) : 0;
-  return [
-    { icon:'🏆', nome:'Primeiro Mandato',   desc:'Complete 1 jogo',          unlocked: total >= 1  },
-    { icon:'⭐', nome:'Gestão Excelente',   desc:'Score acima de 70',         unlocked: melhor >= 70},
-    { icon:'🔥', nome:'Veterano',           desc:'5 mandatos concluídos',     unlocked: total >= 5  },
-    { icon:'💼', nome:'Executivo Sênior',   desc:'10 mandatos concluídos',    unlocked: total >= 10 },
-    { icon:'🚀', nome:'Especialista Tech',  desc:'Vença com Tecnologia',      unlocked: hist.some(h => h.sector === 'tecnologia' && h.score >= 70) },
-    { icon:'🏭', nome:'Rei da Indústria',   desc:'Vença com Indústria',       unlocked: hist.some(h => h.sector === 'industria'  && h.score >= 70) },
-  ];
-}
-
-/* ════════════════════════════════════════════════════
-   PÓDIO — com filtro por setor
-════════════════════════════════════════════════════ */
-let _podioFiltro = 'all';
-
-async function filtrarPodio(setor) {
-  _podioFiltro = setor;
-  document.querySelectorAll('.podio-filter').forEach(b => {
-    b.classList.toggle('active', b.dataset.filter === setor);
-  });
-  // Com Firestore busca dados filtrados do servidor
-  if (window.GSPSync) {
-    try {
-      const podioFS = await window.GSPSync.carregarPodio(setor !== "all" ? setor : null);
-      if (podioFS.length > 0) {
-        const convertido = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));
-        _renderPodioLista(convertido);
-        return;
-      }
-    } catch (e) { /* usa dados locais */ }
-  }
-  // Fallback: filtra localmente
-  const podioLocal = LS.get(SK.PODIO) || [];
-  const filtrado = setor === "all" ? podioLocal : podioLocal.filter(p => p.sector === setor);
-  _renderPodioLista(filtrado);
-}
-
-function irParaPodio() {
-  mostrarTela('screen-podio');
-  const podio = LS.get(SK.PODIO) || [];
-  const lista = document.getElementById('podio-lista');
-  if (!lista) return;
-  if (!podio.length) {
-    lista.innerHTML = '<div class="podio-empty">Nenhum jogo finalizado ainda.<br>Complete seu primeiro mandato para aparecer aqui.</div>';
-    return;
-  }
-  const medalhas = ['🥇','🥈','🥉'];
-  const rkClass  = ['gold','silver','bronze'];
-  const icones   = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
-  lista.innerHTML = podio.map((p, i) => {
-    const data = new Date(p.ts).toLocaleDateString('pt-BR');
-    const cor  = p.score >= 70 ? 'var(--good)' : p.score >= 45 ? 'var(--warn)' : 'var(--danger)';
-    return `<div class="podio-item" data-sector="${p.sector}">
-      <div class="podio-rank ${rkClass[i]||''}">${medalhas[i]||i+1}</div>
-      <div class="podio-player">
-        <div class="podio-player-name">${p.player}</div>
-        <div class="podio-player-meta">${icones[p.sector]||'🏢'} ${p.companyName} · ${data}</div>
-      </div>
-      <div class="podio-score" style="color:${cor}">${p.score}</div>
-    </div>`;
-  }).join('');
-  if (_podioFiltro !== 'all') filtrarPodio(_podioFiltro);
-}
-
-/* ════════════════════════════════════════════════════
-   PAUSA
-════════════════════════════════════════════════════ */
-let _jogoPausado = false;
-
-function pausarJogo() {
-  _jogoPausado = true;
-  if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
-  const state = BetaState.get();
-  const info  = document.getElementById('pause-info');
-  if (info && state) {
-    const fases = { fundacao:'Diagnóstico', crescimento:'Crescimento', crise:'⚠ Crise', consolidacao:'Consolidação', expansao:'Expansão' };
-    const fase  = state.storyState?.faseEmpresa || '';
-    info.textContent = `${state.companyName} · ${fases[fase]||fase} · Rodada ${state.currentRound+1}/${state.totalRounds}`;
-  }
-  const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.style.display = '';
-}
-
-function continuarJogo() {
-  _jogoPausado = false;
-  const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.style.display = 'none';
-  if (_settings.timer && !_escolhaFeita && _timerSegs > 0) {
-    const el = document.getElementById('timer-display');
-    if (el) { el.classList.add('active'); if (_timerSegs <= 10) el.classList.add('danger'); }
-    _timerInterval = setInterval(() => {
-      _timerSegs--;
-      if (el) el.textContent = `⏱ ${_timerSegs}s`;
-      if (_timerSegs <= 10 && el) el.classList.add('danger');
-      if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }
-    }, 1000);
-  }
-}
-
-function abandonarJogo() {
-  _jogoPausado = false;
-  const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.style.display = 'none';
-  _pararTimer();
-  LS.remove(_skSession());
-  _aplicarTemaSetor(null);
-  mostrarTela('screen-home');
-}
-
-/* ════════════════════════════════════════════════════
-   TOOLTIP DE INDICADORES DO GESTOR
-════════════════════════════════════════════════════ */
-const INDICADOR_INFO = {
-  reputacaoInterna: {
-    titulo: '🧑 Reputação Interna',
-    desc: 'Reflete como o time percebe sua liderança. Decisões que prejudicam as pessoas reduzem a reputação; decisões inclusivas e transparentes aumentam.',
-    consequence: '⚠ Se chegar a 0, sua autoridade é questionada pelo conselho.',
-  },
-  capitalPolitico: {
-    titulo: '🏛 Capital Político',
-    desc: 'Sua credibilidade junto ao conselho e stakeholders externos. É consumido por decisões impopulares e reposicionamentos bruscos.',
-    consequence: '⚠ Se chegar a 0, o conselho encerra seu mandato antecipadamente.',
-  },
-  esgotamento: {
-    titulo: '🔋 Esgotamento',
-    desc: 'Mede o desgaste acumulado do gestor. Aumenta com crises mal resolvidas e alta pressão de trabalho.',
-    consequence: '🔴 Se chegar a 10, você é afastado por burnout e o mandato é encerrado imediatamente.',
-  },
-};
-
-function abrirTooltipIndicador(key) {
-  const info = INDICADOR_INFO[key];
-  if (!info) return;
-  const state = BetaState.get();
-  const val   = state?.gestor?.[key] ?? '—';
-  const overlay = document.getElementById('overlay-tooltip');
-  const title   = document.getElementById('tooltip-title');
-  const body    = document.getElementById('tooltip-body');
-  if (!overlay) return;
-  if (title) title.textContent = info.titulo;
-  if (body) body.innerHTML = `
-    <div class="tooltip-val-block">
-      <div class="tooltip-val-num" style="color:var(--s-text)">${val}<span style="font-size:.9rem;color:var(--t3)">/10</span></div>
-      <div class="tooltip-val-label">Valor atual</div>
-    </div>
-    <p class="tooltip-body-text">${info.desc}</p>
-    <div class="tooltip-consequence">${info.consequence}</div>`;
-  overlay.style.display = '';
-}
-
-function closeTooltip() {
-  const el = document.getElementById('overlay-tooltip');
-  if (el) el.style.display = 'none';
-}
-
-/* ════════════════════════════════════════════════════
-   MODO TREINO
-════════════════════════════════════════════════════ */
-let _modoTreino = false;
-
-function toggleModoTreino() {
-  _modoTreino = !_modoTreino;
-  const btn = document.getElementById('toggle-treino-btn');
-  if (btn) { btn.textContent = _modoTreino ? 'ON' : 'OFF'; btn.className = `toggle-btn ${_modoTreino ? 'on' : 'off'}`; }
-}
-
-/* ════════════════════════════════════════════════════
-   COMPARTILHAR RESULTADO
-════════════════════════════════════════════════════ */
-function compartilharResultado() {
-  const score  = document.getElementById('result-score-num')?.textContent || '—';
-  const titulo = document.getElementById('result-title')?.textContent || 'Mandato';
-  const state  = BetaState.get();
-  const icones = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
-  const icon   = icones[state?.sector] || '🏢';
-  const empresa = state?.companyName || 'Empresa';
-  const texto  = `${icon} ${titulo}
-📊 Score: ${score}/100
-🏢 ${empresa}
-
-Joguei Under Pressure — o simulador de decisões executivas!`;
-  if (navigator.share) {
-    navigator.share({ title: 'Under Pressure', text: texto }).catch(() => {});
-  } else {
-    navigator.clipboard?.writeText(texto)
-      .then(() => mostrarErro('Resultado copiado para a área de transferência!'))
-      .catch(() => mostrarErro('Copie o resultado manualmente.'));
-  }
-}
-
-/* ════════════════════════════════════════════════════
-   ANIMAÇÃO DE SCORE + CONFETTI
-════════════════════════════════════════════════════ */
-function _animarScore(elId, valorFinal, cor, duracao = 1200) {
-  const el = document.getElementById(elId);
-  if (!el || isNaN(valorFinal)) return;
-  const start = Date.now();
-  const tick  = () => {
-    const elapsed  = Date.now() - start;
-    const progress = Math.min(elapsed / duracao, 1);
-    const ease     = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-    el.textContent = Math.round(ease * valorFinal);
-    el.style.color = cor;
-    if (progress < 1) { requestAnimationFrame(tick); }
-    else { el.textContent = valorFinal; el.classList.add('animating'); setTimeout(() => el.classList.remove('animating'), 200); }
-  };
-  requestAnimationFrame(tick);
-}
-
-function _lancarConfetti() {
-  const screen = document.getElementById('screen-result');
-  if (!screen) return;
-  const cores = ['#D4A853','#5B8DEF','#1FB885','#E8711A','#E8467A','#ffffff'];
-  for (let i = 0; i < 30; i++) {
-    const p = document.createElement('div');
-    p.className = 'confetti-piece';
-    p.style.cssText = `left:${Math.random()*100}%;top:0;position:absolute;background:${cores[Math.floor(Math.random()*cores.length)]};animation-delay:${Math.random()*1.5}s;animation-duration:${1.5+Math.random()}s`;
-    screen.appendChild(p);
-    setTimeout(() => p.remove(), 4000);
-  }
-}
-
-/* Wrapper animado para renderResultado */
-function renderResultadoAnimado({ motivo, score, scoreGestor, gestor, indicators,
-                                   history, companyName, empresa, sector, epilogo, decisoesCruciais }) {
-  renderResultado({ motivo, score, scoreGestor, gestor, indicators, history, companyName, empresa, sector, epilogo, decisoesCruciais });
-  // Estado visual
-  const screen = document.getElementById('screen-result');
-  if (screen) {
-    screen.classList.remove('state-excelente','state-regular','state-dificil');
-    screen.classList.add(score >= 70 ? 'state-excelente' : score >= 45 ? 'state-regular' : 'state-dificil');
-  }
-  // Animar scores (começa em 0)
-  const corEmp = score >= 70 ? 'var(--good)' : score >= 45 ? 'var(--warn)' : 'var(--danger)';
-  const corGes = scoreGestor >= 70 ? 'var(--purple)' : scoreGestor >= 45 ? 'var(--warn)' : 'var(--danger)';
-  const ne = document.getElementById('result-score-num');
-  const mg = document.getElementById('result-manager-num');
-  if (ne) { ne.textContent = '0'; ne.style.color = corEmp; }
-  if (mg) { mg.textContent = '0'; mg.style.color = corGes; }
-  setTimeout(() => {
-    _animarScore('result-score-num',   score,       corEmp);
-    _animarScore('result-manager-num', scoreGestor, corGes);
-  }, 400);
-  if (score >= 70) setTimeout(_lancarConfetti, 800);
-  // Modo Treino: não salvar
-  if (_modoTreino) {
-    const ml = document.getElementById('result-motivo-label');
-    if (ml) ml.textContent = 'MODO TREINO · Resultado não salvo';
-    // Reverte score do modo treino (só para usuários logados que salvaram);
-    if (_player?.tipo !== 'guest' && _player?.uid) {
-      const podio = LS.get(SK.PODIO) || [];
-      if (podio.length) { podio.shift(); LS.set(SK.PODIO, podio); }
-      const hh = LS.get(SK.HISTORICO) || [];
-      if (hh.length) { hh.shift(); LS.set(SK.HISTORICO, hh); }
-    }
-  }
-}
-
-/* ════════════════════════════════════════════════════
-   REGISTRO NO ENGINE + BOOT
-════════════════════════════════════════════════════ */
-registrarUI({ mostrarTela, mostrarIntro, renderSidebar, renderRodada, mostrarFeedback, renderResultado: renderResultadoAnimado });
-
-window.BetaUI = {
-  irParaLogin, irParaAuth, irComoConvidado, sair,
-  authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
-  irParaSetores, irParaPodio, irParaHistoricoJogos,
-  irParaPerfil, filtrarPodio,
-  restaurarSessao, descartarSessao,
-  selecionarSetor, lancarJogo, comecaJogo,
-  mudarTab, escolher, avancar, reiniciar,
-  openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting,
-  toggleFullscreen, voltar,
-  // Novos
-  pularTutorial, tutorialStep,
-  pausarJogo, continuarJogo, abandonarJogo,
-  abrirTooltipIndicador, closeTooltip,
-  toggleModoTreino,
-  compartilharResultado,
-};
-
-window.addEventListener("DOMContentLoaded", _boot);
+import { registrarUI, iniciar, iniciarRodadas, processarEscolha, EMPRESAS }from "./core/engine.js";import BetaIndicadores from "./core/indicadores.js";import BetaState from "./core/state.js";const LS = {get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },remove: k => { try { localStorage.removeItem(k); } catch {} },};const SK = {PLAYER: "gsp_player",PODIO: "gsp_podio",HISTORICO:"gsp_historico",SESSION: "gsp_session",SETTINGS: "gsp_settings",HIST_GUEST:"gsp_historico_guest",SESS_GUEST:"gsp_session_guest",};function _skHistorico() { return _player?.tipo === "guest" ? SK.HIST_GUEST : SK.HISTORICO; }function _skSession() { return _player?.tipo === "guest" ? SK.SESS_GUEST : SK.SESSION; }let _player = null;let _settings = { timer: false };let _setorSelecionado = null;let _escolhaFeita = false;let _feedbackCallback = null;let _timerInterval = null;let _timerSegs = 0;function _setLoadingMsg(msg) {const el = document.getElementById('loading-msg');if (el) el.textContent = msg;}async function _boot() {_settings = LS.get(SK.SETTINGS) || { timer: false };
+mostrarTela('screen-loading');_setLoadingMsg('Iniciando...');
+if (window.GSPAuth) {_setLoadingMsg('Conectando ao servidor...');let tentativas = 0;while (!window.GSPAuth.isReady() && tentativas < 30) {await new Promise(r => setTimeout(r, 100));tentativas++;}}if (window.GSPAuth?.isReady()) {_setLoadingMsg('Verificando autenticação...');
+try {const redirectPlayer = await window.GSPAuth.processarRedirectGoogle();if (redirectPlayer) {_setLoadingMsg('Carregando seus dados...');await _loginOk(redirectPlayer);return;}} catch(e) {console.warn("[GSP] Erro ao processar redirect Google:", e.message);}
+
+_setLoadingMsg('Verificando sessão ativa...');try {const firebaseUser = await window.GSPAuth.waitForAuthReady();if (firebaseUser) {_setLoadingMsg('Carregando seus dados...');const player = {uid: firebaseUser.uid,nome: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Jogador',email: firebaseUser.email,tipo: 'user'};await _loginOk(player);return;}} catch(e) {console.warn("[GSP] Erro ao verificar sessão Firebase:", e.message);}}
+const saved = LS.get(SK.PLAYER);if (saved) {_setLoadingMsg('Carregando perfil local...');_player = saved;_verificarSessaoSalva();_atualizarHome();if (!localStorage.getItem('gsp_tutorial_done')) {mostrarTela('screen-tutorial');} else {mostrarTela('screen-home');}return;}mostrarTela('screen-login');}function mostrarTela(id) {document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));const el = document.getElementById(id);if (el) el.classList.add("active");
+const TELAS_JOGO = ["screen-intro","screen-game","screen-feedback","screen-result"];if (!TELAS_JOGO.includes(id)) _aplicarTemaSetor(null);window.scrollTo(0, 0);}function voltar(tela) { mostrarTela(tela); }function irParaLogin() { mostrarTela("screen-auth"); authMudarAba("login"); }function irParaAuth() { mostrarTela("screen-auth"); authMudarAba("login"); }function authMudarAba(aba) {["login","cadastro","recuperar"].forEach(a => {const f = document.getElementById(`auth-form-${a}`);const b = document.getElementById(`tab-${a === "login" ? "login" : "register"}-btn`);if (f) f.style.display = "none";if (b) b.classList.remove("active");});const form = document.getElementById(`auth-form-${aba}`);if (form) form.style.display = "flex";if (aba === "login") document.getElementById("tab-login-btn")?.classList.add("active");if (aba === "cadastro") document.getElementById("tab-register-btn")?.classList.add("active");
+["auth-login-err","auth-reg-err","auth-rec-err","auth-rec-ok"].forEach(id => {const el = document.getElementById(id);if (el) { el.textContent = ""; el.style.display = ""; }});}function authTogglePass(inputId, btn) {const inp = document.getElementById(inputId);if (!inp) return;if (inp.type === "password") { inp.type = "text"; btn.textContent = "🙈"; }else { inp.type = "password"; btn.textContent = "👁"; }}function _authSetLoading(prefix, on) {const btn = document.getElementById(`auth-${prefix}-btn`);const lbl = document.getElementById(`auth-${prefix}-label`);const spn = document.getElementById(`auth-${prefix}-spinner`);if (btn) btn.disabled = on;if (lbl) lbl.style.opacity = on ? "0.4" : "1";if (spn) spn.style.display = on ? "inline" : "none";}function _authShowErr(id, msg) {const el = document.getElementById(id);if (el) { el.textContent = msg; el.style.display = "block"; }}function _traduzirErroFirebase(code) {const map = {"auth/email-already-in-use": "Este e-mail já está em uso.","auth/invalid-email": "E-mail inválido.","auth/weak-password": "A senha deve ter pelo menos 6 caracteres.","auth/user-not-found": "Usuário não encontrado.","auth/wrong-password": "Senha incorreta.","auth/invalid-credential": "E-mail ou senha incorretos.","auth/too-many-requests": "Muitas tentativas. Tente novamente mais tarde.","auth/network-request-failed": "Falha de rede. Verifique sua conexão.","auth/popup-closed-by-user": "Login cancelado.","auth/user-disabled": "Esta conta foi desativada.",};return map[code] || "Ocorreu um erro. Tente novamente.";}async function authLogin() {const email = document.getElementById("auth-login-email")?.value.trim();const senha = document.getElementById("auth-login-pass")?.value;if (!email) { _authShowErr("auth-login-err", "Digite seu e-mail."); return; }if (!senha) { _authShowErr("auth-login-err", "Digite sua senha."); return; }
+if (!window.GSPAuth?.isReady()) {const nome = email.split("@")[0];_loginOk({ nome, email, tipo: "user" });return;}_authSetLoading("login", true);try {const player = await window.GSPAuth.login({ email, senha });_loginOk(player);} catch(e) {const msg = _traduzirErroFirebase(e.code);_authShowErr("auth-login-err", msg);mostrarErroCritico(msg);} finally {_authSetLoading("login", false);}}async function authCadastrar() {const nome = document.getElementById("auth-reg-nome")?.value.trim();const email = document.getElementById("auth-reg-email")?.value.trim();const senha = document.getElementById("auth-reg-pass")?.value;if (!nome) { _authShowErr("auth-reg-err", "Digite seu nome."); return; }if (!email) { _authShowErr("auth-reg-err", "Digite seu e-mail."); return; }if (!senha || senha.length < 6) { _authShowErr("auth-reg-err", "A senha deve ter ao menos 6 caracteres."); return; }if (!window.GSPAuth?.isReady()) {_loginOk({ nome, email, tipo: "user" });return;}_authSetLoading("reg", true);try {const player = await window.GSPAuth.cadastrar({ nome, email, senha });mostrarSucesso("Conta criada com sucesso!");_loginOk(player);} catch(e) {const msg = _traduzirErroFirebase(e.code);_authShowErr("auth-reg-err", msg);mostrarErroCritico(msg);} finally {_authSetLoading("reg", false);}}async function authGoogle() {if (!window.GSPAuth?.isReady()) {mostrarErro("Configure o Firebase para usar o login com Google.");return;}try {
+mostrarTela('screen-loading');_setLoadingMsg('Conectando ao Google...');const player = await window.GSPAuth.loginGoogle();if (!player) {
+_setLoadingMsg('Redirecionando para o Google...');return;}_setLoadingMsg('Carregando seus dados...');mostrarSucesso("Login com Google realizado!");await _loginOk(player);} catch(e) {
+mostrarTela('screen-auth');authMudarAba('login');mostrarErroCritico(_traduzirErroFirebase(e.code));}}async function authRecuperar() {const email = document.getElementById("auth-rec-email")?.value.trim();if (!email) { _authShowErr("auth-rec-err", "Digite seu e-mail."); return; }if (!window.GSPAuth?.isReady()) {_authShowErr("auth-rec-err", "Firebase não configurado.");return;}_authSetLoading("rec", true);try {await window.GSPAuth.recuperarSenha(email);const ok = document.getElementById("auth-rec-ok");if (ok) { ok.style.display = "block"; ok.textContent = "✅ E-mail enviado! Verifique sua caixa de entrada."; }mostrarSucesso("E-mail de recuperação enviado!");} catch(e) {const msg = _traduzirErroFirebase(e.code);_authShowErr("auth-rec-err", msg);mostrarErroCritico(msg);} finally {_authSetLoading("rec", false);}}async function _loginOk(player) {_player = player;LS.set(SK.PLAYER, _player);
+mostrarTela('screen-loading');_setLoadingMsg('Preparando seu perfil...');
+if (_player?.uid && window.GSPSync) {try {
+_setLoadingMsg('Sincronizando histórico...');const histFS = await window.GSPSync.carregarHistorico(_player.uid);if (histFS.length > 0) {const hist = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));LS.set(SK.HISTORICO, hist);}
+_setLoadingMsg('Carregando pódio...');const podioFS = await window.GSPSync.carregarPodio();if (podioFS.length > 0) {const podio = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));LS.set(SK.PODIO, podio);}
+_setLoadingMsg('Verificando sessão em andamento...');const sessFS = await window.GSPSync.carregarSessao(_player.uid);if (sessFS) {LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });}} catch (e) {console.warn("[GSP] Erro ao carregar dados do Firestore:", e.message);mostrarAviso("Não foi possível carregar dados da nuvem. Usando dados locais.");}}_setLoadingMsg('Entrando no painel...');_verificarSessaoSalva();_atualizarHome();mostrarTela("screen-home");}async function sair() {if (window.GSPAuth?.isReady()) { try { await window.GSPAuth.logout(); } catch {} }LS.remove(SK.PLAYER);
+LS.remove(SK.SESSION);LS.remove(SK.HISTORICO);LS.remove(SK.PODIO);_player = null;mostrarTela("screen-login");}function irComoConvidado() {_player = { nome: "Convidado", tipo: "guest" };_atualizarHome();mostrarTela("screen-home");}function _atualizarHome() {const el = document.getElementById("home-player-name");if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;const av = document.getElementById("home-avatar-icon");if (av && _player?.nome) av.textContent = _player.nome.charAt(0).toUpperCase();}function _salvarSessao() {const state = BetaState.get();if (!state || state.phase === "result") {LS.remove(_skSession());
+if (_player?.uid && _player.tipo !== "guest" && window.GSPSync) {window.GSPSync.limparSessao(_player.uid).catch(() => {});}return;}const dadosSessao = {sector: state.sector, companyName: state.companyName,currentRound: state.currentRound, totalRounds: state.totalRounds,ts: Date.now(),};
+LS.set(_skSession(), dadosSessao);
+if (_player?.uid && _player.tipo !== "guest" && window.GSPSync) {window.GSPSync.salvarSessao(_player.uid, dadosSessao).catch(() => {});}}function _verificarSessaoSalva() {const sess = LS.get(_skSession());const banner = document.getElementById("session-restore-banner");const texto = document.getElementById("session-restore-text");if (sess && banner && texto) {const mins = Math.round((Date.now() - sess.ts) / 60000);const tempo = mins < 60 ? `${mins} min atrás` : `${Math.round(mins/60)}h atrás`;texto.textContent = `Jogo em andamento: ${sess.companyName} (${sess.sector}) — Rodada ${sess.currentRound + 1}/${sess.totalRounds} · salvo ${tempo}`;banner.style.display = "";} else if (banner) {banner.style.display = "none";}}function restaurarSessao() {const sess = LS.get(_skSession());if (!sess) return;iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);}function descartarSessao() {LS.remove(_skSession());const banner = document.getElementById("session-restore-banner");if (banner) banner.style.display = "none";
+if (_player?.uid && _player.tipo !== "guest" && window.GSPSync) {window.GSPSync.limparSessao(_player.uid).catch(() => {});}}function _registrarResultado(score, scoreGestor, sector, companyName) {const entrada = {player: _player?.nome || "Convidado",score, scoreGestor, sector, companyName, ts: Date.now(),};const isGuest = _player?.tipo === "guest" || !_player?.uid;if (isGuest) {
+const hist = LS.get(SK.HIST_GUEST) || [];hist.unshift(entrada);LS.set(SK.HIST_GUEST, hist.slice(0, 20));LS.remove(SK.SESS_GUEST);} else {
+const podio = LS.get(SK.PODIO) || [];podio.push(entrada);podio.sort((a, b) => b.score - a.score);LS.set(SK.PODIO, podio.slice(0, 10));const hist = LS.get(SK.HISTORICO) || [];hist.unshift(entrada);LS.set(SK.HISTORICO, hist.slice(0, 20));LS.remove(SK.SESSION);
+if (_player?.uid && window.GSPSync) {window.GSPSync.salvarPartida(_player.uid, entrada).catch(() => {});window.GSPSync.salvarNoPodio(_player.uid, entrada).catch(() => {});window.GSPSync.limparSessao(_player.uid).catch(() => {});}}}function _renderPodioLista(podio) {const lista = document.getElementById("podio-lista");if (!lista) return;if (!podio.length) {lista.innerHTML = `<div class="podio-empty">Nenhum jogo finalizado ainda.<br>Complete seu primeiro mandato para aparecer aqui.</div>`;return;}const medalhas = ["🥇","🥈","🥉"];const rkClass = ["gold","silver","bronze"];const icones = { tecnologia:"🚀",varejo:"🛒",logistica:"🚚",industria:"🏭" };lista.innerHTML = podio.map((p, i) => {const ts = p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now());const data = new Date(ts).toLocaleDateString("pt-BR");const cor = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";return `<div class="podio-item">
+<div class="podio-rank ${rkClass[i]||''}">${medalhas[i]||i+1}</div>
+<div class="podio-player">
+<div class="podio-player-name">${p.player}</div>
+<div class="podio-player-meta">${icones[p.sector]||"🏢"} ${p.companyName} · ${data}</div>
+</div>
+<div class="podio-score" style="color:${cor}">${p.score}</div>
+</div>`;}).join("");}async function irParaPodio() {mostrarTela("screen-podio");
+const podioLocal = LS.get(SK.PODIO) || [];_renderPodioLista(podioLocal);
+if (window.GSPSync) {try {const podioFS = await window.GSPSync.carregarPodio(_podioFiltro !== "all" ? _podioFiltro : null);if (podioFS.length > 0) {const convertido = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));LS.set(SK.PODIO, convertido.slice(0, 20));_renderPodioLista(convertido);}} catch (e) {mostrarAviso("Erro ao buscar pódio online. Exibindo dados locais.");}}}function _renderHistoricoLista(hist) {const lista = document.getElementById("historico-jogos-lista");if (!lista) return;if (!hist.length) { lista.innerHTML = `<div class="podio-empty">Nenhum jogo registrado ainda.</div>`; return; }const icones = { tecnologia:"🚀",varejo:"🛒",logistica:"🚚",industria:"🏭" };lista.innerHTML = hist.map(p => {const ts = p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now());const data = new Date(ts).toLocaleDateString("pt-BR");const hora = new Date(ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});const cor = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";return `<div class="podio-item">
+<div style="font-size:1.4rem">${icones[p.sector]||"🏢"}</div>
+<div class="podio-player">
+<div class="podio-player-name">${p.companyName}</div>
+<div class="podio-player-meta">${p.player} · ${data} ${hora}</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+<div class="podio-score" style="color:${cor};font-size:1.2rem">${p.score}</div>
+<div style="font-size:.62rem;color:var(--text-muted);font-family:var(--f-game)">Gestor ${p.scoreGestor}</div>
+</div>
+</div>`;}).join("");}async function irParaHistoricoJogos() {mostrarTela("screen-historico-jogos");const isGuest = _player?.tipo === "guest" || !_player?.uid;if (isGuest) {
+const histGuest = LS.get(SK.HIST_GUEST) || [];_renderHistoricoLista(histGuest);return;}
+const histLocal = LS.get(SK.HISTORICO) || [];_renderHistoricoLista(histLocal);if (_player?.uid && window.GSPSync) {try {const lista = document.getElementById("historico-jogos-lista");if (lista) lista.innerHTML = `<div class="podio-empty" style="color:var(--t3)">⏳ Carregando histórico...</div>`;const histFS = await window.GSPSync.carregarHistorico(_player.uid);if (histFS.length > 0) {const convertido = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));LS.set(SK.HISTORICO, convertido);_renderHistoricoLista(convertido);} else {_renderHistoricoLista(histLocal);}} catch (e) {mostrarAviso("Erro ao buscar histórico. Exibindo dados locais.");_renderHistoricoLista(histLocal);}}}function irParaSetores() {
+document.querySelectorAll(".sector-card").forEach(b => b.classList.remove("selected"));const sh = document.getElementById("sector-hidden");const cn = document.getElementById("companyName");if (sh) sh.value = "";if (cn) cn.value = "";mostrarTela("screen-sector");}function _aplicarTemaSetor(sector) {const app = document.getElementById('app');if (app) {if (sector) app.setAttribute('data-sector', sector);else app.removeAttribute('data-sector');}}function selecionarSetor(sector) {_setorSelecionado = sector;document.querySelectorAll(".sector-card").forEach(b => b.classList.remove("selected"));document.querySelector(`[data-sector="${sector}"]`)?.classList.add("selected");document.getElementById("sector-hidden").value = sector;}function lancarJogo() {const sector = document.getElementById("sector-hidden").value;const companyNameEl = document.getElementById("companyName");const companyName = companyNameEl.value.trim();if (!sector) { mostrarErro("Selecione o tipo de empresa antes de continuar."); return; }if (!companyName) {companyNameEl.focus();companyNameEl.classList.add("input-error-shake");setTimeout(() => companyNameEl.classList.remove("input-error-shake"), 600);mostrarErro("Digite o nome da empresa antes de continuar.");return;}iniciar(sector, _player?.nome || "Jogador", companyName);}let _introCache = null;function mostrarIntro(state, empresa) {_aplicarTemaSetor(state.sector);mostrarTela("screen-intro");const intro = state.introAtual;if (!intro) { comecaJogo(); return; }
+_introCache = { intro, empresa, sector: state.sector, situacao: state.situacaoAtual };document.getElementById("intro-badge").textContent = empresa.nome || state.sector;document.getElementById("intro-titulo").textContent = intro.titulo || "Bem-vindo";document.getElementById("intro-subtitulo").textContent = intro.subtitulo || "";const secoes = document.getElementById("intro-secoes");if (secoes) secoes.innerHTML = (intro.secoes || []).map(s => `
+<div class="intro-secao">
+<div class="intro-secao-header">
+<span class="intro-secao-icone">${s.icone||"📌"}</span>
+<span class="intro-secao-titulo">${s.titulo}</span>
+</div>
+<div class="intro-secao-corpo">${s.corpo}</div>
+</div>`).join("");const criseEl = document.getElementById("intro-crise");const crise = state.situacaoAtual;if (crise && criseEl) {criseEl.style.display = "";criseEl.innerHTML = `
+<div class="intro-crise-header">
+<span class="intro-crise-badge">⚠ CRISE ATIVA</span>
+<span class="intro-crise-titulo">${crise.titulo}</span>
+</div>
+<div class="intro-crise-texto">${crise.historia}</div>`;} else if (criseEl) { criseEl.style.display = "none"; }const preview = document.getElementById("intro-indicators-preview");if (preview) {preview.innerHTML = Object.entries(state.indicators).map(([k, v]) => {const cor = BetaIndicadores.corNivel(v);return `<div class="intro-ind-item">
+<span>${BetaIndicadores.LABELS[k]||k}</span>
+<span style="color:${cor};font-weight:700">${v}/20</span>
+</div>`;}).join("");}}function comecaJogo() {iniciarRodadas();_renderEmpresaTab();}function _renderEmpresaTab() {const el = document.getElementById("empresa-tab-content");if (!el || !_introCache) return;const { intro, empresa, sector, situacao } = _introCache;const icones = { tecnologia:"🚀", industria:"🏭", logistica:"🚚", varejo:"🛒" };let html = `
+<div class="empresa-tab-header">
+<span class="empresa-tab-badge">${icones[sector]||"🏢"} ${empresa.nome || sector}</span>
+<h2 class="empresa-tab-titulo">${intro.titulo || ""}</h2>
+${intro.subtitulo ? `<p class="empresa-tab-sub">${intro.subtitulo}</p>` : ""}</div>`;if (intro.secoes?.length) {html += intro.secoes.map(s => `
+<div class="empresa-tab-secao">
+<div class="empresa-tab-secao-header">
+<span class="empresa-tab-secao-icone">${s.icone||"📌"}</span>
+<span class="empresa-tab-secao-titulo">${s.titulo}</span>
+</div>
+<div class="empresa-tab-secao-corpo">${s.corpo}</div>
+</div>`).join("");}if (situacao) {html += `
+<div class="empresa-tab-crise">
+<div class="empresa-tab-crise-header">
+<span class="empresa-tab-crise-badge">⚠ CRISE ATIVA</span>
+<span class="empresa-tab-crise-titulo">${situacao.titulo}</span>
+</div>
+<div class="empresa-tab-crise-corpo">${situacao.historia}</div>
+</div>`;}el.innerHTML = html;}const BENCHMARKS = {varejo: { financeiro:11,rh:10,clientes:12,processos:10,margem:9,estoque:11,marca:10,digital:9 },logistica: { financeiro:11,rh:10,clientes:12,processos:11,sla:12,frota:10,seguranca:11,tecnologia:9 },industria: { financeiro:11,rh:10,clientes:11,processos:11,seguranca:10,manutencao:10,qualidade:12,conformidade:11 },tecnologia:{ financeiro:11,clima:11,satisfacao:12,qualidade:11,produtividade:10,reputacao:10,inovacao:9,seguranca:10 },};function _bench(sector, key) { return BENCHMARKS[sector]?.[key] ?? null; }function renderSidebar(state, empresa) {
+const nameEl = document.getElementById("game-company-name");if (nameEl) nameEl.textContent = `${state.companyName} · ${empresa?.nome||""}`;
+const progBar = document.getElementById("game-progress-bar");if (progBar) {const pct = Math.round((state.currentRound / state.totalRounds) * 100);progBar.style.width = `${pct}%`;}const roundBadge = document.getElementById("game-round-badge");if (roundBadge) {const faseLabel = { fundacao:"Diagnóstico",crescimento:"Crescimento",crise:"⚠ Crise",consolidacao:"Consolidação",expansao:"Expansão" };const fase = state.storyState?.faseEmpresa;roundBadge.textContent = `Rod. ${state.currentRound+1}/${state.totalRounds} · ${faseLabel[fase]||""}`;}const grid = document.getElementById("game-indicators-grid");if (grid) {grid.innerHTML = Object.entries(state.indicators).map(([k, v]) => {const pct = (v/20)*100;const cor = BetaIndicadores.corNivel(v);const label = BetaIndicadores.LABELS[k] || k;const b = _bench(state.sector, k);const benchHtml = b ? `<span class="game-ind-bench">Méd: ${b}</span>` : "";return `<div class="game-ind-row">
+<div class="game-ind-top">
+<span class="game-ind-name">${label}</span>
+<span class="game-ind-val" style="color:${cor}">${v}</span>
+</div>
+<div class="game-ind-track"><div class="game-ind-bar" style="width:${pct}%;background:${cor}"></div></div>
+${benchHtml}</div>`;}).join("");}const strip = document.getElementById("game-gestor-strip");if (strip) {const g = state.gestor;const esgCor = g.esgotamento>=7?"var(--danger)":g.esgotamento>=5?"var(--warn)":"var(--good)";const capCor = g.capitalPolitico<=2?"var(--danger)":"var(--purple)";const repCor = g.reputacaoInterna<=2?"var(--danger)":"var(--purple)";strip.innerHTML = `
+<div class="gestor-pill" onclick="BetaUI.abrirTooltipIndicador('reputacaoInterna')">
+<span class="gestor-pill-label">Reputação ⓘ</span>
+<span class="gestor-pill-val" style="color:${repCor}">${g.reputacaoInterna}/10</span>
+</div>
+<div class="gestor-pill" onclick="BetaUI.abrirTooltipIndicador('capitalPolitico')">
+<span class="gestor-pill-label">Cap. Político ⓘ</span>
+<span class="gestor-pill-val" style="color:${capCor}">${g.capitalPolitico}/10</span>
+</div>
+<div class="gestor-pill" onclick="BetaUI.abrirTooltipIndicador('esgotamento')">
+<span class="gestor-pill-label">Esgotamento ⓘ</span>
+<span class="gestor-pill-val" style="color:${esgCor}">${g.esgotamento}/10</span>
+</div>`;}_salvarSessao();}function renderRodada(state) {_escolhaFeita = false;const round = state.gameRounds[state.currentRound];if (!round) return;const faseLabel = { fundacao:"Diagnóstico",crescimento:"Crescimento",crise:"⚠ Crise",consolidacao:"Consolidação",expansao:"Expansão" };const fase = state.storyState?.faseEmpresa;document.getElementById("hist-round-badge").textContent =
+`Rodada ${state.currentRound+1} · ${faseLabel[fase]||""}`;document.getElementById("hist-round-title").textContent = round.title || "";document.getElementById("hist-round-desc").textContent = _enriquecerDescricao(round.description||"", state);
+const ev = state.activeEvents?.find(e => e.expiresAt >= state.currentRound);const banner = document.getElementById("hist-event");const evTxt = document.getElementById("hist-event-text");if (ev && banner && evTxt) { banner.classList.add("visible"); evTxt.textContent = `${ev.titulo} — ${ev.descricao}`; }else if (banner) banner.classList.remove("visible");
+const choices = state.choicesAtivas || round.choices;const lista = document.getElementById("choices-list");lista.innerHTML = choices.map((c, i) => {const letra = String.fromCharCode(65+i);const risco = c.risco ? `<span class="choice-risk risk-${c.risco}">${c.risco.toUpperCase()}</span>` : "";return `<button class="choice-card" onclick="BetaUI.escolher(${i})" id="choice-btn-${i}">
+<span class="choice-letter">${letra}</span>
+<span class="choice-text">${c.text}</span>
+${risco}</button>`;}).join("");
+_renderHistoricoTab(state);
+_iniciarTimer();
+mudarTab("historia");mostrarTela("screen-game");}function mudarTab(aba) {["historia","desafios","historico","empresa"].forEach(t => {document.getElementById(`tab-${t}`)?.classList.remove("active");document.getElementById(`gtab-${t}`)?.classList.remove("active");});document.getElementById(`tab-${aba}`)?.classList.add("active");document.getElementById(`gtab-${aba}`)?.classList.add("active");}function _renderHistoricoTab(state) {const histEl = document.getElementById("historico-indicadores");const recEl = document.getElementById("recomendacoes-panel");if (histEl) {const ultimas = state.history?.slice(-6).reverse() || [];if (!ultimas.length) {histEl.innerHTML = `<span style="color:var(--text-muted);font-size:.78rem;">Tome decisões para ver as mudanças aqui.</span>`;} else {histEl.innerHTML = ultimas.map(h => {const efeitos = Object.entries(h.efeitos||{}).filter(([,v])=>v!==0).slice(0,3).map(([k,v])=>`<span class="efeito-tag ${v>0?'efeito-pos':'efeito-neg'}">${v>0?"+":""}${v} ${BetaIndicadores.LABELS[k]||k}</span>`).join(" ");const emo = h.avaliacao==="boa"?"✅":h.avaliacao==="ruim"?"❌":"⚠️";return `<div class="historico-item">
+<div class="historico-item-round">${emo} Rod.${h.rodada} — ${h.titulo}</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${efeitos}</div>
+</div>`;}).join("");}}if (recEl) {const recs = _gerarRecomendacoes(state);recEl.innerHTML = recs.length
+? recs.map(r=>`<div class="rec-item"><div class="rec-item-title">${r.titulo}</div><div class="rec-item-desc">${r.desc}</div></div>`).join(""): `<span style="color:var(--text-muted);font-size:.78rem;">Recomendações aparecem conforme o jogo avança.</span>`;}}function _enriquecerDescricao(desc, state) {const hist = state.history || [];const flags = state.storyState?.flags || [];const g = state.gestor;const refs = [];if (hist.length && state.currentRound > 2) {const ultimaRuim = hist.filter(h=>h.avaliacao==="ruim").slice(-1)[0];if (ultimaRuim) refs.push(`O impacto de "${ultimaRuim.escolha.slice(0,48)}..." ainda repercute na organização.`);}if (g.esgotamento >= 7) refs.push("Você sente o peso acumulado das rodadas anteriores.");if (flags.includes("lideranca_toxica")) refs.push("A tensão interna criada pelas últimas decisões é perceptível.");if (!refs.length) return desc;return `[${refs[0]}]\n\n${desc}`;}function _gerarRecomendacoes(state) {const ind = state.indicators;const bench= BENCHMARKS[state.sector] || {};const recs = [];Object.entries(ind).forEach(([k, v]) => {const b = bench[k]; if (!b) return;const label = BetaIndicadores.LABELS[k] || k;if (v < b-3) recs.push({ titulo:`⚠ ${label} abaixo do mercado`, desc:`${label} (${v}) está ${b-v} pts abaixo da média do setor (${b}).` });else if (v > b+3) recs.push({ titulo:`✅ ${label} acima da média`, desc:`${label} (${v}) está ${v-b} pts acima da média do setor (${b}). Mantenha.` });});const g = state.gestor;if (g.esgotamento >= 7) recs.push({ titulo:"🔋 Esgotamento crítico", desc:"Priorize decisões que reduzam pressão e resgatem capital político." });if (g.capitalPolitico <= 3) recs.push({ titulo:"🏛 Capital político baixo", desc:"O conselho está desconfiante. Decisões com retorno financeiro ou de clientes recuperam credibilidade." });return recs.slice(0, 4);}function escolher(idx) {if (_escolhaFeita) return;_escolhaFeita = true;_pararTimer();
+document.querySelectorAll(".choice-card").forEach((b, i) => {b.disabled = true;if (i === idx) b.style.borderColor = "var(--gold)";});processarEscolha(idx);}function _iniciarTimer() {_pararTimer();if (!_settings.timer) return;_timerSegs = 90;const el = document.getElementById("timer-display");if (!el) return;el.classList.add("active"); el.classList.remove("danger");el.textContent = `⏱ ${_timerSegs}s`;_timerInterval = setInterval(() => {_timerSegs--;el.textContent = `⏱ ${_timerSegs}s`;if (_timerSegs <= 10) el.classList.add("danger");if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }}, 1000);}function _pararTimer() {clearInterval(_timerInterval); _timerInterval = null;const el = document.getElementById("timer-display");if (el) { el.classList.remove("active","danger"); el.textContent = ""; }}function mostrarFeedback(data, callback) {_feedbackCallback = callback;mostrarTela("screen-feedback");const corMap = { boa:"var(--good)", media:"var(--warn)", ruim:"var(--danger)" };const iconMap = { boa:"✅", media:"⚠️", ruim:"❌" };const labelMap = { boa:"BOA DECISÃO", media:"DECISÃO COM TRADE-OFFS", ruim:"MÁ DECISÃO" };const badgeClass = { boa:"verdict-boa", media:"verdict-media", ruim:"verdict-ruim" };const badge = document.getElementById("fb-veredito-badge");if (badge) { badge.className=`verdict-badge ${badgeClass[data.avaliacao]||"verdict-media"}`; badge.textContent=iconMap[data.avaliacao]||"⚠️"; }const lbl = document.getElementById("fb-veredito-label");if (lbl) { lbl.textContent=labelMap[data.avaliacao]||"DECISÃO"; lbl.style.color=corMap[data.avaliacao]; }document.getElementById("fb-veredito-sub").textContent = data.avaliacao==="boa"?"Decisão acertada":data.avaliacao==="ruim"?"Decisão equivocada":"Decisão com trade-offs";document.getElementById("fb-escolha-texto").textContent = data.escolhaTexto||"";document.getElementById("fb-explicacao-texto").textContent = data.ensinamento||"";
+const grid = document.getElementById("fb-impactos-grid");if (grid) grid.innerHTML = Object.entries(data.efeitos||{}).filter(([,v])=>v!==0).map(([k,v])=>{const cor=v>0?"var(--good)":"var(--danger)"; const nome=BetaIndicadores.LABELS[k]||k;return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v>0?"+":""}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;}).join("")||`<span style="font-size:.8rem;color:var(--text-muted)">Sem impacto direto.</span>`;
+const altEl = document.getElementById("fb-melhor-alt");if (altEl) {const melhor = data.melhorAlternativa;if (melhor && melhor.text !== data.escolhaTexto) {altEl.style.display = "";document.getElementById("fb-alt-texto").textContent = melhor.text;document.getElementById("fb-alt-ensinamento").textContent = melhor.ensinamento||"";const efEl = document.getElementById("fb-alt-efeitos");if (efEl) efEl.innerHTML = Object.entries(melhor.effects||{}).filter(([,v])=>v!==0).map(([k,v])=>{const cor=v>0?"var(--good)":"var(--danger)"; const nome=BetaIndicadores.LABELS[k]||k;return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor};font-size:.8rem">${v>0?"+":""}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;}).join("");} else { altEl.style.display="none"; }}
+const gestorEl=document.getElementById("fb-gestor"), gestorGrid=document.getElementById("fb-gestor-grid");if (gestorEl && gestorGrid) {const eg=data.efeitosGestor||{}, temEfeito=Object.values(eg).some(v=>v!==0);if (temEfeito) {gestorEl.style.display="";const labels={reputacaoInterna:"🧑 Reputação",capitalPolitico:"🏛 Cap. Político",esgotamento:"🔋 Esgotamento"};gestorGrid.innerHTML=Object.entries(eg).filter(([,v])=>v!==0).map(([k,v])=>{const ruim=k==="esgotamento"?v>0:v<0; const cor=ruim?"var(--danger)":"var(--purple)";return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v>0?"+":""}${v}</span><span class="fb-chip-nome">${labels[k]||k}</span></div>`;}).join("");} else { gestorEl.style.display="none"; }}
+const stEl=document.getElementById("fb-stakeholder");if (data.stakeholderReacao && stEl) {stEl.style.display="";document.getElementById("fb-st-icon").textContent=data.stakeholderReacao.icone||"👤";document.getElementById("fb-st-nome").textContent=data.stakeholderReacao.nome||"";document.getElementById("fb-st-txt").textContent=data.stakeholderReacao.texto||"";} else if (stEl) { stEl.style.display="none"; }
+const evEl=document.getElementById("fb-evento"), evTxt=document.getElementById("fb-evento-texto");if (data.eventoAtivo && evEl) { evEl.style.display=""; evTxt.textContent=`${data.eventoAtivo.titulo} amplificou os efeitos desta rodada.`; }else if (evEl) { evEl.style.display="none"; }
+const notifEl=document.getElementById("fb-notif"), notifLst=document.getElementById("fb-notif-lista");if (notifEl && notifLst) {const notifs=[...(data.novasFlags||[]).map(f=>_textoFlag(f)),...(data.novasConquistas||[]).map(c=>`🏆 ${c}`)];if (notifs.length) { notifEl.style.display=""; notifLst.innerHTML=notifs.map(n=>`<div class="fb-notif-row">${n}</div>`).join(""); }else { notifEl.style.display="none"; }}
+const histEl=document.getElementById("fb-historico"), histLst=document.getElementById("fb-historico-lista");if (histEl && histLst && data.historico?.length) {histEl.style.display="";histLst.innerHTML=data.historico.slice(0,3).map(h=>{const emo=h.avaliacao==="boa"?"✅":h.avaliacao==="ruim"?"❌":"⚠️";return `<div class="historico-item"><div class="historico-item-round">${emo} Rod.${h.rodada} — ${h.titulo}</div></div>`;}).join("");} else if (histEl) { histEl.style.display="none"; }}function avancar() {if (_feedbackCallback) { const cb=_feedbackCallback; _feedbackCallback=null; cb(); }}function renderResultado({ motivo, score, scoreGestor, gestor, indicators,history, companyName, empresa, sector, epilogo, decisoesCruciais }) {mostrarTela("screen-result");_registrarResultado(score, scoreGestor, sector, companyName);const titulos={fim:score>=70?"Mandato Concluído com Êxito":score>=45?"Mandato Concluído":"Mandato com Dificuldades",gameover:"Colapso Operacional",mandato_conselho:"Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};const subs={fim:"Você completou as 15 rodadas. Veja o balanço do seu mandato.",gameover:"Um indicador zerou. A empresa entrou em colapso.",mandato_conselho:"Seu capital político se esgotou e o conselho encerrou seu mandato.",mandato_burnout:"O esgotamento chegou ao limite e você precisou se afastar."};const motivoLabels = {fim:"Relatório Final",gameover:"Colapso Operacional",mandato_conselho:"Mandato Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};document.getElementById("result-motivo-label").textContent = motivoLabels[motivo] || motivo.replace(/_/g," ").toUpperCase();document.getElementById("result-title").textContent = titulos[motivo]||"Mandato Encerrado";document.getElementById("result-subtitle").textContent = subs[motivo]||"";const corEmp=score>=70?"var(--good)":score>=45?"var(--warn)":"var(--danger)";const corGes=scoreGestor>=70?"var(--purple)":scoreGestor>=45?"var(--warn)":"var(--danger)";const numEl=document.getElementById("result-score-num"), mgEl=document.getElementById("result-manager-num");if (numEl){numEl.textContent=score; numEl.style.color=corEmp;}if (mgEl) {mgEl.textContent=scoreGestor; mgEl.style.color=corGes;}
+const epilogoSec=document.getElementById("result-epilogo-section"), epilogoEl=document.getElementById("result-epilogo");if (epilogo && epilogoEl && epilogoSec) {epilogoSec.style.display="";epilogoEl.innerHTML=`<div class="result-epilogo-titulo">${epilogo.titulo}</div><div class="result-epilogo-desc">${epilogo.descricao}</div>`;} else if (epilogoSec) { epilogoSec.style.display="none"; }
+const indEl=document.getElementById("result-indicators");if (indEl) {const bench=BENCHMARKS[sector]||{};indEl.innerHTML=Object.entries(indicators).map(([k,v])=>{const cor=BetaIndicadores.corNivel(v), label=BetaIndicadores.LABELS[k]||k, b=bench[k];const diff=b?(v>b?`+${v-b} acima`:v<b?`${v-b} abaixo`:"na média"):"";return `<div class="result-ind-card">
+<div class="result-ind-label">${label}</div>
+<div class="result-ind-val" style="color:${cor}">${v}<span style="font-size:.7rem;color:var(--text-muted)">/20</span></div>
+${diff?`<div class="result-ind-level" style="color:${cor}">${diff}</div>`:""}</div>`;}).join("");}
+const gestorGrid=document.getElementById("result-gestor-grid");if (gestorGrid) {const g=gestor, esgCor=g.esgotamento>=7?"var(--danger)":g.esgotamento>=5?"var(--warn)":"var(--good)";gestorGrid.innerHTML=`
+<div class="gestor-item"><div class="gestor-item-val" style="color:var(--purple)">${g.reputacaoInterna}</div><div class="gestor-item-label">Reputação Interna</div></div>
+<div class="gestor-item"><div class="gestor-item-val" style="color:var(--purple)">${g.capitalPolitico}</div><div class="gestor-item-label">Capital Político</div></div>
+<div class="gestor-item"><div class="gestor-item-val" style="color:${esgCor}">${g.esgotamento}</div><div class="gestor-item-label">Esgotamento</div></div>`;}
+const cruciaisSec=document.getElementById("result-cruciais-section"), cruciaisLst=document.getElementById("result-cruciais-lista");if (cruciaisSec && cruciaisLst && decisoesCruciais?.length) {cruciaisSec.style.display="";cruciaisLst.innerHTML=decisoesCruciais.map(d=>{const emo=d.avaliacao==="boa"?"✅":d.avaliacao==="ruim"?"❌":"⚠️";const efeitos=Object.entries(d.efeitos||{}).filter(([,v])=>v!==0).map(([k,v])=>{const cor=v>0?"var(--good)":"var(--danger)"; const nome=BetaIndicadores.LABELS[k]||k;return `<span style="color:${cor};font-size:.65rem;margin-right:8px">${v>0?"+":""}${v} ${nome}</span>`;}).join("");return `<div class="crucial-item">
+<div class="crucial-round">${emo} Rodada ${d.rodada} — ${d.titulo}</div>
+<div class="crucial-escolha">"${d.escolha}"</div>
+<div style="margin:6px 0">${efeitos}</div>
+${d.ensinamento?`<div style="font-size:.75rem;color:var(--text-muted);line-height:1.4;font-style:italic">${d.ensinamento}</div>`:""}</div>`;}).join("");} else if (cruciaisSec) { cruciaisSec.style.display="none"; }}const GLOSSARIO_TERMOS = [{ termo:"SLA", def:"Service Level Agreement. Acordo de Nível de Serviço que define metas de prazo e qualidade entre operadora e cliente." },{ termo:"Capital Político", def:"Credibilidade do gestor junto ao conselho e stakeholders. Cai com decisões ruins, sobe com resultados e alinhamento estratégico." },{ termo:"Esgotamento", def:"Nível de desgaste do gestor. Ao atingir 10, o gestor precisa se afastar por burnout e o mandato é encerrado." },{ termo:"Benchmark", def:"Referência média do mercado para cada indicador. Exibido abaixo das barras durante o jogo para contextualizar seu desempenho." },{ termo:"IFA", def:"Índice de Frequência de Acidentes. Mede acidentes de trabalho por milhão de horas trabalhadas. Benchmark nacional: 8,2." },{ termo:"TMS", def:"Transportation Management System. Sistema de gerenciamento de transporte utilizado por operadoras logísticas para rastreamento e roteirização." },{ termo:"ISO 9001", def:"Norma internacional de gestão da qualidade. Exigida por clientes industriais como condição contratual de fornecimento." },{ termo:"Payback", def:"Prazo em que um investimento se paga com a economia ou receita gerada. Ex: painéis solares com payback de 4,5 anos." },{ termo:"NPS", def:"Net Promoter Score. Mede a lealdade e satisfação dos clientes com base em probabilidade de recomendação." },{ termo:"Dark Store", def:"Loja física convertida em centro de distribuição para e-commerce, sem atendimento presencial ao cliente final." },{ termo:"Hedge Cambial", def:"Instrumento financeiro que trava o custo do câmbio, protegendo empresas com custos em moeda estrangeira." },{ termo:"Click-and-Collect", def:"Modelo onde o cliente compra online e retira em loja física, eliminando o custo de frete e gerando tráfego para as lojas." },{ termo:"Kanban", def:"Sistema de produção puxada. Produz apenas o que foi vendido ou consumido, reduzindo estoque e lead time." },{ termo:"CIPA", def:"Comissão Interna de Prevenção de Acidentes. Obrigatória por lei em empresas a partir de 20 funcionários." },{ termo:"ESG", def:"Environmental, Social and Governance. Práticas ambientais, sociais e de governança avaliadas por investidores e clientes empresariais." },{ termo:"CAT", def:"Comunicação de Acidente de Trabalho. Documento obrigatório emitido pelo empregador nos casos de acidente laboral." },{ termo:"Interdependência", def:"Relação causal entre indicadores. Ex: na logística, frota deteriorada → segurança cai → RH cai → financeiro cai." },{ termo:"Imprevisto", def:"Evento aleatório que amplifica os efeitos de decisões durante a rodada em que está ativo. Pesos influenciados pelo estado do gestor." },{ termo:"Flag", def:"Padrão de comportamento detectado ao longo do mandato. Influencia eventos futuros e o epílogo. Ex: Liderança Tóxica, Crescimento Saudável." },{ termo:"Margem Operacional", def:"Lucro operacional dividido pela receita líquida. Indica quanto de cada real vendido se converte em lucro da operação." },];function openGlossary() {const el=document.getElementById("overlay-glossary"), content=document.getElementById("glossary-content");if (el) el.style.display="";if (content) content.innerHTML=GLOSSARIO_TERMOS.map(g=>
+`<div class="glossary-term"><div class="glossary-term-word">${g.termo}</div><div class="glossary-term-def">${g.def}</div></div>`).join("");}function closeGlossary() { const el=document.getElementById("overlay-glossary"); if(el) el.style.display="none"; }function openSettings() {const el=document.getElementById("overlay-settings"); if(el) el.style.display="";_atualizarToggleTimer();}function closeSettings() { const el=document.getElementById("overlay-settings"); if(el) el.style.display="none"; }function toggleTimerSetting() { _settings.timer=!_settings.timer; LS.set(SK.SETTINGS,_settings); _atualizarToggleTimer(); }function _atualizarToggleTimer() {const btn=document.getElementById("toggle-timer-btn"); if(!btn) return;btn.textContent=_settings.timer?"ON":"OFF"; btn.className=`toggle-btn ${_settings.timer?"on":"off"}`;}function toggleFullscreen() {if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}function reiniciar() { LS.remove(_skSession()); _aplicarTemaSetor(null); mostrarTela("screen-home"); }function mostrarErro(msg) { _showToast(msg, "info", 3200); }function mostrarSucesso(msg) { _showToast(msg, "ok", 2800); }function mostrarAviso(msg) { _showToast(msg, "aviso", 3200); }function mostrarErroCritico(msg) { _showToast(msg, "erro", 3500); }function _showToast(msg, tipo = "info", duracao = 3200) {const container = document.getElementById("toast");if (!container) return;const div = document.createElement("div");div.className = "toast-msg";const cores = {erro: { bg:"rgba(231,76,60,.92)", borda:"rgba(231,76,60,.5)", icone:"❌" },aviso: { bg:"rgba(243,156,18,.92)", borda:"rgba(243,156,18,.5)", icone:"⚠️" },ok: { bg:"rgba(46,204,113,.92)", borda:"rgba(46,204,113,.5)", icone:"✅" },info: { bg:"var(--bg4)", borda:"var(--line2)", icone:"ℹ️" },};const c = cores[tipo] || cores.info;div.style.cssText = `background:${c.bg};border-color:${c.borda};`;div.textContent = `${c.icone} ${msg}`;container.appendChild(div);setTimeout(() => {div.classList.add("removing");setTimeout(() => div.remove(), 220);}, duracao);}function _textoFlag(flag) {const MAPA={lideranca_toxica:"⚠️ Liderança Tóxica — padrão de decisões prejudicou o time",crescimento_sem_caixa:"⚠️ Decisões ruins drenaram o caixa",demissao_em_massa:"⚠️ Ondas de corte afetaram a cultura organizacional",rh_negligenciado:"⚠️ RH negligenciado — nenhuma decisão favoreceu o time",ignorou_seguranca:"⚠️ Vulnerabilidades de segurança foram ignoradas",crescimento_saudavel:"🟢 Sequência de 5 decisões corretas",investiu_em_inovacao:"🟢 Cultura de inovação estabelecida",gestor_de_crise:"🔥 Empresa recuperada de situação crítica",gestor_esgotado:"🔋 Esgotamento em nível crítico",};return MAPA[flag] || `🔔 ${flag}`;}let _tutorialStep = 0;const _TUTORIAL_TOTAL = 4;function pularTutorial() {localStorage.setItem('gsp_tutorial_done', '1');_verificarSessaoSalva();_atualizarHome();mostrarTela('screen-home');}function tutorialStep(dir) {const slides = document.querySelectorAll('.tutorial-slide');const dots = document.querySelectorAll('.tut-dot');slides[_tutorialStep]?.classList.remove('active');dots[_tutorialStep]?.classList.remove('active');_tutorialStep = Math.max(0, _tutorialStep + dir);if (_tutorialStep >= _TUTORIAL_TOTAL) { pularTutorial(); return; }slides[_tutorialStep]?.classList.add('active');dots[_tutorialStep]?.classList.add('active');const prevBtn = document.getElementById('tut-prev');const nextBtn = document.getElementById('tut-next');if (prevBtn) prevBtn.style.display = _tutorialStep > 0 ? '' : 'none';if (nextBtn) nextBtn.textContent = _tutorialStep === _TUTORIAL_TOTAL - 1 ? 'Começar →' : 'Próximo →';}async function irParaPerfil() {mostrarTela('screen-perfil');const isGuest = _player?.tipo === "guest" || !_player?.uid;if (!isGuest && _player?.uid && window.GSPSync) {
+try {const histFS = await window.GSPSync.carregarHistorico(_player.uid);if (histFS.length > 0) {const convertido = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));LS.set(SK.HISTORICO, convertido);}} catch (e) { }}
+const hist = LS.get(isGuest ? SK.HIST_GUEST : SK.HISTORICO) || [];const nome = _player?.nome || 'Jogador';const av = document.getElementById('perfil-avatar');if (av) av.textContent = nome.charAt(0).toUpperCase();const pn = document.getElementById('perfil-nome');if (pn) pn.textContent = nome;const total = hist.length;const melhor = total ? Math.max(...hist.map(h => h.score)) : 0;const media = total ? Math.round(hist.reduce((a,h) => a + h.score, 0) / total) : 0;const boas = hist.filter(h => h.score >= 70).length;const setorCount = {};hist.forEach(h => { setorCount[h.sector] = (setorCount[h.sector] || 0) + 1; });const favEntry = Object.entries(setorCount).sort((a,b) => b[1]-a[1])[0];const icones = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };const favLabel = favEntry ? `${icones[favEntry[0]]||''} ${favEntry[0]}` : '—';const sub = document.getElementById('perfil-subtitulo');if (sub) sub.textContent = `${total} mandato${total !== 1 ? 's' : ''} concluído${total !== 1 ? 's' : ''}`;const statsEl = document.getElementById('perfil-stats');if (statsEl) statsEl.innerHTML = [{ val: total ? melhor : '—', label: 'Melhor Score' },{ val: total ? media : '—', label: 'Score Médio' },{ val: boas, label: 'Mandatos Excelentes (70+)' },{ val: favLabel, label: 'Setor Favorito' },].map(s => `<div class="perfil-stat">
+<div class="perfil-stat-val">${s.val}</div>
+<div class="perfil-stat-label">${s.label}</div>
+</div>`).join('');const cqEl = document.getElementById('perfil-conquistas');if (cqEl) {if (isGuest) {cqEl.innerHTML = `
+<div class="conquistas-guest-lock">
+<div class="conquistas-lock-icon">🔒</div>
+<div class="conquistas-lock-title">Conquistas bloqueadas</div>
+<div class="conquistas-lock-desc">Crie uma conta para desbloquear conquistas, salvar seu progresso e competir no pódio.</div>
+<button class="btn btn-primary conquistas-lock-btn" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button>
+</div>`;} else {const conquistas = _calcularConquistas(hist);cqEl.innerHTML = conquistas.map(c => `
+<div class="perfil-conquista ${c.unlocked ? 'unlocked' : ''}">
+<div class="perfil-conquista-icon">${c.unlocked ? c.icon : '🔒'}</div>
+<div>
+<div class="perfil-conquista-nome">${c.nome}</div>
+<div class="perfil-conquista-desc">${c.desc}</div>
+</div>
+</div>`).join('');}}}function _calcularConquistas(hist) {const total = hist.length;const melhor = total ? Math.max(...hist.map(h => h.score)) : 0;return [{ icon:'🏆', nome:'Primeiro Mandato', desc:'Complete 1 jogo', unlocked: total >= 1 },{ icon:'⭐', nome:'Gestão Excelente', desc:'Score acima de 70', unlocked: melhor >= 70},{ icon:'🔥', nome:'Veterano', desc:'5 mandatos concluídos', unlocked: total >= 5 },{ icon:'💼', nome:'Executivo Sênior', desc:'10 mandatos concluídos', unlocked: total >= 10 },{ icon:'🚀', nome:'Especialista Tech', desc:'Vença com Tecnologia', unlocked: hist.some(h => h.sector === 'tecnologia' && h.score >= 70) },{ icon:'🏭', nome:'Rei da Indústria', desc:'Vença com Indústria', unlocked: hist.some(h => h.sector === 'industria' && h.score >= 70) },];}let _podioFiltro = 'all';async function filtrarPodio(setor) {_podioFiltro = setor;document.querySelectorAll('.podio-filter').forEach(b => {b.classList.toggle('active', b.dataset.filter === setor);});
+if (window.GSPSync) {try {const podioFS = await window.GSPSync.carregarPodio(setor !== "all" ? setor : null);if (podioFS.length > 0) {const convertido = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));_renderPodioLista(convertido);return;}} catch (e) { }}
+const podioLocal = LS.get(SK.PODIO) || [];const filtrado = setor === "all" ? podioLocal : podioLocal.filter(p => p.sector === setor);_renderPodioLista(filtrado);}function irParaPodio() {mostrarTela('screen-podio');const podio = LS.get(SK.PODIO) || [];const lista = document.getElementById('podio-lista');if (!lista) return;if (!podio.length) {lista.innerHTML = '<div class="podio-empty">Nenhum jogo finalizado ainda.<br>Complete seu primeiro mandato para aparecer aqui.</div>';return;}const medalhas = ['🥇','🥈','🥉'];const rkClass = ['gold','silver','bronze'];const icones = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };lista.innerHTML = podio.map((p, i) => {const data = new Date(p.ts).toLocaleDateString('pt-BR');const cor = p.score >= 70 ? 'var(--good)' : p.score >= 45 ? 'var(--warn)' : 'var(--danger)';return `<div class="podio-item" data-sector="${p.sector}">
+<div class="podio-rank ${rkClass[i]||''}">${medalhas[i]||i+1}</div>
+<div class="podio-player">
+<div class="podio-player-name">${p.player}</div>
+<div class="podio-player-meta">${icones[p.sector]||'🏢'} ${p.companyName} · ${data}</div>
+</div>
+<div class="podio-score" style="color:${cor}">${p.score}</div>
+</div>`;}).join('');if (_podioFiltro !== 'all') filtrarPodio(_podioFiltro);}let _jogoPausado = false;function pausarJogo() {_jogoPausado = true;if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }const state = BetaState.get();const info = document.getElementById('pause-info');if (info && state) {const fases = { fundacao:'Diagnóstico', crescimento:'Crescimento', crise:'⚠ Crise', consolidacao:'Consolidação', expansao:'Expansão' };const fase = state.storyState?.faseEmpresa || '';info.textContent = `${state.companyName} · ${fases[fase]||fase} · Rodada ${state.currentRound+1}/${state.totalRounds}`;}const overlay = document.getElementById('overlay-pause');if (overlay) overlay.style.display = '';}function continuarJogo() {_jogoPausado = false;const overlay = document.getElementById('overlay-pause');if (overlay) overlay.style.display = 'none';if (_settings.timer && !_escolhaFeita && _timerSegs > 0) {const el = document.getElementById('timer-display');if (el) { el.classList.add('active'); if (_timerSegs <= 10) el.classList.add('danger'); }_timerInterval = setInterval(() => {_timerSegs--;if (el) el.textContent = `⏱ ${_timerSegs}s`;if (_timerSegs <= 10 && el) el.classList.add('danger');if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }}, 1000);}}function abandonarJogo() {_jogoPausado = false;const overlay = document.getElementById('overlay-pause');if (overlay) overlay.style.display = 'none';_pararTimer();LS.remove(_skSession());_aplicarTemaSetor(null);mostrarTela('screen-home');}const INDICADOR_INFO = {reputacaoInterna: {titulo: '🧑 Reputação Interna',desc: 'Reflete como o time percebe sua liderança. Decisões que prejudicam as pessoas reduzem a reputação; decisões inclusivas e transparentes aumentam.',consequence: '⚠ Se chegar a 0, sua autoridade é questionada pelo conselho.',},capitalPolitico: {titulo: '🏛 Capital Político',desc: 'Sua credibilidade junto ao conselho e stakeholders externos. É consumido por decisões impopulares e reposicionamentos bruscos.',consequence: '⚠ Se chegar a 0, o conselho encerra seu mandato antecipadamente.',},esgotamento: {titulo: '🔋 Esgotamento',desc: 'Mede o desgaste acumulado do gestor. Aumenta com crises mal resolvidas e alta pressão de trabalho.',consequence: '🔴 Se chegar a 10, você é afastado por burnout e o mandato é encerrado imediatamente.',},};function abrirTooltipIndicador(key) {const info = INDICADOR_INFO[key];if (!info) return;const state = BetaState.get();const val = state?.gestor?.[key] ?? '—';const overlay = document.getElementById('overlay-tooltip');const title = document.getElementById('tooltip-title');const body = document.getElementById('tooltip-body');if (!overlay) return;if (title) title.textContent = info.titulo;if (body) body.innerHTML = `
+<div class="tooltip-val-block">
+<div class="tooltip-val-num" style="color:var(--s-text)">${val}<span style="font-size:.9rem;color:var(--t3)">/10</span></div>
+<div class="tooltip-val-label">Valor atual</div>
+</div>
+<p class="tooltip-body-text">${info.desc}</p>
+<div class="tooltip-consequence">${info.consequence}</div>`;overlay.style.display = '';}function closeTooltip() {const el = document.getElementById('overlay-tooltip');if (el) el.style.display = 'none';}let _modoTreino = false;function toggleModoTreino() {_modoTreino = !_modoTreino;const btn = document.getElementById('toggle-treino-btn');if (btn) { btn.textContent = _modoTreino ? 'ON' : 'OFF'; btn.className = `toggle-btn ${_modoTreino ? 'on' : 'off'}`; }}function compartilharResultado() {const score = document.getElementById('result-score-num')?.textContent || '—';const titulo = document.getElementById('result-title')?.textContent || 'Mandato';const state = BetaState.get();const icones = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };const icon = icones[state?.sector] || '🏢';const empresa = state?.companyName || 'Empresa';const texto = `${icon} ${titulo}📊 Score: ${score}/100
+🏢 ${empresa}Joguei Under Pressure — o simulador de decisões executivas!`;if (navigator.share) {navigator.share({ title: 'Under Pressure', text: texto }).catch(() => {});} else {navigator.clipboard?.writeText(texto).then(() => mostrarErro('Resultado copiado para a área de transferência!')).catch(() => mostrarErro('Copie o resultado manualmente.'));}}function _animarScore(elId, valorFinal, cor, duracao = 1200) {const el = document.getElementById(elId);if (!el || isNaN(valorFinal)) return;const start = Date.now();const tick = () => {const elapsed = Date.now() - start;const progress = Math.min(elapsed / duracao, 1);const ease = 1 - Math.pow(1 - progress, 3);el.textContent = Math.round(ease * valorFinal);el.style.color = cor;if (progress < 1) { requestAnimationFrame(tick); }else { el.textContent = valorFinal; el.classList.add('animating'); setTimeout(() => el.classList.remove('animating'), 200); }};requestAnimationFrame(tick);}function _lancarConfetti() {const screen = document.getElementById('screen-result');if (!screen) return;const cores = ['#D4A853','#5B8DEF','#1FB885','#E8711A','#E8467A','#ffffff'];for (let i = 0; i < 30; i++) {const p = document.createElement('div');p.className = 'confetti-piece';p.style.cssText = `left:${Math.random()*100}%;top:0;position:absolute;background:${cores[Math.floor(Math.random()*cores.length)]};animation-delay:${Math.random()*1.5}s;animation-duration:${1.5+Math.random()}s`;screen.appendChild(p);setTimeout(() => p.remove(), 4000);}}function renderResultadoAnimado({ motivo, score, scoreGestor, gestor, indicators,history, companyName, empresa, sector, epilogo, decisoesCruciais }) {renderResultado({ motivo, score, scoreGestor, gestor, indicators, history, companyName, empresa, sector, epilogo, decisoesCruciais });
+const screen = document.getElementById('screen-result');if (screen) {screen.classList.remove('state-excelente','state-regular','state-dificil');screen.classList.add(score >= 70 ? 'state-excelente' : score >= 45 ? 'state-regular' : 'state-dificil');}
+const corEmp = score >= 70 ? 'var(--good)' : score >= 45 ? 'var(--warn)' : 'var(--danger)';const corGes = scoreGestor >= 70 ? 'var(--purple)' : scoreGestor >= 45 ? 'var(--warn)' : 'var(--danger)';const ne = document.getElementById('result-score-num');const mg = document.getElementById('result-manager-num');if (ne) { ne.textContent = '0'; ne.style.color = corEmp; }if (mg) { mg.textContent = '0'; mg.style.color = corGes; }setTimeout(() => {_animarScore('result-score-num', score, corEmp);_animarScore('result-manager-num', scoreGestor, corGes);}, 400);if (score >= 70) setTimeout(_lancarConfetti, 800);
+if (_modoTreino) {const ml = document.getElementById('result-motivo-label');if (ml) ml.textContent = 'MODO TREINO · Resultado não salvo';
+if (_player?.tipo !== 'guest' && _player?.uid) {const podio = LS.get(SK.PODIO) || [];if (podio.length) { podio.shift(); LS.set(SK.PODIO, podio); }const hh = LS.get(SK.HISTORICO) || [];if (hh.length) { hh.shift(); LS.set(SK.HISTORICO, hh); }}}}registrarUI({ mostrarTela, mostrarIntro, renderSidebar, renderRodada, mostrarFeedback, renderResultado: renderResultadoAnimado });window.BetaUI = {irParaLogin, irParaAuth, irComoConvidado, sair,authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,irParaSetores, irParaPodio, irParaHistoricoJogos,irParaPerfil, filtrarPodio,restaurarSessao, descartarSessao,selecionarSetor, lancarJogo, comecaJogo,mudarTab, escolher, avancar, reiniciar,openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting,toggleFullscreen, voltar,
+pularTutorial, tutorialStep,pausarJogo, continuarJogo, abandonarJogo,abrirTooltipIndicador, closeTooltip,toggleModoTreino,compartilharResultado,};window.addEventListener("DOMContentLoaded", _boot);
