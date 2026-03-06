@@ -3329,7 +3329,7 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
       if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
       const _statusEl = () => document.getElementById('result-cloud-status');
       if (_statusEl()) _statusEl().textContent = '☁️ Salvando na nuvem...';
-      const _timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000));
+      const _timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000)
       Promise.race([
         Promise.all([
           window.GSPSync.salvarPartida(_player.uid, entrada),
