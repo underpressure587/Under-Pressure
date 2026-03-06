@@ -630,9 +630,8 @@
 
 <script src="./bundle.js"></script>
 <script>
-  if (document.readyState !== "loading") {
-    if (typeof _boot === "function") _boot();
-  }
+  // DOMContentLoaded já disparou, chama _boot manualmente
+  if (typeof _boot === "function") _boot();
 </script>
 </body>
 </html>
