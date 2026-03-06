@@ -19,7 +19,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
-  initializeFirestore,
+  getFirestore,
   doc, setDoc, getDoc, updateDoc, deleteDoc,
   collection, addDoc, query, orderBy, limit, getDocs, where,
   serverTimestamp
@@ -43,7 +43,7 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
   try {
     app            = initializeApp(firebaseConfig);
     auth           = getAuth(app);
-    db = initializeFirestore(app, { experimentalForceLongPolling: true });
+    db = getFirestore(app);
     googleProvider = new GoogleAuthProvider();
     _firebaseReady = true;
     console.log("[GSP] Firebase inicializado com sucesso.");
