@@ -27,7 +27,7 @@ import {
 
 /* ─── COLE SUA CONFIGURAÇÃO AQUI ─────────────────────── */
 const firebaseConfig = {
-  apiKey:            "COLE_AQUI_A_KEY_DO_under-pressure-web",
+  apiKey:            "AIzaSyB_Zkl12AyT5RMfg9eJ68QFTakdBKSioVU",
   authDomain:        "under-pressure-49320.firebaseapp.com",
   projectId:         "under-pressure-49320",
   storageBucket:     "under-pressure-49320.firebasestorage.app",
@@ -39,7 +39,7 @@ const firebaseConfig = {
 let app, auth, db, googleProvider;
 let _firebaseReady = false;
 
-if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "COLE_AQUI") {
+if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
   try {
     app            = initializeApp(firebaseConfig);
     auth           = getAuth(app);
