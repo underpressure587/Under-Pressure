@@ -43,7 +43,7 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "COLE_AQUI") {
   try {
     app            = initializeApp(firebaseConfig);
     auth           = getAuth(app);
-    db = initializeFirestore(app, { experimentalForceLongPolling: true });
+    db = initializeFirestore(app, {});
     googleProvider = new GoogleAuthProvider();
     _firebaseReady = true;
     console.log("[GSP] Firebase inicializado com sucesso.");
