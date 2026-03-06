@@ -626,6 +626,19 @@
 
   <div id="toast"></div>
 </div>
-<script type="module" src="./bundle.js"></script>
+<script>
+  // Aguarda firebase-config.js carregar antes de rodar o bundle
+  window._gspBundleReady = false;
+  function _waitAndLoadBundle() {
+    const s = document.createElement("script");
+    s.src = "./bundle.js";
+    document.body.appendChild(s);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", _waitAndLoadBundle);
+  } else {
+    setTimeout(_waitAndLoadBundle, 500);
+  }
+</script>
 </body>
 </html>
