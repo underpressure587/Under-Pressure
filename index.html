@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="./style.css">
   <!-- ══ FIREBASE SDK ══ (adicione sua configuração em firebase-config.js) -->
   <script type="module" src="./firebase-config.js"></script>
-  <script defer src="./bundle.js"></script>
+
 </head>
 <body>
 <div id="critical-toast-container"></div>
@@ -628,5 +628,11 @@
   <div id="toast"></div>
 </div>
 
+<script src="./bundle.js"></script>
+<script>
+  if (document.readyState !== "loading") {
+    if (typeof _boot === "function") _boot();
+  }
+</script>
 </body>
 </html>
