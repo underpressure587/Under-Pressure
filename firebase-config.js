@@ -126,16 +126,18 @@ window.GSPAuth = {
     return new Promise((resolve) => {
       let resolved = false;
       const done = (val) => { if (!resolved) { resolved = true; resolve(val); } };
+      // Processa redirect — tem prioridade
       getRedirectResult(auth)
         .then(cred => { if (cred?.user) done(cred.user); })
         .catch(() => {});
-      let firstCall = true;
+      // onAuthStateChanged — espera usuário, ignora nulos iniciais por 4s
+      const startTime = Date.now();
       const unsub = onAuthStateChanged(auth, (user) => {
         if (user) { unsub(); done(user); return; }
-        if (firstCall) { firstCall = false; return; }
-        unsub(); done(null);
+        // So resolve null depois de 4s (tempo para redirect processar)
+        if (Date.now() - startTime > 4000) { unsub(); done(null); }
       });
-      setTimeout(() => done(null), 5000);
+      setTimeout(() => done(null), 8000);
     });
   },
 
