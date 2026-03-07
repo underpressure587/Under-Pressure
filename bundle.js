@@ -3144,11 +3144,9 @@ async function _boot() {
     if (window.GSPAuth.isReady()) {
       _setLoadingMsg('Verificando sua sessão...', 'Checando login do Google', 60);
       try {
-        // waitForAuthReady é mais confiável que getRedirectResult
         const fbUser = await window.GSPAuth.waitForAuthReady().catch(() => null);
         if (fbUser) {
-          const redir = await window.GSPAuth.processarRedirectGoogle().catch(() => null);
-          const user = redir || {
+          const user = {
             uid: fbUser.uid,
             nome: fbUser.displayName || fbUser.email?.split('@')[0] || 'Jogador',
             email: fbUser.email,
