@@ -4916,6 +4916,14 @@ async function authCadastrar() {
 }
 
 async function authGoogle() {
+  // Aguarda Firebase ficar pronto (até 3s)
+  if (!window.GSPAuth?.isReady()) {
+    let t = 0;
+    while (!window.GSPAuth?.isReady() && t < 30) {
+      await new Promise(r => setTimeout(r, 100));
+      t++;
+    }
+  }
   if (!window.GSPAuth?.isReady()) {
     mostrarErro("Configure o Firebase para usar o login com Google.");
     return;
