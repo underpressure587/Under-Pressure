@@ -84,7 +84,12 @@ window.GSPAuth = {
   async loginGoogle() {
     if (!_firebaseReady) throw new Error("Firebase não configurado.");
     try {
-      const cred = await signInWithPopup(auth, googleProvider);
+      const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+        if (isMobile) {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        }
+        const cred = await signInWithPopup(auth, googleProvider);
       const nome = cred.user.displayName || cred.user.email.split("@")[0];
       await GSPAuth._salvarPerfil(cred.user, nome);
       return { uid: cred.user.uid, nome, email: cred.user.email, tipo: "user" };
