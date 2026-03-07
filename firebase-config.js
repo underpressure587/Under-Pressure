@@ -123,18 +123,18 @@ window.GSPAuth = {
 
   waitForAuthReady() {
     if (!_firebaseReady || !auth) return Promise.resolve(null);
-    // Processa redirect do Google primeiro, depois aguarda auth state
     return new Promise((resolve) => {
       let resolved = false;
       const done = (val) => { if (!resolved) { resolved = true; resolve(val); } };
-      // Tenta processar redirect imediatamente
       getRedirectResult(auth)
-        .then(cred => {
-          if (cred?.user) done(cred.user);
-        })
+        .then(cred => { if (cred?.user) done(cred.user); })
         .catch(() => {});
-      // onAuthStateChanged como fallback principal
-      const unsub = onAuthStateChanged(auth, (user) => { unsub(); done(user); });
+      let firstCall = true;
+      const unsub = onAuthStateChanged(auth, (user) => {
+        if (user) { unsub(); done(user); return; }
+        if (firstCall) { firstCall = false; return; }
+        unsub(); done(null);
+      });
       setTimeout(() => done(null), 5000);
     });
   },
