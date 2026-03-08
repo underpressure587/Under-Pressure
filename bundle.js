@@ -3213,6 +3213,9 @@ function mostrarTela(id, goBack) {
   if (el) {
     el.classList.add("active");
     if (goBack) {
+      el.style.animation = "none";
+      el.offsetHeight;
+      el.style.animation = "";
       el.classList.add("go-back");
       setTimeout(() => el.classList.remove("go-back"), 350);
     }
