@@ -3112,6 +3112,16 @@ window.addEventListener('DOMContentLoaded', function _pollFirebase() {
   }, 100);
 });
 
+// Listener global — captura login do Google mesmo após redirect
+function _iniciarListenerAuth() {
+  if (!window.GSPAuth?.isReady()) return;
+  window.GSPAuth.onAuthChange((user) => {
+    if (user && !_player) {
+      _loginOk(user);
+    }
+  });
+}
+
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false };
 
@@ -3162,6 +3172,7 @@ async function _boot() {
 
   _setLoadingMsg('Pronto!', 'Faça seu login para continuar', 100);
   await new Promise(r => setTimeout(r, 400));
+  _iniciarListenerAuth();
   mostrarTela('screen-login');
 }
 
