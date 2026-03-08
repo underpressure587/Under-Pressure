@@ -4926,10 +4926,10 @@ function irParaAuth() {
     z-index: 9999;
     pointer-events: none;
     border-radius: 50%;
-    transition: left 0.5s cubic-bezier(.4,0,.2,1),
-                top 0.5s cubic-bezier(.4,0,.2,1),
-                width 0.5s cubic-bezier(.4,0,.2,1),
-                height 0.5s cubic-bezier(.4,0,.2,1);
+    transition: left 0.55s cubic-bezier(.2,.8,.4,1),
+                top 0.55s cubic-bezier(.2,.8,.4,1),
+                width 0.55s cubic-bezier(.2,.8,.4,1),
+                height 0.55s cubic-bezier(.2,.8,.4,1);
     animation: none;
   `;
   document.body.appendChild(clone);
