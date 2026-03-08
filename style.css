@@ -205,7 +205,6 @@ body::after{
 .screen{
   display:none; position:absolute; inset:0; flex-direction:column;
   overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
-  animation: screenIn .3s cubic-bezier(.22,.68,0,1.2);
 }
 .screen.active{ display:flex; }
 

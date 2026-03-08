@@ -3065,7 +3065,8 @@ const LS = {
 };
 const SK = {
   PLAYER:"gsp_player", PODIO:"gsp_podio",
-  HISTORICO:"gsp_historico", SESSION:"gsp_session", SETTINGS:"gsp_settings",
+  HISTORICO:"gsp_historico", HIST_GUEST:"gsp_historico_guest",
+  SESSION:"gsp_session", SETTINGS:"gsp_settings",
 };
 
 /* ════════════════════════════════════════════════════
@@ -3084,8 +3085,47 @@ let _prevIndicators   = {}; // track trends
 /* ════════════════════════════════════════════════════
    BOOT
 ════════════════════════════════════════════════════ */
-function _boot() {
+function _setFirebaseStatus(estado) {
+  // estados: 'connecting' | 'online' | 'offline'
+  const dot   = document.getElementById('firebase-status-dot');
+  const label = document.getElementById('firebase-status-label');
+  if (!dot || !label) return;
+  dot.className = 'firebase-dot firebase-dot--' + estado;
+  const textos = { connecting: 'Conectando', online: 'Online', offline: 'Offline' };
+  label.textContent = textos[estado] || estado;
+  label.style.color = estado === 'online' ? '#2ecc71' : estado === 'offline' ? '#e74c3c' : 'var(--t3)';
+}
+
+// Inicia polling do Firebase só após DOM pronto
+window.addEventListener('DOMContentLoaded', function _pollFirebase() {
+  let tentativas = 0;
+  const intervalo = setInterval(() => {
+    tentativas++;
+    if (window.GSPSync && window.GSPAuth?.isReady()) {
+      clearInterval(intervalo);
+      _setFirebaseStatus('online');
+    } else if (tentativas >= 80) {
+      // Timeout de 6s sem resposta
+      clearInterval(intervalo);
+      _setFirebaseStatus('offline');
+    }
+  }, 100);
+});
+
+// Listener global — captura login do Google mesmo após redirect
+function _iniciarListenerAuth() {
+  if (!window.GSPAuth?.isReady()) return;
+  window.GSPAuth.onAuthChange((user) => {
+    if (user && !_player) {
+      _loginOk(user);
+    }
+  });
+}
+
+async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false };
+
+  // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
   if (saved) {
     _player = saved;
@@ -3096,24 +3136,102 @@ function _boot() {
     } else {
       mostrarTela('screen-home');
     }
+    _sincronizarFirebaseBackground(saved);
     return;
   }
+
+  // Sem sessão salva — mostra loading enquanto verifica redirect do Google
+  mostrarTela('screen-loading');
+  _setLoadingMsg('Iniciando...', 'Preparando o jogo', 10);
+
+  if (window.GSPAuth) {
+    _setLoadingMsg('Conectando ao servidor...', 'Aguardando Firebase', 30);
+    let t = 0;
+    while (!window.GSPAuth.isReady() && t < 30) {
+      await new Promise(r => setTimeout(r, 100));
+      t++;
+    }
+    if (window.GSPAuth.isReady()) {
+      _setLoadingMsg('Verificando sua sessão...', 'Checando login do Google', 60);
+      try {
+        const fbUser = await window.GSPAuth.waitForAuthReady().catch(() => null);
+        if (fbUser) {
+          const user = {
+            uid: fbUser.uid,
+            nome: fbUser.displayName || fbUser.email?.split('@')[0] || 'Jogador',
+            email: fbUser.email,
+            tipo: 'user'
+          };
+          _setLoadingMsg('Entrando no painel...', 'Bem-vindo de volta!', 90);
+          await _loginOk(user);
+          return;
+        }
+      } catch(e) {}
+    }
+  }
+
+  _setLoadingMsg('Pronto!', 'Faça seu login para continuar', 100);
+  await new Promise(r => setTimeout(r, 400));
+  _iniciarListenerAuth();
   mostrarTela('screen-login');
+}
+
+// Sincroniza sessão Firebase em background sem bloquear a UI
+function _sincronizarFirebaseBackground(player) {
+  if (!player?.uid || !window.GSPAuth?.isReady() || !window.GSPSync) return;
+  Promise.all([
+    window.GSPSync.carregarHistorico(player.uid),
+    window.GSPSync.carregarPodio(),
+    window.GSPSync.carregarSessao(player.uid)
+  ]).then(([histFS, podioFS, sessFS]) => {
+    if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) })));
+    if (podioFS?.length > 0) LS.set(SK.PODIO, podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
+    if (sessFS) LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
+  }).catch(() => {});
+}
+
+function _setLoadingMsg(msg, sub, progress) {
+  const el = document.getElementById('loading-msg');
+  if (el) el.textContent = msg;
+  const sub_el = document.getElementById('loading-submsg');
+  if (sub_el) sub_el.textContent = sub || '';
+  const bar = document.getElementById('loading-bar-fill');
+  if (bar && progress !== undefined) bar.style.width = progress + '%';
 }
 
 /* ════════════════════════════════════════════════════
    NAVEGAÇÃO
 ════════════════════════════════════════════════════ */
-function mostrarTela(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+function mostrarTela(id, goBack) {
+  document.querySelectorAll(".screen").forEach(s => {
+    s.classList.remove("active", "go-back");
+    s.style.display = '';
+    s.style.opacity = '';
+    s.style.transition = '';
+    s.style.animation = '';
+  });
   const el = document.getElementById(id);
-  if (el) el.classList.add("active");
+  if (el) {
+    el.classList.add("active");
+    el.style.animation = goBack
+      ? 'screenBack .3s cubic-bezier(.22,.68,0,1.2)'
+      : 'screenIn .3s cubic-bezier(.22,.68,0,1.2)';
+    setTimeout(() => { el.style.animation = ''; }, 350);
+  }
   // Remove tema de setor em todas as telas fora do jogo
   const TELAS_JOGO = ["screen-intro","screen-game","screen-feedback","screen-result"];
   if (!TELAS_JOGO.includes(id)) _aplicarTemaSetor(null);
   window.scrollTo(0, 0);
 }
-function voltar(tela) { mostrarTela(tela); }
+function voltar(tela) {
+  ['.login-logo-img', '.login-footer', '.login-main', '.login-eyebrow', '.login-rule', '.login-desc'].forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) { el.style.opacity = ''; el.style.transition = ''; el.style.transform = ''; }
+  });
+  const authLogoEl = document.querySelector('.auth-logo-img');
+  if (authLogoEl) authLogoEl.style.opacity = '';
+  mostrarTela(tela, true);
+}
 
 /* ════════════════════════════════════════════════════
    LOGIN / IDENTIDADE
@@ -3142,6 +3260,7 @@ function sair() {
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
   _player = null;
+  if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
 
@@ -3206,45 +3325,143 @@ function descartarSessao() {
    PÓDIO / HISTÓRICO DE JOGOS
 ════════════════════════════════════════════════════ */
 function _registrarResultado(score, scoreGestor, sector, companyName) {
-  const entrada = {
-    player: _player?.nome || "Convidado",
+  const isGuest  = _player?.tipo === 'guest' || !_player?.uid;
+  const histKey  = isGuest ? SK.HIST_GUEST : SK.HISTORICO;
+  const entrada  = {
+    player: _player?.nome || 'Convidado',
     score, scoreGestor, sector, companyName, ts: Date.now(),
+    uid: _player?.uid || null,
   };
-  const podio = LS.get(SK.PODIO) || [];
-  podio.push(entrada);
-  podio.sort((a, b) => b.score - a.score);
-  LS.set(SK.PODIO, podio.slice(0, 10));
-  const hist = LS.get(SK.HISTORICO) || [];
+
+  // Salva no histórico local
+  const hist = LS.get(histKey) || [];
   hist.unshift(entrada);
-  LS.set(SK.HISTORICO, hist.slice(0, 20));
+  LS.set(histKey, hist.slice(0, 30));
+
+  // Atualiza pódio local — usuários logados deduplicam por uid, convidados sempre adicionam nova entrada
+  const podio = LS.get(SK.PODIO) || [];
+  if (entrada.uid) {
+    const existIdx = podio.findIndex(p => p.uid && p.uid === entrada.uid);
+    if (existIdx >= 0) {
+      if (entrada.score > podio[existIdx].score) podio[existIdx] = entrada;
+    } else {
+      podio.push(entrada);
+    }
+  } else {
+    podio.push(entrada);
+  }
+  podio.sort((a, b) => b.score - a.score);
+  LS.set(SK.PODIO, podio.slice(0, 20));
+
   LS.remove(SK.SESSION);
+
+  // Salva no Firestore com feedback visível
+  if (!isGuest && _player?.uid) {
+    const _salvarNoFirestore = () => {
+      if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
+      const _statusEl = () => document.getElementById('result-cloud-status');
+      if (_statusEl()) _statusEl().textContent = '☁️ Salvando na nuvem...';
+      Promise.all([
+        window.GSPSync.salvarPartida(_player.uid, entrada),
+        window.GSPSync.salvarNoPodio(_player.uid, entrada)
+      ])
+        .then(() => { if (_statusEl()) _statusEl().textContent = '✅ Salvo na nuvem!'; })
+        .catch(e => {
+          if (_statusEl()) _statusEl().textContent = '❌ Erro: ' + (e?.code || e?.message || 'desconhecido');
+        });
+    };
+    if (window.GSPSync) {
+      _salvarNoFirestore();
+    } else {
+      let t = 0;
+      const poll = setInterval(() => {
+        t++;
+        if (window.GSPSync) { clearInterval(poll); _salvarNoFirestore(); }
+        else if (t >= 50) { clearInterval(poll); mostrarAviso('⚠️ Firebase não conectado'); }
+      }, 100);
+    }
+  }
 }
 
 /* irParaPodio: definição única e correta abaixo (com data-sector) */
 
 function irParaHistoricoJogos() {
   mostrarTela("screen-historico-jogos");
-  const hist  = LS.get(SK.HISTORICO) || [];
-  const lista = document.getElementById("historico-jogos-lista");
+  const isGuest = _player?.tipo === "guest" || !_player?.uid;
+  const histKey = isGuest ? SK.HIST_GUEST : SK.HISTORICO;
+  const lista   = document.getElementById("historico-jogos-lista");
   if (!lista) return;
-  if (!hist.length) { lista.innerHTML = `<div class="podio-empty">Nenhum jogo registrado ainda.</div>`; return; }
-  const icones = { tecnologia:"🚀",varejo:"🛒",logistica:"🚚",industria:"🏭" };
-  lista.innerHTML = hist.map(p => {
-    const data = new Date(p.ts).toLocaleDateString("pt-BR");
-    const hora = new Date(p.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
-    const cor  = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
-    return `<div class="podio-item">
-      <div style="font-size:1.4rem">${icones[p.sector]||"🏢"}</div>
-      <div class="podio-player">
-        <div class="podio-player-name">${p.companyName}</div>
-        <div class="podio-player-meta">${p.player} · ${data} ${hora}</div>
+
+  // Renderiza imediatamente com dados locais
+  _renderHistorico(lista, LS.get(histKey) || [], isGuest);
+
+  // Se logado, sincroniza Firestore em background e re-renderiza se tiver novo
+  if (!isGuest && _player?.uid && window.GSPSync) {
+    window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
+      if (!histFS?.length) return;
+      const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
+      LS.set(SK.HISTORICO, c);
+      _renderHistorico(lista, c, false);
+    }).catch(() => {});
+  }
+}
+
+function _renderHistorico(lista, hist, isGuest) {
+  const icones = { tecnologia:"🚀", varejo:"🛒", logistica:"🚚", industria:"🏭" };
+  const labels = { tecnologia:"Tecnologia", varejo:"Varejo", logistica:"Logística", industria:"Indústria" };
+
+  if (isGuest) {
+    lista.innerHTML = `
+      <div class="hist-guest-banner">
+        <div class="hist-guest-icon">☁️</div>
+        <div class="hist-guest-title">Histórico na nuvem</div>
+        <div class="hist-guest-desc">Crie uma conta para salvar seu histórico online e acessar em qualquer dispositivo.</div>
+        <button class="btn btn-primary hist-guest-btn" onclick="BetaUI.irParaAuth()">Criar conta grátis</button>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-        <div class="podio-score" style="color:${cor};font-size:1.2rem">${p.score}</div>
-        <div style="font-size:.62rem;color:var(--text-muted);font-family:var(--f-game)">Gestor ${p.scoreGestor}</div>
+      ${hist.length ? '<div class="hist-section-label">Sessão atual (local)</div>' + hist.map(p => _histCard(p, icones, labels)).join('') : ''}`;
+    return;
+  }
+
+  if (!hist.length) {
+    lista.innerHTML = `<div class="podio-empty">Nenhuma partida registrada ainda.<br>Complete um mandato para ver seu histórico aqui.</div>`;
+    return;
+  }
+
+  // Agrupa por setor para estatísticas rápidas
+  const totalJogos = hist.length;
+  const melhor     = Math.max(...hist.map(h => h.score));
+  const media      = Math.round(hist.reduce((a, h) => a + h.score, 0) / totalJogos);
+
+  lista.innerHTML = `
+    <div class="hist-stats-row">
+      <div class="hist-stat"><span class="hist-stat-val">${totalJogos}</span><span class="hist-stat-label">Partidas</span></div>
+      <div class="hist-stat"><span class="hist-stat-val" style="color:var(--s-text)">${melhor}</span><span class="hist-stat-label">Melhor</span></div>
+      <div class="hist-stat"><span class="hist-stat-val">${media}</span><span class="hist-stat-label">Média</span></div>
+    </div>
+    <div class="hist-section-label">Últimas partidas</div>
+    ${hist.map(p => _histCard(p, icones, labels)).join('')}`;
+}
+
+function _histCard(p, icones, labels) {
+  const data    = new Date(p.ts).toLocaleDateString("pt-BR");
+  const hora    = new Date(p.ts).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
+  const cor     = p.score >= 70 ? "var(--good)" : p.score >= 45 ? "var(--warn)" : "var(--danger)";
+  const badge   = p.score >= 70 ? "hist-badge-great" : p.score >= 45 ? "hist-badge-ok" : "hist-badge-bad";
+  const label   = p.score >= 70 ? "Excelente" : p.score >= 45 ? "Regular" : "Crítico";
+  return `<div class="hist-card">
+    <div class="hist-card-left">
+      <div class="hist-card-sector">${icones[p.sector]||"🏢"}</div>
+      <div class="hist-card-info">
+        <div class="hist-card-company">${p.companyName}</div>
+        <div class="hist-card-meta">${labels[p.sector]||p.sector} · ${data} às ${hora}</div>
       </div>
-    </div>`;
-  }).join("");
+    </div>
+    <div class="hist-card-right">
+      <div class="hist-card-score" style="color:${cor}">${p.score}</div>
+      <div class="hist-badge ${badge}">${label}</div>
+      <div class="hist-card-gestor">Gestor: ${p.scoreGestor}</div>
+    </div>
+  </div>`;
 }
 
 /* ════════════════════════════════════════════════════
@@ -4044,22 +4261,11 @@ function irParaSlide(step) {
 ════════════════════════════════════════════════════ */
 async function irParaPerfil() {
   mostrarTela('screen-perfil');
-  // Relê do localStorage para garantir uid/email após login Google ou email
   const playerSalvo = LS.get(SK.PLAYER);
   if (playerSalvo) _player = playerSalvo;
   const isGuest = _player?.tipo === "guest" || !_player?.uid;
 
-  // Sincroniza histórico do Firestore se logado
-  if (!isGuest && _player?.uid && window.GSPSync) {
-    try {
-      const histFS = await window.GSPSync.carregarHistorico(_player.uid);
-      if (histFS.length > 0) {
-        const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
-        LS.set(SK.HISTORICO, c);
-      }
-    } catch(e) {}
-  }
-
+  // Renderiza IMEDIATAMENTE com dados locais
   const hist = LS.get(isGuest ? SK.HIST_GUEST : SK.HISTORICO) || [];
   const nome = _player?.nome || 'Jogador';
 
@@ -4189,6 +4395,39 @@ async function irParaPerfil() {
     });
   }
   sessionStorage.setItem('gsp_prev_unlocked', JSON.stringify(conquistas.filter(c => c.unlocked).map(c => c.nome)));
+
+  // Sincroniza Firestore em background — não bloqueia a UI
+  if (!isGuest && _player?.uid && window.GSPSync) {
+    window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
+      if (histFS.length > 0) {
+        const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
+        const localHist = LS.get(SK.HISTORICO) || [];
+        // Só re-renderiza se vier dado novo do servidor
+        if (c.length !== localHist.length) {
+          LS.set(SK.HISTORICO, c);
+          // Re-renderiza apenas os stats silenciosamente
+          const total2  = c.length;
+          const melhor2 = total2 ? Math.max(...c.map(h => h.score)) : 0;
+          const media2  = total2 ? Math.round(c.reduce((a,h) => a + h.score, 0) / total2) : 0;
+          const boas2   = c.filter(h => h.score >= 70).length;
+          const setorCount2 = {};
+          c.forEach(h => { setorCount2[h.sector] = (setorCount2[h.sector] || 0) + 1; });
+          const favEntry2 = Object.entries(setorCount2).sort((a,b) => b[1]-a[1])[0];
+          const icones2 = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
+          const favLabel2 = favEntry2 ? `${icones2[favEntry2[0]]||''} ${favEntry2[0]}` : '—';
+          const subEl = document.getElementById('perfil-subtitulo');
+          if (subEl) subEl.textContent = `${total2} mandato${total2 !== 1 ? 's' : ''} concluído${total2 !== 1 ? 's' : ''}`;
+          const statsEl2 = document.getElementById('perfil-stats');
+          if (statsEl2) statsEl2.innerHTML = [
+            { val: total2 ? melhor2 : '—', label: 'Melhor Score' },
+            { val: total2 ? media2  : '—', label: 'Score Médio'  },
+            { val: boas2,                  label: 'Excelentes (70+)' },
+            { val: favLabel2,              label: 'Setor Favorito' },
+          ].map(s => `<div class="perfil-stat"><div class="perfil-stat-val">${s.val}</div><div class="perfil-stat-label">${s.label}</div></div>`).join('');
+        }
+      }
+    }).catch(() => {});
+  }
 }
 
 function _copiarId(id) {
@@ -4219,39 +4458,184 @@ let _podioFiltro = 'all';
 
 function filtrarPodio(setor) {
   _podioFiltro = setor;
-  document.querySelectorAll('.podio-filter').forEach(b => {
-    b.classList.toggle('active', b.dataset.filter === setor);
-  });
-  document.querySelectorAll('.podio-item').forEach(item => {
-    item.classList.toggle('hidden', setor !== 'all' && item.dataset.sector !== setor);
-  });
+  document.querySelectorAll('.podio-filter').forEach(b =>
+    b.classList.toggle('active', b.dataset.filter === setor)
+  );
+  const lista = document.getElementById('podio-lista');
+  if (!lista) return;
+
+  const isAll = !setor || setor === 'all';
+
+  if (isAll) {
+    // "Todos" — usa cache 'all' ou localStorage
+    const dados = _podioCache['all'] || LS.get(SK.PODIO) || [];
+    _renderPodio(lista, dados, 'all');
+    return;
+  }
+
+  // Filtro por setor — filtra os dados 'all' já carregados localmente
+  const dadosAll = _podioCache['all'] || LS.get(SK.PODIO) || [];
+  if (dadosAll.length) {
+    // Filtra por setor e reordena pelo melhor score naquele setor
+    const filtrados = dadosAll
+      .filter(p => p.sector === setor || (p.melhorPorSetor && p.melhorPorSetor[setor]))
+      .map(p => {
+        const entradaSetor = p.melhorPorSetor?.[setor];
+        return {
+          ...p,
+          score:       entradaSetor?.score       ?? p.score,
+          companyName: entradaSetor?.companyName ?? p.companyName,
+          sector:      setor,
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+    _renderPodio(lista, filtrados, setor);
+  }
+
+  // Busca Firestore em background para dados mais precisos do setor
+  if (_podioCache[setor]) {
+    _renderPodio(lista, _podioCache[setor], setor);
+  } else {
+    _buscarEAtualizarPodio(lista, setor);
+  }
 }
+
+// Cache por setor para não rebuscar dados já carregados
+let _podioCache = {};
 
 function irParaPodio() {
   mostrarTela('screen-podio');
-  const podio = LS.get(SK.PODIO) || [];
+  _podioFiltro = 'all';
+  _podioCache  = {};
+  document.querySelectorAll('.podio-filter').forEach(b =>
+    b.classList.toggle('active', b.dataset.filter === 'all')
+  );
   const lista = document.getElementById('podio-lista');
   if (!lista) return;
+
+  // Renderiza imediatamente com cache local (modo "all" = score médio)
+  const local = LS.get(SK.PODIO) || [];
+  if (local.length) _renderPodio(lista, local, 'all');
+
+  // Busca Firestore em background
+  _buscarEAtualizarPodio(lista, 'all');
+}
+
+function _buscarEAtualizarPodio(lista, setor) {
+  if (!window.GSPSync) return;
+
+  const msgId = 'podio-sync-msg';
+  let syncEl = document.getElementById(msgId);
+  if (!syncEl) {
+    syncEl = document.createElement('div');
+    syncEl.id = msgId; syncEl.className = 'podio-sync';
+    syncEl.textContent = '🔄 Atualizando ranking...';
+    lista.prepend(syncEl);
+  }
+
+  window.GSPSync.carregarPodio(setor).then(podioFS => {
+    const syncMsg = document.getElementById(msgId);
+    const c = (podioFS || []).map(p => ({
+      ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now())
+    }));
+    _podioCache[setor] = c;
+    if (setor === 'all' || !setor) LS.set(SK.PODIO, c);
+    if (c.length === 0) {
+      // Firestore retornou vazio — não apaga o que já está na tela
+      if (syncMsg) syncMsg.textContent = '✅ Ranking atualizado';
+      setTimeout(() => document.getElementById(msgId)?.remove(), 2000);
+      return;
+    }
+    if (syncMsg) syncMsg.remove();
+    if (_podioFiltro === (setor || 'all')) _renderPodio(lista, c, setor);
+  }).catch(() => {
+    const syncMsg = document.getElementById(msgId);
+    if (syncMsg) syncMsg.textContent = '⚠️ Erro ao carregar ranking';
+    setTimeout(() => document.getElementById(msgId)?.remove(), 2000);
+  });
+}
+
+function _renderPodio(lista, podio, setor) {
+  const isAll  = !setor || setor === 'all';
+  const icones = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
+
   if (!podio.length) {
-    lista.innerHTML = '<div class="podio-empty">Nenhum jogo finalizado ainda.<br>Complete seu primeiro mandato para aparecer aqui.</div>';
+    lista.innerHTML = `<div class="podio-empty">Nenhuma partida no ranking ainda.<br>Complete um mandato para aparecer aqui.</div>`;
     return;
   }
-  const medalhas = ['🥇','🥈','🥉'];
-  const rkClass  = ['gold','silver','bronze'];
-  const icones   = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
-  lista.innerHTML = podio.map((p, i) => {
-    const data = new Date(p.ts).toLocaleDateString('pt-BR');
-    const cor  = p.score >= 70 ? 'var(--good)' : p.score >= 45 ? 'var(--warn)' : 'var(--danger)';
-    return `<div class="podio-item" data-sector="${p.sector}">
-      <div class="podio-rank ${rkClass[i]||''}">${medalhas[i]||i+1}</div>
-      <div class="podio-player">
-        <div class="podio-player-name">${p.player}</div>
-        <div class="podio-player-meta">${icones[p.sector]||'🏢'} ${p.companyName} · ${data}</div>
+
+  const scoreLabel = isAll ? 'Média' : 'Score';
+  const scoreKey   = isAll ? 'scoreMedia' : 'score';
+
+  // Garante campos de agregação para dados locais (sem scoreMedia/scoreMelhor)
+  const normalized = podio.map(p => ({
+    ...p,
+    scoreMedia:  p.scoreMedia  ?? p.score,
+    scoreMelhor: p.scoreMelhor ?? p.score,
+    totalJogos:  p.totalJogos  ?? 1,
+  }));
+
+  const sorted = [...normalized].sort((a, b) => (b[scoreKey] ?? b.score) - (a[scoreKey] ?? a.score));
+  const top3   = sorted.slice(0, 3);
+  const resto  = sorted.slice(3);
+  const rkClass = ['gold','silver','bronze'];
+
+  // Escada: ordem visual = 2º (esquerda) · 1º (centro) · 3º (direita)
+  const visualOrder = [
+    top3[1] ? { p: top3[1], pos: 2, cls: 'podio-top3-2', rk: 'silver' } : null,
+    top3[0] ? { p: top3[0], pos: 1, cls: 'podio-top3-1', rk: 'gold'   } : null,
+    top3[2] ? { p: top3[2], pos: 3, cls: 'podio-top3-3', rk: 'bronze' } : null,
+  ].filter(Boolean);
+
+  const _card = ({ p, pos, cls, rk }) => {
+    const val  = p[scoreKey] ?? p.score;
+    const isMe = _player?.uid && p.uid === _player.uid;
+    const sub  = isAll
+      ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
+      : `${icones[p.sector]||'🏢'} ${p.companyName}`;
+    return `<div class="podio-top3-card ${cls} ${isMe ? 'podio-top3-me' : ''}" data-sector="${p.sector||''}">
+      <div class="podio-top3-player">
+        ${isMe ? '<div class="podio-top3-you">Você</div>' : ''}
+        <div class="podio-top3-avatar">${(p.player||'?').charAt(0).toUpperCase()}</div>
+        <div class="podio-top3-name">${p.player}</div>
+        <div class="podio-top3-company">${sub}</div>
+        <div class="podio-top3-score">${val}</div>
+        <div class="podio-top3-score-label">${scoreLabel}</div>
       </div>
-      <div class="podio-score" style="color:${cor}">${p.score}</div>
+      <div class="podio-top3-step">
+        <span class="podio-top3-pos ${rk}">${pos}º</span>
+      </div>
     </div>`;
-  }).join('');
-  if (_podioFiltro !== 'all') filtrarPodio(_podioFiltro);
+  };
+
+  const top3Html = `
+    <div class="podio-top3">${visualOrder.map(_card).join('')}</div>
+    <div class="podio-base"></div>`;
+
+  const restoHtml = resto.length ? `
+    <div class="hist-section-label">A partir do 4º lugar</div>
+    ${resto.map((p, i) => {
+      const val  = p[scoreKey] ?? p.score;
+      const cor  = val >= 70 ? 'var(--good)' : val >= 45 ? 'var(--warn)' : 'var(--danger)';
+      const isMe = _player?.uid && p.uid === _player.uid;
+      const data = new Date(p.ts).toLocaleDateString('pt-BR');
+      const sub  = isAll
+        ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''} · melhor: ${p.scoreMelhor ?? val}`
+        : `${icones[p.sector]||'🏢'} ${p.companyName} · ${data}`;
+      return `<div class="podio-item ${isMe ? 'podio-item-me' : ''}" data-sector="${p.sector||''}">
+        <div class="podio-rank">${i + 4}</div>
+        <div class="podio-player">
+          <div class="podio-player-name">${p.player}${isMe ? ' <span class="podio-you-tag">Você</span>' : ''}</div>
+          <div class="podio-player-meta">${sub}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+          <div class="podio-score" style="color:${cor}">${val}</div>
+          <div class="podio-score-sublabel">${scoreLabel}</div>
+        </div>
+      </div>`;
+    }).join('')}` : '';
+
+  lista.innerHTML = top3Html + restoHtml;
 }
 
 /* ════════════════════════════════════════════════════
@@ -4456,7 +4840,93 @@ registrarUI({ mostrarTela, mostrarIntro, renderSidebar, renderRodada, mostrarFee
 /* ════════════════════════════════════════════════════
    AUTH FUNCTIONS
 ════════════════════════════════════════════════════ */
-function irParaAuth()   { mostrarTela("screen-auth"); authMudarAba("login"); }
+function irParaAuth() {
+  const logo = document.querySelector('.login-logo-img');
+  const footer = document.querySelector('.login-footer');
+  const main = document.querySelector('.login-main');
+
+  if (!logo || !footer || !main) {
+    mostrarTela("screen-auth"); authMudarAba("login"); return;
+  }
+
+  // Pega posição atual da logo grande
+  const fromRect = logo.getBoundingClientRect();
+
+  // Fade out do resto da tela (texto, botões)
+  footer.style.transition = 'opacity 0.3s ease';
+  footer.style.opacity = '0';
+  const eyebrow = document.querySelector('.login-eyebrow');
+  const rule = document.querySelector('.login-rule');
+  const desc = document.querySelector('.login-desc');
+  [eyebrow, rule, desc].forEach(el => {
+    if (el) { el.style.transition = 'opacity 0.3s ease'; el.style.opacity = '0'; }
+  });
+
+  // Mostra tela de auth (invisível ainda) para calcular posição destino
+  const screenAuth = document.getElementById('screen-auth');
+  screenAuth.style.opacity = '0';
+  screenAuth.style.display = 'flex';
+  screenAuth.classList.add('active');
+
+  const authLogoEl = document.querySelector('.auth-logo-img');
+  const toRect = authLogoEl ? authLogoEl.getBoundingClientRect() : null;
+
+  // Esconde logo destino enquanto anima
+  if (authLogoEl) authLogoEl.style.opacity = '0';
+
+  // Cria clone da logo para animar
+  const clone = logo.cloneNode(true);
+  clone.style.cssText = `
+    position: fixed;
+    left: ${fromRect.left}px;
+    top: ${fromRect.top}px;
+    width: ${fromRect.width}px;
+    height: ${fromRect.height}px;
+    margin: 0;
+    z-index: 9999;
+    pointer-events: none;
+    border-radius: 50%;
+    transition: left 0.55s cubic-bezier(.2,.8,.4,1),
+                top 0.55s cubic-bezier(.2,.8,.4,1),
+                width 0.55s cubic-bezier(.2,.8,.4,1),
+                height 0.55s cubic-bezier(.2,.8,.4,1);
+    animation: none;
+  `;
+  document.body.appendChild(clone);
+
+  // Esconde logo original
+  logo.style.opacity = '0';
+
+  // Troca tela imediatamente (auth fica invisível)
+  const screenLogin = document.getElementById('screen-login');
+  screenLogin.classList.remove('active');
+  screenLogin.style.display = 'none';
+  authMudarAba("login");
+
+  // Pequeno delay para o DOM renderizar a tela de auth
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const finalRect = authLogoEl ? authLogoEl.getBoundingClientRect() : null;
+    if (finalRect && clone) {
+      // Anima clone até a posição da logo pequena
+      clone.style.left = finalRect.left + 'px';
+      clone.style.top = finalRect.top + 'px';
+      clone.style.width = finalRect.width + 'px';
+      clone.style.height = finalRect.height + 'px';
+    }
+
+    // Fade in da tela de auth
+    screenAuth.style.transition = 'opacity 0.3s ease 0.2s';
+    screenAuth.style.opacity = '1';
+
+    // Após animação terminar, remove clone e mostra logo real
+    setTimeout(() => {
+      if (authLogoEl) authLogoEl.style.opacity = '1';
+      clone.remove();
+      screenAuth.style.transition = '';
+      screenAuth.style.opacity = '';
+    }, 520);
+  }));
+}
 function irParaLogin()  { mostrarTela("screen-auth"); authMudarAba("login"); }
 
 function authMudarAba(aba) {
@@ -4551,7 +5021,7 @@ async function authCadastrar() {
   try {
     const player = await window.GSPAuth.cadastrar({ nome, email, senha });
     mostrarSucesso("Conta criada com sucesso!");
-    _loginOk(player);
+    await _loginOk(player);
   } catch(e) {
     const msg = _traduzirErroFirebase(e.code);
     _authShowErr("auth-reg-err", msg);
@@ -4562,15 +5032,35 @@ async function authCadastrar() {
 }
 
 async function authGoogle() {
+  // Aguarda Firebase ficar pronto (até 3s)
+  if (!window.GSPAuth?.isReady()) {
+    let t = 0;
+    while (!window.GSPAuth?.isReady() && t < 30) {
+      await new Promise(r => setTimeout(r, 100));
+      t++;
+    }
+  }
   if (!window.GSPAuth?.isReady()) {
     mostrarErro("Configure o Firebase para usar o login com Google.");
     return;
   }
   try {
     const player = await window.GSPAuth.loginGoogle();
+
+    if (!player) {
+      // Popup bloqueado — redirect em andamento, página vai recarregar
+      // Mostra login com mensagem para o usuário não ficar perdido
+      mostrarTela('screen-auth');
+      authMudarAba('login');
+      mostrarAviso('Redirecionando para o Google...');
+      return;
+    }
+
     mostrarSucesso("Login com Google realizado!");
-    _loginOk(player);
+    await _loginOk(player);
   } catch(e) {
+    mostrarTela('screen-auth');
+    authMudarAba('login');
     mostrarErroCritico(_traduzirErroFirebase(e.code));
   }
 }
@@ -4600,29 +5090,14 @@ async function authRecuperar() {
 async function _loginOk(player) {
   _player = player;
   LS.set(SK.PLAYER, _player);
-  if (_player?.uid && window.GSPSync) {
-    try {
-      const histFS = await window.GSPSync.carregarHistorico(_player.uid);
-      if (histFS.length > 0) {
-        const hist = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
-        LS.set(SK.HISTORICO, hist);
-      }
-      const podioFS = await window.GSPSync.carregarPodio();
-      if (podioFS.length > 0) {
-        const podio = podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) }));
-        LS.set(SK.PODIO, podio);
-      }
-      const sessFS = await window.GSPSync.carregarSessao(_player.uid);
-      if (sessFS) {
-        LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
-      }
-    } catch (e) {
-      console.warn("[GSP] Erro ao carregar dados do Firestore:", e.message);
-    }
-  }
+
+  // Entra no painel imediatamente — sem esperar Firestore
   _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela("screen-home");
+
+  // Sincroniza dados em background (não bloqueia a UI)
+  _sincronizarFirebaseBackground(player);
 }
 
 window.BetaUI = {
@@ -4643,4 +5118,19 @@ window.BetaUI = {
   compartilharResultado,
 };
 
-window.addEventListener("DOMContentLoaded", _boot);
+// Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando
+(function() {
+  window.onerror = function(msg, src, line) {
+    var el = document.getElementById('loading-msg');
+    if (el) { el.textContent = 'ERRO: ' + msg + ' L:' + line; el.style.color='red'; }
+  };
+  window.onunhandledrejection = function(e) {
+    var el = document.getElementById('loading-msg');
+    if (el) { el.textContent = 'ERRO: ' + (e.reason?.message || String(e.reason)); el.style.color='red'; }
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _boot);
+  } else {
+    _boot();
+  }
+})();
