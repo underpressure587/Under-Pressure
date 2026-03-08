@@ -63,8 +63,9 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
         const nome = u.displayName || u.email?.split('@')[0] || 'Jogador';
         const player = { uid: u.uid, nome, email: u.email, tipo: 'user' };
         try { localStorage.setItem('gsp_player', JSON.stringify(player)); } catch(e) {}
+        // Avisa o _boot imediatamente via evento
+        window.dispatchEvent(new CustomEvent('gsp-redirect-login', { detail: player }));
       } else {
-        // Redirect processado sem usuário — libera o cache
         if (_cachedAuthUser === undefined) _cachedAuthUser = null;
       }
     }).catch(() => {
@@ -335,13 +336,32 @@ window.GSPSync = {
           }
           return result;
         };
+
+        // Suporte ao formato novo (melhorScore) e antigo (score + sector)
+        const melhorScoreNovo  = parseInt(f.melhorScore?.integerValue || 0);
+        const scoreAntigo      = parseInt(f.score?.integerValue || 0);
+        const setorAntigo      = f.sector?.stringValue || '';
+        const companyNameAntigo = f.companyName?.stringValue || '';
+        const melhorPorSetor   = getMelhorPorSetor();
+
+        // Se formato antigo e sem melhorPorSetor, monta a partir dos campos diretos
+        if (scoreAntigo > 0 && setorAntigo && Object.keys(melhorPorSetor).length === 0) {
+          melhorPorSetor[setorAntigo] = {
+            score: scoreAntigo,
+            scoreGestor: parseInt(f.scoreGestor?.integerValue || 0),
+            companyName: companyNameAntigo,
+          };
+        }
+
+        const melhorScore = melhorScoreNovo > 0 ? melhorScoreNovo : scoreAntigo;
+
         return {
           uid:            f.uid?.stringValue || '',
           player:         f.player?.stringValue || '',
-          melhorScore:    parseInt(f.melhorScore?.integerValue || 0),
+          melhorScore,
           totalJogos:     parseInt(f.totalJogos?.integerValue || 1),
-          ultimaPartida:  f.ultimaPartida?.timestampValue || null,
-          melhorPorSetor: getMelhorPorSetor(),
+          ultimaPartida:  f.ultimaPartida?.timestampValue || f.ts?.timestampValue || null,
+          melhorPorSetor,
         };
       };
 

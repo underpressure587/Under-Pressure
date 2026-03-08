@@ -3144,6 +3144,11 @@ async function _boot() {
   mostrarTela('screen-loading');
   _setLoadingMsg('Iniciando...', 'Preparando o jogo', 10);
 
+  // Escuta o evento de redirect do Google (disparado pelo firebase-config quando getRedirectResult resolve)
+  let _redirectPlayer = null;
+  const _redirectHandler = (e) => { _redirectPlayer = e.detail; };
+  window.addEventListener('gsp-redirect-login', _redirectHandler, { once: true });
+
   if (window.GSPAuth) {
     _setLoadingMsg('Conectando ao servidor...', 'Aguardando Firebase', 30);
     let t = 0;
@@ -3154,8 +3159,22 @@ async function _boot() {
     if (window.GSPAuth.isReady()) {
       _setLoadingMsg('Verificando sua sessão...', 'Checando login do Google', 60);
       try {
-        const fbUser = await window.GSPAuth.waitForAuthReady().catch(() => null);
+        // Aguarda até 8s pelo resultado (waitForAuthReady OU evento de redirect)
+        let fbUser = null;
+        for (let i = 0; i < 80; i++) {
+          if (_redirectPlayer) {
+            // Evento de redirect chegou — entra direto
+            window.removeEventListener('gsp-redirect-login', _redirectHandler);
+            _setLoadingMsg('Entrando no painel...', 'Bem-vindo de volta!', 90);
+            await _loginOk(_redirectPlayer);
+            return;
+          }
+          fbUser = await window.GSPAuth.waitForAuthReady().catch(() => null);
+          if (fbUser) break;
+          await new Promise(r => setTimeout(r, 100));
+        }
         if (fbUser) {
+          window.removeEventListener('gsp-redirect-login', _redirectHandler);
           const user = {
             uid: fbUser.uid,
             nome: fbUser.displayName || fbUser.email?.split('@')[0] || 'Jogador',
@@ -3170,6 +3189,7 @@ async function _boot() {
     }
   }
 
+  window.removeEventListener('gsp-redirect-login', _redirectHandler);
   _setLoadingMsg('Pronto!', 'Faça seu login para continuar', 100);
   await new Promise(r => setTimeout(r, 400));
   _iniciarListenerAuth();
