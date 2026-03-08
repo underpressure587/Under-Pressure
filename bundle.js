@@ -3269,6 +3269,11 @@ function _atualizarHome() {
   if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;
   const av = document.getElementById("home-avatar-icon");
   if (av && _player?.nome) av.textContent = _player.nome.charAt(0).toUpperCase();
+  // Sidebar desktop
+  const elSidebar = document.getElementById("home-player-name-sidebar");
+  if (elSidebar) elSidebar.textContent = (_player?.nome || "JOGADOR").toUpperCase();
+  const avSidebar = document.getElementById("home-avatar-icon-sidebar");
+  if (avSidebar && _player?.nome) avSidebar.textContent = _player.nome.charAt(0).toUpperCase();
 }
 
 /* ════════════════════════════════════════════════════

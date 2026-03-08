@@ -282,17 +282,25 @@
         <button class="btn-discard" onclick="BetaUI.descartarSessao()">Descartar</button>
       </div>
     </div>
+    <div class="home-tab-bar">
+      <div class="home-id home-id--sidebar" onclick="BetaUI.irParaPerfil()" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:0 10px 20px;border-bottom:1px solid rgba(255,255,255,.05);margin-bottom:12px">
+        <div class="home-avatar" id="home-avatar-icon-sidebar">👤</div>
+        <div>
+          <div class="home-id-label" style="font-size:.68rem;color:var(--t3)">Gestor</div>
+          <div class="home-id-name" id="home-player-name-sidebar" style="font-size:.82rem;font-weight:600;color:var(--t1)">JOGADOR</div>
+        </div>
+      </div>
+      <button class="home-tab-btn" onclick="BetaUI.irParaPerfil()">👤 Perfil</button>
+      <button class="home-tab-btn" onclick="BetaUI.irParaPodio()">🏆 Pódio</button>
+      <button class="home-tab-btn" onclick="BetaUI.irParaHistoricoJogos()">📋 Histórico</button>
+      <button class="home-tab-btn" onclick="BetaUI.openSettings()" style="margin-top:auto">⚙ Configurações</button>
+      <button class="home-tab-btn" onclick="BetaUI.sair()">↩ Sair</button>
+    </div>
     <div class="home-center">
       <button class="home-start-btn" onclick="BetaUI.irParaSetores()">
         <span class="home-start-icon">▶</span>
         <span class="home-start-label">Iniciar<br>Mandato</span>
       </button>
-    </div>
-    <div class="home-tab-bar">
-      <button class="home-tab-btn" onclick="BetaUI.irParaPerfil()">👤 Perfil</button>
-      <button class="home-tab-btn" onclick="BetaUI.irParaPodio()">🏆 Pódio</button>
-      <button class="home-tab-btn" onclick="BetaUI.irParaHistoricoJogos()">📋 Histórico</button>
-      <button class="home-tab-btn" onclick="BetaUI.sair()">Sair</button>
     </div>
   </div>
 
