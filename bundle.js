@@ -3203,7 +3203,12 @@ function _setLoadingMsg(msg, sub, progress) {
    NAVEGAÇÃO
 ════════════════════════════════════════════════════ */
 function mostrarTela(id, goBack) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active", "go-back"));
+  document.querySelectorAll(".screen").forEach(s => {
+    s.classList.remove("active", "go-back");
+    s.style.display = '';
+    s.style.opacity = '';
+    s.style.transition = '';
+  });
   const el = document.getElementById(id);
   if (el) {
     el.classList.add("active");
@@ -3218,6 +3223,13 @@ function mostrarTela(id, goBack) {
   window.scrollTo(0, 0);
 }
 function voltar(tela) {
+  // Limpa inline styles deixados pela animação do irParaAuth
+  ['.login-logo-img', '.login-footer', '.login-main', '.login-eyebrow', '.login-rule', '.login-desc'].forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) { el.style.opacity = ''; el.style.transition = ''; el.style.transform = ''; }
+  });
+  const authLogoEl = document.querySelector('.auth-logo-img');
+  if (authLogoEl) authLogoEl.style.opacity = '';
   mostrarTela(tela, true);
 }
 
