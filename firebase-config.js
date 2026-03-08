@@ -50,7 +50,14 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
       if (_cachedAuthUser === undefined) _cachedAuthUser = user;
     });
     getRedirectResult(auth).then(cred => {
-      if (cred?.user) _cachedAuthUser = cred.user;
+      if (cred?.user) {
+        _cachedAuthUser = cred.user;
+        // Salva sessão no localStorage para o boot detectar imediatamente
+        const u = cred.user;
+        const nome = u.displayName || u.email?.split('@')[0] || 'Jogador';
+        const player = { uid: u.uid, nome, email: u.email, tipo: 'user' };
+        try { localStorage.setItem('gsp_player', JSON.stringify(player)); } catch(e) {}
+      }
     }).catch(() => {});
     window._gspFirebaseReady = true;
   } catch (e) {
