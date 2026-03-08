@@ -4897,10 +4897,9 @@ function irParaAuth() {
   // Esconde logo original
   logo.style.opacity = '0';
 
-  // Troca tela imediatamente (auth fica invisível)
+  // Remove screen-login do active mas sem display:none inline (voltar precisa reativá-la)
   const screenLogin = document.getElementById('screen-login');
   screenLogin.classList.remove('active');
-  screenLogin.style.display = 'none';
   authMudarAba("login");
 
   // Pequeno delay para o DOM renderizar a tela de auth
