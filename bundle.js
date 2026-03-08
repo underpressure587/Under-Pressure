@@ -3211,6 +3211,8 @@ function mostrarTela(id, goBack) {
     s.style.transition = '';
     s.style.animation = '';
   });
+  // Fecha todos os overlays ao navegar
+  document.querySelectorAll(".overlay").forEach(o => o.style.display = 'none');
   const el = document.getElementById(id);
   if (el) {
     el.classList.add("active");

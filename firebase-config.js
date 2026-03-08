@@ -47,7 +47,7 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
     _firebaseReady = true;
     // Captura usuário imediatamente ao inicializar
     onAuthStateChanged(auth, (user) => {
-      if (_cachedAuthUser === undefined) _cachedAuthUser = user;
+      _cachedAuthUser = user || null;
     });
     getRedirectResult(auth).then(cred => {
       if (cred?.user) {
