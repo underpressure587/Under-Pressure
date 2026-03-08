@@ -4821,61 +4821,91 @@ registrarUI({ mostrarTela, mostrarIntro, renderSidebar, renderRodada, mostrarFee
    AUTH FUNCTIONS
 ════════════════════════════════════════════════════ */
 function irParaAuth() {
-  // Animação: logo cresce levemente, depois tela de auth entra com fade
   const logo = document.querySelector('.login-logo-img');
   const footer = document.querySelector('.login-footer');
   const main = document.querySelector('.login-main');
 
-  if (logo && footer && main) {
-    // Fase 1: logo pulsa e sobe
-    logo.style.transition = 'transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s ease';
-    footer.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-    main.style.transition = 'opacity 0.35s ease';
-
-    footer.style.opacity = '0';
-    footer.style.transform = 'translateY(20px)';
-    logo.style.transform = 'scale(1.08) translateY(-10px)';
-
-    setTimeout(() => {
-      logo.style.opacity = '0';
-      main.style.opacity = '0';
-    }, 200);
-
-    setTimeout(() => {
-      // Fase 2: mostra tela de auth
-      mostrarTela("screen-auth");
-      authMudarAba("login");
-      // Reset styles
-      logo.style.transition = '';
-      logo.style.transform = '';
-      logo.style.opacity = '';
-      footer.style.transition = '';
-      footer.style.opacity = '';
-      footer.style.transform = '';
-      main.style.transition = '';
-      main.style.opacity = '';
-
-      // Anima entrada do auth
-      const authWrap = document.querySelector('.auth-wrap');
-      if (authWrap) {
-        authWrap.style.opacity = '0';
-        authWrap.style.transform = 'translateY(24px)';
-        authWrap.style.transition = 'opacity 0.35s ease, transform 0.35s cubic-bezier(.4,0,.2,1)';
-        requestAnimationFrame(() => {
-          authWrap.style.opacity = '1';
-          authWrap.style.transform = 'translateY(0)';
-        });
-        setTimeout(() => {
-          authWrap.style.transition = '';
-          authWrap.style.transform = '';
-          authWrap.style.opacity = '';
-        }, 400);
-      }
-    }, 380);
-  } else {
-    mostrarTela("screen-auth");
-    authMudarAba("login");
+  if (!logo || !footer || !main) {
+    mostrarTela("screen-auth"); authMudarAba("login"); return;
   }
+
+  // Pega posição atual da logo grande
+  const fromRect = logo.getBoundingClientRect();
+
+  // Fade out do resto da tela (texto, botões)
+  footer.style.transition = 'opacity 0.3s ease';
+  footer.style.opacity = '0';
+  const eyebrow = document.querySelector('.login-eyebrow');
+  const rule = document.querySelector('.login-rule');
+  const desc = document.querySelector('.login-desc');
+  [eyebrow, rule, desc].forEach(el => {
+    if (el) { el.style.transition = 'opacity 0.3s ease'; el.style.opacity = '0'; }
+  });
+
+  // Mostra tela de auth (invisível ainda) para calcular posição destino
+  const screenAuth = document.getElementById('screen-auth');
+  screenAuth.style.opacity = '0';
+  screenAuth.style.display = 'flex';
+  screenAuth.classList.add('active');
+
+  const authLogoEl = document.querySelector('.auth-logo-img');
+  const toRect = authLogoEl ? authLogoEl.getBoundingClientRect() : null;
+
+  // Esconde logo destino enquanto anima
+  if (authLogoEl) authLogoEl.style.opacity = '0';
+
+  // Cria clone da logo para animar
+  const clone = logo.cloneNode(true);
+  clone.style.cssText = `
+    position: fixed;
+    left: ${fromRect.left}px;
+    top: ${fromRect.top}px;
+    width: ${fromRect.width}px;
+    height: ${fromRect.height}px;
+    margin: 0;
+    z-index: 9999;
+    pointer-events: none;
+    border-radius: 50%;
+    transition: left 0.5s cubic-bezier(.4,0,.2,1),
+                top 0.5s cubic-bezier(.4,0,.2,1),
+                width 0.5s cubic-bezier(.4,0,.2,1),
+                height 0.5s cubic-bezier(.4,0,.2,1);
+    animation: none;
+  `;
+  document.body.appendChild(clone);
+
+  // Esconde logo original
+  logo.style.opacity = '0';
+
+  // Troca tela imediatamente (auth fica invisível)
+  const screenLogin = document.getElementById('screen-login');
+  screenLogin.classList.remove('active');
+  screenLogin.style.display = 'none';
+  authMudarAba("login");
+
+  // Pequeno delay para o DOM renderizar a tela de auth
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const finalRect = authLogoEl ? authLogoEl.getBoundingClientRect() : null;
+    if (finalRect && clone) {
+      // Anima clone até a posição da logo pequena
+      clone.style.left = finalRect.left + 'px';
+      clone.style.top = finalRect.top + 'px';
+      clone.style.width = finalRect.width + 'px';
+      clone.style.height = finalRect.height + 'px';
+    }
+
+    // Fade in da tela de auth
+    screenAuth.style.transition = 'opacity 0.3s ease 0.2s';
+    screenAuth.style.opacity = '1';
+
+    // Após animação terminar, remove clone e mostra logo real
+    setTimeout(() => {
+      if (authLogoEl) authLogoEl.style.opacity = '1';
+      clone.remove();
+      screenAuth.style.transition = '';
+      screenAuth.style.opacity = '';
+    }, 520);
+  }));
 }
 function irParaLogin()  { mostrarTela("screen-auth"); authMudarAba("login"); }
 
