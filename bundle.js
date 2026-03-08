@@ -4820,7 +4820,63 @@ registrarUI({ mostrarTela, mostrarIntro, renderSidebar, renderRodada, mostrarFee
 /* ════════════════════════════════════════════════════
    AUTH FUNCTIONS
 ════════════════════════════════════════════════════ */
-function irParaAuth()   { mostrarTela("screen-auth"); authMudarAba("login"); }
+function irParaAuth() {
+  // Animação: logo cresce levemente, depois tela de auth entra com fade
+  const logo = document.querySelector('.login-logo-img');
+  const footer = document.querySelector('.login-footer');
+  const main = document.querySelector('.login-main');
+
+  if (logo && footer && main) {
+    // Fase 1: logo pulsa e sobe
+    logo.style.transition = 'transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s ease';
+    footer.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    main.style.transition = 'opacity 0.35s ease';
+
+    footer.style.opacity = '0';
+    footer.style.transform = 'translateY(20px)';
+    logo.style.transform = 'scale(1.08) translateY(-10px)';
+
+    setTimeout(() => {
+      logo.style.opacity = '0';
+      main.style.opacity = '0';
+    }, 200);
+
+    setTimeout(() => {
+      // Fase 2: mostra tela de auth
+      mostrarTela("screen-auth");
+      authMudarAba("login");
+      // Reset styles
+      logo.style.transition = '';
+      logo.style.transform = '';
+      logo.style.opacity = '';
+      footer.style.transition = '';
+      footer.style.opacity = '';
+      footer.style.transform = '';
+      main.style.transition = '';
+      main.style.opacity = '';
+
+      // Anima entrada do auth
+      const authWrap = document.querySelector('.auth-wrap');
+      if (authWrap) {
+        authWrap.style.opacity = '0';
+        authWrap.style.transform = 'translateY(24px)';
+        authWrap.style.transition = 'opacity 0.35s ease, transform 0.35s cubic-bezier(.4,0,.2,1)';
+        requestAnimationFrame(() => {
+          authWrap.style.opacity = '1';
+          authWrap.style.transform = 'translateY(0)';
+        });
+        setTimeout(() => {
+          authWrap.style.transition = '';
+          authWrap.style.transform = '';
+          authWrap.style.opacity = '';
+        }, 400);
+      }
+    }, 380);
+  } else {
+    mostrarTela("screen-auth");
+    authMudarAba("login");
+  }
+}
 function irParaLogin()  { mostrarTela("screen-auth"); authMudarAba("login"); }
 
 function authMudarAba(aba) {
