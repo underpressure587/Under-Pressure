@@ -322,6 +322,8 @@ window.GSPSync = {
       const data = await res.json();
       if (!data.documents) return [];
 
+      const _parseInt = (f) => parseInt(f?.integerValue ?? f?.doubleValue ?? 0);
+
       const parseDoc = (d) => {
         const f = d.fields || {};
         const getMelhorPorSetor = () => {
@@ -329,8 +331,8 @@ window.GSPSync = {
           const result = {};
           for (const [s, v] of Object.entries(raw)) {
             result[s] = {
-              score:       parseInt(v.mapValue?.fields?.score?.integerValue || 0),
-              scoreGestor: parseInt(v.mapValue?.fields?.scoreGestor?.integerValue || 0),
+              score:       _parseInt(v.mapValue?.fields?.score),
+              scoreGestor: _parseInt(v.mapValue?.fields?.scoreGestor),
               companyName: v.mapValue?.fields?.companyName?.stringValue || '',
             };
           }
@@ -338,17 +340,17 @@ window.GSPSync = {
         };
 
         // Suporte ao formato novo (melhorScore) e antigo (score + sector)
-        const melhorScoreNovo  = parseInt(f.melhorScore?.integerValue || 0);
-        const scoreAntigo      = parseInt(f.score?.integerValue || 0);
-        const setorAntigo      = f.sector?.stringValue || '';
+        const melhorScoreNovo   = _parseInt(f.melhorScore);
+        const scoreAntigo       = _parseInt(f.score);
+        const setorAntigo       = f.sector?.stringValue || '';
         const companyNameAntigo = f.companyName?.stringValue || '';
-        const melhorPorSetor   = getMelhorPorSetor();
+        const melhorPorSetor    = getMelhorPorSetor();
 
         // Se formato antigo e sem melhorPorSetor, monta a partir dos campos diretos
         if (scoreAntigo > 0 && setorAntigo && Object.keys(melhorPorSetor).length === 0) {
           melhorPorSetor[setorAntigo] = {
             score: scoreAntigo,
-            scoreGestor: parseInt(f.scoreGestor?.integerValue || 0),
+            scoreGestor: _parseInt(f.scoreGestor),
             companyName: companyNameAntigo,
           };
         }
@@ -356,11 +358,11 @@ window.GSPSync = {
         const melhorScore = melhorScoreNovo > 0 ? melhorScoreNovo : scoreAntigo;
 
         return {
-          uid:            f.uid?.stringValue || '',
-          player:         f.player?.stringValue || '',
+          uid:           f.uid?.stringValue || '',
+          player:        f.player?.stringValue || '',
           melhorScore,
-          totalJogos:     parseInt(f.totalJogos?.integerValue || 1),
-          ultimaPartida:  f.ultimaPartida?.timestampValue || f.ts?.timestampValue || null,
+          totalJogos:    _parseInt(f.totalJogos) || 1,
+          ultimaPartida: f.ultimaPartida?.timestampValue || f.ts?.timestampValue || null,
           melhorPorSetor,
         };
       };
