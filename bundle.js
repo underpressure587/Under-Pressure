@@ -3237,7 +3237,6 @@ function voltar(tela) {
 /* ════════════════════════════════════════════════════
    LOGIN / IDENTIDADE
 ════════════════════════════════════════════════════ */
-function irParaLogin() { mostrarTela("screen-name"); }
 
 function irComoConvidado() {
   _player = { nome: "Convidado", tipo: "guest" };
@@ -4531,11 +4530,15 @@ function irParaPodio() {
   const lista = document.getElementById('podio-lista');
   if (!lista) return;
 
-  // Renderiza imediatamente com cache local (modo "all" = score médio)
+  // Convidados não têm acesso ao pódio
+  if (!_player?.uid || _player?.tipo === 'guest') {
+    lista.innerHTML = `<div class="podio-empty">🔒 Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
+    return;
+  }
+
   const local = LS.get(SK.PODIO) || [];
   if (local.length) _renderPodio(lista, local, 'all');
 
-  // Busca Firestore em background
   _buscarEAtualizarPodio(lista, 'all');
 }
 
