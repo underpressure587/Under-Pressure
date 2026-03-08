@@ -226,35 +226,30 @@ window.GSPSync = {
     const url   = FS_BASE + "/podio/" + uid;
 
     // Lê o documento atual via REST
-    const getRes = await fetch(url, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-
     let melhorScore    = score;
     let totalJogos     = 1;
     let melhorPorSetor = {};
     let playerNome     = entrada.player || '';
 
+    const getRes = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+
     if (getRes.ok) {
-      // Documento já existe — lê os valores atuais
       const atual = await getRes.json();
       const f = atual.fields || {};
-      const getMelhorPorSetor = (fields) => {
-        const raw = fields.melhorPorSetor?.mapValue?.fields || {};
-        const result = {};
-        for (const [s, v] of Object.entries(raw)) {
-          result[s] = {
-            score:       parseInt(v.mapValue?.fields?.score?.integerValue || 0),
-            scoreGestor: parseInt(v.mapValue?.fields?.scoreGestor?.integerValue || 0),
-            companyName: v.mapValue?.fields?.companyName?.stringValue || '',
-          };
-        }
-        return result;
-      };
-      melhorScore    = Math.max(parseInt(f.melhorScore?.integerValue || 0), score);
-      totalJogos     = parseInt(f.totalJogos?.integerValue || 0) + 1;
-      melhorPorSetor = getMelhorPorSetor(f);
-      playerNome     = entrada.player || f.player?.stringValue || '';
+      // Lê melhorPorSetor do formato REST
+      const raw = f.melhorPorSetor?.mapValue?.fields || {};
+      for (const [s, v] of Object.entries(raw)) {
+        melhorPorSetor[s] = {
+          score:       parseInt(v.mapValue?.fields?.score?.integerValue || 0),
+          scoreGestor: parseInt(v.mapValue?.fields?.scoreGestor?.integerValue || 0),
+          companyName: v.mapValue?.fields?.companyName?.stringValue || '',
+        };
+      }
+      melhorScore = Math.max(parseInt(f.melhorScore?.integerValue || 0), score);
+      totalJogos  = parseInt(f.totalJogos?.integerValue || 0) + 1;
+      playerNome  = entrada.player || f.player?.stringValue || '';
     }
 
     // Atualiza melhorPorSetor se score do setor for maior
@@ -266,7 +261,7 @@ window.GSPSync = {
       };
     }
 
-    // Monta o campo melhorPorSetor no formato Firestore REST
+    // Converte melhorPorSetor para formato Firestore REST
     const melhorPorSetorFields = {};
     for (const [s, v] of Object.entries(melhorPorSetor)) {
       melhorPorSetorFields[s] = {
@@ -278,7 +273,7 @@ window.GSPSync = {
       };
     }
 
-    // Salva via PATCH (cria ou atualiza)
+    // PATCH cria ou atualiza o documento com o uid como ID
     const body = { fields: {
       uid:           { stringValue:  uid },
       player:        { stringValue:  playerNome },
@@ -288,17 +283,11 @@ window.GSPSync = {
       melhorPorSetor: { mapValue: { fields: melhorPorSetorFields } },
     }};
 
-    const patchRes = await fetch(url + '?currentDocument.exists=true&currentDocument.exists=false', {
+    const patchRes = await fetch(url, {
       method: 'PATCH',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
-    }).catch(() =>
-      fetch(url, {
-        method: 'PATCH',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
-    );
+    });
 
     if (!patchRes.ok) {
       const t = await patchRes.text();
