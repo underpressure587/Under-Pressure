@@ -3229,6 +3229,7 @@ function sair() {
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
   _player = null;
+  if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
 
