@@ -219,98 +219,159 @@ window.GSPSync = {
   },
 
   async salvarNoPodio(uid, entrada) {
-    if (!db || !uid) throw new Error('sem db ou uid');
-    try {
-      const docRef = doc(db, "podio", uid);
-      const snap   = await getDoc(docRef);
-      const setor  = entrada.sector || '';
-      const score  = entrada.score  || 0;
+    const token = await _getToken();
+    if (!token) throw new Error('sem auth');
+    const setor = entrada.sector || '';
+    const score = entrada.score  || 0;
+    const url   = FS_BASE + "/podio/" + uid;
 
-      if (snap.exists()) {
-        const atual = snap.data();
-        // Só atualiza melhorScore se o novo score for maior
-        const novoMelhor = Math.max(atual.melhorScore || 0, score);
-        // Atualiza melhorPorSetor se score do setor for maior
-        const melhorPorSetor = { ...(atual.melhorPorSetor || {}) };
-        if (!melhorPorSetor[setor] || score > melhorPorSetor[setor].score) {
-          melhorPorSetor[setor] = {
-            score,
-            scoreGestor: entrada.scoreGestor || 0,
-            companyName: entrada.companyName || '',
+    // Lê o documento atual via REST
+    const getRes = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+
+    let melhorScore    = score;
+    let totalJogos     = 1;
+    let melhorPorSetor = {};
+    let playerNome     = entrada.player || '';
+
+    if (getRes.ok) {
+      // Documento já existe — lê os valores atuais
+      const atual = await getRes.json();
+      const f = atual.fields || {};
+      const getMelhorPorSetor = (fields) => {
+        const raw = fields.melhorPorSetor?.mapValue?.fields || {};
+        const result = {};
+        for (const [s, v] of Object.entries(raw)) {
+          result[s] = {
+            score:       parseInt(v.mapValue?.fields?.score?.integerValue || 0),
+            scoreGestor: parseInt(v.mapValue?.fields?.scoreGestor?.integerValue || 0),
+            companyName: v.mapValue?.fields?.companyName?.stringValue || '',
           };
         }
-        await setDoc(docRef, {
-          uid,
-          player:         entrada.player || atual.player || '',
-          melhorScore:    novoMelhor,
-          totalJogos:     (atual.totalJogos || 0) + 1,
-          ultimaPartida:  serverTimestamp(),
-          melhorPorSetor,
-        }, { merge: true });
-      } else {
-        // Primeira partida deste jogador
-        await setDoc(docRef, {
-          uid,
-          player:        entrada.player || '',
-          melhorScore:   score,
-          totalJogos:    1,
-          ultimaPartida: serverTimestamp(),
-          melhorPorSetor: {
-            [setor]: {
-              score,
-              scoreGestor: entrada.scoreGestor || 0,
-              companyName: entrada.companyName || '',
-            }
-          },
-        });
-      }
-    } catch (e) {
-      console.warn("[GSP] salvarNoPodio:", e.message);
-      throw e;
+        return result;
+      };
+      melhorScore    = Math.max(parseInt(f.melhorScore?.integerValue || 0), score);
+      totalJogos     = parseInt(f.totalJogos?.integerValue || 0) + 1;
+      melhorPorSetor = getMelhorPorSetor(f);
+      playerNome     = entrada.player || f.player?.stringValue || '';
     }
+
+    // Atualiza melhorPorSetor se score do setor for maior
+    if (!melhorPorSetor[setor] || score > melhorPorSetor[setor].score) {
+      melhorPorSetor[setor] = {
+        score,
+        scoreGestor: entrada.scoreGestor || 0,
+        companyName: entrada.companyName || '',
+      };
+    }
+
+    // Monta o campo melhorPorSetor no formato Firestore REST
+    const melhorPorSetorFields = {};
+    for (const [s, v] of Object.entries(melhorPorSetor)) {
+      melhorPorSetorFields[s] = {
+        mapValue: { fields: {
+          score:       { integerValue: String(v.score) },
+          scoreGestor: { integerValue: String(v.scoreGestor || 0) },
+          companyName: { stringValue:  v.companyName || '' },
+        }}
+      };
+    }
+
+    // Salva via PATCH (cria ou atualiza)
+    const body = { fields: {
+      uid:           { stringValue:  uid },
+      player:        { stringValue:  playerNome },
+      melhorScore:   { integerValue: String(melhorScore) },
+      totalJogos:    { integerValue: String(totalJogos) },
+      ultimaPartida: { timestampValue: new Date().toISOString() },
+      melhorPorSetor: { mapValue: { fields: melhorPorSetorFields } },
+    }};
+
+    const patchRes = await fetch(url + '?currentDocument.exists=true&currentDocument.exists=false', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).catch(() =>
+      fetch(url, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+    );
+
+    if (!patchRes.ok) {
+      const t = await patchRes.text();
+      throw new Error('HTTP ' + patchRes.status + ': ' + t.slice(0, 100));
+    }
+    return patchRes.json();
   },
 
   async carregarPodio(sector = null) {
-    if (!db) return [];
+    const token = await _getToken();
+    const url   = FS_BASE + "/podio?pageSize=100";
+    const headers = token
+      ? { 'Authorization': 'Bearer ' + token }
+      : {};
+
     try {
-      // Busca todos os documentos — 1 por jogador, ordena em memória (sem índice)
-      const snap = await getDocs(collection(db, "podio"));
-      const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const res = await fetch(url, { headers });
+      if (!res.ok) { console.warn("[GSP] carregarPodio HTTP:", res.status); return []; }
+      const data = await res.json();
+      if (!data.documents) return [];
+
+      const parseDoc = (d) => {
+        const f = d.fields || {};
+        const getMelhorPorSetor = () => {
+          const raw = f.melhorPorSetor?.mapValue?.fields || {};
+          const result = {};
+          for (const [s, v] of Object.entries(raw)) {
+            result[s] = {
+              score:       parseInt(v.mapValue?.fields?.score?.integerValue || 0),
+              scoreGestor: parseInt(v.mapValue?.fields?.scoreGestor?.integerValue || 0),
+              companyName: v.mapValue?.fields?.companyName?.stringValue || '',
+            };
+          }
+          return result;
+        };
+        return {
+          uid:            f.uid?.stringValue || '',
+          player:         f.player?.stringValue || '',
+          melhorScore:    parseInt(f.melhorScore?.integerValue || 0),
+          totalJogos:     parseInt(f.totalJogos?.integerValue || 1),
+          ultimaPartida:  f.ultimaPartida?.timestampValue || null,
+          melhorPorSetor: getMelhorPorSetor(),
+        };
+      };
+
+      const todos = data.documents
+        .map(parseDoc)
+        .filter(p => p.uid && p.melhorScore > 0); // ignora docs fantasma
 
       const isAll = !sector || sector === 'all';
 
       if (isAll) {
         return todos
-          .filter(p => p.uid && p.melhorScore > 0) // ignora docs antigos sem uid ou score
-          .sort((a, b) => (b.melhorScore || 0) - (a.melhorScore || 0))
+          .sort((a, b) => b.melhorScore - a.melhorScore)
           .slice(0, 20)
           .map(p => ({
-            uid:            p.uid,
-            player:         p.player,
-            melhorScore:    p.melhorScore || 0,
-            totalJogos:     p.totalJogos  || 1,
-            melhorPorSetor: p.melhorPorSetor || {},
-            ts:             p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
-            score:          p.melhorScore || 0,
-            companyName:    _melhorEmpresa(p.melhorPorSetor),
-            sector:         _melhorSetor(p.melhorPorSetor),
+            ...p,
+            ts:          p.ultimaPartida ? new Date(p.ultimaPartida).getTime() : Date.now(),
+            score:       p.melhorScore,
+            companyName: _melhorEmpresa(p.melhorPorSetor),
+            sector:      _melhorSetor(p.melhorPorSetor),
           }));
       }
 
-      // Filtro por setor — só quem jogou aquele setor
       return todos
         .filter(p => p.melhorPorSetor?.[sector])
         .map(p => {
           const s = p.melhorPorSetor[sector];
           return {
-            uid:          p.uid,
-            player:       p.player,
-            melhorScore:  p.melhorScore || 0,
-            totalJogos:   p.totalJogos  || 1,
-            melhorPorSetor: p.melhorPorSetor || {},
-            ts:           p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
-            score:        s.score        || 0,
-            companyName:  s.companyName  || '',
+            ...p,
+            ts:          p.ultimaPartida ? new Date(p.ultimaPartida).getTime() : Date.now(),
+            score:       s.score,
+            companyName: s.companyName,
             sector,
           };
         })
