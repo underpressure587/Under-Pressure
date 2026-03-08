@@ -273,28 +273,28 @@ window.GSPSync = {
   async carregarPodio(sector = null) {
     if (!db) return [];
     try {
-      // Busca os top 50 por melhorScore — 1 documento por jogador
-      const snap = await getDocs(
-        query(collection(db, "podio"), orderBy("melhorScore", "desc"), limit(50))
-      );
+      // Busca todos os documentos — 1 por jogador, ordena em memória (sem índice)
+      const snap = await getDocs(collection(db, "podio"));
       const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
       const isAll = !sector || sector === 'all';
 
       if (isAll) {
-        // Retorna top 20 por melhorScore
-        return todos.slice(0, 20).map(p => ({
-          uid:          p.uid,
-          player:       p.player,
-          melhorScore:  p.melhorScore || 0,
-          totalJogos:   p.totalJogos  || 1,
-          melhorPorSetor: p.melhorPorSetor || {},
-          ts:           p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
-          // campos usados no render
-          score:        p.melhorScore || 0,
-          companyName:  _melhorEmpresa(p.melhorPorSetor),
-          sector:       _melhorSetor(p.melhorPorSetor),
-        }));
+        return todos
+          .filter(p => p.uid && p.melhorScore > 0) // ignora docs antigos sem uid ou score
+          .sort((a, b) => (b.melhorScore || 0) - (a.melhorScore || 0))
+          .slice(0, 20)
+          .map(p => ({
+            uid:            p.uid,
+            player:         p.player,
+            melhorScore:    p.melhorScore || 0,
+            totalJogos:     p.totalJogos  || 1,
+            melhorPorSetor: p.melhorPorSetor || {},
+            ts:             p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
+            score:          p.melhorScore || 0,
+            companyName:    _melhorEmpresa(p.melhorPorSetor),
+            sector:         _melhorSetor(p.melhorPorSetor),
+          }));
       }
 
       // Filtro por setor — só quem jogou aquele setor
