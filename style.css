@@ -206,7 +206,7 @@ body::after{
   display:none; position:absolute; inset:0; flex-direction:column;
   overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
 }
-.screen.active{ display:flex; }
+.screen.active{ display:flex; z-index:10; }
 
 @keyframes screenIn{
   from{ opacity:0; transform:translateY(22px) scale(.99); }
@@ -2412,13 +2412,12 @@ body::after{
   }
 
   /* ══════════════════════════════════════════
-     TELA INICIAL — login split layout
+     TELA DE LOGIN — duas colunas
   ══════════════════════════════════════════ */
   #screen-login {
     flex-direction: row;
     overflow: hidden;
   }
-  #screen-login::after { display: none; }
 
   .login-topbar {
     position: absolute;
@@ -2427,21 +2426,16 @@ body::after{
     background: transparent;
     border: none;
     padding: 20px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
   }
 
-  /* Logo no topbar em vez de texto */
   .login-brand-logo {
-    width: 36px;
-    height: 36px;
+    width: 34px; height: 34px;
     border-radius: 50%;
     object-fit: cover;
     filter: drop-shadow(0 0 8px rgba(212,168,83,.4));
   }
 
-  /* Coluna esquerda: visual */
+  /* Coluna esquerda */
   .login-main {
     flex: 1;
     display: flex;
@@ -2449,7 +2443,6 @@ body::after{
     justify-content: flex-end;
     align-items: flex-start;
     padding: 72px 60px;
-    gap: 0;
     background:
       radial-gradient(ellipse 90% 70% at 0% 100%, rgba(212,168,83,.09) 0%, transparent 60%),
       linear-gradient(160deg, #090b13 0%, #0c0e18 100%);
@@ -2488,21 +2481,18 @@ body::after{
 
   .login-title-group {
     position: relative; z-index: 1;
-    display: flex; flex-direction: column; gap: 8px;
-    margin-bottom: 0;
   }
 
-  /* Remove pseudo-elementos que causavam título duplicado */
   .login-title-group::before,
   .login-title-group::after { display: none; }
 
   .login-eyebrow {
+    display: block;
     font-size: .67rem;
     letter-spacing: .32em;
     color: var(--s-text);
     opacity: .8;
     text-align: left;
-    display: block;
     margin-bottom: 16px;
   }
 
@@ -2520,7 +2510,7 @@ body::after{
     max-width: 320px; position: relative; z-index: 1;
   }
 
-  /* Coluna direita: ações */
+  /* Coluna direita */
   .login-footer {
     width: 400px; flex-shrink: 0;
     display: flex; flex-direction: column;
@@ -2565,32 +2555,35 @@ body::after{
   }
 
   /* ══════════════════════════════════════════
-     AUTH — card centralizado
+     AUTH — card centralizado (sem nada atrás)
   ══════════════════════════════════════════ */
   #screen-auth {
     justify-content: center; align-items: center;
     overflow-y: auto;
-    background:
-      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(212,168,83,.05) 0%, transparent 65%),
-      #0d0f14;
+    /* Fundo sólido garante que nada aparece atrás */
+    background: #0d0f14;
+  }
+
+  #screen-auth::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(212,168,83,.05) 0%, transparent 65%);
+    pointer-events: none;
   }
 
   .auth-wrap {
     width: 100%; max-width: 440px;
+    position: relative; z-index: 1;
     margin: auto; padding: 40px 44px;
     background: #13161d;
     border: 1px solid rgba(255,255,255,.07);
     border-radius: 24px;
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,.03),
-      0 32px 80px rgba(0,0,0,.7),
-      0 8px 32px rgba(0,0,0,.4);
+    box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 8px 32px rgba(0,0,0,.4);
     min-height: unset; align-self: center;
   }
 
   .auth-topbar { margin-bottom: 12px; }
   .auth-logo-row { margin-bottom: 20px; }
-
   .auth-logo-img {
     width: 54px; height: 54px;
     animation: logoFloat 6s ease-in-out infinite;
@@ -2598,53 +2591,43 @@ body::after{
   }
 
   /* ══════════════════════════════════════════
-     HOME — sidebar + área central
+     HOME — grid com sidebar e área central
+     (HTML original mantido, só CSS reorganiza)
   ══════════════════════════════════════════ */
   #screen-home {
-    flex-direction: row; overflow: hidden;
+    display: grid !important;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas:
+      "sidebar header"
+      "sidebar banner"
+      "sidebar center"
+      "sidebar center";
+    overflow: hidden;
+    background: #0d0f14;
   }
 
-  /* Header original: esconde no desktop */
-  .home-header { display: none; }
-
-  /* Sidebar */
-  .home-tab-bar {
-    width: 220px; flex-shrink: 0;
-    flex-direction: column;
-    border-top: none;
-    border-right: 1px solid rgba(255,255,255,.05);
-    background: #0f111a;
-    padding: 24px 12px;
-    gap: 2px;
-    justify-content: flex-start;
-    order: -1;
-    display: flex;
+  /* Header do jogador — área superior direita */
+  .home-header {
+    grid-area: header;
+    display: flex !important;
+    align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    background: #0d0f14;
+    border-bottom: 1px solid rgba(255,255,255,.05);
   }
 
-  .home-tab-btn {
-    width: 100%; border-radius: 10px;
-    text-align: left; padding: 11px 14px;
-    font-size: .83rem; letter-spacing: .01em;
-    border: 1px solid transparent;
-    color: var(--t2); background: transparent;
-    transition: all .15s; cursor: pointer;
-    display: flex; align-items: center; gap: 10px;
-  }
-
-  .home-tab-btn:hover {
-    background: rgba(255,255,255,.04);
-    border-color: rgba(255,255,255,.06);
-    color: var(--t1);
-  }
+  #session-restore-banner { grid-area: banner; }
 
   /* Área central */
   .home-center {
-    flex: 1; display: flex;
+    grid-area: center;
+    display: flex !important;
     flex-direction: column; align-items: center; justify-content: center;
     background:
       radial-gradient(ellipse 50% 50% at 50% 50%, rgba(212,168,83,.04) 0%, transparent 65%),
       #0d0f14;
-    position: relative; overflow: hidden; order: 1;
+    position: relative; overflow: hidden;
   }
 
   .home-center::before {
@@ -2659,12 +2642,53 @@ body::after{
     border: 1px solid rgba(212,168,83,.04); pointer-events: none;
   }
 
-  #session-restore-banner {
-    position: absolute; top: 0; left: 0; right: 0; z-index: 5;
+  /* Sidebar esquerda */
+  .home-tab-bar {
+    grid-area: sidebar;
+    display: flex !important;
+    flex-direction: column;
+    width: 220px;
+    border-right: 1px solid rgba(255,255,255,.05);
+    border-top: none;
+    background: #0f111a;
+    padding: 0;
+    gap: 0;
+    justify-content: flex-start;
+    overflow: hidden;
   }
 
+  /* Logo na sidebar */
+  .home-tab-bar::before {
+    content: 'Under Pressure';
+    display: block;
+    font-family: var(--serif);
+    font-size: .9rem; font-weight: 700;
+    letter-spacing: .04em; color: var(--t1);
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+
+  .home-tab-btn {
+    width: 100%; border-radius: 0;
+    text-align: left; padding: 13px 20px;
+    font-size: .83rem; letter-spacing: .01em;
+    border: none; border-left: 2px solid transparent;
+    color: var(--t2); background: transparent;
+    transition: all .15s; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .home-tab-btn:hover {
+    background: rgba(255,255,255,.04);
+    border-left-color: var(--s-gold);
+    color: var(--t1);
+  }
+
+  /* Botão iniciar mandato */
   .home-start-btn {
-    width: 196px; height: 196px; border-radius: 50%;
+    width: 180px; height: 180px; border-radius: 50%;
     position: relative; z-index: 1;
     box-shadow:
       0 0 0 1px rgba(212,168,83,.14),
@@ -2681,7 +2705,7 @@ body::after{
       0 12px 48px rgba(0,0,0,.6);
   }
 
-  .home-start-label { font-size: .95rem; letter-spacing: .06em; }
+  .home-start-label { font-size: .9rem; letter-spacing: .06em; }
 
   /* ══════════════════════════════════════════
      PERFIL / PÓDIO / HISTÓRICO
@@ -2691,9 +2715,13 @@ body::after{
   #screen-historico-jogos {
     flex-direction: column;
     align-items: center; overflow-y: auto;
+    background: var(--bg);
   }
 
-  .podio-header,
+  .podio-header {
+    width: 100%; max-width: 820px; padding: 20px 32px;
+  }
+
   #screen-historico-jogos > div:first-child {
     width: 100%; max-width: 820px; padding: 20px 32px;
   }
@@ -2736,7 +2764,10 @@ body::after{
   /* ══════════════════════════════════════════
      SELEÇÃO DE SETOR
   ══════════════════════════════════════════ */
-  #screen-sector { align-items: center; overflow-y: auto; }
+  #screen-sector {
+    align-items: center; overflow-y: auto;
+    background: var(--bg);
+  }
 
   #screen-sector > div:not(.sector-cta) {
     width: 100%; max-width: 860px;
@@ -2798,7 +2829,7 @@ body::after{
   }
 
   /* ══════════════════════════════════════════
-     GAME — sidebar de indicadores + conteúdo
+     GAME — sidebar + conteúdo
   ══════════════════════════════════════════ */
   #screen-game { flex-direction: row; }
 
@@ -2927,6 +2958,7 @@ body::after{
   }
 
 }
+
 
 /* ══════════════════════════════════════════════════
    TELA DE CARREGAMENTO
