@@ -1733,8 +1733,15 @@ body::after{
   background:var(--bg); border-top:1px solid var(--line);
 }
 
-/* ════════════════════════════════════════════════════
-   OVERLAYS
+/* Status de salvamento na nuvem */
+#result-cloud-status{
+  text-align:center; font-size:.78rem; font-weight:600;
+  color:#fff; letter-spacing:.03em;
+  padding:8px var(--sp3) 0;
+  opacity:.9;
+}
+
+
 ════════════════════════════════════════════════════ */
 .overlay{
   position:absolute; inset:0; z-index:100;

@@ -3073,7 +3073,7 @@ const SK = {
    ESTADO LOCAL
 ════════════════════════════════════════════════════ */
 let _player   = null;
-let _settings = { timer: false };
+let _settings = { timer: false, cloudStatus: false };
 let _setorSelecionado = null;
 let _escolhaFeita     = false;
 let _feedbackCallback = null;
@@ -3123,7 +3123,7 @@ function _iniciarListenerAuth() {
 }
 
 async function _boot() {
-  _settings = LS.get(SK.SETTINGS) || { timer: false };
+  _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
 
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
@@ -3361,15 +3361,19 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
     const _salvarNoFirestore = () => {
       if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
       const _statusEl = () => document.getElementById('result-cloud-status');
-      if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().textContent = '☁️ Salvando na nuvem...'; }
+      if (_settings.cloudStatus !== false) {
+        if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().textContent = '☁️ Salvando na nuvem...'; }
+      }
       Promise.all([
         window.GSPSync.salvarPartida(_player.uid, entrada),
         window.GSPSync.salvarNoPodio(_player.uid, entrada)
       ])
-        .then(() => { if (_statusEl()) _statusEl().textContent = '✅ Salvo na nuvem!'; })
+        .then(() => {
+          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().textContent = '✅ Salvo na nuvem!';
+        })
         .catch(e => {
           console.error('[GSP] Erro ao salvar resultado:', e);
-          if (_statusEl()) _statusEl().textContent = '❌ Erro: ' + (e?.code || e?.message || 'desconhecido');
+          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().textContent = '❌ Erro: ' + (e?.code || e?.message || 'desconhecido');
         });
     };
     if (window.GSPSync) {
@@ -4137,9 +4141,21 @@ function closeGlossary() { const el=document.getElementById("overlay-glossary");
 function openSettings() {
   const el=document.getElementById("overlay-settings"); if(el) el.style.display="";
   _atualizarToggleTimer();
+  const cloudBtn = document.getElementById('toggle-cloud-btn');
+  if (cloudBtn) {
+    const on = _settings.cloudStatus !== false;
+    cloudBtn.textContent = on ? 'ON' : 'OFF';
+    cloudBtn.className = `toggle-btn ${on ? 'on' : 'off'}`;
+  }
 }
 function closeSettings() { const el=document.getElementById("overlay-settings"); if(el) el.style.display="none"; }
 function toggleTimerSetting() { _settings.timer=!_settings.timer; LS.set(SK.SETTINGS,_settings); _atualizarToggleTimer(); }
+function toggleCloudStatus() {
+  _settings.cloudStatus = !_settings.cloudStatus;
+  LS.set(SK.SETTINGS, _settings);
+  const btn = document.getElementById('toggle-cloud-btn');
+  if (btn) { btn.textContent = _settings.cloudStatus ? 'ON' : 'OFF'; btn.className = `toggle-btn ${_settings.cloudStatus ? 'on' : 'off'}`; }
+}
 function _atualizarToggleTimer() {
   const btn=document.getElementById("toggle-timer-btn"); if(!btn) return;
   btn.textContent=_settings.timer?"ON":"OFF"; btn.className=`toggle-btn ${_settings.timer?"on":"off"}`;
@@ -5017,7 +5033,7 @@ window.BetaUI = {
   restaurarSessao, descartarSessao,
   selecionarSetor, lancarJogo, comecaJogo,
   mudarTab, escolher, avancar, reiniciar,
-  openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting,
+  openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus,
   toggleFullscreen, voltar,
   // Novos
   pularTutorial, tutorialStep, irParaSlide,
