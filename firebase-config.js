@@ -27,6 +27,7 @@ const FS_BASE = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "
 
 let app, auth, db, googleProvider;
 let _firebaseReady = false;
+let _cachedAuthUser = undefined; // undefined = ainda não resolveu, null = sem usuário
 
 async function _getToken() {
   if (!auth) return null;
@@ -44,6 +45,13 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
     db             = initializeFirestore(app, { experimentalForceLongPolling: true });
     googleProvider = new GoogleAuthProvider();
     _firebaseReady = true;
+    // Captura usuário imediatamente ao inicializar
+    onAuthStateChanged(auth, (user) => {
+      if (_cachedAuthUser === undefined) _cachedAuthUser = user;
+    });
+    getRedirectResult(auth).then(cred => {
+      if (cred?.user) _cachedAuthUser = cred.user;
+    }).catch(() => {});
     window._gspFirebaseReady = true;
   } catch (e) {
     console.warn("[GSP] Erro ao inicializar Firebase:", e.message);
@@ -123,17 +131,13 @@ window.GSPAuth = {
 
   async waitForAuthReady() {
     if (!_firebaseReady || !auth) return null;
-    return new Promise((resolve) => {
-      // Listener persistente — aguarda até 10s por qualquer usuário
-      const unsub = onAuthStateChanged(auth, (user) => {
-        if (user) { unsub(); resolve(user); }
-      });
-      // Processa redirect em paralelo
-      getRedirectResult(auth)
-        .then(cred => { if (cred?.user) { unsub(); resolve(cred.user); } })
-        .catch(() => {});
-      setTimeout(() => { unsub(); resolve(null); }, 10000);
-    });
+    // Aguarda cache ser preenchido (onAuthStateChanged + getRedirectResult)
+    let t = 0;
+    while (_cachedAuthUser === undefined && t < 80) {
+      await new Promise(r => setTimeout(r, 100));
+      t++;
+    }
+    return _cachedAuthUser || null;
   },
 
   async _salvarPerfil(user, nome) {
