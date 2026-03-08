@@ -219,7 +219,8 @@ body::after{
   to  { opacity:1; transform:translateY(0) scale(1); }
 }
 .screen.go-back{
-  animation: screenBack .3s cubic-bezier(.22,.68,0,1.2);
+  animation: none !important;
+  animation: screenBack .3s cubic-bezier(.22,.68,0,1.2) !important;
 }
 
 /* ── BOTÕES ─────────────────────────────────────────── */
