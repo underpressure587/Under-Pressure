@@ -3202,75 +3202,23 @@ function _setLoadingMsg(msg, sub, progress) {
 /* ════════════════════════════════════════════════════
    NAVEGAÇÃO
 ════════════════════════════════════════════════════ */
-function mostrarTela(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+function mostrarTela(id, goBack) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active", "go-back"));
   const el = document.getElementById(id);
-  if (el) el.classList.add("active");
+  if (el) {
+    el.classList.add("active");
+    if (goBack) {
+      el.classList.add("go-back");
+      setTimeout(() => el.classList.remove("go-back"), 350);
+    }
+  }
   // Remove tema de setor em todas as telas fora do jogo
   const TELAS_JOGO = ["screen-intro","screen-game","screen-feedback","screen-result"];
   if (!TELAS_JOGO.includes(id)) _aplicarTemaSetor(null);
   window.scrollTo(0, 0);
 }
 function voltar(tela) {
-  // Animação de volta: auth some para baixo, login aparece
-  if (tela === 'screen-login') {
-    const authWrap = document.querySelector('.auth-wrap');
-    const screenAuth = document.getElementById('screen-auth');
-    const screenLogin = document.getElementById('screen-login');
-
-    if (authWrap && screenAuth && screenLogin) {
-      // Fade out da tela de auth
-      authWrap.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-      authWrap.style.opacity = '0';
-      authWrap.style.transform = 'translateY(24px)';
-
-      setTimeout(() => {
-        // Mostra tela de login invisível
-        screenLogin.style.display = 'flex';
-        screenLogin.classList.add('active');
-        screenAuth.classList.remove('active');
-        screenAuth.style.display = 'none';
-
-        // Reset auth
-        authWrap.style.transition = '';
-        authWrap.style.opacity = '';
-        authWrap.style.transform = '';
-
-        // Anima logo e conteúdo da tela de login
-        const logo = document.querySelector('.login-logo-img');
-        const footer = document.querySelector('.login-footer');
-        const main = document.querySelector('.login-main');
-        const eyebrow = document.querySelector('.login-eyebrow');
-        const rule = document.querySelector('.login-rule');
-        const desc = document.querySelector('.login-desc');
-
-        // Começa invisível
-        [logo, footer, main].forEach(el => {
-          if (el) { el.style.opacity = '0'; el.style.transition = ''; }
-        });
-
-        // Aparece suavemente
-        requestAnimationFrame(() => {
-          if (logo) { logo.style.transition = 'opacity 0.35s ease'; logo.style.opacity = '1'; }
-          if (footer) { 
-            footer.style.transition = 'opacity 0.35s ease 0.1s, transform 0.35s ease 0.1s';
-            footer.style.transform = 'translateY(10px)';
-            requestAnimationFrame(() => { footer.style.opacity = '1'; footer.style.transform = 'translateY(0)'; });
-          }
-          [eyebrow, rule, desc].forEach((el, i) => {
-            if (el) { el.style.transition = `opacity 0.3s ease ${0.05*i}s`; el.style.opacity = '1'; }
-          });
-          setTimeout(() => {
-            [logo, footer, main, eyebrow, rule, desc].forEach(el => {
-              if (el) { el.style.transition = ''; el.style.opacity = ''; el.style.transform = ''; }
-            });
-          }, 500);
-        });
-      }, 250);
-      return;
-    }
-  }
-  mostrarTela(tela);
+  mostrarTela(tela, true);
 }
 
 /* ════════════════════════════════════════════════════

@@ -214,6 +214,14 @@ body::after{
   to  { opacity:1; transform:translateY(0) scale(1); }
 }
 
+@keyframes screenBack{
+  from{ opacity:0; transform:translateY(-22px) scale(.99); }
+  to  { opacity:1; transform:translateY(0) scale(1); }
+}
+.screen.go-back{
+  animation: screenBack .3s cubic-bezier(.22,.68,0,1.2);
+}
+
 /* ── BOTÕES ─────────────────────────────────────────── */
 .btn{
   display:flex; align-items:center; justify-content:center; gap:8px;
