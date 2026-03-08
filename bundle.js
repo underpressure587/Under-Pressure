@@ -3185,7 +3185,8 @@ function _sincronizarFirebaseBackground(player) {
     window.GSPSync.carregarSessao(player.uid)
   ]).then(([histFS, podioFS, sessFS]) => {
     if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) })));
-    if (podioFS?.length > 0) LS.set(SK.PODIO, podioFS.map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
+    // Sempre sincroniza o localStorage com o Firestore — mesmo se vier vazio
+    LS.set(SK.PODIO, (podioFS || []).map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
     if (sessFS) LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
   }).catch(() => {});
 }
@@ -4522,7 +4523,10 @@ function irParaPodio() {
 }
 
 function _buscarEAtualizarPodio(lista, setor) {
-  if (!window.GSPSync) return;
+  if (!window.GSPSync) {
+    lista.innerHTML = `<div class="podio-empty">⚠️ Firebase não disponível. Verifique sua conexão.</div>`;
+    return;
+  }
 
   const msgId = 'podio-sync-msg';
   let syncEl = document.getElementById(msgId);
@@ -4535,23 +4539,19 @@ function _buscarEAtualizarPodio(lista, setor) {
 
   window.GSPSync.carregarPodio(setor).then(podioFS => {
     const syncMsg = document.getElementById(msgId);
+    if (syncMsg) syncMsg.remove();
     const c = (podioFS || []).map(p => ({
       ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now())
     }));
     _podioCache[setor] = c;
+    // Sempre atualiza localStorage para espelhar o banco (inclusive quando vazio)
     if (setor === 'all' || !setor) LS.set(SK.PODIO, c);
-    if (c.length === 0) {
-      // Firestore retornou vazio — não apaga o que já está na tela
-      if (syncMsg) syncMsg.textContent = '✅ Ranking atualizado';
-      setTimeout(() => document.getElementById(msgId)?.remove(), 2000);
-      return;
-    }
-    if (syncMsg) syncMsg.remove();
     if (_podioFiltro === (setor || 'all')) _renderPodio(lista, c, setor);
-  }).catch(() => {
+  }).catch(e => {
     const syncMsg = document.getElementById(msgId);
-    if (syncMsg) syncMsg.textContent = '⚠️ Erro ao carregar ranking';
-    setTimeout(() => document.getElementById(msgId)?.remove(), 2000);
+    if (syncMsg) syncMsg.textContent = '⚠️ Erro ao carregar ranking. Tente novamente.';
+    setTimeout(() => document.getElementById(msgId)?.remove(), 3000);
+    console.warn('[GSP] _buscarEAtualizarPodio:', e);
   });
 }
 
@@ -4564,21 +4564,13 @@ function _renderPodio(lista, podio, setor) {
     return;
   }
 
-  const scoreLabel = isAll ? 'Média' : 'Score';
-  const scoreKey   = isAll ? 'scoreMedia' : 'score';
+  // Score único: melhorScore no modo Todos, score do setor no modo filtrado
+  const scoreLabel = isAll ? 'Melhor' : 'Score';
+  const getScore   = p => isAll ? (p.melhorScore ?? p.score ?? 0) : (p.score ?? 0);
 
-  // Garante campos de agregação para dados locais (sem scoreMedia/scoreMelhor)
-  const normalized = podio.map(p => ({
-    ...p,
-    scoreMedia:  p.scoreMedia  ?? p.score,
-    scoreMelhor: p.scoreMelhor ?? p.score,
-    totalJogos:  p.totalJogos  ?? 1,
-  }));
-
-  const sorted = [...normalized].sort((a, b) => (b[scoreKey] ?? b.score) - (a[scoreKey] ?? a.score));
+  const sorted = [...podio].sort((a, b) => getScore(b) - getScore(a));
   const top3   = sorted.slice(0, 3);
   const resto  = sorted.slice(3);
-  const rkClass = ['gold','silver','bronze'];
 
   // Escada: ordem visual = 2º (esquerda) · 1º (centro) · 3º (direita)
   const visualOrder = [
@@ -4588,7 +4580,7 @@ function _renderPodio(lista, podio, setor) {
   ].filter(Boolean);
 
   const _card = ({ p, pos, cls, rk }) => {
-    const val  = p[scoreKey] ?? p.score;
+    const val  = getScore(p);
     const isMe = _player?.uid && p.uid === _player.uid;
     const sub  = isAll
       ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
@@ -4615,13 +4607,12 @@ function _renderPodio(lista, podio, setor) {
   const restoHtml = resto.length ? `
     <div class="hist-section-label">A partir do 4º lugar</div>
     ${resto.map((p, i) => {
-      const val  = p[scoreKey] ?? p.score;
+      const val  = getScore(p);
       const cor  = val >= 70 ? 'var(--good)' : val >= 45 ? 'var(--warn)' : 'var(--danger)';
       const isMe = _player?.uid && p.uid === _player.uid;
-      const data = new Date(p.ts).toLocaleDateString('pt-BR');
       const sub  = isAll
-        ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''} · melhor: ${p.scoreMelhor ?? val}`
-        : `${icones[p.sector]||'🏢'} ${p.companyName} · ${data}`;
+        ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
+        : `${icones[p.sector]||'🏢'} ${p.companyName}`;
       return `<div class="podio-item ${isMe ? 'podio-item-me' : ''}" data-sector="${p.sector||''}">
         <div class="podio-rank">${i + 4}</div>
         <div class="podio-player">

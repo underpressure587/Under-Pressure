@@ -157,6 +157,19 @@ window.GSPAuth = {
   },
 };
 
+// Retorna o nome da empresa do melhor score geral
+function _melhorEmpresa(melhorPorSetor) {
+  if (!melhorPorSetor) return '';
+  return Object.values(melhorPorSetor)
+    .sort((a, b) => b.score - a.score)[0]?.companyName || '';
+}
+// Retorna o setor do melhor score geral
+function _melhorSetor(melhorPorSetor) {
+  if (!melhorPorSetor) return '';
+  return Object.entries(melhorPorSetor)
+    .sort((a, b) => b[1].score - a[1].score)[0]?.[0] || '';
+}
+
 window.GSPSync = {
 
   async salvarSessao(uid, dados) {
@@ -206,46 +219,104 @@ window.GSPSync = {
   },
 
   async salvarNoPodio(uid, entrada) {
-    const token = await _getToken();
-    if (!token) throw new Error('sem auth');
-    const url = FS_BASE + "/podio";
-    const body = { fields: {
-      uid:         { stringValue:  uid },
-      player:      { stringValue:  entrada.player      || '' },
-      score:       { integerValue: String(entrada.score       || 0) },
-      scoreGestor: { integerValue: String(entrada.scoreGestor || 0) },
-      sector:      { stringValue:  entrada.sector      || '' },
-      companyName: { stringValue:  entrada.companyName || '' },
-      ts:          { timestampValue: new Date().toISOString() }
-    }};
-    const r = await fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!r.ok) { const t = await r.text(); throw new Error('HTTP ' + r.status + ': ' + t.slice(0,100)); }
-    return r.json();
+    if (!db || !uid) throw new Error('sem db ou uid');
+    try {
+      const docRef = doc(db, "podio", uid);
+      const snap   = await getDoc(docRef);
+      const setor  = entrada.sector || '';
+      const score  = entrada.score  || 0;
+
+      if (snap.exists()) {
+        const atual = snap.data();
+        // Só atualiza melhorScore se o novo score for maior
+        const novoMelhor = Math.max(atual.melhorScore || 0, score);
+        // Atualiza melhorPorSetor se score do setor for maior
+        const melhorPorSetor = { ...(atual.melhorPorSetor || {}) };
+        if (!melhorPorSetor[setor] || score > melhorPorSetor[setor].score) {
+          melhorPorSetor[setor] = {
+            score,
+            scoreGestor: entrada.scoreGestor || 0,
+            companyName: entrada.companyName || '',
+          };
+        }
+        await setDoc(docRef, {
+          uid,
+          player:         entrada.player || atual.player || '',
+          melhorScore:    novoMelhor,
+          totalJogos:     (atual.totalJogos || 0) + 1,
+          ultimaPartida:  serverTimestamp(),
+          melhorPorSetor,
+        }, { merge: true });
+      } else {
+        // Primeira partida deste jogador
+        await setDoc(docRef, {
+          uid,
+          player:        entrada.player || '',
+          melhorScore:   score,
+          totalJogos:    1,
+          ultimaPartida: serverTimestamp(),
+          melhorPorSetor: {
+            [setor]: {
+              score,
+              scoreGestor: entrada.scoreGestor || 0,
+              companyName: entrada.companyName || '',
+            }
+          },
+        });
+      }
+    } catch (e) {
+      console.warn("[GSP] salvarNoPodio:", e.message);
+      throw e;
+    }
   },
 
   async carregarPodio(sector = null) {
     if (!db) return [];
     try {
-      const constraints = [limit(200)];
-      if (sector && sector !== "all") constraints.unshift(where("sector", "==", sector));
-      const snap = await getDocs(query(collection(db, "podio"), ...constraints));
-      const all  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const map  = new Map();
-      for (const e of all) {
-        const key = e.uid || e.player;
-        if (!map.has(key)) map.set(key, { uid: e.uid, player: e.player, jogos: [], melhorPorSetor: {} });
-        const g = map.get(key);
-        g.jogos.push(e);
-        if (!g.melhorPorSetor[e.sector] || e.score > g.melhorPorSetor[e.sector].score) g.melhorPorSetor[e.sector] = e;
+      // Busca os top 50 por melhorScore — 1 documento por jogador
+      const snap = await getDocs(
+        query(collection(db, "podio"), orderBy("melhorScore", "desc"), limit(50))
+      );
+      const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      const isAll = !sector || sector === 'all';
+
+      if (isAll) {
+        // Retorna top 20 por melhorScore
+        return todos.slice(0, 20).map(p => ({
+          uid:          p.uid,
+          player:       p.player,
+          melhorScore:  p.melhorScore || 0,
+          totalJogos:   p.totalJogos  || 1,
+          melhorPorSetor: p.melhorPorSetor || {},
+          ts:           p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
+          // campos usados no render
+          score:        p.melhorScore || 0,
+          companyName:  _melhorEmpresa(p.melhorPorSetor),
+          sector:       _melhorSetor(p.melhorPorSetor),
+        }));
       }
-      return Array.from(map.values()).map(g => {
-        const scores = g.jogos.map(j => j.score);
-        const media  = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
-        const rep    = g.jogos.reduce((a,b) => b.score > a.score ? b : a);
-        return { ...rep, uid: g.uid, player: g.player, scoreMedia: media, scoreMelhor: Math.max(...scores), totalJogos: g.jogos.length, melhorPorSetor: g.melhorPorSetor,
-          score: sector && sector !== "all" ? (g.melhorPorSetor[sector]?.score ?? 0) : media,
-          companyName: sector && sector !== "all" ? (g.melhorPorSetor[sector]?.companyName ?? rep.companyName) : rep.companyName };
-      }).filter(p => p.score > 0).sort((a,b) => b.score - a.score).slice(0, 20);
+
+      // Filtro por setor — só quem jogou aquele setor
+      return todos
+        .filter(p => p.melhorPorSetor?.[sector])
+        .map(p => {
+          const s = p.melhorPorSetor[sector];
+          return {
+            uid:          p.uid,
+            player:       p.player,
+            melhorScore:  p.melhorScore || 0,
+            totalJogos:   p.totalJogos  || 1,
+            melhorPorSetor: p.melhorPorSetor || {},
+            ts:           p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
+            score:        s.score        || 0,
+            companyName:  s.companyName  || '',
+            sector,
+          };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20);
+
     } catch (e) { console.warn("[GSP] carregarPodio:", e.message); return []; }
   },
 
