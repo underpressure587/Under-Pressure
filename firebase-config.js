@@ -46,19 +46,31 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
     googleProvider = new GoogleAuthProvider();
     _firebaseReady = true;
     // Captura usuário imediatamente ao inicializar
+    let _redirectDone = false;
     onAuthStateChanged(auth, (user) => {
-      _cachedAuthUser = user || null;
+      // Só atualiza após o redirect ter sido processado
+      if (_redirectDone) {
+        _cachedAuthUser = user || null;
+      } else if (user) {
+        _cachedAuthUser = user;
+      }
     });
     getRedirectResult(auth).then(cred => {
+      _redirectDone = true;
       if (cred?.user) {
         _cachedAuthUser = cred.user;
-        // Salva sessão no localStorage para o boot detectar imediatamente
         const u = cred.user;
         const nome = u.displayName || u.email?.split('@')[0] || 'Jogador';
         const player = { uid: u.uid, nome, email: u.email, tipo: 'user' };
         try { localStorage.setItem('gsp_player', JSON.stringify(player)); } catch(e) {}
+      } else {
+        // Redirect processado sem usuário — libera o cache
+        if (_cachedAuthUser === undefined) _cachedAuthUser = null;
       }
-    }).catch(() => {});
+    }).catch(() => {
+      _redirectDone = true;
+      if (_cachedAuthUser === undefined) _cachedAuthUser = null;
+    });
     window._gspFirebaseReady = true;
   } catch (e) {
     console.warn("[GSP] Erro ao inicializar Firebase:", e.message);
