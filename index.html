@@ -106,7 +106,7 @@
   <!-- ══ LOGIN ══ -->
   <div id="screen-login" class="screen active">
     <div class="login-topbar">
-      <span class="login-brand">Under Pressure</span>
+      <img src="logo.jpg" alt="Under Pressure" class="login-brand-logo">
       <div style="display:flex;gap:6px">
         <button class="btn-ghost" onclick="BetaUI.toggleFullscreen()">⛶</button>
         <button class="btn-ghost" onclick="BetaUI.openGlossary()" style="color:var(--s-text);font-weight:700">?</button>
@@ -122,8 +122,6 @@
     </div>
     <div class="login-footer">
       <button class="btn btn-primary" id="btn-entrar" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button>
-      <span class="login-footer-hint" style="display:none">Ou jogue sem cadastro como convidado</span>
-      <button class="btn btn-ghost" onclick="BetaUI.irComoConvidado()" style="display:none" id="btn-guest-desktop">Entrar como Convidado</button>
     </div>
   </div>
 
