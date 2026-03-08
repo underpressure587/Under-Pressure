@@ -4667,7 +4667,7 @@ function pausarJogo() {
     info.textContent = `${state.companyName} · ${fases[fase]||fase} · Rodada ${state.currentRound+1}/${state.totalRounds}`;
   }
   const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.style.display = '';
+  if (overlay) overlay.style.display = 'flex';
 }
 
 function continuarJogo() {
