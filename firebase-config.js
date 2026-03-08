@@ -123,18 +123,17 @@ window.GSPAuth = {
 
   async waitForAuthReady() {
     if (!_firebaseReady || !auth) return null;
-    // Aguarda getRedirectResult primeiro (retorno do Google)
     try {
       const cred = await getRedirectResult(auth);
       if (cred?.user) return cred.user;
     } catch(e) {}
-    // Depois verifica se já tem sessão ativa
+    // Continua escutando até achar usuário ou timeout
     return new Promise((resolve) => {
       const unsub = onAuthStateChanged(auth, (user) => {
-        unsub();
-        resolve(user || null);
+        if (user) { unsub(); resolve(user); }
+        // Se null, continua esperando — Firebase pode ainda estar carregando
       });
-      setTimeout(() => resolve(null), 3000);
+      setTimeout(() => { unsub(); resolve(null); }, 6000);
     });
   },
 
