@@ -3232,7 +3232,7 @@ function mostrarTela(id, goBack) {
     s.style.animation = '';
   });
   // Fecha todos os overlays ao navegar
-  document.querySelectorAll(".overlay").forEach(o => o.style.display = 'none');
+  document.querySelectorAll(".overlay").forEach(o => { o.classList.remove('overlay--open'); o.style.display=''; });
   const el = document.getElementById(id);
   if (el) {
     el.classList.add("active");
@@ -4160,7 +4160,7 @@ function closeGlossary() { const el=document.getElementById("overlay-glossary");
    CONFIGURAÇÕES
 ════════════════════════════════════════════════════ */
 function openSettings() {
-  const el=document.getElementById("overlay-settings"); if(el) el.style.display="flex";
+  const el=document.getElementById("overlay-settings"); if(el) el.classList.add("overlay--open");
   _atualizarToggleTimer();
   const cloudBtn = document.getElementById('toggle-cloud-btn');
   if (cloudBtn) {
