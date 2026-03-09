@@ -1746,11 +1746,9 @@ body::after{
 .overlay{
   position:absolute; inset:0; z-index:100;
   background:rgba(0,0,0,.75); backdrop-filter:blur(8px);
-  display:none; align-items:flex-end;
+  display:none !important; align-items:flex-end;
 }
-.overlay.active,
-.overlay[style*="display:flex"],
-.overlay[style*="display: flex"]{
+.overlay.overlay--open{
   display:flex !important;
   animation:fadeIn .2s ease forwards;
 }
