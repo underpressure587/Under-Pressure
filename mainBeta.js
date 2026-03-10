@@ -82,7 +82,6 @@ function _iniciarListenerAuth() {
 
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
-  // Garante que todos os overlays começam fechados
   document.querySelectorAll('.overlay').forEach(o => { o.style.display = 'none'; });
 
   // Sempre sai da screen-loading imediatamente

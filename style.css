@@ -126,6 +126,8 @@ html,body{
   overflow:hidden; -webkit-font-smoothing:antialiased;
   background:#07080f;
 }
+/* garante que position:fixed funcione em todos os WebViews */
+html { -webkit-overflow-scrolling: auto; }
 
 /* ── WALLPAPER ANIMADO ─────────────────────────────── */
 body::before{
@@ -1744,9 +1746,11 @@ body::after{
 
 ════════════════════════════════════════════════════ */
 .overlay{
-  position:fixed; inset:0; z-index:9000;
+  position:fixed; top:0; left:0; right:0; bottom:0; z-index:9000;
   background:rgba(0,0,0,.85);
   display:none; align-items:flex-end;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
 
