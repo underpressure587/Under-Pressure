@@ -158,5 +158,3 @@ const LogisticaRounds = [
   }
 ]
 ]; // fim LogisticaRounds
-
-export default LogisticaRounds;

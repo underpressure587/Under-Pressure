@@ -54,5 +54,3 @@ const IndicadoresVarejo = (() => {
 
     return { aplicarInterdependencias };
 })();
-
-export default IndicadoresVarejo;

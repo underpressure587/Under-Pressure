@@ -37,5 +37,3 @@ const BetaImpacto = (() => {
 
     return { calcular, descricao, NOMES };
 })();
-
-export default BetaImpacto;

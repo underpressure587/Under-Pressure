@@ -158,5 +158,3 @@ const VarejoRounds = [
   }
 ]
 ]; // fim VarejoRounds
-
-export default VarejoRounds;

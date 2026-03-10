@@ -5,27 +5,8 @@
           melhor alternativa no feedback.
 ═══════════════════════════════════════════════════════ */
 
-import BetaState             from "./state.js";
-import BetaIndicadores       from "./indicadores.js";
-import IndicadoresTecnologia from "./indicadores-tecnologia.js";
-import IndicadoresVarejo     from "./indicadores-varejo.js";
-import IndicadoresLogistica  from "./indicadores-logistica.js";
-import IndicadoresIndustria  from "./indicadores-industria.js";
-import BetaImpacto           from "../systems/impacto.js";
-import BetaImprevisto        from "../systems/imprevisto.js";
-import BetaFeedback          from "../systems/feedback.js";
-import StoryEngine           from "../systems/storyEngine.js";
-import Protagonista          from "../systems/protagonista.js";
 
-import EmpresaTecnologia from "../empresas/tecnologia.js";
-import EmpresaVarejo     from "../empresas/varejo.js";
-import EmpresaLogistica  from "../empresas/logistica.js";
-import EmpresaIndustria  from "../empresas/industria.js";
 
-import TecnologiaRounds  from "../empresas/tecnologia-rounds.js";
-import VarejoRounds      from "../empresas/varejo-rounds.js";
-import LogisticaRounds   from "../empresas/logistica-rounds.js";
-import IndustriaRounds   from "../empresas/industria-rounds.js";
 
 /* ── Situações iniciais com filtro de setor ─────────── */
 const SITUACOES_INICIAIS = [
@@ -209,7 +190,7 @@ function processarEscolha(choiceIndex) {
 
     const eventoAtivo   = _eventoAtivo(state);
     const efeitosFinais = BetaImpacto.calcular(
-        { ...choice.effects },
+        { ...(choice.effects || {}) },
         eventoAtivo ? [eventoAtivo] : []
     );
 
@@ -218,20 +199,17 @@ function processarEscolha(choiceIndex) {
     );
 
     BetaState.applyEffects(efeitosFinais);
-
-    // Interdependências por setor
     _aplicarInterdependencias(state.sector, state.indicators);
 
-    // storyState
     const storyStateAntes = {
         flags:      [...state.storyState.flags],
         conquistas: [...state.storyState.conquistas]
     };
-    StoryEngine.avaliarFase(state);
-    StoryEngine.registrarFlags(choice, state, avaliacao);
 
-    // Evolução da situação inicial (marcadores automáticos)
-    _atualizarSituacaoStatus(state);
+    // Protege chamadas que podem lançar erros sem derrubar o fluxo
+    try { StoryEngine.avaliarFase(state); } catch(e) { console.warn("avaliarFase:", e); }
+    try { StoryEngine.registrarFlags(choice, state, avaliacao); } catch(e) { console.warn("registrarFlags:", e); }
+    try { _atualizarSituacaoStatus(state); } catch(e) { console.warn("situacaoStatus:", e); }
 
     BetaState.addHistory({
         rodada:   state.currentRound + 1,
@@ -242,26 +220,24 @@ function processarEscolha(choiceIndex) {
         ensinamento: choice.ensinamento || ""
     });
 
-    // Gestor: efeitos explícitos ou automáticos
-    const efeitosGestor = choice.gestorEffects
-        || _calcularEfeitosGestorAutomatico(efeitosFinais, avaliacao, state);
+    const _temEfeitoReal = obj => obj && Object.values(obj).some(v => v !== 0);
+    const efeitosGestor = _temEfeitoReal(choice.gestorEffects)
+        ? choice.gestorEffects
+        : _calcularEfeitosGestorAutomatico(efeitosFinais, avaliacao, state);
     BetaState.applyGestorEffects(efeitosGestor);
 
-    // Efeitos do imprevisto no gestor
     if (eventoAtivo?.gestorEffects) {
         BetaState.applyGestorEffects(eventoAtivo.gestorEffects);
     }
 
-    // Renderiza sidebar após aplicar tudo
     _ui.renderSidebar?.(state, EMPRESAS[state.sector]);
 
-    const stakeholderReacao = Protagonista.calcularReacao(efeitosFinais, state.sector, state);
+    let stakeholderReacao = null;
+    try { stakeholderReacao = Protagonista.calcularReacao(efeitosFinais, state.sector, state); } catch(e) {}
     if (stakeholderReacao) BetaState.addStakeholderLog(stakeholderReacao);
 
-    // Calcula melhor alternativa entre as opções não escolhidas
-    const melhorAlternativa = _calcularMelhorAlternativa(
-        choicesAtivas, choiceIndex, state.indicators, state.situacaoAtual
-    );
+    let melhorAlternativa = null;
+    try { melhorAlternativa = _calcularMelhorAlternativa(choicesAtivas, choiceIndex, state.indicators, state.situacaoAtual); } catch(e) {}
 
     const feedbackData = BetaFeedback.calcular({
         choice,
@@ -280,6 +256,7 @@ function processarEscolha(choiceIndex) {
     const isGameOver    = BetaIndicadores.isGameOver(state.indicators);
     const motivoMandato = _verificarMandatoEncerrado(state.gestor);
 
+    // Feedback é SEMPRE exibido
     _ui.mostrarFeedback?.(feedbackData, () => {
         if (isGameOver) {
             _encerrar("gameover");
@@ -315,6 +292,7 @@ function _avancarRodada() {
         _encerrar("fim");
     } else {
         _preparaRodada(state);
+        _ui.renderSidebar?.(state, EMPRESAS[state.sector]);
         _ui.renderRodada?.(state);
     }
 }
@@ -440,5 +418,3 @@ function _verificarMandatoEncerrado(gestor) {
 function _eventoAtivo(state) {
     return state.activeEvents.find(e => e.expiresAt >= state.currentRound) || null;
 }
-
-export { registrarUI, iniciar, iniciarRodadas, processarEscolha, EMPRESAS };

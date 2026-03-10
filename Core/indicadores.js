@@ -131,5 +131,3 @@ const BetaIndicadores = (() => {
         avaliarDecisaoContextual, isGameOver, scoreTotal
     };
 })();
-
-export default BetaIndicadores;

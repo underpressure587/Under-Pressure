@@ -612,5 +612,3 @@ const TecnologiaRounds = [
 /* Histórias 1-9 removidas para teste beta — apenas história [0] ativa */
 
 ]; // fim TecnologiaRounds
-
-export default TecnologiaRounds;

@@ -142,6 +142,8 @@ const BetaState = (() => {
         addConquista, addTrauma, setSituacaoStatus,
     };
 })();
+
+
 /* --core/indicadores.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Helpers de nível e avaliação
@@ -276,6 +278,8 @@ const BetaIndicadores = (() => {
         avaliarDecisaoContextual, isGameOver, scoreTotal
     };
 })();
+
+
 /* --core/indicadores-tecnologia.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Tecnologia
@@ -439,6 +443,8 @@ const IndicadoresTecnologia = (() => {
         indicadorMaisCritico
     };
 })();
+
+
 /* --core/indicadores-varejo.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Varejo
@@ -496,6 +502,8 @@ const IndicadoresVarejo = (() => {
 
     return { aplicarInterdependencias };
 })();
+
+
 /* --core/indicadores-logistica.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Logística
@@ -553,6 +561,8 @@ const IndicadoresLogistica = (() => {
 
     return { aplicarInterdependencias };
 })();
+
+
 /* --core/indicadores-industria.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Indústria
@@ -610,6 +620,8 @@ const IndicadoresIndustria = (() => {
 
     return { aplicarInterdependencias };
 })();
+
+
 /* --systems/impacto.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · IMPACTO · v5.0
@@ -650,6 +662,8 @@ const BetaImpacto = (() => {
 
     return { calcular, descricao, NOMES };
 })();
+
+
 /* --systems/imprevisto.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · IMPREVISTO · v5.0
@@ -792,6 +806,8 @@ const BetaImprevisto = (() => {
 
     return { sortear, resetar };
 })();
+
+
 /* --systems/feedback.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · FEEDBACK · v5.0
@@ -838,6 +854,8 @@ const BetaFeedback = (() => {
 
     return { calcular, COR, ROTULO };
 })();
+
+
 /* --systems/storyEngine.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · STORY ENGINE · Motor narrativo BitLife-style
@@ -1198,6 +1216,8 @@ const StoryEngine = (() => {
     return { avaliarFase, registrarFlags, choicesDisponiveis, gerarEpilogo };
 
 })();
+
+
 /* --systems/protagonista.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · PROTAGONISTA · v5.0
@@ -1299,6 +1319,8 @@ const Protagonista = (() => {
 
     return { calcularReacao, getNPCs };
 })();
+
+
 /* --empresas/tecnologia.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · EMPRESA · Tecnologia
@@ -1348,6 +1370,8 @@ const EmpresaTecnologia = {
 
     ] /* fim de intros[] — histórias 2-10 removidas para teste beta */
 };
+
+
 /* --empresas/varejo.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · EMPRESA · Varejo
@@ -1392,6 +1416,8 @@ const EmpresaVarejo = {
         }
     ]
 };
+
+
 /* --empresas/logistica.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · EMPRESA · Logística
@@ -1436,6 +1462,8 @@ const EmpresaLogistica = {
         }
     ]
 };
+
+
 /* --empresas/industria.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · EMPRESA · Indústria
@@ -1480,6 +1508,8 @@ const EmpresaIndustria = {
         }
     ]
 };
+
+
 /* --rounds/tecnologia-rounds.js-- */
 /* ═══════════════════════════════════════════════════════════════════
    BETA · TECNOLOGIA · ROUNDS EXCLUSIVOS — HISTÓRIA [0]
@@ -2095,6 +2125,8 @@ const TecnologiaRounds = [
 /* Histórias 1-9 removidas para teste beta — apenas história [0] ativa */
 
 ]; // fim TecnologiaRounds
+
+
 /* --rounds/varejo-rounds.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · VAREJO · ROUNDS v5.0
@@ -2256,6 +2288,8 @@ const VarejoRounds = [
   }
 ]
 ]; // fim VarejoRounds
+
+
 /* --rounds/logistica-rounds.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · LOGÍSTICA · ROUNDS v5.0
@@ -2417,6 +2451,8 @@ const LogisticaRounds = [
   }
 ]
 ]; // fim LogisticaRounds
+
+
 /* --rounds/industria-rounds.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDÚSTRIA · ROUNDS v5.0
@@ -2578,6 +2614,8 @@ const IndustriaRounds = [
   }
 ]
 ]; // fim IndustriaRounds
+
+
 /* --core/engine.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · ENGINE · Orquestra o fluxo completo do jogo
@@ -2999,6 +3037,8 @@ function _verificarMandatoEncerrado(gestor) {
 function _eventoAtivo(state) {
     return state.activeEvents.find(e => e.expiresAt >= state.currentRound) || null;
 }
+
+
 /* --mainBeta.js-- */
 /* ═══════════════════════════════════════════════════════
    GESTÃO SOB PRESSÃO · MAIN v5.1

@@ -54,5 +54,3 @@ const IndicadoresIndustria = (() => {
 
     return { aplicarInterdependencias };
 })();
-
-export default IndicadoresIndustria;

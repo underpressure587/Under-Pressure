@@ -46,5 +46,3 @@ const EmpresaTecnologia = {
 
     ] /* fim de intros[] — histórias 2-10 removidas para teste beta */
 };
-
-export default EmpresaTecnologia;

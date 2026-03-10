@@ -54,5 +54,3 @@ const IndicadoresLogistica = (() => {
 
     return { aplicarInterdependencias };
 })();
-
-export default IndicadoresLogistica;

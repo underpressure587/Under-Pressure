@@ -4,7 +4,6 @@
            traumas no epílogo, flags com contexto.
 ═══════════════════════════════════════════════════════ */
 
-import BetaState from "../core/state.js";
 
 const StoryEngine = (() => {
 
@@ -49,7 +48,7 @@ const StoryEngine = (() => {
         if (ruinsClima.length >= 3) {
             BetaState.addFlag("lideranca_toxica",
                 `${ruinsClima.length} decisões ruins prejudicaram o time`);
-            BetaState.addTrauma("Ambiente interno corrroído por decisões que ignoraram as pessoas.");
+            BetaState.addTrauma("Ambiente interno corroído por decisões que ignoraram as pessoas.");
         }
 
         // Ignorou segurança
@@ -358,5 +357,3 @@ const StoryEngine = (() => {
     return { avaliarFase, registrarFlags, choicesDisponiveis, gerarEpilogo };
 
 })();
-
-export default StoryEngine;

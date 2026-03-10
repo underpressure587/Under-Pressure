@@ -158,5 +158,3 @@ const IndustriaRounds = [
   }
 ]
 ]; // fim IndustriaRounds
-
-export default IndustriaRounds;

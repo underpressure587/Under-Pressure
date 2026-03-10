@@ -3,7 +3,6 @@
    Inclui melhor alternativa para aprendizagem comparativa.
 ═══════════════════════════════════════════════════════ */
 
-import BetaImpacto from "./impacto.js";
 
 const BetaFeedback = (() => {
 
@@ -44,5 +43,3 @@ const BetaFeedback = (() => {
 
     return { calcular, COR, ROTULO };
 })();
-
-export default BetaFeedback;

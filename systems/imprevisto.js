@@ -139,5 +139,3 @@ const BetaImprevisto = (() => {
 
     return { sortear, resetar };
 })();
-
-export default BetaImprevisto;

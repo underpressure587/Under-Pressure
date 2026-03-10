@@ -98,5 +98,3 @@ const Protagonista = (() => {
 
     return { calcularReacao, getNPCs };
 })();
-
-export default Protagonista;

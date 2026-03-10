@@ -160,5 +160,3 @@ const IndicadoresTecnologia = (() => {
         indicadorMaisCritico
     };
 })();
-
-export default IndicadoresTecnologia;

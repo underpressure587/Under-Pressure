@@ -41,5 +41,3 @@ const EmpresaVarejo = {
         }
     ]
 };
-
-export default EmpresaVarejo;

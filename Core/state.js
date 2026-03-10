@@ -141,5 +141,3 @@ const BetaState = (() => {
         addConquista, addTrauma, setSituacaoStatus,
     };
 })();
-
-export default BetaState;
