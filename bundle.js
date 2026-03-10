@@ -3082,9 +3082,38 @@ function _iniciarListenerAuth() {
   });
 }
 
+
+/* ── HELPER: força overlay a cobrir a viewport real ── */
+function _abrirOverlay(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  ['overlay-pause','overlay-tooltip','overlay-glossary','overlay-settings'].forEach(function(oid) {
+    if (oid !== id) { var o = document.getElementById(oid); if (o) o.style.display = 'none'; }
+  });
+  if (el.parentNode !== document.body) document.body.appendChild(el);
+  // Alinha com o #app para centralizar corretamente
+  const app = document.getElementById('app');
+  const rect = app ? app.getBoundingClientRect() : {left:0, top:0, width:window.innerWidth, height:window.innerHeight};
+  el.style.position        = 'fixed';
+  el.style.left            = rect.left + 'px';
+  el.style.top             = rect.top  + 'px';
+  el.style.width           = rect.width  + 'px';
+  el.style.height          = rect.height + 'px';
+  el.style.display         = 'flex';
+  el.style.alignItems      = 'center';
+  el.style.justifyContent  = 'center';
+  el.style.padding         = '20px';
+  el.style.boxSizing       = 'border-box';
+  el.style.zIndex          = '99999';
+}
+function _fecharOverlay(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
-  document.querySelectorAll('.overlay').forEach(o => { o.style.display = 'none'; });
+  document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
 
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
@@ -3193,7 +3222,7 @@ function mostrarTela(id, goBack) {
     s.style.animation = '';
   });
   // Fecha todos os overlays ao navegar
-  document.querySelectorAll(".overlay").forEach(o => { o.style.display = 'none'; });
+  document.querySelectorAll(".overlay").forEach(o => { _fecharOverlay(o.id); });
   const el = document.getElementById(id);
   if (el) {
     el.classList.add("active");
@@ -4108,20 +4137,21 @@ const GLOSSARIO_TERMOS = [
   { termo:"Interdependência", def:"Relação causal entre indicadores. Ex: na logística, frota deteriorada → segurança cai → RH cai → resultado financeiro cai." },
 ];
 
+
 function openGlossary() {
   const el=document.getElementById("overlay-glossary"), content=document.getElementById("glossary-content");
-  if (el) el.style.display = 'flex';
+  _abrirOverlay('overlay-glossary');
   if (content) content.innerHTML=GLOSSARIO_TERMOS.map(g=>
     `<div class="glossary-term"><div class="glossary-term-word">${g.termo}</div><div class="glossary-term-def">${g.def}</div></div>`
   ).join("");
 }
-function closeGlossary() { const el=document.getElementById("overlay-glossary"); if(el) el.style.display = 'none'; }
+function closeGlossary() { const el=document.getElementById("overlay-glossary"); _fecharOverlay('overlay-glossary'); }
 
 /* ════════════════════════════════════════════════════
    CONFIGURAÇÕES
 ════════════════════════════════════════════════════ */
 function openSettings() {
-  const el=document.getElementById("overlay-settings"); if(el) el.style.display = 'flex';
+  _abrirOverlay('overlay-settings');
   _atualizarToggleTimer();
   const cloudBtn = document.getElementById('toggle-cloud-btn');
   if (cloudBtn) {
@@ -4130,7 +4160,7 @@ function openSettings() {
     cloudBtn.className = `toggle-btn ${on ? 'on' : 'off'}`;
   }
 }
-function closeSettings() { const el=document.getElementById("overlay-settings"); if(el) el.style.display = 'none'; }
+function closeSettings() { _fecharOverlay('overlay-settings'); }
 function toggleTimerSetting() { _settings.timer=!_settings.timer; LS.set(SK.SETTINGS,_settings); _atualizarToggleTimer(); }
 function toggleCloudStatus() {
   _settings.cloudStatus = !_settings.cloudStatus;
@@ -4648,13 +4678,13 @@ function pausarJogo() {
     info.textContent = `${state.companyName} · ${fases[fase]||fase} · Rodada ${state.currentRound+1}/${state.totalRounds}`;
   }
   const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.style.display = 'flex';
+  _abrirOverlay('overlay-pause');
 }
 
 function continuarJogo() {
   _jogoPausado = false;
   const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.style.display = 'none';
+  _fecharOverlay('overlay-pause');
   // BUG #11 FIX: se timer chegou a 0 durante pausa, forçar escolha imediata
   if (_settings.timer && !_escolhaFeita && _timerSegs <= 0) { escolher(0); return; }
   if (_settings.timer && !_escolhaFeita && _timerSegs > 0) {
@@ -4672,7 +4702,7 @@ function continuarJogo() {
 function abandonarJogo() {
   _jogoPausado = false;
   const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.style.display = 'none';
+  _fecharOverlay('overlay-pause');
   _pararTimer();
   LS.remove(SK.SESSION);
   _aplicarTemaSetor(null);
@@ -4717,12 +4747,12 @@ function abrirTooltipIndicador(key) {
     </div>
     <p class="tooltip-body-text">${info.desc}</p>
     <div class="tooltip-consequence">${info.consequence}</div>`;
-  overlay.style.display = 'flex';
+  _abrirOverlay('overlay-tooltip');
 }
 
 function closeTooltip() {
   const el = document.getElementById('overlay-tooltip');
-  if (el) el.style.display = 'none';
+  _fecharOverlay('overlay-tooltip');
 }
 
 /* ════════════════════════════════════════════════════

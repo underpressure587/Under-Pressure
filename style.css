@@ -195,6 +195,13 @@ body::after{
   box-shadow:var(--sh3), 0 0 80px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.06);
   transition: background .5s ease;
 }
+/* Mobile: ocupa tela toda sem remover box-shadow no desktop */
+@media (max-width:430px){
+  #app{
+    max-width:100%;
+    box-shadow:none;
+  }
+}
 
 /* Glow de setor no app */
 #app::before{
@@ -805,6 +812,7 @@ body::after{
   background:var(--bg1); border-top:1px solid var(--line); flex-shrink:0;
   position:relative; z-index:1;
 }
+.overlay-active .home-tab-bar{ z-index:0; }
 .home-tab-btn{
   flex:1; padding:12px 6px; border-radius:var(--r);
   background:var(--surface); border:1px solid var(--line2);
@@ -1362,6 +1370,7 @@ body::after{
   display:flex; border-top:1px solid var(--line);
   background:var(--bg1); flex-shrink:0;
   padding-bottom:env(safe-area-inset-bottom,0px);
+  position:relative; z-index:2;
 }
 .tab-btn{
   flex:1; padding:10px 2px; background:transparent; border:none;
@@ -1746,21 +1755,24 @@ body::after{
 
 ════════════════════════════════════════════════════ */
 .overlay{
-  position:fixed; top:0; left:0; right:0; bottom:0; z-index:9000;
-  background:rgba(0,0,0,.85);
-  display:none; align-items:flex-end;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  position:absolute; top:0; left:0; right:0; bottom:0; z-index:99999;
+  background:rgba(0,0,0,.75);
+  display:none; align-items:center; justify-content:center;
+  padding:20px; box-sizing:border-box;
 }
 @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
 
 .overlay-card{
-  width:100%; max-height:82vh; background:var(--bg1);
-  border-radius:var(--r3) var(--r3) 0 0; overflow:hidden;
+  width:90%; max-width:360px; max-height:75vh; background:var(--bg1);
+  border-radius:var(--r3); overflow:hidden;
   display:flex; flex-direction:column;
-  box-shadow:0 -8px 40px rgba(0,0,0,.5), 0 0 0 1px var(--line2);
-  animation:slideUp .3s cubic-bezier(.22,.68,0,1.1);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  box-shadow:0 8px 40px rgba(0,0,0,.7), 0 0 0 1px var(--line2);
+  animation:popIn .25s cubic-bezier(.22,.68,0,1.2);
+  box-sizing:border-box;
+}
+@keyframes popIn{
+  from{ opacity:0; transform:scale(.92); }
+  to{   opacity:1; transform:scale(1); }
 }
 @keyframes slideUp{ from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
 .overlay-head{
@@ -2199,9 +2211,9 @@ body::after{
 ══════════════════════════════════════════════════ */
 .pause-card{
   width:100%; align-items:center; text-align:center;
-  padding:var(--sp4) var(--sp3) calc(var(--sp4) + env(safe-area-inset-bottom,0px));
-  background:var(--bg1); border-radius:var(--r3) var(--r3) 0 0;
-  animation:slideUp .3s cubic-bezier(.22,.68,0,1.1);
+  padding:var(--sp4) var(--sp3);
+  background:var(--bg1); border-radius:var(--r3);
+  animation:popIn .25s cubic-bezier(.22,.68,0,1.2);
 }
 .pause-icon{ font-size:2.5rem; margin-bottom:var(--sp2); filter:drop-shadow(0 0 16px var(--s-glow)); }
 .pause-title{ font-family:var(--serif); font-size:1.6rem; font-weight:700; color:var(--t1); margin-bottom:8px; }
