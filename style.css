@@ -1744,7 +1744,7 @@ body::after{
 
 ════════════════════════════════════════════════════ */
 .overlay{
-  position:fixed; inset:0; z-index:100;
+  position:fixed; inset:0; z-index:9000;
   background:rgba(0,0,0,.75); backdrop-filter:blur(8px);
   display:none !important; align-items:flex-end;
 }

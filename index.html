@@ -577,72 +577,74 @@
     </div>
   </div>
 
-  <!-- ══ OVERLAY: PAUSA ══ -->
-  <div id="overlay-pause" class="overlay">
-    <div class="overlay-card pause-card">
-      <div class="pause-icon">⏸</div>
-      <div class="pause-title">Jogo Pausado</div>
-      <div class="pause-info" id="pause-info"></div>
-      <div class="pause-btns">
-        <button class="btn btn-primary" onclick="BetaUI.continuarJogo()">▶ Continuar</button>
-        <button class="btn btn-secondary" onclick="BetaUI.abandonarJogo()">Abandonar Mandato</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ OVERLAY: TOOLTIP INDICADOR ══ -->
-  <div id="overlay-tooltip" class="overlay">
-    <div class="overlay-card tooltip-card">
-      <div class="overlay-head">
-        <span class="overlay-title" id="tooltip-title">Indicador</span>
-        <button class="overlay-close" onclick="BetaUI.closeTooltip()">✕</button>
-      </div>
-      <div class="overlay-body" id="tooltip-body"></div>
-    </div>
-  </div>
-
-  <!-- ══ OVERLAY: GLOSSÁRIO ══ -->
-  <div id="overlay-glossary" class="overlay">
-    <div class="overlay-card">
-      <div class="overlay-head">
-        <span class="overlay-title">Glossário</span>
-        <button class="overlay-close" onclick="BetaUI.closeGlossary()">✕</button>
-      </div>
-      <div class="overlay-body" id="glossary-content"></div>
-    </div>
-  </div>
-
-  <!-- ══ OVERLAY: CONFIGURAÇÕES ══ -->
-  <div id="overlay-settings" class="overlay">
-    <div class="overlay-card">
-      <div class="overlay-head">
-        <span class="overlay-title">Configurações</span>
-        <button class="overlay-close" onclick="BetaUI.closeSettings()">✕</button>
-      </div>
-      <div class="overlay-body">
-        <div class="settings-row">
-          <span class="settings-row-label">Timer por rodada (90 segundos)</span>
-          <button id="toggle-timer-btn" class="toggle-btn off" onclick="BetaUI.toggleTimerSetting()">OFF</button>
-        </div>
-        <div class="settings-row">
-          <span class="settings-row-label">Status de salvamento na nuvem</span>
-          <button id="toggle-cloud-btn" class="toggle-btn off" onclick="BetaUI.toggleCloudStatus()">OFF</button>
-        </div>
-        <div class="settings-row">
-          <span class="settings-row-label">Tela Cheia</span>
-          <button class="btn-settings-fullscreen" onclick="BetaUI.toggleFullscreen()" id="settings-fs-btn">⛶ Ativar</button>
-        </div>
-        <div class="settings-row">
-          <span class="settings-row-label" style="font-size:.74rem;color:var(--t3)">v6.0 · Under Pressure · Beta</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div id="toast"></div>
 </div>
+<!-- ══ OVERLAYS (fora do #app para evitar conflito de stacking context) ══ -->
 
-<script src="./bundle.js" defer></script>
+<!-- OVERLAY: PAUSA -->
+<div id="overlay-pause" class="overlay">
+  <div class="overlay-card pause-card">
+    <div class="pause-icon">⏸</div>
+    <div class="pause-title">Jogo Pausado</div>
+    <div class="pause-info" id="pause-info"></div>
+    <div class="pause-btns">
+      <button class="btn btn-primary" onclick="BetaUI.continuarJogo()">▶ Continuar</button>
+      <button class="btn btn-secondary" onclick="BetaUI.abandonarJogo()">Abandonar Mandato</button>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: TOOLTIP INDICADOR -->
+<div id="overlay-tooltip" class="overlay">
+  <div class="overlay-card tooltip-card">
+    <div class="overlay-head">
+      <span class="overlay-title" id="tooltip-title">Indicador</span>
+      <button class="overlay-close" onclick="BetaUI.closeTooltip()">✕</button>
+    </div>
+    <div class="overlay-body" id="tooltip-body"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: GLOSSÁRIO -->
+<div id="overlay-glossary" class="overlay">
+  <div class="overlay-card">
+    <div class="overlay-head">
+      <span class="overlay-title">Glossário</span>
+      <button class="overlay-close" onclick="BetaUI.closeGlossary()">✕</button>
+    </div>
+    <div class="overlay-body" id="glossary-content"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: CONFIGURAÇÕES -->
+<div id="overlay-settings" class="overlay">
+  <div class="overlay-card">
+    <div class="overlay-head">
+      <span class="overlay-title">Configurações</span>
+      <button class="overlay-close" onclick="BetaUI.closeSettings()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <div class="settings-row">
+        <span class="settings-row-label">Timer por rodada (90 segundos)</span>
+        <button id="toggle-timer-btn" class="toggle-btn off" onclick="BetaUI.toggleTimerSetting()">OFF</button>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Status de salvamento na nuvem</span>
+        <button id="toggle-cloud-btn" class="toggle-btn off" onclick="BetaUI.toggleCloudStatus()">OFF</button>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Tela Cheia</span>
+        <button class="btn-settings-fullscreen" onclick="BetaUI.toggleFullscreen()" id="settings-fs-btn">⛶ Ativar</button>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label" style="font-size:.74rem;color:var(--t3)">v6.0 · Under Pressure · Beta</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="./bundle.js"></script>
 <script>
 window.onerror = function(msg, src, line) {
   document.body.innerHTML += '<div style="position:fixed;bottom:0;left:0;right:0;background:red;color:white;padding:10px;font-size:12px;z-index:99999">ERRO: ' + msg + ' | Linha: ' + line + '</div>';
