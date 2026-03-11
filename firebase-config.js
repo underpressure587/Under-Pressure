@@ -8,7 +8,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   initializeFirestore,
-  doc, setDoc, getDoc, deleteDoc,
+  doc, setDoc, getDoc, deleteDoc, addDoc,
   collection, query, orderBy, limit, getDocs, where,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -23,7 +23,7 @@ const firebaseConfig = {
 };
 
 const PROJECT_ID = "under-pressure-49320";
-const FS_BASE = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents";
+const FS_BASE = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/(default)/documents";
 
 let app, auth, db, googleProvider;
 let _firebaseReady = false;
@@ -206,21 +206,16 @@ window.GSPSync = {
   },
 
   async salvarPartida(uid, entrada) {
-    const token = await _getToken();
-    if (!token) throw new Error('sem auth');
-    const url = FS_BASE + "/usuarios/" + uid + "/historico";
-    const body = { fields: {
-      player:      { stringValue:  entrada.player      || '' },
-      score:       { integerValue: String(entrada.score       || 0) },
-      scoreGestor: { integerValue: String(entrada.scoreGestor || 0) },
-      sector:      { stringValue:  entrada.sector      || '' },
-      companyName: { stringValue:  entrada.companyName || '' },
-      uid:         { stringValue:  uid },
-      ts:          { timestampValue: new Date().toISOString() }
-    }};
-    const r = await fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!r.ok) { const t = await r.text(); throw new Error('HTTP ' + r.status + ': ' + t.slice(0,100)); }
-    return r.json();
+    if (!db || !uid) throw new Error('Firebase não disponível');
+    return addDoc(collection(db, "usuarios", uid, "historico"), {
+      player:      entrada.player      || '',
+      score:       entrada.score       || 0,
+      scoreGestor: entrada.scoreGestor || 0,
+      sector:      entrada.sector      || '',
+      companyName: entrada.companyName || '',
+      uid,
+      ts: serverTimestamp()
+    });
   },
 
   async carregarHistorico(uid, maximo = 20) {
@@ -232,40 +227,26 @@ window.GSPSync = {
   },
 
   async salvarNoPodio(uid, entrada) {
-    const token = await _getToken();
-    if (!token) throw new Error('sem auth');
+    if (!db || !uid) throw new Error('Firebase não disponível');
     const setor = entrada.sector || '';
     const score = entrada.score  || 0;
-    const url   = FS_BASE + "/podio/" + uid;
 
-    // Lê o documento atual via REST
+    // Lê doc atual via SDK
+    const ref = doc(db, "podio", uid);
+    const snap = await getDoc(ref);
     let melhorScore    = score;
     let totalJogos     = 1;
     let melhorPorSetor = {};
     let playerNome     = entrada.player || '';
 
-    const getRes = await fetch(url, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-
-    if (getRes.ok) {
-      const atual = await getRes.json();
-      const f = atual.fields || {};
-      // Lê melhorPorSetor do formato REST
-      const raw = f.melhorPorSetor?.mapValue?.fields || {};
-      for (const [s, v] of Object.entries(raw)) {
-        melhorPorSetor[s] = {
-          score:       parseInt(v.mapValue?.fields?.score?.integerValue || 0),
-          scoreGestor: parseInt(v.mapValue?.fields?.scoreGestor?.integerValue || 0),
-          companyName: v.mapValue?.fields?.companyName?.stringValue || '',
-        };
-      }
-      melhorScore = Math.max(parseInt(f.melhorScore?.integerValue || 0), score);
-      totalJogos  = parseInt(f.totalJogos?.integerValue || 0) + 1;
-      playerNome  = entrada.player || f.player?.stringValue || '';
+    if (snap.exists()) {
+      const d = snap.data();
+      melhorPorSetor = d.melhorPorSetor || {};
+      melhorScore    = Math.max(d.melhorScore || 0, score);
+      totalJogos     = (d.totalJogos || 0) + 1;
+      playerNome     = entrada.player || d.player || '';
     }
 
-    // Atualiza melhorPorSetor se score do setor for maior
     if (!melhorPorSetor[setor] || score > melhorPorSetor[setor].score) {
       melhorPorSetor[setor] = {
         score,
@@ -274,116 +255,44 @@ window.GSPSync = {
       };
     }
 
-    // Converte melhorPorSetor para formato Firestore REST
-    const melhorPorSetorFields = {};
-    for (const [s, v] of Object.entries(melhorPorSetor)) {
-      melhorPorSetorFields[s] = {
-        mapValue: { fields: {
-          score:       { integerValue: String(v.score) },
-          scoreGestor: { integerValue: String(v.scoreGestor || 0) },
-          companyName: { stringValue:  v.companyName || '' },
-        }}
-      };
-    }
-
-    // PATCH cria ou atualiza o documento com o uid como ID
-    const body = { fields: {
-      uid:           { stringValue:  uid },
-      player:        { stringValue:  playerNome },
-      melhorScore:   { integerValue: String(melhorScore) },
-      totalJogos:    { integerValue: String(totalJogos) },
-      ultimaPartida: { timestampValue: new Date().toISOString() },
-      melhorPorSetor: { mapValue: { fields: melhorPorSetorFields } },
-    }};
-
-    const patchRes = await fetch(url, {
-      method: 'PATCH',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+    await setDoc(ref, {
+      uid,
+      player:        playerNome,
+      melhorScore,
+      totalJogos,
+      ultimaPartida: serverTimestamp(),
+      melhorPorSetor,
     });
-
-    if (!patchRes.ok) {
-      const t = await patchRes.text();
-      throw new Error('HTTP ' + patchRes.status + ': ' + t.slice(0, 100));
-    }
-    return patchRes.json();
   },
 
   async carregarPodio(sector = null) {
-    const token = await _getToken();
-    const url   = FS_BASE + "/podio?pageSize=100";
-    const headers = token
-      ? { 'Authorization': 'Bearer ' + token }
-      : {};
-
+    if (!db) return [];
     try {
-      const res = await fetch(url, { headers });
-      if (!res.ok) { console.warn("[GSP] carregarPodio HTTP:", res.status); return []; }
-      const data = await res.json();
-      if (!data.documents) return [];
+      const snap = await getDocs(query(collection(db, "podio"), orderBy("melhorScore", "desc"), limit(20)));
+      if (snap.empty) return [];
 
-      const _parseInt = (f) => parseInt(f?.integerValue ?? f?.doubleValue ?? 0);
-
-      const parseDoc = (d) => {
-        const f = d.fields || {};
-        const getMelhorPorSetor = () => {
-          const raw = f.melhorPorSetor?.mapValue?.fields || {};
-          const result = {};
-          for (const [s, v] of Object.entries(raw)) {
-            result[s] = {
-              score:       _parseInt(v.mapValue?.fields?.score),
-              scoreGestor: _parseInt(v.mapValue?.fields?.scoreGestor),
-              companyName: v.mapValue?.fields?.companyName?.stringValue || '',
-            };
-          }
-          return result;
-        };
-
-        // Suporte ao formato novo (melhorScore) e antigo (score + sector)
-        const melhorScoreNovo   = _parseInt(f.melhorScore);
-        const scoreAntigo       = _parseInt(f.score);
-        const setorAntigo       = f.sector?.stringValue || '';
-        const companyNameAntigo = f.companyName?.stringValue || '';
-        const melhorPorSetor    = getMelhorPorSetor();
-
-        // Se formato antigo e sem melhorPorSetor, monta a partir dos campos diretos
-        if (scoreAntigo > 0 && setorAntigo && Object.keys(melhorPorSetor).length === 0) {
-          melhorPorSetor[setorAntigo] = {
-            score: scoreAntigo,
-            scoreGestor: _parseInt(f.scoreGestor),
-            companyName: companyNameAntigo,
-          };
-        }
-
-        const melhorScore = melhorScoreNovo > 0 ? melhorScoreNovo : scoreAntigo;
-
+      const todos = snap.docs.map(d => {
+        const p = d.data();
         return {
-          uid:           f.uid?.stringValue || '',
-          player:        f.player?.stringValue || '',
-          melhorScore,
-          totalJogos:    _parseInt(f.totalJogos) || 1,
-          ultimaPartida: f.ultimaPartida?.timestampValue || f.ts?.timestampValue || null,
-          melhorPorSetor,
+          uid:           p.uid           || '',
+          player:        p.player        || '',
+          melhorScore:   p.melhorScore   || 0,
+          totalJogos:    p.totalJogos    || 1,
+          ultimaPartida: p.ultimaPartida || null,
+          melhorPorSetor: p.melhorPorSetor || {},
         };
-      };
-
-      const todos = data.documents
-        .map(parseDoc)
-        .filter(p => p.uid && p.melhorScore > 0); // ignora docs fantasma
+      }).filter(p => p.uid && p.melhorScore > 0);
 
       const isAll = !sector || sector === 'all';
 
       if (isAll) {
-        return todos
-          .sort((a, b) => b.melhorScore - a.melhorScore)
-          .slice(0, 20)
-          .map(p => ({
-            ...p,
-            ts:          p.ultimaPartida ? new Date(p.ultimaPartida).getTime() : Date.now(),
-            score:       p.melhorScore,
-            companyName: _melhorEmpresa(p.melhorPorSetor),
-            sector:      _melhorSetor(p.melhorPorSetor),
-          }));
+        return todos.map(p => ({
+          ...p,
+          ts:          p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
+          score:       p.melhorScore,
+          companyName: _melhorEmpresa(p.melhorPorSetor),
+          sector:      _melhorSetor(p.melhorPorSetor),
+        }));
       }
 
       return todos
@@ -392,17 +301,17 @@ window.GSPSync = {
           const s = p.melhorPorSetor[sector];
           return {
             ...p,
-            ts:          p.ultimaPartida ? new Date(p.ultimaPartida).getTime() : Date.now(),
+            ts:          p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
             score:       s.score,
             companyName: s.companyName,
             sector,
           };
         })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 20);
+        .sort((a, b) => b.score - a.score);
 
-    } catch (e) { console.warn("[GSP] carregarPodio:", e.message); return []; }
+    } catch (e) { console.warn('[GSP] carregarPodio:', e.message); return []; }
   },
+
 
   async carregarPerfil(uid) {
     if (!db || !uid) return null;
