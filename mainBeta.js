@@ -2059,14 +2059,6 @@ window.BetaUI = {
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando
 (function() {
-  window.onerror = function(msg, src, line) {
-    var el = document.getElementById('loading-msg');
-    if (el) { el.textContent = 'ERRO: ' + msg + ' L:' + line; el.style.color='red'; }
-  };
-  window.onunhandledrejection = function(e) {
-    var el = document.getElementById('loading-msg');
-    if (el) { el.textContent = 'ERRO: ' + (e.reason?.message || String(e.reason)); el.style.color='red'; }
-  };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', _boot);
   } else {

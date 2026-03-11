@@ -142,8 +142,6 @@ const BetaState = (() => {
         addConquista, addTrauma, setSituacaoStatus,
     };
 })();
-
-
 /* --core/indicadores.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Helpers de nível e avaliação
@@ -278,8 +276,6 @@ const BetaIndicadores = (() => {
         avaliarDecisaoContextual, isGameOver, scoreTotal
     };
 })();
-
-
 /* --core/indicadores-tecnologia.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Tecnologia
@@ -443,8 +439,6 @@ const IndicadoresTecnologia = (() => {
         indicadorMaisCritico
     };
 })();
-
-
 /* --core/indicadores-varejo.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Varejo
@@ -502,8 +496,6 @@ const IndicadoresVarejo = (() => {
 
     return { aplicarInterdependencias };
 })();
-
-
 /* --core/indicadores-logistica.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Logística
@@ -561,8 +553,6 @@ const IndicadoresLogistica = (() => {
 
     return { aplicarInterdependencias };
 })();
-
-
 /* --core/indicadores-industria.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDICADORES · Indústria
@@ -620,8 +610,6 @@ const IndicadoresIndustria = (() => {
 
     return { aplicarInterdependencias };
 })();
-
-
 /* --systems/impacto.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · IMPACTO · v5.0
@@ -662,8 +650,6 @@ const BetaImpacto = (() => {
 
     return { calcular, descricao, NOMES };
 })();
-
-
 /* --systems/imprevisto.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · IMPREVISTO · v5.0
@@ -806,8 +792,6 @@ const BetaImprevisto = (() => {
 
     return { sortear, resetar };
 })();
-
-
 /* --systems/feedback.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · FEEDBACK · v5.0
@@ -854,8 +838,6 @@ const BetaFeedback = (() => {
 
     return { calcular, COR, ROTULO };
 })();
-
-
 /* --systems/storyEngine.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · STORY ENGINE · Motor narrativo BitLife-style
@@ -1216,8 +1198,6 @@ const StoryEngine = (() => {
     return { avaliarFase, registrarFlags, choicesDisponiveis, gerarEpilogo };
 
 })();
-
-
 /* --systems/protagonista.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · PROTAGONISTA · v5.0
@@ -1319,8 +1299,6 @@ const Protagonista = (() => {
 
     return { calcularReacao, getNPCs };
 })();
-
-
 /* --empresas/tecnologia.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · EMPRESA · Tecnologia
@@ -1370,8 +1348,6 @@ const EmpresaTecnologia = {
 
     ] /* fim de intros[] — histórias 2-10 removidas para teste beta */
 };
-
-
 /* --empresas/varejo.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · EMPRESA · Varejo
@@ -1416,8 +1392,6 @@ const EmpresaVarejo = {
         }
     ]
 };
-
-
 /* --empresas/logistica.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · EMPRESA · Logística
@@ -1462,8 +1436,6 @@ const EmpresaLogistica = {
         }
     ]
 };
-
-
 /* --empresas/industria.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · EMPRESA · Indústria
@@ -1508,8 +1480,6 @@ const EmpresaIndustria = {
         }
     ]
 };
-
-
 /* --rounds/tecnologia-rounds.js-- */
 /* ═══════════════════════════════════════════════════════════════════
    BETA · TECNOLOGIA · ROUNDS EXCLUSIVOS — HISTÓRIA [0]
@@ -2125,8 +2095,6 @@ const TecnologiaRounds = [
 /* Histórias 1-9 removidas para teste beta — apenas história [0] ativa */
 
 ]; // fim TecnologiaRounds
-
-
 /* --rounds/varejo-rounds.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · VAREJO · ROUNDS v5.0
@@ -2288,8 +2256,6 @@ const VarejoRounds = [
   }
 ]
 ]; // fim VarejoRounds
-
-
 /* --rounds/logistica-rounds.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · LOGÍSTICA · ROUNDS v5.0
@@ -2451,8 +2417,6 @@ const LogisticaRounds = [
   }
 ]
 ]; // fim LogisticaRounds
-
-
 /* --rounds/industria-rounds.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · INDÚSTRIA · ROUNDS v5.0
@@ -2614,8 +2578,6 @@ const IndustriaRounds = [
   }
 ]
 ]; // fim IndustriaRounds
-
-
 /* --core/engine.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · ENGINE · Orquestra o fluxo completo do jogo
@@ -3037,8 +2999,6 @@ function _verificarMandatoEncerrado(gestor) {
 function _eventoAtivo(state) {
     return state.activeEvents.find(e => e.expiresAt >= state.currentRound) || null;
 }
-
-
 /* --mainBeta.js-- */
 /* ═══════════════════════════════════════════════════════
    GESTÃO SOB PRESSÃO · MAIN v5.1
@@ -3124,6 +3084,8 @@ function _iniciarListenerAuth() {
 
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
+  // Garante que todos os overlays começam fechados
+  document.querySelectorAll('.overlay').forEach(o => { o.style.display = 'none'; });
 
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
@@ -3232,7 +3194,7 @@ function mostrarTela(id, goBack) {
     s.style.animation = '';
   });
   // Fecha todos os overlays ao navegar
-  document.querySelectorAll(".overlay").forEach(o => { o.classList.remove('overlay--open'); o.style.display = ''; });
+  document.querySelectorAll(".overlay").forEach(o => { o.style.display = 'none'; });
   const el = document.getElementById(id);
   if (el) {
     el.classList.add("active");
@@ -4149,18 +4111,18 @@ const GLOSSARIO_TERMOS = [
 
 function openGlossary() {
   const el=document.getElementById("overlay-glossary"), content=document.getElementById("glossary-content");
-  if (el) el.classList.add("overlay--open");
+  if (el) el.style.display = 'flex';
   if (content) content.innerHTML=GLOSSARIO_TERMOS.map(g=>
     `<div class="glossary-term"><div class="glossary-term-word">${g.termo}</div><div class="glossary-term-def">${g.def}</div></div>`
   ).join("");
 }
-function closeGlossary() { const el=document.getElementById("overlay-glossary"); if(el) el.classList.remove("overlay--open"); }
+function closeGlossary() { const el=document.getElementById("overlay-glossary"); if(el) el.style.display = 'none'; }
 
 /* ════════════════════════════════════════════════════
    CONFIGURAÇÕES
 ════════════════════════════════════════════════════ */
 function openSettings() {
-  const el=document.getElementById("overlay-settings"); if(el) el.classList.add("overlay--open");
+  const el=document.getElementById("overlay-settings"); if(el) el.style.display = 'flex';
   _atualizarToggleTimer();
   const cloudBtn = document.getElementById('toggle-cloud-btn');
   if (cloudBtn) {
@@ -4169,7 +4131,7 @@ function openSettings() {
     cloudBtn.className = `toggle-btn ${on ? 'on' : 'off'}`;
   }
 }
-function closeSettings() { const el=document.getElementById("overlay-settings"); if(el) el.classList.remove("overlay--open"); }
+function closeSettings() { const el=document.getElementById("overlay-settings"); if(el) el.style.display = 'none'; }
 function toggleTimerSetting() { _settings.timer=!_settings.timer; LS.set(SK.SETTINGS,_settings); _atualizarToggleTimer(); }
 function toggleCloudStatus() {
   _settings.cloudStatus = !_settings.cloudStatus;
@@ -4687,13 +4649,13 @@ function pausarJogo() {
     info.textContent = `${state.companyName} · ${fases[fase]||fase} · Rodada ${state.currentRound+1}/${state.totalRounds}`;
   }
   const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.classList.add('overlay--open');
+  if (overlay) overlay.style.display = 'flex';
 }
 
 function continuarJogo() {
   _jogoPausado = false;
   const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.classList.remove('overlay--open');
+  if (overlay) overlay.style.display = 'none';
   // BUG #11 FIX: se timer chegou a 0 durante pausa, forçar escolha imediata
   if (_settings.timer && !_escolhaFeita && _timerSegs <= 0) { escolher(0); return; }
   if (_settings.timer && !_escolhaFeita && _timerSegs > 0) {
@@ -4711,7 +4673,7 @@ function continuarJogo() {
 function abandonarJogo() {
   _jogoPausado = false;
   const overlay = document.getElementById('overlay-pause');
-  if (overlay) overlay.classList.remove('overlay--open');
+  if (overlay) overlay.style.display = 'none';
   _pararTimer();
   LS.remove(SK.SESSION);
   _aplicarTemaSetor(null);
@@ -4756,12 +4718,12 @@ function abrirTooltipIndicador(key) {
     </div>
     <p class="tooltip-body-text">${info.desc}</p>
     <div class="tooltip-consequence">${info.consequence}</div>`;
-  overlay.classList.add('overlay--open');
+  overlay.style.display = 'flex';
 }
 
 function closeTooltip() {
   const el = document.getElementById('overlay-tooltip');
-  if (el) el.classList.remove('overlay--open');
+  if (el) el.style.display = 'none';
 }
 
 /* ════════════════════════════════════════════════════
