@@ -43,7 +43,7 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
   try {
     app            = initializeApp(firebaseConfig);
     auth           = getAuth(app);
-    db             = initializeFirestore(app, { experimentalForceLongPolling: true });
+    db             = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
     googleProvider = new GoogleAuthProvider();
     _firebaseReady = true;
     // Captura usuário imediatamente ao inicializar
