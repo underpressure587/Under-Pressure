@@ -253,8 +253,10 @@ window.GSPSync = {
   async salvarPartida(uid, entrada) {
     const token = await _getToken();
     if (!token) throw new Error('sem auth');
-    const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + "/historico";
-    const body = { fields: {
+
+    // 1. Salva no histórico
+    const urlHist = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + "/historico";
+    const bodyHist = { fields: {
       player:      { stringValue:  entrada.player      || '' },
       score:       { integerValue: String(entrada.score       || 0) },
       scoreGestor: { integerValue: String(entrada.scoreGestor || 0) },
@@ -263,8 +265,33 @@ window.GSPSync = {
       uid:         { stringValue:  uid },
       ts:          { timestampValue: new Date().toISOString() }
     }};
-    const r = await fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await fetch(urlHist, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(bodyHist) });
     if (!r.ok) { const t = await r.text(); throw new Error('HTTP ' + r.status + ': ' + t.slice(0,100)); }
+
+    // 2. Atualiza mandatos e melhorScore em /usuarios/{uid}
+    try {
+      const urlPerfil = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid;
+      // Lê valores atuais
+      const getRes = await fetch(urlPerfil, { headers: { 'Authorization': 'Bearer ' + token } });
+      let mandatosAtual = 0;
+      let melhorScoreAtual = 0;
+      if (getRes.ok) {
+        const atual = await getRes.json();
+        mandatosAtual    = parseInt(atual.fields?.mandatos?.integerValue    || 0);
+        melhorScoreAtual = parseInt(atual.fields?.melhorScore?.integerValue || 0);
+      }
+      const novoMandatos    = mandatosAtual + 1;
+      const novoMelhorScore = Math.max(melhorScoreAtual, entrada.score || 0);
+      await fetch(urlPerfil + "?updateMask.fieldPaths=mandatos&updateMask.fieldPaths=melhorScore", {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: {
+          mandatos:    { integerValue: String(novoMandatos) },
+          melhorScore: { integerValue: String(novoMelhorScore) },
+        }})
+      });
+    } catch(e) { console.warn('[GSP] salvarPartida perfil:', e.message); }
+
     return r.json();
   },
 
@@ -273,25 +300,52 @@ window.GSPSync = {
     try {
       const token = await _getToken();
       if (!token) return [];
-      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + "/historico?orderBy=ts+desc&pageSize=" + maximo;
-      const res = await fetch(url, { headers: { "Authorization": "Bearer " + token } });
-      if (!res.ok) return [];
-      const data = await res.json();
-      if (!data.documents) return [];
-      const _pi = v => parseInt(v?.integerValue ?? v?.doubleValue ?? 0);
-      return data.documents.map(d => {
-        const f = d.fields || {};
-        return {
-          id:          d.name.split('/').pop(),
-          player:      f.player?.stringValue      || '',
-          score:       _pi(f.score),
-          scoreGestor: _pi(f.scoreGestor),
-          sector:      f.sector?.stringValue      || '',
-          companyName: f.companyName?.stringValue || '',
-          uid:         f.uid?.stringValue         || uid,
-          ts:          f.ts?.timestampValue ? new Date(f.ts.timestampValue).getTime() : Date.now(),
-        };
+      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents:runQuery";
+      const body = {
+        structuredQuery: {
+          from: [{ collectionId: "historico", allDescendants: false }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: "uid" },
+              op: "EQUAL",
+              value: { stringValue: uid }
+            }
+          },
+          orderBy: [{ field: { fieldPath: "ts" }, direction: "DESCENDING" }],
+          limit: maximo
+        }
+      };
+      // runQuery deve ser feito no contexto do usuário para subcoleção
+      const urlUser = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + ":runQuery";
+      const res = await fetch(urlUser, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          structuredQuery: {
+            from: [{ collectionId: "historico" }],
+            orderBy: [{ field: { fieldPath: "ts" }, direction: "DESCENDING" }],
+            limit: maximo
+          }
+        })
       });
+      if (!res.ok) return [];
+      const rows = await res.json();
+      const _pi = v => parseInt(v?.integerValue ?? v?.doubleValue ?? 0);
+      return rows
+        .filter(r => r.document)
+        .map(r => {
+          const f = r.document.fields || {};
+          return {
+            id:          r.document.name.split('/').pop(),
+            player:      f.player?.stringValue      || '',
+            score:       _pi(f.score),
+            scoreGestor: _pi(f.scoreGestor),
+            sector:      f.sector?.stringValue      || '',
+            companyName: f.companyName?.stringValue || '',
+            uid:         f.uid?.stringValue         || uid,
+            ts:          f.ts?.timestampValue ? new Date(f.ts.timestampValue).getTime() : Date.now(),
+          };
+        });
     } catch (e) { console.warn('[GSP] carregarHistorico:', e.message); return []; }
   },
 
