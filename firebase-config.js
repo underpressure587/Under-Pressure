@@ -162,11 +162,17 @@ window.GSPAuth = {
   },
 
   async _salvarPerfil(user, nome) {
-    if (!db) return;
     try {
-      await setDoc(doc(db, "usuarios", user.uid), {
-        nome, email: user.email, criadoEm: serverTimestamp(), mandatos: 0, melhorScore: 0
-      }, { merge: true });
+      const token = await _getToken();
+      if (!token) return;
+      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + user.uid + "?updateMask.fieldPaths=nome&updateMask.fieldPaths=email&updateMask.fieldPaths=mandatos&updateMask.fieldPaths=melhorScore";
+      const body = { fields: {
+        nome:        { stringValue:  nome || '' },
+        email:       { stringValue:  user.email || '' },
+        mandatos:    { integerValue: "0" },
+        melhorScore: { integerValue: "0" },
+      }};
+      await fetch(url, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     } catch (e) { console.warn("[GSP] _salvarPerfil:", e.message); }
   },
 };
@@ -187,36 +193,73 @@ function _melhorSetor(melhorPorSetor) {
 window.GSPSync = {
 
   async salvarSessao(uid, dados) {
-    if (!db || !uid) return;
+    if (!uid) return;
     try {
-      await setDoc(doc(db, "usuarios", uid, "dados", "sessao"), { ...dados, ts: serverTimestamp() });
+      const token = await _getToken();
+      if (!token) return;
+      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + "/dados/sessao";
+      const fields = {};
+      for (const [k, v] of Object.entries(dados)) {
+        if (typeof v === 'number') fields[k] = { integerValue: String(v) };
+        else if (typeof v === 'boolean') fields[k] = { booleanValue: v };
+        else if (v === null || v === undefined) fields[k] = { nullValue: null };
+        else fields[k] = { stringValue: String(v) };
+      }
+      fields.ts = { timestampValue: new Date().toISOString() };
+      await fetch(url, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }) });
     } catch (e) { console.warn("[GSP] salvarSessao:", e.message); }
   },
 
   async carregarSessao(uid) {
-    if (!db || !uid) return null;
+    if (!uid) return null;
     try {
-      const snap = await getDoc(doc(db, "usuarios", uid, "dados", "sessao"));
-      return snap.exists() ? snap.data() : null;
+      const token = await _getToken();
+      if (!token) return null;
+      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + "/dados/sessao";
+      const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data.fields) return null;
+      const f = data.fields;
+      const result = {};
+      for (const [k, v] of Object.entries(f)) {
+        if (v.integerValue !== undefined) result[k] = parseInt(v.integerValue);
+        else if (v.doubleValue !== undefined) result[k] = parseFloat(v.doubleValue);
+        else if (v.booleanValue !== undefined) result[k] = v.booleanValue;
+        else if (v.stringValue !== undefined) result[k] = v.stringValue;
+        else if (v.timestampValue !== undefined) result[k] = new Date(v.timestampValue).getTime();
+        else result[k] = null;
+      }
+      return result;
     } catch (e) { return null; }
   },
 
   async limparSessao(uid) {
-    if (!db || !uid) return;
-    try { await deleteDoc(doc(db, "usuarios", uid, "dados", "sessao")); } catch (e) {}
+    if (!uid) return;
+    try {
+      const token = await _getToken();
+      if (!token) return;
+      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + "/dados/sessao";
+      await fetch(url, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+    } catch (e) {}
   },
 
   async salvarPartida(uid, entrada) {
-    if (!db || !uid) throw new Error('Firebase não disponível');
-    return addDoc(collection(db, "usuarios", uid, "historico"), {
-      player:      entrada.player      || '',
-      score:       entrada.score       || 0,
-      scoreGestor: entrada.scoreGestor || 0,
-      sector:      entrada.sector      || '',
-      companyName: entrada.companyName || '',
-      uid,
-      ts: serverTimestamp()
-    });
+    const token = await _getToken();
+    if (!token) throw new Error('sem auth');
+    const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + "/historico";
+    const body = { fields: {
+      player:      { stringValue:  entrada.player      || '' },
+      score:       { integerValue: String(entrada.score       || 0) },
+      scoreGestor: { integerValue: String(entrada.scoreGestor || 0) },
+      sector:      { stringValue:  entrada.sector      || '' },
+      companyName: { stringValue:  entrada.companyName || '' },
+      uid:         { stringValue:  uid },
+      ts:          { timestampValue: new Date().toISOString() }
+    }};
+    const r = await fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!r.ok) { const t = await r.text(); throw new Error('HTTP ' + r.status + ': ' + t.slice(0,100)); }
+    return r.json();
   },
 
   async carregarHistorico(uid, maximo = 20) {
