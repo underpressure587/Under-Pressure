@@ -23,7 +23,7 @@ const firebaseConfig = {
 };
 
 const PROJECT_ID = "under-pressure-49320";
-const FS_BASE = "https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents";
+const FS_BASE = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents";
 
 let app, auth, db, googleProvider;
 let _firebaseReady = false;
@@ -367,15 +367,9 @@ window.GSPSync = {
         };
       };
 
-      const todosRaw = data.documents.map(parseDoc);
-      const todos = todosRaw.filter(p => p.uid && p.melhorScore > 0);
-      // DEBUG VISIVEL
-      const dbgEl = document.getElementById('podio-lista');
-      if (dbgEl) {
-        const info = todosRaw.map(p => p.player + '|uid=' + (p.uid||'?') + '|score=' + p.melhorScore).join('<br>');
-        dbgEl.innerHTML = '<div style="color:lime;padding:12px;font-size:.7rem;word-break:break-all">Raw=' + todosRaw.length + ' Filtrados=' + todos.length + '<br>' + info + '</div>';
-      }
-      if (!todos.length) return todos;
+      const todos = data.documents
+        .map(parseDoc)
+        .filter(p => p.uid && p.melhorScore > 0); // ignora docs fantasma
 
       const isAll = !sector || sector === 'all';
 
