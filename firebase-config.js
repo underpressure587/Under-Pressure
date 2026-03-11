@@ -30,13 +30,17 @@ let app, auth, db, googleProvider;
 let _firebaseReady = false;
 let _cachedAuthUser = undefined; // undefined = ainda não resolveu, null = sem usuário
 
+let _cachedFirebaseUser = null;
+
 async function _getToken() {
   if (!auth) return null;
-  const user = auth.currentUser || await new Promise(r => {
+  // Usa cache se disponível
+  const user = auth.currentUser || _cachedFirebaseUser || await new Promise(r => {
     const unsub = onAuthStateChanged(auth, u => { unsub(); r(u); });
     setTimeout(() => r(null), 4000);
   });
-  return user ? user.getIdToken() : null;
+  if (user) _cachedFirebaseUser = user;
+  return user ? user.getIdToken(true).catch(() => user.getIdToken()) : null;
 }
 
 if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
@@ -55,11 +59,14 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
       } else if (user) {
         _cachedAuthUser = user;
       }
+      // Cacheia para uso no _getToken
+      if (user) _cachedFirebaseUser = user;
     });
     getRedirectResult(auth).then(cred => {
       _redirectDone = true;
       if (cred?.user) {
         _cachedAuthUser = cred.user;
+        _cachedFirebaseUser = cred.user;
         const u = cred.user;
         const nome = u.displayName || u.email?.split('@')[0] || 'Jogador';
         const player = { uid: u.uid, nome, email: u.email, tipo: 'user' };
