@@ -311,7 +311,7 @@ window.GSPSync = {
         })
         .sort((a, b) => b.score - a.score);
 
-    } catch (e) { console.warn('[GSP] carregarPodio:', e.message); return []; }
+    } catch (e) { console.error('[GSP] carregarPodio ERRO:', e.code, e.message); return []; }
   },
 
 
