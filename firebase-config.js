@@ -267,7 +267,6 @@ window.GSPSync = {
   },
 
   async carregarPodio(sector = null) {
-    console.log("[GSP] carregarPodio chamado, db=", !!db, "sector=", sector);
     try {
       const token = await _getToken();
       const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents:runQuery";
@@ -281,14 +280,12 @@ window.GSPSync = {
       if (token) headers["Authorization"] = "Bearer " + token;
 
       const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
-      console.log("[GSP] runQuery status=", res.status);
       if (!res.ok) {
         const t = await res.text();
         console.error("[GSP] runQuery erro:", res.status, t.slice(0,200));
         return [];
       }
       const rows = await res.json();
-      console.log("[GSP] runQuery rows=", rows.length);
 
       const _pi = v => parseInt(v?.integerValue ?? v?.doubleValue ?? 0);
 
@@ -316,7 +313,6 @@ window.GSPSync = {
         })
         .filter(p => p.uid && p.melhorScore > 0);
 
-      console.log("[GSP] docs validos=", todos.length);
 
       const isAll = !sector || sector === "all";
       if (isAll) {
