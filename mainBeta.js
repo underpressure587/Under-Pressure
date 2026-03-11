@@ -75,6 +75,12 @@ function _iniciarListenerAuth() {
   if (!window.GSPAuth?.isReady()) return;
   window.GSPAuth.onAuthChange((user) => {
     if (user && !_player) {
+      // Mostra loading breve antes de entrar
+      const telaAtual = document.querySelector('.screen.active')?.id;
+      if (telaAtual === 'screen-login' || telaAtual === 'screen-auth') {
+        mostrarTela('screen-loading');
+        _setLoadingMsg('Entrando no painel...', 'Bem-vindo de volta!', 90);
+      }
       _loginOk(user);
     }
   });
@@ -129,8 +135,15 @@ async function _boot() {
   }
 
   // Sem sessão salva — mostra loading enquanto verifica redirect do Google
+  const _googlePending = localStorage.getItem('gsp_google_pending') === '1';
+  localStorage.removeItem('gsp_google_pending');
+
   mostrarTela('screen-loading');
-  _setLoadingMsg('Iniciando...', 'Preparando o jogo', 10);
+  if (_googlePending) {
+    _setLoadingMsg('Conectando com Google...', 'Finalizando seu login', 30);
+  } else {
+    _setLoadingMsg('Iniciando...', 'Preparando o jogo', 10);
+  }
 
   // Escuta o evento de redirect do Google (disparado pelo firebase-config quando getRedirectResult resolve)
   let _redirectPlayer = null;
@@ -138,18 +151,23 @@ async function _boot() {
   window.addEventListener('gsp-redirect-login', _redirectHandler, { once: true });
 
   if (window.GSPAuth) {
-    _setLoadingMsg('Conectando ao servidor...', 'Aguardando Firebase', 30);
+    if (!_googlePending) _setLoadingMsg('Conectando ao servidor...', 'Aguardando Firebase', 30);
     let t = 0;
     while (!window.GSPAuth.isReady() && t < 30) {
       await new Promise(r => setTimeout(r, 100));
       t++;
     }
     if (window.GSPAuth.isReady()) {
-      _setLoadingMsg('Verificando sua sessão...', 'Checando login do Google', 60);
+      if (_googlePending) {
+        _setLoadingMsg('Verificando conta Google...', 'Quase lá!', 60);
+      } else {
+        _setLoadingMsg('Verificando sua sessão...', 'Checando login do Google', 60);
+      }
       try {
-        // Aguarda até 8s pelo resultado (waitForAuthReady OU evento de redirect)
+        // Aguarda até 15s pelo resultado (waitForAuthReady OU evento de redirect)
         let fbUser = null;
-        for (let i = 0; i < 80; i++) {
+        const maxTentativas = _googlePending ? 150 : 80;
+        for (let i = 0; i < maxTentativas; i++) {
           if (_redirectPlayer) {
             // Evento de redirect chegou — entra direto
             window.removeEventListener('gsp-redirect-login', _redirectHandler);
@@ -159,6 +177,9 @@ async function _boot() {
           }
           fbUser = await window.GSPAuth.waitForAuthReady().catch(() => null);
           if (fbUser) break;
+          if (_googlePending && i % 30 === 0 && i > 0) {
+            _setLoadingMsg('Conectando com Google...', 'Aguardando resposta...', 60 + i/3);
+          }
           await new Promise(r => setTimeout(r, 100));
         }
         if (fbUser) {
@@ -178,8 +199,13 @@ async function _boot() {
   }
 
   window.removeEventListener('gsp-redirect-login', _redirectHandler);
-  _setLoadingMsg('Pronto!', 'Faça seu login para continuar', 100);
-  await new Promise(r => setTimeout(r, 400));
+  if (_googlePending) {
+    _setLoadingMsg('Não foi possível conectar', 'Tente novamente', 100);
+    await new Promise(r => setTimeout(r, 1000));
+  } else {
+    _setLoadingMsg('Pronto!', 'Faça seu login para continuar', 100);
+    await new Promise(r => setTimeout(r, 400));
+  }
   _iniciarListenerAuth();
   mostrarTela('screen-login');
 }

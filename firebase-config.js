@@ -163,8 +163,14 @@ window.GSPAuth = {
 
   async _salvarPerfil(user, nome) {
     try {
-      const token = await _getToken();
-      if (!token) return;
+      // Aguarda token ficar disponível (até 5s)
+      let token = null;
+      for (let i = 0; i < 10; i++) {
+        token = await _getToken();
+        if (token) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      if (!token) { console.warn("[GSP] _salvarPerfil: sem token"); return; }
       const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + user.uid + "?updateMask.fieldPaths=nome&updateMask.fieldPaths=email&updateMask.fieldPaths=mandatos&updateMask.fieldPaths=melhorScore";
       const body = { fields: {
         nome:        { stringValue:  nome || '' },
