@@ -220,51 +220,88 @@ window.GSPSync = {
   },
 
   async carregarHistorico(uid, maximo = 20) {
-    if (!db || !uid) return [];
+    if (!uid) return [];
     try {
-      const snap = await getDocs(query(collection(db, "usuarios", uid, "historico"), orderBy("ts", "desc"), limit(maximo)));
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (e) { return []; }
+      const token = await _getToken();
+      if (!token) return [];
+      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + "/historico?orderBy=ts+desc&pageSize=" + maximo;
+      const res = await fetch(url, { headers: { "Authorization": "Bearer " + token } });
+      if (!res.ok) return [];
+      const data = await res.json();
+      if (!data.documents) return [];
+      const _pi = v => parseInt(v?.integerValue ?? v?.doubleValue ?? 0);
+      return data.documents.map(d => {
+        const f = d.fields || {};
+        return {
+          id:          d.name.split('/').pop(),
+          player:      f.player?.stringValue      || '',
+          score:       _pi(f.score),
+          scoreGestor: _pi(f.scoreGestor),
+          sector:      f.sector?.stringValue      || '',
+          companyName: f.companyName?.stringValue || '',
+          uid:         f.uid?.stringValue         || uid,
+          ts:          f.ts?.timestampValue ? new Date(f.ts.timestampValue).getTime() : Date.now(),
+        };
+      });
+    } catch (e) { console.warn('[GSP] carregarHistorico:', e.message); return []; }
   },
 
   async salvarNoPodio(uid, entrada) {
-    if (!db || !uid) throw new Error('Firebase não disponível');
+    const token = await _getToken();
+    if (!token) throw new Error('sem auth');
     const setor = entrada.sector || '';
     const score = entrada.score  || 0;
+    const url   = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/podio/" + uid;
 
-    // Lê doc atual via SDK
-    const ref = doc(db, "podio", uid);
-    const snap = await getDoc(ref);
     let melhorScore    = score;
     let totalJogos     = 1;
     let melhorPorSetor = {};
     let playerNome     = entrada.player || '';
 
-    if (snap.exists()) {
-      const d = snap.data();
-      melhorPorSetor = d.melhorPorSetor || {};
-      melhorScore    = Math.max(d.melhorScore || 0, score);
-      totalJogos     = (d.totalJogos || 0) + 1;
-      playerNome     = entrada.player || d.player || '';
+    const getRes = await fetch(url, { headers: { "Authorization": "Bearer " + token } });
+    if (getRes.ok) {
+      const atual = await getRes.json();
+      const f = atual.fields || {};
+      const raw = f.melhorPorSetor?.mapValue?.fields || {};
+      for (const [s, v] of Object.entries(raw)) {
+        melhorPorSetor[s] = {
+          score:       parseInt(v.mapValue?.fields?.score?.integerValue || 0),
+          scoreGestor: parseInt(v.mapValue?.fields?.scoreGestor?.integerValue || 0),
+          companyName: v.mapValue?.fields?.companyName?.stringValue || '',
+        };
+      }
+      melhorScore = Math.max(parseInt(f.melhorScore?.integerValue || 0), score);
+      totalJogos  = parseInt(f.totalJogos?.integerValue || 0) + 1;
+      playerNome  = entrada.player || f.player?.stringValue || '';
     }
 
     if (!melhorPorSetor[setor] || score > melhorPorSetor[setor].score) {
-      melhorPorSetor[setor] = {
-        score,
-        scoreGestor: entrada.scoreGestor || 0,
-        companyName: entrada.companyName || '',
-      };
+      melhorPorSetor[setor] = { score, scoreGestor: entrada.scoreGestor || 0, companyName: entrada.companyName || '' };
     }
 
-    await setDoc(ref, {
-      uid,
-      player:        playerNome,
-      melhorScore,
-      totalJogos,
-      ultimaPartida: serverTimestamp(),
-      melhorPorSetor,
-    });
+    const melhorPorSetorFields = {};
+    for (const [s, v] of Object.entries(melhorPorSetor)) {
+      melhorPorSetorFields[s] = { mapValue: { fields: {
+        score:       { integerValue: String(v.score) },
+        scoreGestor: { integerValue: String(v.scoreGestor || 0) },
+        companyName: { stringValue:  v.companyName || '' },
+      }}};
+    }
+
+    const body = { fields: {
+      uid:           { stringValue:  uid },
+      player:        { stringValue:  playerNome },
+      melhorScore:   { integerValue: String(melhorScore) },
+      totalJogos:    { integerValue: String(totalJogos) },
+      ultimaPartida: { timestampValue: new Date().toISOString() },
+      melhorPorSetor: { mapValue: { fields: melhorPorSetorFields } },
+    }};
+
+    const patchRes = await fetch(url, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!patchRes.ok) { const t = await patchRes.text(); throw new Error('HTTP ' + patchRes.status + ': ' + t.slice(0,100)); }
+    return patchRes.json();
   },
+
 
   async carregarPodio(sector = null) {
     try {
@@ -341,10 +378,22 @@ window.GSPSync = {
 
 
   async carregarPerfil(uid) {
-    if (!db || !uid) return null;
+    if (!uid) return null;
     try {
-      const snap = await getDoc(doc(db, "usuarios", uid));
-      return snap.exists() ? snap.data() : null;
-    } catch (e) { return null; }
+      const token = await _getToken();
+      if (!token) return null;
+      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid;
+      const res = await fetch(url, { headers: { "Authorization": "Bearer " + token } });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const f = data.fields || {};
+      const _pi = v => parseInt(v?.integerValue ?? v?.doubleValue ?? 0);
+      return {
+        nome:        f.nome?.stringValue  || '',
+        email:       f.email?.stringValue || '',
+        mandatos:    _pi(f.mandatos),
+        melhorScore: _pi(f.melhorScore),
+      };
+    } catch (e) { console.warn('[GSP] carregarPerfil:', e.message); return null; }
   },
 };
