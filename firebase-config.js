@@ -271,7 +271,14 @@ window.GSPSync = {
     if (!db) { console.warn("[GSP] db nulo!"); return []; }
     try {
       const snap = await getDocs(collection(db, "podio"));
-      console.log("[GSP] snap.size=", snap.size);
+        console.log("[GSP] snap.size=", snap.size);
+
+      // TESTE: lê documento específico conhecido
+      try {
+        const testDoc = await getDoc(doc(db, "podio", "vL1h5semMvd06NuWs6IKntJlI1s2"));
+        console.log("[GSP] testDoc exists=", testDoc.exists(), "data=", JSON.stringify(testDoc.data()));
+      } catch(te) { console.error("[GSP] testDoc erro:", te.message); }
+
       if (snap.empty) return [];
 
       const todos = snap.docs.map(d => {
