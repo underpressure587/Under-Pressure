@@ -268,58 +268,79 @@ window.GSPSync = {
 
   async carregarPodio(sector = null) {
     console.log("[GSP] carregarPodio chamado, db=", !!db, "sector=", sector);
-    if (!db) { console.warn("[GSP] db nulo!"); return []; }
     try {
-      const snap = await getDocs(collection(db, "podio"));
-        console.log("[GSP] snap.size=", snap.size);
+      const token = await _getToken();
+      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents:runQuery";
+      const body = {
+        structuredQuery: {
+          from: [{ collectionId: "podio" }],
+          limit: 50
+        }
+      };
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = "Bearer " + token;
 
-      // TESTE: lê documento específico conhecido
-      try {
-        const testDoc = await getDoc(doc(db, "podio", "vL1h5semMvd06NuWs6IKntJlI1s2"));
-        console.log("[GSP] testDoc exists=", testDoc.exists(), "data=", JSON.stringify(testDoc.data()));
-      } catch(te) { console.error("[GSP] testDoc erro:", te.message); }
-
-      if (snap.empty) return [];
-
-      const todos = snap.docs.map(d => {
-        const p = d.data();
-        return {
-          uid:           p.uid           || '',
-          player:        p.player        || '',
-          melhorScore:   p.melhorScore   || 0,
-          totalJogos:    p.totalJogos    || 1,
-          ultimaPartida: p.ultimaPartida || null,
-          melhorPorSetor: p.melhorPorSetor || {},
-        };
-      }).filter(p => p.uid && p.melhorScore > 0);
-
-      const isAll = !sector || sector === 'all';
-
-      if (isAll) {
-        return todos.map(p => ({
-          ...p,
-          ts:          p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
-          score:       p.melhorScore,
-          companyName: _melhorEmpresa(p.melhorPorSetor),
-          sector:      _melhorSetor(p.melhorPorSetor),
-        }));
+      const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+      console.log("[GSP] runQuery status=", res.status);
+      if (!res.ok) {
+        const t = await res.text();
+        console.error("[GSP] runQuery erro:", res.status, t.slice(0,200));
+        return [];
       }
+      const rows = await res.json();
+      console.log("[GSP] runQuery rows=", rows.length);
 
+      const _pi = v => parseInt(v?.integerValue ?? v?.doubleValue ?? 0);
+
+      const todos = rows
+        .filter(r => r.document)
+        .map(r => {
+          const f = r.document.fields || {};
+          const raw = f.melhorPorSetor?.mapValue?.fields || {};
+          const melhorPorSetor = {};
+          for (const [s, v] of Object.entries(raw)) {
+            melhorPorSetor[s] = {
+              score:       _pi(v.mapValue?.fields?.score),
+              scoreGestor: _pi(v.mapValue?.fields?.scoreGestor),
+              companyName: v.mapValue?.fields?.companyName?.stringValue || '',
+            };
+          }
+          return {
+            uid:           f.uid?.stringValue || '',
+            player:        f.player?.stringValue || '',
+            melhorScore:   _pi(f.melhorScore),
+            totalJogos:    _pi(f.totalJogos) || 1,
+            ultimaPartida: f.ultimaPartida?.timestampValue || null,
+            melhorPorSetor,
+          };
+        })
+        .filter(p => p.uid && p.melhorScore > 0);
+
+      console.log("[GSP] docs validos=", todos.length);
+
+      const isAll = !sector || sector === "all";
+      if (isAll) {
+        return todos
+          .sort((a, b) => b.melhorScore - a.melhorScore)
+          .slice(0, 20)
+          .map(p => ({
+            ...p,
+            ts:          p.ultimaPartida ? new Date(p.ultimaPartida).getTime() : Date.now(),
+            score:       p.melhorScore,
+            companyName: _melhorEmpresa(p.melhorPorSetor),
+            sector:      _melhorSetor(p.melhorPorSetor),
+          }));
+      }
       return todos
         .filter(p => p.melhorPorSetor?.[sector])
         .map(p => {
           const s = p.melhorPorSetor[sector];
-          return {
-            ...p,
-            ts:          p.ultimaPartida?.toMillis ? p.ultimaPartida.toMillis() : Date.now(),
-            score:       s.score,
-            companyName: s.companyName,
-            sector,
-          };
+          return { ...p, ts: p.ultimaPartida ? new Date(p.ultimaPartida).getTime() : Date.now(), score: s.score, companyName: s.companyName, sector };
         })
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20);
 
-    } catch (e) { console.error('[GSP] carregarPodio ERRO:', e.code, e.message); return []; }
+    } catch(e) { console.error("[GSP] carregarPodio ERRO:", e.code, e.message); return []; }
   },
 
 
