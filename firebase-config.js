@@ -317,20 +317,9 @@ window.GSPSync = {
       : {};
 
     try {
-      const _debug = (msg) => {
-        const el = document.getElementById('podio-lista');
-        if (el) el.innerHTML = '<div style="color:yellow;padding:16px;font-size:.75rem;word-break:break-all">🔍 DEBUG: ' + msg + '</div>';
-      };
-      _debug('Buscando pódio... token=' + (token ? 'sim' : 'não'));
       const res = await fetch(url, { headers });
-      _debug('Status=' + res.status + ' url=' + url);
-      if (!res.ok) {
-        const errText = await res.text();
-        _debug('ERRO HTTP ' + res.status + ': ' + errText.slice(0,300));
-        return [];
-      }
+      if (!res.ok) { console.warn("[GSP] carregarPodio HTTP:", res.status); return []; }
       const data = await res.json();
-      _debug('Docs recebidos=' + (data.documents?.length ?? 0) + (data.error ? ' ERRO:'+JSON.stringify(data.error) : ''));
       if (!data.documents) return [];
 
       const _parseInt = (f) => parseInt(f?.integerValue ?? f?.doubleValue ?? 0);
@@ -378,9 +367,15 @@ window.GSPSync = {
         };
       };
 
-      const todos = data.documents
-        .map(parseDoc)
-        .filter(p => p.uid && p.melhorScore > 0); // ignora docs fantasma
+      const todosRaw = data.documents.map(parseDoc);
+      const todos = todosRaw.filter(p => p.uid && p.melhorScore > 0);
+      // DEBUG VISIVEL
+      const dbgEl = document.getElementById('podio-lista');
+      if (dbgEl) {
+        const info = todosRaw.map(p => p.player + '|uid=' + (p.uid||'?') + '|score=' + p.melhorScore).join('<br>');
+        dbgEl.innerHTML = '<div style="color:lime;padding:12px;font-size:.7rem;word-break:break-all">Raw=' + todosRaw.length + ' Filtrados=' + todos.length + '<br>' + info + '</div>';
+      }
+      if (!todos.length) return todos;
 
       const isAll = !sector || sector === 'all';
 
