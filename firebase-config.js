@@ -269,7 +269,7 @@ window.GSPSync = {
     console.log("[GSP] carregarPodio chamado, db=", !!db, "sector=", sector);
     if (!db) { console.warn("[GSP] db nulo!"); return []; }
     try {
-      const snap = await getDocs(query(collection(db, "podio"), orderBy("melhorScore", "desc"), limit(20)));
+      const snap = await getDocs(collection(db, "podio"));
       console.log("[GSP] snap.size=", snap.size);
       if (snap.empty) return [];
 
