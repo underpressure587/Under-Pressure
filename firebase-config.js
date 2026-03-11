@@ -23,7 +23,7 @@ const firebaseConfig = {
 };
 
 const PROJECT_ID = "under-pressure-49320";
-const FS_BASE = "https://southamerica-east1-firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents";
+const FS_BASE = "https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents";
 
 let app, auth, db, googleProvider;
 let _firebaseReady = false;
