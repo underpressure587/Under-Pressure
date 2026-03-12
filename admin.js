@@ -240,22 +240,37 @@ const ADMIN = (() => {
   async function toggleBan(uid, estaBanido) {
     const acao = estaBanido ? 'desbanir' : 'banir';
     if (!confirm(`Tem certeza que deseja ${acao} este jogador?`)) return;
+    _showAdminToast('⏳ Processando...', false);
     try {
       const tok = await _token();
-      const fields = { banido: _fsBool(!estaBanido) };
-      const r = await fetch(`${FS}/usuarios/${uid}?updateMask.fieldPaths=banido`, {
+
+      // Lê documento atual para não sobrescrever outros campos
+      const getR = await fetch(`${FS}/usuarios/${uid}`, {
+        headers: { Authorization: `Bearer ${tok}` }
+      });
+      if (!getR.ok) throw new Error(`Usuário não encontrado (HTTP ${getR.status})`);
+      const docAtual = await getR.json();
+
+      // Escreve apenas o campo banido via updateMask
+      const patchR = await fetch(`${FS}/usuarios/${uid}?updateMask.fieldPaths=banido`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields })
+        body: JSON.stringify({ fields: { banido: _fsBool(!estaBanido) } })
       });
-      if (!r.ok) {
-        const errText = await r.text();
-        throw new Error(`HTTP ${r.status}: ${errText.slice(0,120)}`);
+
+      if (!patchR.ok) {
+        const errBody = await patchR.text();
+        let msg = `HTTP ${patchR.status}`;
+        if (patchR.status === 403) msg = 'Permissão negada — redeploy as regras do Firestore (firebase deploy --only firestore)';
+        else if (patchR.status === 404) msg = 'Usuário não encontrado no Firestore';
+        else msg += ': ' + errBody.slice(0, 100);
+        throw new Error(msg);
       }
+
       _showAdminToast(estaBanido ? '✅ Jogador desbanido!' : '🚫 Jogador banido!');
       carregarJogadores(document.getElementById('admin-busca')?.value || '');
     } catch(e) {
-      _showAdminToast('Erro ao banir: ' + e.message, true);
+      _showAdminToast('Erro: ' + e.message, true);
     }
   }
 
@@ -397,14 +412,35 @@ const ADMIN = (() => {
   async function salvarConfigGlobal() {
     const msg = document.getElementById('admin-msg-global')?.value || '';
     const manutencao = document.getElementById('admin-manutencao')?.checked || false;
+    const btnSalvar = document.getElementById('btn-salvar-config');
+    if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = '⏳ Salvando...'; }
     try {
-      await _patch('config/global', {
-        mensagem: _fsStr(msg),
-        manutencao: _fsBool(manutencao)
-      });
-      _showAdminToast('Configurações salvas!');
+      const tok = await _token();
+      const r = await fetch(
+        `${FS}/config/global?updateMask.fieldPaths=mensagem&updateMask.fieldPaths=manutencao`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: {
+            mensagem:   _fsStr(msg),
+            manutencao: _fsBool(manutencao)
+          }})
+        }
+      );
+      if (!r.ok) {
+        const errBody = await r.text();
+        throw new Error(patchR.status === 403
+          ? 'Permissão negada — redeploy as regras do Firestore'
+          : `HTTP ${r.status}: ${errBody.slice(0,80)}`);
+      }
+      const statusMsg = manutencao
+        ? '🔧 Manutenção ATIVADA — jogadores serão expulsos em até 20s'
+        : msg ? `📢 Mensagem global salva` : '✅ Configurações salvas';
+      _showAdminToast(statusMsg);
     } catch(e) {
       _showAdminToast('Erro: ' + e.message, true);
+    } finally {
+      if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = '💾 Salvar'; }
     }
   }
 
@@ -422,10 +458,14 @@ const ADMIN = (() => {
     try {
       const doc = await _get('config/global');
       const fields = _parseFields(doc.fields || {});
-      if (fields.manutencao) return { manutencao: true };
-      if (fields.mensagem) return { mensagem: fields.mensagem };
-    } catch(e) {}
-    return null;
+      // Retorna TODOS os campos para o cliente decidir o que fazer
+      return {
+        manutencao: !!fields.manutencao,
+        mensagem: fields.mensagem || ''
+      };
+    } catch(e) {
+      return { manutencao: false, mensagem: '' };
+    }
   }
 
   /* ── UI HELPERS ─────────────────────────────────── */

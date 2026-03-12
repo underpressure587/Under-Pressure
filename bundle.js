@@ -3040,6 +3040,8 @@ let _escolhaFeita     = false;
 let _feedbackCallback = null;
 let _timerInterval    = null;
 let _manutencaoInterval = null;
+let _globalPollInterval  = null;
+let _ultimaMensagemGlobal = '';
 let _timerSegs        = 0;
 let _bloqueioAte      = 0; // timestamp — bloqueia escolher() durante transições
 let _prevIndicators   = {}; // track trends
@@ -3130,6 +3132,7 @@ async function _boot() {
     _verificarSessaoSalva();
     _atualizarHome();
     _atualizarBotaoAdmin(saved.uid);
+    _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
     } else {
@@ -3307,6 +3310,7 @@ function confirmarNome() {
 }
 
 function sair() {
+  _pararPollingGlobal();
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
   _player = null;
@@ -3616,28 +3620,66 @@ function comecaJogo() {
   _iniciarVerificacaoManutencao();
 }
 
-function _iniciarVerificacaoManutencao() {
-  if (_manutencaoInterval) clearInterval(_manutencaoInterval);
-  if (!window.ADMIN || _isAdmin) return; // admin nunca é expulso
-  _manutencaoInterval = setInterval(async () => {
+// ─── POLLING UNIVERSAL ─────────────────────────────────────────
+// Roda sempre que o usuário está logado (home, jogo, perfil, etc.)
+// Verifica: ban + manutenção + mensagem global — a cada 20 segundos
+
+function _iniciarPollingGlobal(uid) {
+  _pararPollingGlobal(); // limpa qualquer poll anterior
+  if (!window.ADMIN || !uid) return;
+
+  const _tick = async () => {
     try {
-      const cfg = await window.ADMIN.verificarMensagemGlobal();
-      if (cfg?.manutencao) {
-        clearInterval(_manutencaoInterval);
-        _manutencaoInterval = null;
-        _pararTimer();
-        LS.remove(SK.SESSION);
-        _aplicarTemaSetor(null);
-        mostrarTela('screen-login');
-        setTimeout(() => mostrarAviso('🔧 Jogo entrou em manutenção. Sua sessão foi encerrada.'), 500);
+      // 1. Verifica ban (admin nunca é banido)
+      if (!_isAdmin) {
+        const banido = await window.ADMIN.verificarBan(uid);
+        if (banido) {
+          _forcarSaida('🚫 Sua conta foi suspensa pelo administrador.');
+          return;
+        }
       }
-    } catch(e) {}
-  }, 30000); // verifica a cada 30 segundos
+
+      // 2. Verifica manutenção + mensagem global
+      const cfg = await window.ADMIN.verificarMensagemGlobal();
+
+      if (cfg.manutencao && !_isAdmin) {
+        _forcarSaida('🔧 Jogo em manutenção. Você será desconectado.');
+        return;
+      }
+
+      // 3. Mensagem global — mostra só se mudou desde a última vez
+      if (cfg.mensagem && cfg.mensagem !== _ultimaMensagemGlobal) {
+        _ultimaMensagemGlobal = cfg.mensagem;
+        mostrarSucesso(cfg.mensagem);
+      }
+    } catch(e) { /* ignora erros de rede temporários */ }
+  };
+
+  _tick(); // executa imediatamente no login
+  _globalPollInterval = setInterval(_tick, 20000);
 }
 
-function _pararVerificacaoManutencao() {
+function _pararPollingGlobal() {
+  if (_globalPollInterval) { clearInterval(_globalPollInterval); _globalPollInterval = null; }
   if (_manutencaoInterval) { clearInterval(_manutencaoInterval); _manutencaoInterval = null; }
 }
+
+function _forcarSaida(msg) {
+  _pararPollingGlobal();
+  _pararTimer();
+  LS.remove(SK.SESSION);
+  LS.remove(SK.PLAYER);
+  _player = null;
+  _isAdmin = false;
+  _aplicarTemaSetor(null);
+  if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
+  mostrarTela('screen-login');
+  setTimeout(() => mostrarAviso(msg), 600);
+}
+
+// Mantido para não quebrar chamadas de comecaJogo/abandonarJogo
+function _iniciarVerificacaoManutencao() { /* substituído pelo polling global */ }
+function _pararVerificacaoManutencao()  { /* substituído pelo polling global */ }
 
 function _renderEmpresaTab() {
   const el = document.getElementById("empresa-tab-content");
@@ -5237,6 +5279,9 @@ async function _loginOk(player) {
       window._mensagemGlobal = cfg.mensagem;
     }
   }
+
+  // Inicia o polling universal (ban + manutenção + mensagem global)
+  _iniciarPollingGlobal(player.uid);
 
   // Entra no painel imediatamente — sem esperar Firestore
   _verificarSessaoSalva();
