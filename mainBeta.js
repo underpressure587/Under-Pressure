@@ -37,6 +37,7 @@ let _setorSelecionado = null;
 let _escolhaFeita     = false;
 let _feedbackCallback = null;
 let _timerInterval    = null;
+let _manutencaoInterval = null;
 let _timerSegs        = 0;
 let _bloqueioAte      = 0; // timestamp — bloqueia escolher() durante transições
 let _prevIndicators   = {}; // track trends
@@ -120,25 +121,12 @@ async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
 
-  // Verifica mensagem global / manutenção
-  if (window.ADMIN) {
-    const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
-    if (cfg?.manutencao) {
-      document.getElementById('loading-msg').textContent = '🔧 Jogo em manutenção. Volte em breve!';
-      return;
-    }
-    if (cfg?.mensagem) {
-      setTimeout(() => mostrarSucesso(cfg.mensagem), 1500);
-    }
-  }
-
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
   if (saved) {
     _player = saved;
     _verificarSessaoSalva();
     _atualizarHome();
-    // Verifica admin em background para sessões restauradas
     _atualizarBotaoAdmin(saved.uid);
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
@@ -275,7 +263,14 @@ function mostrarTela(id, goBack) {
   if (!TELAS_JOGO.includes(id)) _aplicarTemaSetor(null);
   window.scrollTo(0, 0);
   // Atualiza botão admin ao entrar na home
-  if (id === 'screen-home') _mostrarBotaoAdmin();
+  if (id === 'screen-home') {
+    _mostrarBotaoAdmin();
+    // Exibe mensagem global se houver
+    if (window._mensagemGlobal) {
+      setTimeout(() => mostrarSucesso(window._mensagemGlobal), 800);
+      window._mensagemGlobal = null;
+    }
+  }
 }
 function voltar(tela) {
   ['.login-logo-img', '.login-footer', '.login-main', '.login-eyebrow', '.login-rule', '.login-desc'].forEach(sel => {
@@ -616,6 +611,30 @@ function mostrarIntro(state, empresa) {
 function comecaJogo() {
   iniciarRodadas();
   _renderEmpresaTab();
+  _iniciarVerificacaoManutencao();
+}
+
+function _iniciarVerificacaoManutencao() {
+  if (_manutencaoInterval) clearInterval(_manutencaoInterval);
+  if (!window.ADMIN || _isAdmin) return; // admin nunca é expulso
+  _manutencaoInterval = setInterval(async () => {
+    try {
+      const cfg = await window.ADMIN.verificarMensagemGlobal();
+      if (cfg?.manutencao) {
+        clearInterval(_manutencaoInterval);
+        _manutencaoInterval = null;
+        _pararTimer();
+        LS.remove(SK.SESSION);
+        _aplicarTemaSetor(null);
+        mostrarTela('screen-login');
+        setTimeout(() => mostrarAviso('🔧 Jogo entrou em manutenção. Sua sessão foi encerrada.'), 500);
+      }
+    } catch(e) {}
+  }, 30000); // verifica a cada 30 segundos
+}
+
+function _pararVerificacaoManutencao() {
+  if (_manutencaoInterval) { clearInterval(_manutencaoInterval); _manutencaoInterval = null; }
 }
 
 function _renderEmpresaTab() {
@@ -1236,7 +1255,7 @@ function _atualizarBotaoFullscreen() {
 }
 document.addEventListener("fullscreenchange", _atualizarBotaoFullscreen);
 
-function reiniciar() { LS.remove(SK.SESSION); _aplicarTemaSetor(null); mostrarTela("screen-home"); }
+function reiniciar() { _pararVerificacaoManutencao(); LS.remove(SK.SESSION); _aplicarTemaSetor(null); mostrarTela("screen-home"); }
 
 function _showToast(msg, tipo = "info", duracao = 3200) {
   const container = document.getElementById("toast");
@@ -1758,6 +1777,7 @@ function abandonarJogo() {
   const overlay = document.getElementById('overlay-pause');
   _fecharOverlay('overlay-pause');
   _pararTimer();
+  _pararVerificacaoManutencao();
   LS.remove(SK.SESSION);
   _aplicarTemaSetor(null);
   mostrarTela('screen-home');
@@ -1767,6 +1787,7 @@ function abandonarJogo() {
    TOOLTIP DE INDICADORES DO GESTOR
 ════════════════════════════════════════════════════ */
 const INDICADOR_INFO = {
+  // ── Indicadores do Gestor ──
   reputacaoInterna: {
     titulo: '🧑 Reputação Interna',
     desc: 'Reflete como o time percebe sua liderança. Decisões que prejudicam as pessoas reduzem a reputação; decisões inclusivas e transparentes aumentam.',
@@ -1781,6 +1802,112 @@ const INDICADOR_INFO = {
     titulo: '🔋 Esgotamento',
     desc: 'Mede o desgaste acumulado do gestor. Aumenta com crises mal resolvidas e alta pressão de trabalho.',
     consequence: '🔴 Se chegar a 10, você é afastado por burnout e o mandato é encerrado imediatamente.',
+  },
+  // ── Indicadores da Empresa (comuns) ──
+  financeiro: {
+    titulo: '💰 Financeiro',
+    desc: 'Saúde financeira geral da empresa. Afetado por investimentos, cortes de custo e resultados operacionais.',
+    consequence: '⚠ Se chegar a 0, a empresa entra em crise de caixa e o mandato é encerrado.',
+  },
+  rh: {
+    titulo: '👥 RH',
+    desc: 'Representa o capital humano e o engajamento dos colaboradores. Impactado por políticas de pessoas e cultura organizacional.',
+    consequence: '⚠ Valores críticos geram aumento de turnover e queda de produtividade.',
+  },
+  clientes: {
+    titulo: '⭐ Clientes',
+    desc: 'Satisfação e fidelidade da base de clientes. Afetado pela qualidade dos produtos, atendimento e experiência.',
+    consequence: '⚠ Valores críticos resultam em perda de receita e dano à reputação.',
+  },
+  processos: {
+    titulo: '⚙️ Processos',
+    desc: 'Eficiência operacional interna. Reflete a maturidade dos processos e a capacidade de execução.',
+    consequence: '⚠ Processos deficientes aumentam custos e reduzem a qualidade das entregas.',
+  },
+  // ── Varejo ──
+  margem: {
+    titulo: '📊 Margem Operacional',
+    desc: 'Percentual de lucro sobre as vendas. Impactado por precificação, custos e mix de produtos.',
+    consequence: '⚠ Margens negativas comprometem a sustentabilidade financeira.',
+  },
+  estoque: {
+    titulo: '📦 Giro de Estoque',
+    desc: 'Velocidade com que os produtos são vendidos. Alto giro indica eficiência; baixo giro gera capital parado.',
+    consequence: '⚠ Estoque parado aumenta custos e pode gerar obsolescência.',
+  },
+  marca: {
+    titulo: '🏷️ Força da Marca',
+    desc: 'Percepção e reconhecimento da marca no mercado. Construída por consistência, qualidade e comunicação.',
+    consequence: '⚠ Marca fraca reduz poder de precificação e atração de clientes.',
+  },
+  digital: {
+    titulo: '🖥️ Canal Digital',
+    desc: 'Presença e desempenho nos canais digitais de venda. Cada vez mais essencial para o varejo moderno.',
+    consequence: '⚠ Atraso digital cede espaço para concorrentes mais ágeis.',
+  },
+  // ── Logística ──
+  sla: {
+    titulo: '⏱️ Cumprimento de SLA',
+    desc: 'Taxa de entregas dentro do prazo acordado. Principal métrica de confiabilidade para clientes.',
+    consequence: '⚠ SLA baixo gera multas contratuais e perda de contratos.',
+  },
+  frota: {
+    titulo: '🚛 Estado da Frota',
+    desc: 'Condição e disponibilidade dos veículos. Frota bem mantida garante operação confiável e segura.',
+    consequence: '⚠ Frota degradada aumenta paradas e custos de manutenção emergencial.',
+  },
+  // ── Indústria ──
+  manutencao: {
+    titulo: '🔧 Manutenção de Ativos',
+    desc: 'Estado de conservação das máquinas e equipamentos produtivos. Manutenção preventiva reduz paradas.',
+    consequence: '⚠ Ativos degradados causam paradas de produção e acidentes.',
+  },
+  qualidade: {
+    titulo: '🎯 Controle de Qualidade',
+    desc: 'Conformidade dos produtos com os padrões estabelecidos. Medido por taxas de defeito e retrabalho.',
+    consequence: '⚠ Qualidade baixa gera devoluções, recalls e perda de clientes.',
+  },
+  conformidade: {
+    titulo: '📋 Conformidade Regulatória',
+    desc: 'Aderência às normas e regulações do setor. Envolve licenças, certificações e auditorias.',
+    consequence: '⚠ Não conformidade pode resultar em multas, interdições e danos à reputação.',
+  },
+  // ── Tecnologia ──
+  clima: {
+    titulo: '🧑‍💻 Clima Organizacional',
+    desc: 'Bem-estar e satisfação dos colaboradores de tecnologia. Essencial para atrair e reter talentos.',
+    consequence: '⚠ Clima ruim aumenta turnover em cargos técnicos críticos.',
+  },
+  satisfacao: {
+    titulo: '⭐ Satisfação do Cliente',
+    desc: 'Nível de satisfação dos usuários com os produtos e serviços digitais.',
+    consequence: '⚠ Insatisfação leva ao churn e prejudica o crescimento.',
+  },
+  produtividade: {
+    titulo: '⚡ Produtividade',
+    desc: 'Velocidade e eficiência das entregas de tecnologia. Impactada por dívida técnica, processos e motivação.',
+    consequence: '⚠ Baixa produtividade atrasa lançamentos e aumenta custos.',
+  },
+  reputacao: {
+    titulo: '📣 Reputação de Mercado',
+    desc: 'Como a empresa é vista no ecossistema de tecnologia por clientes, parceiros e talentos.',
+    consequence: '⚠ Reputação negativa dificulta parcerias e contratações.',
+  },
+  inovacao: {
+    titulo: '🔬 Inovação',
+    desc: 'Capacidade de desenvolver novos produtos e tecnologias. Motor de crescimento e diferenciação competitiva.',
+    consequence: '⚠ Sem inovação a empresa perde relevância para concorrentes mais ágeis.',
+  },
+  // ── Segurança (compartilhado) ──
+  seguranca: {
+    titulo: '🦺 Segurança Operacional',
+    desc: 'Nível de segurança nas operações. Envolve prevenção de acidentes, normas e cultura de segurança.',
+    consequence: '⚠ Incidentes de segurança geram custos humanos, legais e reputacionais graves.',
+  },
+  tecnologia: {
+    titulo: '📡 TMS / Tecnologia',
+    desc: 'Uso de sistemas tecnológicos na operação logística. Permite rastreamento, roteirização e controle em tempo real.',
+    consequence: '⚠ Tecnologia defasada reduz visibilidade e eficiência da operação.',
   },
 };
 
@@ -2086,8 +2213,21 @@ async function _loginOk(player) {
   _player = player;
   LS.set(SK.PLAYER, _player);
 
-  // Mostra botão admin
-  _atualizarBotaoAdmin(player.uid);
+  // Verifica se é admin antes de qualquer outra coisa
+  await _atualizarBotaoAdmin(player.uid);
+
+  // Verifica manutenção — admin bypassa, usuários comuns são bloqueados
+  if (!_isAdmin && window.ADMIN) {
+    const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
+    if (cfg?.manutencao) {
+      mostrarTela('screen-login');
+      setTimeout(() => mostrarAviso('🔧 Jogo em manutenção. Volte em breve!'), 500);
+      return;
+    }
+    if (cfg?.mensagem) {
+      window._mensagemGlobal = cfg.mensagem;
+    }
+  }
 
   // Entra no painel imediatamente — sem esperar Firestore
   _verificarSessaoSalva();

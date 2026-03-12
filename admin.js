@@ -203,10 +203,12 @@ const ADMIN = (() => {
 
     try {
       const tok = await _token();
-      const url = `${FS}/usuarios/${uid}/historico?pageSize=20&orderBy=ts desc`;
+      const url = `${FS}/usuarios/${uid}/historico?pageSize=50`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${tok}` } });
       const data = await r.json();
-      const docs = (data.documents || []).map(d => _parseFields(d.fields));
+      const docs = (data.documents || [])
+        .map(d => _parseFields(d.fields))
+        .sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
       if (!docs.length) {
         modalBody.innerHTML = '<div class="admin-empty">Nenhuma partida registrada.</div>';
@@ -245,8 +247,8 @@ const ADMIN = (() => {
         structuredQuery: {
           from: [{ collectionId: 'podio' }],
           select: { fields: [
-            { fieldPath: 'nome' }, { fieldPath: 'score' },
-            { fieldPath: 'sector' }, { fieldPath: 'companyName' }, { fieldPath: 'ts' }
+            { fieldPath: 'player' }, { fieldPath: 'melhorScore' },
+            { fieldPath: 'totalJogos' }, { fieldPath: 'ultimaPartida' }
           ]}
         }
       });
@@ -254,7 +256,7 @@ const ADMIN = (() => {
       const items = res.filter(r => r.document).map(r => {
         const uid = r.document.name.split('/').pop();
         return { uid, ..._parseFields(r.document.fields) };
-      }).sort((a,b) => (b.score||0) - (a.score||0));
+      }).sort((a,b) => (b.melhorScore||0) - (a.melhorScore||0));
 
       const lista = document.getElementById('admin-podio-lista');
       if (!items.length) {
@@ -266,11 +268,11 @@ const ADMIN = (() => {
         <div class="admin-podio-row">
           <div class="admin-podio-pos">#${i+1}</div>
           <div class="admin-podio-info">
-            <div class="admin-podio-nome">${p.nome || '—'}</div>
-            <div class="admin-podio-detalhe">${p.companyName || '—'} · ${p.sector || '—'} · ${p.ts ? new Date(p.ts).toLocaleDateString('pt-BR') : '—'}</div>
+            <div class="admin-podio-nome">${p.player || '—'}</div>
+            <div class="admin-podio-detalhe">${p.totalJogos || 0} jogos · ${p.ultimaPartida ? new Date(p.ultimaPartida).toLocaleDateString('pt-BR') : '—'}</div>
           </div>
-          <div class="admin-podio-score">${p.score || 0}</div>
-          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerDoPodio('${p.uid}', '${(p.nome||'').replace(/'/g,"\\'")}')">🗑️</button>
+          <div class="admin-podio-score">${p.melhorScore || 0}</div>
+          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerDoPodio('${p.uid}', '${(p.player||'').replace(/'/g,"\\'")}');">🗑️</button>
         </div>
       `).join('');
 
@@ -318,27 +320,30 @@ const ADMIN = (() => {
   async function carregarConteudo() {
     _setLoading('admin-conteudo-body', true);
     try {
+      // Busca pódio e extrai setores do melhorPorSetor
       const res = await _query({
         structuredQuery: {
           from: [{ collectionId: 'podio' }],
-          select: { fields: [{ fieldPath: 'sector' }, { fieldPath: 'score' }] }
+          select: { fields: [{ fieldPath: 'melhorPorSetor' }, { fieldPath: 'totalJogos' }] }
         }
       });
 
-      const items = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
+      const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
       const setores = {};
-      for (const item of items) {
-        const s = item.sector || 'outros';
-        if (!setores[s]) setores[s] = { count: 0, totalScore: 0 };
-        setores[s].count++;
-        setores[s].totalScore += (item.score || 0);
+      for (const doc of docs) {
+        const mps = doc.melhorPorSetor || {};
+        for (const [setor, dados] of Object.entries(mps)) {
+          if (!setores[setor]) setores[setor] = { count: 0, totalScore: 0 };
+          setores[setor].count++;
+          setores[setor].totalScore += (dados.score || 0);
+        }
       }
 
       const body = document.getElementById('admin-conteudo-body');
       const rows = Object.entries(setores).sort((a,b) => b[1].count - a[1].count).map(([setor, d]) => `
         <div class="admin-conteudo-row">
           <div class="admin-conteudo-setor">${_emojiSetor(setor)} ${setor}</div>
-          <div class="admin-conteudo-stat">${d.count} partidas</div>
+          <div class="admin-conteudo-stat">${d.count} jogadores</div>
           <div class="admin-conteudo-stat">Média: ${Math.round(d.totalScore / d.count)} pts</div>
         </div>
       `).join('');
