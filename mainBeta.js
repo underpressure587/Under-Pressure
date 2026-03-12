@@ -271,6 +271,11 @@ function mostrarTela(id, goBack) {
   const TELAS_JOGO = ["screen-intro","screen-game","screen-feedback","screen-result"];
   if (!TELAS_JOGO.includes(id)) _aplicarTemaSetor(null);
   window.scrollTo(0, 0);
+  // Atualiza botão admin ao entrar na home
+  if (id === 'screen-home' && _player?.uid) {
+    const btn = document.getElementById('btn-admin-home');
+    if (btn) btn.style.display = _ADMIN_UIDS?.includes(_player.uid) ? 'inline-flex' : 'none';
+  }
 }
 function voltar(tela) {
   ['.login-logo-img', '.login-footer', '.login-main', '.login-eyebrow', '.login-rule', '.login-desc'].forEach(sel => {
