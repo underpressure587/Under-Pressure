@@ -3001,6 +3001,7 @@ function _eventoAtivo(state) {
 }
 /* --mainBeta.js-- */
 /* ═══════════════════════════════════════════════════════
+const _ADMIN_UIDS = ['vL1h5semMvdO6NuWs6lKntJll1s2'];
    GESTÃO SOB PRESSÃO · MAIN v5.1
    ─────────────────────────────────────────────────────
    · Sistema de jogador com persistência (localStorage)
@@ -5100,7 +5101,6 @@ async function _loginOk(player) {
 /* ════════════════════════════════════════════════════
    PAINEL ADMIN
 ════════════════════════════════════════════════════ */
-const _ADMIN_UIDS = ['vL1h5semMvdO6NuWs6lKntJll1s2'];
 
 async function _atualizarBotaoAdmin(uid) {
   if (!uid) return;
