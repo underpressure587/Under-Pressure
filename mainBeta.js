@@ -2099,10 +2099,18 @@ async function _loginOk(player) {
 ════════════════════════════════════════════════════ */
 
 async function _atualizarBotaoAdmin(uid) {
-  if (!uid) return;
+  if (!uid) { mostrarAviso('ADMIN DEBUG: uid vazio'); return; }
+  mostrarAviso('ADMIN DEBUG: uid=' + uid.slice(0,8) + '...');
+  const adminDisp = !!window.ADMIN;
+  mostrarAviso('ADMIN DEBUG: window.ADMIN=' + adminDisp);
+  if (!adminDisp) return;
   try {
-    _isAdmin = await window.ADMIN?.verificarAdmin(uid) || false;
+    const tok = await window.GSPAuth?.getToken();
+    mostrarAviso('ADMIN DEBUG: token=' + (tok ? 'ok' : 'NULO'));
+    _isAdmin = await window.ADMIN.verificarAdmin(uid) || false;
+    mostrarAviso('ADMIN DEBUG: isAdmin=' + _isAdmin);
   } catch(e) {
+    mostrarAviso('ADMIN DEBUG: ERRO=' + e.message);
     _isAdmin = false;
   }
   _mostrarBotaoAdmin();
