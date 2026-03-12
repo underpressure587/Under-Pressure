@@ -5079,13 +5079,8 @@ async function _loginOk(player) {
   _player = player;
   LS.set(SK.PLAYER, _player);
 
-  // Verifica se é admin e mostra botão
-  if (window.ADMIN && player.uid) {
-    window.ADMIN.verificarAdmin(player.uid).then(isAdmin => {
-      const btn = document.getElementById('btn-admin-home');
-      if (btn) btn.style.display = isAdmin ? 'inline-flex' : 'none';
-    });
-  }
+  // Mostra botão admin
+  _atualizarBotaoAdmin(player.uid);
 
   // Entra no painel imediatamente — sem esperar Firestore
   _verificarSessaoSalva();
@@ -5100,6 +5095,26 @@ async function _loginOk(player) {
 /* ════════════════════════════════════════════════════
    PAINEL ADMIN
 ════════════════════════════════════════════════════ */
+const _ADMIN_UIDS = ['vL1h5semMvdO6NuWs6lKntJll1s2'];
+
+async function _atualizarBotaoAdmin(uid) {
+  if (!uid) return;
+  const btn = document.getElementById('btn-admin-home');
+  if (!btn) return;
+  // Verifica localmente primeiro (instantâneo)
+  if (_ADMIN_UIDS.includes(uid)) {
+    btn.style.display = 'inline-flex';
+    return;
+  }
+  // Fallback: tenta via Firestore
+  try {
+    const isAdmin = await window.ADMIN?.verificarAdmin(uid);
+    btn.style.display = isAdmin ? 'inline-flex' : 'none';
+  } catch(e) {
+    btn.style.display = 'none';
+  }
+}
+
 let _adminClicks = 0;
 let _adminClickTimer = null;
 
