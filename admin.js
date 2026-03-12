@@ -13,7 +13,9 @@ const ADMIN = (() => {
 
   /* ── TOKEN ─────────────────────────────────────── */
   async function _token() {
+    console.log('[ADMIN] _token: chamando GSPAuth.getToken...');
     const tok = await window.GSPAuth?.getToken();
+    console.log('[ADMIN] _token resultado:', tok ? 'token ok' : 'NULL - usuário não autenticado');
     if (!tok) throw new Error('Não autenticado');
     return tok;
   }
@@ -82,11 +84,21 @@ const ADMIN = (() => {
   async function verificarAdmin(uid) {
     try {
       const doc = await _get('config/admins');
-      const uids = _val(doc.fields?.uids) || [];
+      const raw = doc.fields?.uids;
+      const uids = _val(raw) || [];
+      // Debug visual — mostra o que veio do Firestore
+      const rawStr = JSON.stringify(raw).slice(0, 80);
+      const uidsStr = JSON.stringify(uids).slice(0, 80);
+      if (window._adminDebug) {
+        window._adminDebug('raw=' + rawStr);
+        window._adminDebug('uids=' + uidsStr);
+        window._adminDebug('uid=' + uid);
+        window._adminDebug('match=' + uids.includes(uid));
+      }
       _adminUids = uids;
       return uids.includes(uid);
     } catch(e) {
-      console.error('[ADMIN] Erro ao verificar admin:', e);
+      if (window._adminDebug) window._adminDebug('ERRO=' + e.message);
       return false;
     }
   }

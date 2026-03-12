@@ -5101,20 +5101,15 @@ async function _loginOk(player) {
 ════════════════════════════════════════════════════ */
 
 async function _atualizarBotaoAdmin(uid) {
-  if (!uid) { mostrarAviso('ADMIN DEBUG: uid vazio'); return; }
-  mostrarAviso('ADMIN DEBUG: uid=' + uid.slice(0,8) + '...');
-  const adminDisp = !!window.ADMIN;
-  mostrarAviso('ADMIN DEBUG: window.ADMIN=' + adminDisp);
-  if (!adminDisp) return;
+  if (!uid) return;
+  // Expõe debug visual via window para o admin.js usar
+  window._adminDebug = (msg) => mostrarAviso('DBG: ' + msg);
   try {
-    const tok = await window.GSPAuth?.getToken();
-    mostrarAviso('ADMIN DEBUG: token=' + (tok ? 'ok' : 'NULO'));
-    _isAdmin = await window.ADMIN.verificarAdmin(uid) || false;
-    mostrarAviso('ADMIN DEBUG: isAdmin=' + _isAdmin);
+    _isAdmin = await window.ADMIN?.verificarAdmin(uid) || false;
   } catch(e) {
-    mostrarAviso('ADMIN DEBUG: ERRO=' + e.message);
     _isAdmin = false;
   }
+  window._adminDebug = null;
   _mostrarBotaoAdmin();
 }
 
