@@ -6,7 +6,7 @@
 const ADMIN = (() => {
 
   const PROJECT_ID = 'under-pressure-49320';
-  const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+  const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/default/documents`;
 
   let _adminUids = [];
   let _currentSection = 'visao-geral';
