@@ -13,9 +13,9 @@ const ADMIN = (() => {
 
   /* ── TOKEN ─────────────────────────────────────── */
   async function _token() {
-    const user = window.GSPAuth?.currentUser?.();
-    if (!user) throw new Error('Não autenticado');
-    return await user.getIdToken();
+    const tok = await window.GSPAuth?.getToken();
+    if (!tok) throw new Error('Não autenticado');
+    return tok;
   }
 
   async function _get(path) {
