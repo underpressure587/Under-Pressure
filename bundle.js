@@ -3140,6 +3140,8 @@ async function _boot() {
     _player = saved;
     _verificarSessaoSalva();
     _atualizarHome();
+    // Verifica admin em background para sessões restauradas
+    _atualizarBotaoAdmin(saved.uid);
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
     } else {
