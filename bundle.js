@@ -4917,7 +4917,14 @@ function abrirTooltipIndicador(key) {
   const info = INDICADOR_INFO[key];
   if (!info) return;
   const state = BetaState.get();
-  const val   = state?.gestor?.[key] ?? '—';
+  // Gestor indicators: reputacaoInterna, capitalPolitico, esgotamento (scale 0-10)
+  // Empresa indicators: all others (scale 0-20)
+  const GESTOR_KEYS = ['reputacaoInterna', 'capitalPolitico', 'esgotamento'];
+  const isGestor = GESTOR_KEYS.includes(key);
+  const val = isGestor
+    ? (state?.gestor?.[key] ?? '—')
+    : (state?.indicators?.[key] ?? '—');
+  const maxVal = isGestor ? 10 : 20;
   const overlay = document.getElementById('overlay-tooltip');
   const title   = document.getElementById('tooltip-title');
   const body    = document.getElementById('tooltip-body');
@@ -4925,7 +4932,7 @@ function abrirTooltipIndicador(key) {
   if (title) title.textContent = info.titulo;
   if (body) body.innerHTML = `
     <div class="tooltip-val-block">
-      <div class="tooltip-val-num" style="color:var(--s-text)">${val}<span style="font-size:.9rem;color:var(--t3)">/10</span></div>
+      <div class="tooltip-val-num" style="color:var(--s-text)">${val}<span style="font-size:.9rem;color:var(--t3)">/${maxVal}</span></div>
       <div class="tooltip-val-label">Valor atual</div>
     </div>
     <p class="tooltip-body-text">${info.desc}</p>
