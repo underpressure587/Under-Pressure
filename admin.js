@@ -84,21 +84,11 @@ const ADMIN = (() => {
   async function verificarAdmin(uid) {
     try {
       const doc = await _get('config/admins');
-      const raw = doc.fields?.uids;
-      const uids = _val(raw) || [];
-      // Debug visual — mostra o que veio do Firestore
-      const rawStr = JSON.stringify(raw).slice(0, 80);
-      const uidsStr = JSON.stringify(uids).slice(0, 80);
-      if (window._adminDebug) {
-        window._adminDebug('raw=' + rawStr);
-        window._adminDebug('uids=' + uidsStr);
-        window._adminDebug('uid=' + uid);
-        window._adminDebug('match=' + uids.includes(uid));
-      }
+      const uids = _val(doc.fields?.uids) || [];
       _adminUids = uids;
       return uids.includes(uid);
     } catch(e) {
-      if (window._adminDebug) window._adminDebug('ERRO=' + e.message);
+      console.error('[ADMIN] Erro ao verificar admin:', e);
       return false;
     }
   }

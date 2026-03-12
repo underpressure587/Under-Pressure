@@ -1335,8 +1335,11 @@ async function irParaPerfil() {
     const av = document.getElementById('perfil-avatar');
     if (av && !av._adminListened) {
       av._adminListened = true;
-      av.addEventListener('click',     _contarCliqueAdmin);
-      av.addEventListener('touchend',  _contarCliqueAdmin, { passive: true });
+      av.addEventListener('mousedown',  _iniciarHoldAdmin);
+      av.addEventListener('touchstart', _iniciarHoldAdmin, { passive: true });
+      av.addEventListener('mouseup',    _cancelarHoldAdmin);
+      av.addEventListener('mouseleave', _cancelarHoldAdmin);
+      av.addEventListener('touchend',   _cancelarHoldAdmin);
     }
   }, 500);
   mostrarTela('screen-perfil');
@@ -2100,14 +2103,11 @@ async function _loginOk(player) {
 
 async function _atualizarBotaoAdmin(uid) {
   if (!uid) return;
-  // Expõe debug visual via window para o admin.js usar
-  window._adminDebug = (msg) => mostrarAviso('DBG: ' + msg);
   try {
     _isAdmin = await window.ADMIN?.verificarAdmin(uid) || false;
   } catch(e) {
     _isAdmin = false;
   }
-  window._adminDebug = null;
   _mostrarBotaoAdmin();
 }
 
@@ -2116,18 +2116,14 @@ function _mostrarBotaoAdmin() {
   if (btn) btn.style.display = _isAdmin ? 'inline-flex' : 'none';
 }
 
-let _adminClicks = 0;
-let _adminClickTimer = null;
+let _adminHoldTimer = null;
 
-function _contarCliqueAdmin() {
-  _adminClicks++;
-  if (_adminClickTimer) clearTimeout(_adminClickTimer);
-  if (_adminClicks >= 3) {
-    _adminClicks = 0;
-    irParaAdmin();
-  } else {
-    _adminClickTimer = setTimeout(() => { _adminClicks = 0; }, 1000);
-  }
+function _iniciarHoldAdmin() {
+  _adminHoldTimer = setTimeout(() => { irParaAdmin(); }, 3000);
+}
+
+function _cancelarHoldAdmin() {
+  if (_adminHoldTimer) { clearTimeout(_adminHoldTimer); _adminHoldTimer = null; }
 }
 
 async function irParaAdmin() {
