@@ -5079,6 +5079,14 @@ async function _loginOk(player) {
   _player = player;
   LS.set(SK.PLAYER, _player);
 
+  // Verifica se é admin e mostra botão
+  if (window.ADMIN && player.uid) {
+    window.ADMIN.verificarAdmin(player.uid).then(isAdmin => {
+      const btn = document.getElementById('btn-admin-home');
+      if (btn) btn.style.display = isAdmin ? 'inline-flex' : 'none';
+    });
+  }
+
   // Entra no painel imediatamente — sem esperar Firestore
   _verificarSessaoSalva();
   _atualizarHome();
