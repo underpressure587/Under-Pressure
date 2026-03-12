@@ -1331,11 +1331,8 @@ async function irParaPerfil() {
     const av = document.getElementById('perfil-avatar');
     if (av && !av._adminListened) {
       av._adminListened = true;
-      av.addEventListener('mousedown',  _iniciarHoldAdmin);
-      av.addEventListener('touchstart', _iniciarHoldAdmin, { passive: true });
-      av.addEventListener('mouseup',    _cancelarHoldAdmin);
-      av.addEventListener('mouseleave', _cancelarHoldAdmin);
-      av.addEventListener('touchend',   _cancelarHoldAdmin);
+      av.addEventListener('click',     _contarCliqueAdmin);
+      av.addEventListener('touchend',  _contarCliqueAdmin, { passive: true });
     }
   }, 500);
   mostrarTela('screen-perfil');
@@ -2093,21 +2090,18 @@ async function _loginOk(player) {
 /* ════════════════════════════════════════════════════
    PAINEL ADMIN
 ════════════════════════════════════════════════════ */
-let _adminHoldTimer = null;
+let _adminClicks = 0;
+let _adminClickTimer = null;
 
-function _iniciarHoldAdmin() {
-  _adminHoldTimer = setTimeout(async () => {
-    if (!_player?.uid) return;
-    const isAdmin = await window.ADMIN?.verificarAdmin(_player.uid);
-    if (isAdmin) {
-      mostrarTela('screen-admin');
-      window.ADMIN.irParaSecao('visao-geral');
-    }
-  }, 3000);
-}
-
-function _cancelarHoldAdmin() {
-  if (_adminHoldTimer) { clearTimeout(_adminHoldTimer); _adminHoldTimer = null; }
+function _contarCliqueAdmin() {
+  _adminClicks++;
+  if (_adminClickTimer) clearTimeout(_adminClickTimer);
+  if (_adminClicks >= 3) {
+    _adminClicks = 0;
+    irParaAdmin();
+  } else {
+    _adminClickTimer = setTimeout(() => { _adminClicks = 0; }, 1000);
+  }
 }
 
 async function irParaAdmin() {
