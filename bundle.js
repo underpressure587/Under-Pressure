@@ -3001,7 +3001,6 @@ function _eventoAtivo(state) {
 }
 /* --mainBeta.js-- */
 /* ═══════════════════════════════════════════════════════
-const _ADMIN_UIDS = ['vL1h5semMvdO6NuWs6lKntJll1s2'];
    GESTÃO SOB PRESSÃO · MAIN v5.1
    ─────────────────────────────────────────────────────
    · Sistema de jogador com persistência (localStorage)
@@ -3034,6 +3033,7 @@ const SK = {
    ESTADO LOCAL
 ════════════════════════════════════════════════════ */
 let _player   = null;
+let _isAdmin  = false;
 let _settings = { timer: false, cloudStatus: false };
 let _setorSelecionado = null;
 let _escolhaFeita     = false;
@@ -3275,10 +3275,7 @@ function mostrarTela(id, goBack) {
   if (!TELAS_JOGO.includes(id)) _aplicarTemaSetor(null);
   window.scrollTo(0, 0);
   // Atualiza botão admin ao entrar na home
-  if (id === 'screen-home' && _player?.uid) {
-    const btn = document.getElementById('btn-admin-home');
-    if (btn) btn.style.display = _ADMIN_UIDS?.includes(_player.uid) ? 'inline-flex' : 'none';
-  }
+  if (id === 'screen-home') _mostrarBotaoAdmin();
 }
 function voltar(tela) {
   ['.login-logo-img', '.login-footer', '.login-main', '.login-eyebrow', '.login-rule', '.login-desc'].forEach(sel => {
@@ -3316,6 +3313,7 @@ function sair() {
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
   _player = null;
+  _isAdmin = false;
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
@@ -5104,20 +5102,17 @@ async function _loginOk(player) {
 
 async function _atualizarBotaoAdmin(uid) {
   if (!uid) return;
-  const btn = document.getElementById('btn-admin-home');
-  if (!btn) return;
-  // Verifica localmente primeiro (instantâneo)
-  if (_ADMIN_UIDS.includes(uid)) {
-    btn.style.display = 'inline-flex';
-    return;
-  }
-  // Fallback: tenta via Firestore
   try {
-    const isAdmin = await window.ADMIN?.verificarAdmin(uid);
-    btn.style.display = isAdmin ? 'inline-flex' : 'none';
+    _isAdmin = await window.ADMIN?.verificarAdmin(uid) || false;
   } catch(e) {
-    btn.style.display = 'none';
+    _isAdmin = false;
   }
+  _mostrarBotaoAdmin();
+}
+
+function _mostrarBotaoAdmin() {
+  const btn = document.getElementById('btn-admin-home');
+  if (btn) btn.style.display = _isAdmin ? 'inline-flex' : 'none';
 }
 
 let _adminClicks = 0;
