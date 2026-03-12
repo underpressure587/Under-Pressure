@@ -203,11 +203,21 @@ const ADMIN = (() => {
 
     try {
       const tok = await _token();
-      const url = `${FS}/usuarios/${uid}/historico?pageSize=50`;
-      const r = await fetch(url, { headers: { Authorization: `Bearer ${tok}` } });
+      // Use runQuery na subcoleção do usuário
+      const url = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents:runQuery`;
+      const body = { structuredQuery: {
+        from: [{ collectionId: 'historico', allDescendants: true }],
+        where: { fieldFilter: { field: { fieldPath: 'uid' }, op: 'EQUAL', value: { stringValue: uid } } }
+      }};
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
       const data = await r.json();
-      const docs = (data.documents || [])
-        .map(d => _parseFields(d.fields))
+      const docs = (Array.isArray(data) ? data : [])
+        .filter(row => row.document)
+        .map(row => _parseFields(row.document.fields))
         .sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
       if (!docs.length) {
@@ -231,11 +241,21 @@ const ADMIN = (() => {
     const acao = estaBanido ? 'desbanir' : 'banir';
     if (!confirm(`Tem certeza que deseja ${acao} este jogador?`)) return;
     try {
-      await _patch(`usuarios/${uid}`, { banido: _fsBool(!estaBanido) });
-      _showAdminToast(estaBanido ? 'Jogador desbanido!' : 'Jogador banido!');
+      const tok = await _token();
+      const fields = { banido: _fsBool(!estaBanido) };
+      const r = await fetch(`${FS}/usuarios/${uid}?updateMask.fieldPaths=banido`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields })
+      });
+      if (!r.ok) {
+        const errText = await r.text();
+        throw new Error(`HTTP ${r.status}: ${errText.slice(0,120)}`);
+      }
+      _showAdminToast(estaBanido ? '✅ Jogador desbanido!' : '🚫 Jogador banido!');
       carregarJogadores(document.getElementById('admin-busca')?.value || '');
     } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
+      _showAdminToast('Erro ao banir: ' + e.message, true);
     }
   }
 
