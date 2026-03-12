@@ -303,7 +303,7 @@
     </div>
     <div class="perfil-body">
       <div class="perfil-avatar-block">
-        <div class="perfil-avatar" id="perfil-avatar">?</div>
+        <div class="perfil-avatar" id="perfil-avatar" id="perfil-avatar-hold">?</div>
         <div class="perfil-nome" id="perfil-nome">Jogador</div>
         <div class="perfil-subtitulo" id="perfil-subtitulo">0 mandatos concluídos</div>
         <div class="perfil-meta-row" id="perfil-meta-row"></div>
@@ -579,7 +579,187 @@
 
   <div id="toast"></div>
 
+  <!-- ══ ADMIN ══ -->
+  <div id="screen-admin" class="screen">
+    <div class="podio-header">
+      <button class="btn-back" onclick="BetaUI.voltar('screen-home')">‹</button>
+      <span class="podio-title">🛠️ Painel Admin</span>
+    </div>
+
+    <!-- Nav -->
+    <div class="admin-nav">
+      <button class="admin-nav-btn active" data-sec="visao-geral" onclick="ADMIN.irParaSecao('visao-geral')">📊 Geral</button>
+      <button class="admin-nav-btn" data-sec="jogadores" onclick="ADMIN.irParaSecao('jogadores')">👥 Jogadores</button>
+      <button class="admin-nav-btn" data-sec="podio" onclick="ADMIN.irParaSecao('podio')">🏆 Pódio</button>
+      <button class="admin-nav-btn" data-sec="conteudo" onclick="ADMIN.irParaSecao('conteudo')">🎮 Conteúdo</button>
+      <button class="admin-nav-btn" data-sec="config" onclick="ADMIN.irParaSecao('config')">⚙️ Config</button>
+    </div>
+
+    <div class="admin-body">
+
+      <!-- VISÃO GERAL -->
+      <div id="admin-sec-visao-geral" class="admin-section">
+        <div class="admin-cards">
+          <div class="admin-card"><div class="admin-card-val" id="admin-total-jogadores">—</div><div class="admin-card-label">Jogadores</div></div>
+          <div class="admin-card"><div class="admin-card-val" id="admin-total-partidas">—</div><div class="admin-card-label">No Pódio</div></div>
+          <div class="admin-card"><div class="admin-card-val" id="admin-partidas-dia">—</div><div class="admin-card-label">Últimas 24h</div></div>
+          <div class="admin-card"><div class="admin-card-val" id="admin-partidas-semana">—</div><div class="admin-card-label">Última semana</div></div>
+          <div class="admin-card"><div class="admin-card-val" id="admin-score-medio">—</div><div class="admin-card-label">Score médio</div></div>
+        </div>
+      </div>
+
+      <!-- JOGADORES -->
+      <div id="admin-sec-jogadores" class="admin-section" style="display:none">
+        <div class="admin-busca-row">
+          <input id="admin-busca" class="admin-input" placeholder="Buscar por nome ou e-mail..." oninput="ADMIN.carregarJogadores(this.value)">
+        </div>
+        <div id="admin-jogadores-lista"></div>
+      </div>
+
+      <!-- PÓDIO -->
+      <div id="admin-sec-podio" class="admin-section" style="display:none">
+        <div class="admin-reset-row">
+          <select id="admin-setor-reset" class="admin-input" style="flex:1">
+            <option value="">Selecionar setor...</option>
+            <option value="tecnologia">🚀 Tecnologia</option>
+            <option value="varejo">🛒 Varejo</option>
+            <option value="logistica">🚛 Logística</option>
+            <option value="industria">🏭 Indústria</option>
+          </select>
+          <button class="admin-btn admin-btn-danger" onclick="ADMIN.resetarPodioPorSetor()">🗑️ Resetar setor</button>
+        </div>
+        <div id="admin-podio-lista"></div>
+      </div>
+
+      <!-- CONTEÚDO -->
+      <div id="admin-sec-conteudo" class="admin-section" style="display:none">
+        <div id="admin-conteudo-body"></div>
+      </div>
+
+      <!-- CONFIG -->
+      <div id="admin-sec-config" class="admin-section" style="display:none">
+        <div class="admin-config-form">
+          <label class="admin-label">Mensagem global (aparece para todos ao abrir o jogo)</label>
+          <textarea id="admin-msg-global" class="admin-input admin-textarea" placeholder="Deixe vazio para desativar..."></textarea>
+
+          <div class="admin-toggle-row">
+            <label class="admin-label">Modo manutenção (bloqueia acesso ao jogo)</label>
+            <input type="checkbox" id="admin-manutencao" class="admin-checkbox">
+          </div>
+
+          <button class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()">💾 Salvar configurações</button>
+        </div>
+      </div>
+
+    </div><!-- /admin-body -->
+
+    <!-- Modal histórico -->
+    <div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+      <div style="background:var(--bg1);border-radius:var(--r3);width:100%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)">
+          <span id="admin-modal-title" style="font-weight:700;color:var(--t1)"></span>
+          <button onclick="ADMIN.fecharModal()" style="background:none;border:none;color:var(--t2);font-size:1.2rem;cursor:pointer">✕</button>
+        </div>
+        <div id="admin-modal-body" style="overflow-y:auto;padding:16px;flex:1"></div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="admin-toast" class="admin-toast" style="display:none"></div>
+  </div>
+
+
   <!-- ══ OVERLAYS ══ -->
+  <!-- ══ ADMIN ══ -->
+  <div id="screen-admin" class="screen">
+    <div class="podio-header">
+      <button class="btn-back" onclick="BetaUI.voltar('screen-home')">‹</button>
+      <span class="podio-title">🛠️ Painel Admin</span>
+    </div>
+
+    <!-- Nav -->
+    <div class="admin-nav">
+      <button class="admin-nav-btn active" data-sec="visao-geral" onclick="ADMIN.irParaSecao('visao-geral')">📊 Geral</button>
+      <button class="admin-nav-btn" data-sec="jogadores" onclick="ADMIN.irParaSecao('jogadores')">👥 Jogadores</button>
+      <button class="admin-nav-btn" data-sec="podio" onclick="ADMIN.irParaSecao('podio')">🏆 Pódio</button>
+      <button class="admin-nav-btn" data-sec="conteudo" onclick="ADMIN.irParaSecao('conteudo')">🎮 Conteúdo</button>
+      <button class="admin-nav-btn" data-sec="config" onclick="ADMIN.irParaSecao('config')">⚙️ Config</button>
+    </div>
+
+    <div class="admin-body">
+
+      <!-- VISÃO GERAL -->
+      <div id="admin-sec-visao-geral" class="admin-section">
+        <div class="admin-cards">
+          <div class="admin-card"><div class="admin-card-val" id="admin-total-jogadores">—</div><div class="admin-card-label">Jogadores</div></div>
+          <div class="admin-card"><div class="admin-card-val" id="admin-total-partidas">—</div><div class="admin-card-label">No Pódio</div></div>
+          <div class="admin-card"><div class="admin-card-val" id="admin-partidas-dia">—</div><div class="admin-card-label">Últimas 24h</div></div>
+          <div class="admin-card"><div class="admin-card-val" id="admin-partidas-semana">—</div><div class="admin-card-label">Última semana</div></div>
+          <div class="admin-card"><div class="admin-card-val" id="admin-score-medio">—</div><div class="admin-card-label">Score médio</div></div>
+        </div>
+      </div>
+
+      <!-- JOGADORES -->
+      <div id="admin-sec-jogadores" class="admin-section" style="display:none">
+        <div class="admin-busca-row">
+          <input id="admin-busca" class="admin-input" placeholder="Buscar por nome ou e-mail..." oninput="ADMIN.carregarJogadores(this.value)">
+        </div>
+        <div id="admin-jogadores-lista"></div>
+      </div>
+
+      <!-- PÓDIO -->
+      <div id="admin-sec-podio" class="admin-section" style="display:none">
+        <div class="admin-reset-row">
+          <select id="admin-setor-reset" class="admin-input" style="flex:1">
+            <option value="">Selecionar setor...</option>
+            <option value="tecnologia">🚀 Tecnologia</option>
+            <option value="varejo">🛒 Varejo</option>
+            <option value="logistica">🚛 Logística</option>
+            <option value="industria">🏭 Indústria</option>
+          </select>
+          <button class="admin-btn admin-btn-danger" onclick="ADMIN.resetarPodioPorSetor()">🗑️ Resetar setor</button>
+        </div>
+        <div id="admin-podio-lista"></div>
+      </div>
+
+      <!-- CONTEÚDO -->
+      <div id="admin-sec-conteudo" class="admin-section" style="display:none">
+        <div id="admin-conteudo-body"></div>
+      </div>
+
+      <!-- CONFIG -->
+      <div id="admin-sec-config" class="admin-section" style="display:none">
+        <div class="admin-config-form">
+          <label class="admin-label">Mensagem global (aparece para todos ao abrir o jogo)</label>
+          <textarea id="admin-msg-global" class="admin-input admin-textarea" placeholder="Deixe vazio para desativar..."></textarea>
+
+          <div class="admin-toggle-row">
+            <label class="admin-label">Modo manutenção (bloqueia acesso ao jogo)</label>
+            <input type="checkbox" id="admin-manutencao" class="admin-checkbox">
+          </div>
+
+          <button class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()">💾 Salvar configurações</button>
+        </div>
+      </div>
+
+    </div><!-- /admin-body -->
+
+    <!-- Modal histórico -->
+    <div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+      <div style="background:var(--bg1);border-radius:var(--r3);width:100%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)">
+          <span id="admin-modal-title" style="font-weight:700;color:var(--t1)"></span>
+          <button onclick="ADMIN.fecharModal()" style="background:none;border:none;color:var(--t2);font-size:1.2rem;cursor:pointer">✕</button>
+        </div>
+        <div id="admin-modal-body" style="overflow-y:auto;padding:16px;flex:1"></div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="admin-toast" class="admin-toast" style="display:none"></div>
+  </div>
+
+
   <!-- ══ OVERLAYS (fora do #app para evitar conflito de stacking context) ══ -->
   
   <!-- OVERLAY: PAUSA -->
@@ -646,6 +826,7 @@
 </div>
 
 
+<script src="./admin.js"></script>
 <script src="./bundle.js"></script>
 </body>
 </html>

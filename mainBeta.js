@@ -119,6 +119,18 @@ async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
 
+  // Verifica mensagem global / manutenção
+  if (window.ADMIN) {
+    const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
+    if (cfg?.manutencao) {
+      document.getElementById('loading-msg').textContent = '🔧 Jogo em manutenção. Volte em breve!';
+      return;
+    }
+    if (cfg?.mensagem) {
+      setTimeout(() => mostrarSucesso(cfg.mensagem), 1500);
+    }
+  }
+
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
   if (saved) {
@@ -1314,6 +1326,18 @@ function irParaSlide(step) {
    PERFIL DO JOGADOR
 ════════════════════════════════════════════════════ */
 async function irParaPerfil() {
+  // Configura hold 3s no avatar para admin
+  setTimeout(() => {
+    const av = document.getElementById('perfil-avatar');
+    if (av && !av._adminListened) {
+      av._adminListened = true;
+      av.addEventListener('mousedown',  _iniciarHoldAdmin);
+      av.addEventListener('touchstart', _iniciarHoldAdmin, { passive: true });
+      av.addEventListener('mouseup',    _cancelarHoldAdmin);
+      av.addEventListener('mouseleave', _cancelarHoldAdmin);
+      av.addEventListener('touchend',   _cancelarHoldAdmin);
+    }
+  }, 500);
   mostrarTela('screen-perfil');
   const playerSalvo = LS.get(SK.PLAYER);
   if (playerSalvo) _player = playerSalvo;
@@ -2065,6 +2089,36 @@ async function _loginOk(player) {
   _sincronizarFirebaseBackground(player);
 }
 
+
+/* ════════════════════════════════════════════════════
+   PAINEL ADMIN
+════════════════════════════════════════════════════ */
+let _adminHoldTimer = null;
+
+function _iniciarHoldAdmin() {
+  _adminHoldTimer = setTimeout(async () => {
+    if (!_player?.uid) return;
+    const isAdmin = await window.ADMIN?.verificarAdmin(_player.uid);
+    if (isAdmin) {
+      mostrarTela('screen-admin');
+      window.ADMIN.irParaSecao('visao-geral');
+    }
+  }, 3000);
+}
+
+function _cancelarHoldAdmin() {
+  if (_adminHoldTimer) { clearTimeout(_adminHoldTimer); _adminHoldTimer = null; }
+}
+
+async function irParaAdmin() {
+  if (!_player?.uid) return;
+  const isAdmin = await window.ADMIN?.verificarAdmin(_player.uid);
+  if (isAdmin) {
+    mostrarTela('screen-admin');
+    window.ADMIN.irParaSecao('visao-geral');
+  }
+}
+
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
@@ -2081,6 +2135,7 @@ window.BetaUI = {
   abrirTooltipIndicador, closeTooltip,
   toggleModoTreino,
   compartilharResultado,
+  irParaAdmin,
 };
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando
