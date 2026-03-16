@@ -10,6 +10,8 @@ const ADMIN = (() => {
 
   let _adminUids = [];
   let _currentSection = 'visao-geral';
+  let _setorSelecionado = '';  // setor ativo no dropdown do pódio
+  let _banUid = '';            // uid do jogador sendo analisado no modal de ban
 
   /* ── TOKEN ─────────────────────────────────────── */
   async function _token() {
@@ -176,7 +178,7 @@ const ADMIN = (() => {
           </div>
           <div class="admin-jogador-acoes">
             <button class="admin-btn-sm" onclick="ADMIN.verHistoricoJogador('${j.uid}', '${(j.nome||'').replace(/'/g,"\\'")}')">📋 Histórico</button>
-            <button class="admin-btn-sm ${j.banido ? 'admin-btn-ok' : 'admin-btn-danger'}" onclick="ADMIN.toggleBan('${j.uid}', ${!!j.banido})">
+            <button class="admin-btn-sm ${j.banido ? 'admin-btn-ok' : 'admin-btn-danger'}" onclick="ADMIN.abrirModalBan('${j.uid}', '${(j.nome||'').replace(/'/g,"\'")}', ${!!j.banido})">
               ${j.banido ? '✅ Desbanir' : '🚫 Banir'}
             </button>
           </div>
@@ -311,7 +313,7 @@ const ADMIN = (() => {
   }
 
   async function resetarPodioPorSetor() {
-    const setor = document.getElementById('admin-setor-reset')?.value;
+    const setor = _setorSelecionado;
     if (!setor) { _showAdminToast('Selecione um setor.', true); return; }
     if (!confirm(`Resetar pódio de ${setor}? Isso remove todas as entradas desse setor.`)) return;
     try {
@@ -499,6 +501,218 @@ const ADMIN = (() => {
     }
   }
 
+  /* ── DROPDOWN CUSTOMIZADO (pódio) ──────────────── */
+  function toggleDropdown() {
+    const menu = document.getElementById('admin-setor-menu');
+    const dropdown = document.getElementById('admin-setor-dropdown');
+    if (!menu) return;
+    const isOpen = menu.style.display !== 'none';
+    menu.style.display = isOpen ? 'none' : 'block';
+    dropdown?.classList.toggle('open', !isOpen);
+    // Fecha ao clicar fora
+    if (!isOpen) {
+      const close = (e) => {
+        if (!dropdown?.contains(e.target)) {
+          menu.style.display = 'none';
+          dropdown?.classList.remove('open');
+          document.removeEventListener('click', close);
+        }
+      };
+      setTimeout(() => document.addEventListener('click', close), 10);
+    }
+  }
+
+  function selecionarSetor(valor, label) {
+    _setorSelecionado = valor;
+    const labelEl = document.getElementById('admin-setor-label');
+    if (labelEl) labelEl.textContent = label;
+    // Destaca item ativo no menu
+    document.querySelectorAll('.admin-dropdown-item').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.trim() === label.trim());
+    });
+    // Fecha o menu
+    const menu = document.getElementById('admin-setor-menu');
+    const dropdown = document.getElementById('admin-setor-dropdown');
+    if (menu) menu.style.display = 'none';
+    dropdown?.classList.remove('open');
+  }
+
+  /* ── MODAL MENSAGEM GLOBAL ──────────────────────── */
+  async function abrirModalMsg() {
+    const modal = document.getElementById('admin-modal-msg');
+    if (!modal) return;
+    // Carrega valor atual do Firestore
+    try {
+      const doc = await _get('config/global');
+      const fields = _parseFields(doc.fields || {});
+      const el = document.getElementById('admin-msg-global');
+      if (el) el.value = fields.mensagem || '';
+      _atualizarPreviewMsg(fields.mensagem || '');
+    } catch(e) {}
+    modal.style.display = 'flex';
+    // Atualiza preview ao digitar
+    const ta = document.getElementById('admin-msg-global');
+    if (ta) ta.oninput = () => _atualizarPreviewMsg(ta.value);
+  }
+
+  function _atualizarPreviewMsg(texto) {
+    const preview = document.getElementById('admin-msg-preview');
+    const previewText = document.getElementById('admin-msg-preview-text');
+    if (!preview || !previewText) return;
+    if (texto.trim()) {
+      preview.style.display = 'block';
+      previewText.textContent = texto;
+    } else {
+      preview.style.display = 'none';
+    }
+  }
+
+  function fecharModalMsg() {
+    const modal = document.getElementById('admin-modal-msg');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function salvarMensagemGlobal() {
+    const msg = document.getElementById('admin-msg-global')?.value || '';
+    const btn = document.getElementById('btn-salvar-msg');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+    try {
+      const tok = await _token();
+      const r = await fetch(
+        `${FS}/config/global?updateMask.fieldPaths=mensagem`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { mensagem: _fsStr(msg) }})
+        }
+      );
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      fecharModalMsg();
+      _showAdminToast(msg ? '📢 Mensagem enviada a todos os jogadores!' : '✅ Mensagem removida.');
+    } catch(e) {
+      _showAdminToast('Erro: ' + e.message, true);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '📢 Enviar'; }
+    }
+  }
+
+  async function limparMensagemGlobal() {
+    const el = document.getElementById('admin-msg-global');
+    if (el) { el.value = ''; _atualizarPreviewMsg(''); }
+    await salvarMensagemGlobal();
+  }
+
+  /* ── MODAL BANIMENTO ────────────────────────────── */
+  async function abrirModalBan(uid, nome, estaBanido) {
+    _banUid = uid;
+    const modal = document.getElementById('admin-modal-ban');
+    const title = document.getElementById('admin-ban-title');
+    const playerCard = document.getElementById('admin-ban-player-card');
+    const statusEl = document.getElementById('admin-ban-status');
+    const motivoLabel = document.getElementById('admin-ban-motivo-label');
+    const foot = document.getElementById('admin-ban-foot');
+    if (!modal) return;
+
+    title.textContent = estaBanido ? '✅ Desbanir Jogador' : '🚫 Banir Jogador';
+    playerCard.innerHTML = `
+      <div class="admin-ban-avatar">${(nome||'?').charAt(0).toUpperCase()}</div>
+      <div>
+        <div class="admin-ban-nome">${nome || 'Sem nome'}</div>
+        <div class="admin-ban-uid">${uid}</div>
+      </div>`;
+
+    statusEl.innerHTML = estaBanido
+      ? '<div class="admin-ban-badge-ativo">🚫 Jogador atualmente BANIDO</div>'
+      : '<div class="admin-ban-badge-livre">✅ Jogador com acesso normal</div>';
+
+    // Mostra campo de motivo só ao banir
+    if (motivoLabel) motivoLabel.style.display = estaBanido ? 'none' : 'block';
+    const motivoTa = document.getElementById('admin-ban-motivo');
+    if (motivoTa) { motivoTa.style.display = estaBanido ? 'none' : 'block'; motivoTa.value = ''; }
+
+    // Botões de ação
+    foot.innerHTML = `
+      <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2)" onclick="ADMIN.fecharModalBan()">Cancelar</button>
+      <button class="admin-btn ${estaBanido ? 'admin-btn-ok' : 'admin-btn-danger'}" onclick="ADMIN.confirmarBan('${uid}', ${estaBanido})">
+        ${estaBanido ? '✅ Confirmar Desbanimento' : '🚫 Confirmar Banimento'}
+      </button>`;
+
+    modal.style.display = 'flex';
+
+    // Carrega histórico de partidas no modal
+    _carregarHistBan(uid);
+  }
+
+  async function _carregarHistBan(uid) {
+    const section = document.getElementById('admin-ban-historico');
+    const lista = document.getElementById('admin-ban-hist-lista');
+    if (!section || !lista) return;
+    lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
+    section.style.display = 'block';
+    try {
+      const tok = await _token();
+      const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/default/documents/usuarios/${uid}:runQuery`;
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          structuredQuery: {
+            from: [{ collectionId: 'historico' }],
+            orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+            limit: 5
+          }
+        })
+      });
+      const data = await r.json();
+      const docs = (Array.isArray(data) ? data : [])
+        .filter(row => row.document)
+        .map(row => _parseFields(row.document.fields));
+      if (!docs.length) { lista.innerHTML = '<div class="admin-empty" style="padding:8px">Sem partidas registradas.</div>'; return; }
+      lista.innerHTML = docs.map(d => `
+        <div class="admin-hist-row">
+          <div class="admin-hist-empresa">${d.companyName || '—'} <span class="admin-hist-setor">${d.sector || '—'}</span></div>
+          <div class="admin-hist-score">${d.score || 0} pts</div>
+          <div class="admin-hist-data">${d.ts ? new Date(d.ts).toLocaleDateString('pt-BR') : '—'}</div>
+        </div>`).join('');
+    } catch(e) {
+      lista.innerHTML = '<div class="admin-empty" style="padding:8px">Erro ao carregar.</div>';
+    }
+  }
+
+  async function confirmarBan(uid, estaBanido) {
+    const btn = document.querySelector('#admin-ban-foot .admin-btn-danger, #admin-ban-foot .admin-btn-ok');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Processando...'; }
+    try {
+      const patchR = await fetch(`${FS}/usuarios/${uid}?updateMask.fieldPaths=banido`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${await _token()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { banido: _fsBool(!estaBanido) } })
+      });
+      if (!patchR.ok) {
+        const errBody = await patchR.text();
+        let msg = `HTTP ${patchR.status}`;
+        if (patchR.status === 403) msg = 'Permissão negada — redeploy as regras do Firestore';
+        else msg += ': ' + errBody.slice(0, 80);
+        throw new Error(msg);
+      }
+      fecharModalBan();
+      _showAdminToast(estaBanido ? '✅ Jogador desbanido com sucesso!' : '🚫 Jogador banido com sucesso!');
+      // Atualiza lista de jogadores se estiver aberta
+      if (_currentSection === 'jogadores') {
+        carregarJogadores(document.getElementById('admin-busca')?.value || '');
+      }
+    } catch(e) {
+      _showAdminToast('Erro: ' + e.message, true);
+      if (btn) { btn.disabled = false; btn.textContent = btn.textContent.includes('Desban') ? '✅ Confirmar Desbanimento' : '🚫 Confirmar Banimento'; }
+    }
+  }
+
+  function fecharModalBan() {
+    const modal = document.getElementById('admin-modal-ban');
+    if (modal) modal.style.display = 'none';
+    _banUid = '';
+  }
+
   /* ── VERIFICAR BAN / CONFIG GLOBAL ─────────────── */
   async function verificarBan(uid) {
     try {
@@ -566,6 +780,12 @@ const ADMIN = (() => {
     salvarConfigGlobal,
     adicionarAdmin, removerAdmin,
     fecharModal,
+    // Dropdown
+    toggleDropdown, selecionarSetor,
+    // Modal mensagem global
+    abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
+    // Modal banimento
+    abrirModalBan, fecharModalBan, confirmarBan,
   };
 
 })();

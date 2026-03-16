@@ -620,13 +620,20 @@
       <!-- PÓDIO -->
       <div id="admin-sec-podio" class="admin-section" style="display:none">
         <div class="admin-reset-row">
-          <select id="admin-setor-reset" class="admin-input" style="flex:1">
-            <option value="">Selecionar setor...</option>
-            <option value="tecnologia">🚀 Tecnologia</option>
-            <option value="varejo">🛒 Varejo</option>
-            <option value="logistica">🚛 Logística</option>
-            <option value="industria">🏭 Indústria</option>
-          </select>
+          <!-- Dropdown customizado — sem UI nativa do navegador -->
+          <div class="admin-dropdown" id="admin-setor-dropdown">
+            <button class="admin-dropdown-trigger" onclick="ADMIN.toggleDropdown()" type="button">
+              <span id="admin-setor-label">Selecionar setor...</span>
+              <svg class="admin-dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="admin-dropdown-menu" id="admin-setor-menu" style="display:none">
+              <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('', 'Selecionar setor...')">— Nenhum —</button>
+              <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('tecnologia', '🚀 Tecnologia')">🚀 Tecnologia</button>
+              <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('varejo', '🛒 Varejo')">🛒 Varejo</button>
+              <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('logistica', '🚛 Logística')">🚛 Logística</button>
+              <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('industria', '🏭 Indústria')">🏭 Indústria</button>
+            </div>
+          </div>
           <button class="admin-btn admin-btn-danger" onclick="ADMIN.resetarPodioPorSetor()">🗑️ Resetar setor</button>
         </div>
         <div id="admin-podio-lista"></div>
@@ -640,8 +647,8 @@
       <!-- CONFIG -->
       <div id="admin-sec-config" class="admin-section" style="display:none">
         <div class="admin-config-form">
-          <label class="admin-label">Mensagem global (aparece para todos ao abrir o jogo)</label>
-          <textarea id="admin-msg-global" class="admin-input admin-textarea" placeholder="Deixe vazio para desativar..."></textarea>
+          <!-- Mensagem global agora é gerenciada pelo modal dedicado -->
+          <button class="admin-btn admin-btn-ok" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t1)" onclick="ADMIN.abrirModalMsg()">📢 Gerenciar Mensagem Global</button>
 
           <!-- Banner de alerta quando manutenção está ativa -->
           <div id="admin-manutencao-banner" class="admin-manutencao-banner" style="display:none">
@@ -676,6 +683,51 @@
           <button onclick="ADMIN.fecharModal()" style="background:none;border:none;color:var(--t2);font-size:1.2rem;cursor:pointer">✕</button>
         </div>
         <div id="admin-modal-body" style="overflow-y:auto;padding:16px;flex:1"></div>
+      </div>
+    </div>
+
+    <!-- Modal: Mensagem Global -->
+    <div id="admin-modal-msg" class="admin-modal-overlay" style="display:none">
+      <div class="admin-modal-card">
+        <div class="admin-modal-head">
+          <span class="admin-modal-title">📢 Mensagem Global</span>
+          <button class="admin-modal-close" onclick="ADMIN.fecharModalMsg()">✕</button>
+        </div>
+        <div class="admin-modal-body">
+          <p class="admin-modal-desc">Esta mensagem aparece como notificação para <strong>todos os jogadores</strong> que estão online. Deixe vazio para desativar.</p>
+          <label class="admin-label">Mensagem</label>
+          <textarea id="admin-msg-global" class="admin-input admin-textarea" placeholder="Ex: Nova versão disponível! Recarregue a página."></textarea>
+          <div class="admin-modal-preview" id="admin-msg-preview" style="display:none">
+            <div class="admin-preview-label">Pré-visualização</div>
+            <div class="admin-preview-toast" id="admin-msg-preview-text"></div>
+          </div>
+        </div>
+        <div class="admin-modal-foot">
+          <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2)" onclick="ADMIN.fecharModalMsg()">Cancelar</button>
+          <button class="admin-btn admin-btn-danger" onclick="ADMIN.limparMensagemGlobal()">🗑 Limpar</button>
+          <button id="btn-salvar-msg" class="admin-btn admin-btn-ok" onclick="ADMIN.salvarMensagemGlobal()">📢 Enviar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Banimento -->
+    <div id="admin-modal-ban" class="admin-modal-overlay" style="display:none">
+      <div class="admin-modal-card">
+        <div class="admin-modal-head">
+          <span class="admin-modal-title" id="admin-ban-title">🚫 Banir Jogador</span>
+          <button class="admin-modal-close" onclick="ADMIN.fecharModalBan()">✕</button>
+        </div>
+        <div class="admin-modal-body">
+          <div class="admin-ban-player-card" id="admin-ban-player-card"></div>
+          <div class="admin-ban-status" id="admin-ban-status"></div>
+          <label class="admin-label" id="admin-ban-motivo-label">Motivo do banimento <span style="opacity:.5;font-weight:400">(opcional)</span></label>
+          <textarea id="admin-ban-motivo" class="admin-input admin-textarea" style="min-height:64px" placeholder="Ex: Abuso de sistema, linguagem ofensiva..."></textarea>
+          <div id="admin-ban-historico" class="admin-ban-hist-section" style="display:none">
+            <div class="admin-label" style="margin-top:12px">Histórico de partidas</div>
+            <div id="admin-ban-hist-lista"></div>
+          </div>
+        </div>
+        <div class="admin-modal-foot" id="admin-ban-foot"></div>
       </div>
     </div>
 
