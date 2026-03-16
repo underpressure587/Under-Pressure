@@ -603,44 +603,113 @@ const ADMIN = (() => {
   }
 
   /* ── MODAL BANIMENTO ────────────────────────────── */
+  const BAN_MOTIVOS = [
+    'Comportamento inadequado',
+    'Uso indevido do sistema',
+    'Violação dos termos de uso',
+    'Linguagem ofensiva',
+    'Exploração de bugs',
+    'Outro (especificar abaixo)',
+  ];
+  let _banMotivoSelecionado = '';
+
   async function abrirModalBan(uid, nome, estaBanido) {
     _banUid = uid;
+    _banMotivoSelecionado = '';
+    _banConfirmPending = false;
     const modal = document.getElementById('admin-modal-ban');
     const title = document.getElementById('admin-ban-title');
     const playerCard = document.getElementById('admin-ban-player-card');
     const statusEl = document.getElementById('admin-ban-status');
-    const motivoLabel = document.getElementById('admin-ban-motivo-label');
     const foot = document.getElementById('admin-ban-foot');
     if (!modal) return;
 
-    title.textContent = estaBanido ? '✅ Desbanir Jogador' : '🚫 Banir Jogador';
+    title.innerHTML = `<span style="display:flex;align-items:center;gap:8px">${estaBanido
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Desbanir Jogador'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Banir Jogador'
+    }</span>`;
+
     playerCard.innerHTML = `
       <div class="admin-ban-avatar">${(nome||'?').charAt(0).toUpperCase()}</div>
-      <div>
+      <div style="flex:1;min-width:0">
         <div class="admin-ban-nome">${nome || 'Sem nome'}</div>
         <div class="admin-ban-uid">${uid}</div>
       </div>`;
 
     statusEl.innerHTML = estaBanido
-      ? '<div class="admin-ban-badge-ativo">🚫 Jogador atualmente BANIDO</div>'
-      : '<div class="admin-ban-badge-livre">✅ Jogador com acesso normal</div>';
+      ? '<div class="admin-ban-badge-ativo">Jogador atualmente BANIDO</div>'
+      : '<div class="admin-ban-badge-livre">Jogador com acesso normal</div>';
 
-    // Mostra campo de motivo só ao banir
-    if (motivoLabel) motivoLabel.style.display = estaBanido ? 'none' : 'block';
-    const motivoTa = document.getElementById('admin-ban-motivo');
-    if (motivoTa) { motivoTa.style.display = estaBanido ? 'none' : 'block'; motivoTa.value = ''; }
+    // Área de motivo — só para banir (não para desbanir)
+    const motivoSection = document.getElementById('admin-ban-motivo-section');
+    if (motivoSection) {
+      if (estaBanido) {
+        motivoSection.style.display = 'none';
+      } else {
+        motivoSection.style.display = 'block';
+        // Renderiza botões de motivo predefinido
+        const motivoGrid = document.getElementById('admin-ban-motivo-grid');
+        if (motivoGrid) {
+          motivoGrid.innerHTML = BAN_MOTIVOS.map(m => `
+            <button class="admin-motivo-btn" onclick="ADMIN.selecionarMotivo('${m.replace(/'/g,"\'")}', this)">${m}</button>
+          `).join('');
+        }
+        // Limpa campo de detalhe
+        const detalhe = document.getElementById('admin-ban-detalhe');
+        const detalheWrap = document.getElementById('admin-ban-detalhe-wrap');
+        if (detalhe) { detalhe.value = ''; _atualizarContadorDetalhe(); }
+        if (detalheWrap) detalheWrap.style.display = 'none';
+      }
+    }
 
-    // Botões de ação
+    // Histórico de bans anteriores
+    await _carregarHistBanAdmin(uid);
+
     foot.innerHTML = `
       <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2)" onclick="ADMIN.fecharModalBan()">Cancelar</button>
-      <button class="admin-btn ${estaBanido ? 'admin-btn-ok' : 'admin-btn-danger'}" onclick="ADMIN.confirmarBan('${uid}', ${estaBanido})">
-        ${estaBanido ? '✅ Confirmar Desbanimento' : '🚫 Confirmar Banimento'}
+      <button id="admin-ban-confirm-btn" class="admin-btn ${estaBanido ? 'admin-btn-ok' : 'admin-btn-danger'}" onclick="ADMIN.confirmarBan('${uid}', ${estaBanido})">
+        ${estaBanido ? 'Confirmar Desbanimento' : 'Confirmar Banimento'}
       </button>`;
 
     modal.style.display = 'flex';
-
-    // Carrega histórico de partidas no modal
     _carregarHistBan(uid);
+  }
+
+  function selecionarMotivo(motivo, btn) {
+    _banMotivoSelecionado = motivo;
+    document.querySelectorAll('.admin-motivo-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // Mostra campo de detalhe livre só para "Outro"
+    const detalheWrap = document.getElementById('admin-ban-detalhe-wrap');
+    if (detalheWrap) detalheWrap.style.display = motivo.startsWith('Outro') ? 'block' : 'none';
+  }
+
+  function _atualizarContadorDetalhe() {
+    const detalhe = document.getElementById('admin-ban-detalhe');
+    const contador = document.getElementById('admin-ban-detalhe-contador');
+    if (detalhe && contador) {
+      contador.textContent = `${detalhe.value.length}/200`;
+    }
+  }
+
+  async function _carregarHistBanAdmin(uid) {
+    const section = document.getElementById('admin-ban-hist-admin');
+    if (!section) return;
+    try {
+      const doc = await _get(`usuarios/${uid}`);
+      const fields = _parseFields(doc.fields || {});
+      const hist = fields.banHistory || [];
+      if (!hist.length) { section.style.display = 'none'; return; }
+      section.style.display = 'block';
+      section.innerHTML = `
+        <div class="admin-label" style="margin-bottom:6px">Histórico de banimentos</div>
+        ${hist.slice(-3).reverse().map(h => `
+          <div class="admin-ban-hist-entry">
+            <span class="admin-ban-hist-tipo ${h.tipo === 'ban' ? 'tipo-ban' : 'tipo-unban'}">${h.tipo === 'ban' ? 'Ban' : 'Unban'}</span>
+            <span class="admin-ban-hist-motivo">${h.motivo || '—'}</span>
+            <span class="admin-ban-hist-data">${h.ts ? new Date(h.ts).toLocaleDateString('pt-BR') : '—'}</span>
+          </div>`).join('')}`;
+    } catch(e) { section.style.display = 'none'; }
   }
 
   async function _carregarHistBan(uid) {
@@ -715,15 +784,63 @@ const ADMIN = (() => {
   }
 
   async function _executarBan(uid, estaBanido) {
+    // Valida motivo obrigatório para ban
+    if (!estaBanido && !_banMotivoSelecionado) {
+      _showAdminToast('Selecione um motivo antes de banir.', true);
+      return;
+    }
+
     const foot = document.getElementById('admin-ban-foot');
     const btns = foot?.querySelectorAll('button');
     btns?.forEach(b => { b.disabled = true; });
+
     try {
-      const patchR = await fetch(`${FS}/usuarios/${uid}?updateMask.fieldPaths=banido`, {
+      const tok = await _token();
+
+      // Determina o motivo final (predefinido + detalhe se "Outro")
+      let motivoFinal = _banMotivoSelecionado;
+      if (motivoFinal.startsWith('Outro')) {
+        const detalhe = document.getElementById('admin-ban-detalhe')?.value?.trim();
+        if (detalhe) motivoFinal = detalhe;
+        else motivoFinal = 'Outro';
+      }
+
+      // Lê banHistory atual para append
+      let banHistory = [];
+      try {
+        const docAtual = await _get(`usuarios/${uid}`);
+        banHistory = _val(docAtual.fields?.banHistory) || [];
+      } catch(e) {}
+
+      const novaEntrada = {
+        tipo: estaBanido ? 'unban' : 'ban',
+        motivo: estaBanido ? '' : motivoFinal,
+        ts: Date.now(),
+      };
+      banHistory.push(novaEntrada);
+
+      // Campos a atualizar
+      const fieldsUpdate = {
+        banido: _fsBool(!estaBanido),
+        banHistory: { arrayValue: { values: banHistory.map(e => ({ mapValue: { fields: {
+          tipo:   { stringValue: e.tipo },
+          motivo: { stringValue: e.motivo || '' },
+          ts:     { integerValue: String(e.ts) },
+        }}})) }},
+      };
+      if (!estaBanido) {
+        fieldsUpdate.motivoBan = _fsStr(motivoFinal);
+      } else {
+        fieldsUpdate.motivoBan = _fsStr(''); // limpa o motivo ao desbanir
+      }
+
+      const mask = Object.keys(fieldsUpdate).map(k => `updateMask.fieldPaths=${k}`).join('&');
+      const patchR = await fetch(`${FS}/usuarios/${uid}?${mask}`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${await _token()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: { banido: _fsBool(!estaBanido) } })
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: fieldsUpdate })
       });
+
       if (!patchR.ok) {
         const errBody = await patchR.text();
         let msg = `HTTP ${patchR.status}`;
@@ -731,8 +848,9 @@ const ADMIN = (() => {
         else msg += ': ' + errBody.slice(0, 80);
         throw new Error(msg);
       }
+
       fecharModalBan();
-      _showAdminToast(estaBanido ? '✅ Jogador desbanido!' : '🚫 Jogador banido!');
+      _showAdminToast(estaBanido ? 'Jogador desbanido!' : 'Jogador banido!');
       if (_currentSection === 'jogadores') {
         carregarJogadores(document.getElementById('admin-busca')?.value || '');
       }
@@ -754,6 +872,14 @@ const ADMIN = (() => {
       const doc = await _get(`usuarios/${uid}`);
       return !!_val(doc.fields?.banido);
     } catch(e) { return false; }
+  }
+
+  // Retorna dados de banimento (motivoBan) para o overlay do jogador
+  async function _getBanInfo(uid) {
+    try {
+      const doc = await _get(`usuarios/${uid}`);
+      return _parseFields(doc.fields || {});
+    } catch(e) { return {}; }
   }
 
   async function verificarMensagemGlobal() {
@@ -808,7 +934,7 @@ const ADMIN = (() => {
   }
 
   return {
-    verificarAdmin, verificarBan, verificarMensagemGlobal,
+    verificarAdmin, verificarBan, _getBanInfo, verificarMensagemGlobal,
     irParaSecao,
     carregarJogadores, verHistoricoJogador, toggleBan,
     removerDoPodio, resetarPodioPorSetor,
@@ -820,7 +946,7 @@ const ADMIN = (() => {
     // Modal mensagem global
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
     // Modal banimento
-    abrirModalBan, fecharModalBan, confirmarBan,
+    abrirModalBan, fecharModalBan, confirmarBan, selecionarMotivo,
   };
 
 })();
