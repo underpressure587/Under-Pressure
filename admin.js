@@ -13,9 +13,7 @@ const ADMIN = (() => {
 
   /* ── TOKEN ─────────────────────────────────────── */
   async function _token() {
-    console.log('[ADMIN] _token: chamando GSPAuth.getToken...');
     const tok = await window.GSPAuth?.getToken();
-    console.log('[ADMIN] _token resultado:', tok ? 'token ok' : 'NULL - usuário não autenticado');
     if (!tok) throw new Error('Não autenticado');
     return tok;
   }
@@ -97,37 +95,36 @@ const ADMIN = (() => {
   async function carregarVisaoGeral() {
     _setLoading('admin-visao-geral', true);
     try {
-      // Total jogadores
+      // Total de jogadores registrados
       const jogadores = await _query({
         structuredQuery: {
           from: [{ collectionId: 'usuarios' }],
-          select: { fields: [{ fieldPath: 'nome' }, { fieldPath: 'mandatos' }, { fieldPath: 'melhorScore' }] }
+          select: { fields: [{ fieldPath: 'melhorScore' }] }
         }
       });
-
       const docs = jogadores.filter(r => r.document);
       const total = docs.length;
       const scores = docs.map(r => _val(r.document.fields?.melhorScore) || 0);
       const mediaScore = total ? Math.round(scores.reduce((a,b)=>a+b,0) / total) : 0;
 
-      // Partidas recentes do pódio
+      // Dados do pódio: total real de partidas (soma de totalJogos) + atividade recente
       const podioRes = await _query({
         structuredQuery: {
           from: [{ collectionId: 'podio' }],
-          select: { fields: [{ fieldPath: 'ts' }, { fieldPath: 'sector' }] }
+          select: { fields: [{ fieldPath: 'totalJogos' }, { fieldPath: 'ultimaPartida' }] }
         }
       });
-
       const podioItems = podioRes.filter(r => r.document).map(r => _parseFields(r.document.fields));
+      const totalPartidas = podioItems.reduce((acc, p) => acc + (p.totalJogos || 0), 0);
       const agora = Date.now();
-      const dia  = podioItems.filter(p => (agora - (p.ts || 0)) < 86400000).length;
-      const semana = podioItems.filter(p => (agora - (p.ts || 0)) < 604800000).length;
+      const ativosDia    = podioItems.filter(p => (agora - (p.ultimaPartida || 0)) < 86400000).length;
+      const ativosSemana = podioItems.filter(p => (agora - (p.ultimaPartida || 0)) < 604800000).length;
 
       document.getElementById('admin-total-jogadores').textContent = total;
-      document.getElementById('admin-total-partidas').textContent = podioItems.length;
-      document.getElementById('admin-partidas-dia').textContent = dia;
-      document.getElementById('admin-partidas-semana').textContent = semana;
-      document.getElementById('admin-score-medio').textContent = mediaScore;
+      document.getElementById('admin-total-partidas').textContent  = totalPartidas;
+      document.getElementById('admin-partidas-dia').textContent    = ativosDia;
+      document.getElementById('admin-partidas-semana').textContent = ativosSemana;
+      document.getElementById('admin-score-medio').textContent     = mediaScore;
 
     } catch(e) {
       _showAdminError('admin-visao-geral', 'Erro ao carregar dados: ' + e.message);
@@ -162,7 +159,6 @@ const ADMIN = (() => {
           (j.email||'').toLowerCase().includes(b)
         );
       }
-
       jogadores.sort((a,b) => (b.melhorScore||0) - (a.melhorScore||0));
 
       const lista = document.getElementById('admin-jogadores-lista');
@@ -197,28 +193,29 @@ const ADMIN = (() => {
     const modal = document.getElementById('admin-modal');
     const modalBody = document.getElementById('admin-modal-body');
     const modalTitle = document.getElementById('admin-modal-title');
-    modalTitle.textContent = `📋 Histórico de ${nome}`;
+    modalTitle.textContent = `Histórico de ${nome}`;
     modalBody.innerHTML = '<div class="admin-loading">Carregando...</div>';
     modal.style.display = 'flex';
 
     try {
       const tok = await _token();
-      // Use runQuery na subcoleção do usuário
-      const url = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents:runQuery`;
-      const body = { structuredQuery: {
-        from: [{ collectionId: 'historico', allDescendants: true }],
-        where: { fieldFilter: { field: { fieldPath: 'uid' }, op: 'EQUAL', value: { stringValue: uid } } }
-      }};
+      // FIX: consulta direto na subcoleção do usuário, sem collection group nem filtro por uid
+      const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/default/documents/usuarios/${uid}:runQuery`;
       const r = await fetch(url, {
         method: 'POST',
         headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify({
+          structuredQuery: {
+            from: [{ collectionId: 'historico' }],
+            orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+            limit: 30
+          }
+        })
       });
       const data = await r.json();
       const docs = (Array.isArray(data) ? data : [])
         .filter(row => row.document)
-        .map(row => _parseFields(row.document.fields))
-        .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        .map(row => _parseFields(row.document.fields));
 
       if (!docs.length) {
         modalBody.innerHTML = '<div class="admin-empty">Nenhuma partida registrada.</div>';
@@ -240,33 +237,21 @@ const ADMIN = (() => {
   async function toggleBan(uid, estaBanido) {
     const acao = estaBanido ? 'desbanir' : 'banir';
     if (!confirm(`Tem certeza que deseja ${acao} este jogador?`)) return;
-    _showAdminToast('⏳ Processando...', false);
+    _showAdminToast('Processando...');
     try {
-      const tok = await _token();
-
-      // Lê documento atual para não sobrescrever outros campos
-      const getR = await fetch(`${FS}/usuarios/${uid}`, {
-        headers: { Authorization: `Bearer ${tok}` }
-      });
-      if (!getR.ok) throw new Error(`Usuário não encontrado (HTTP ${getR.status})`);
-      const docAtual = await getR.json();
-
-      // Escreve apenas o campo banido via updateMask
       const patchR = await fetch(`${FS}/usuarios/${uid}?updateMask.fieldPaths=banido`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${await _token()}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: { banido: _fsBool(!estaBanido) } })
       });
-
       if (!patchR.ok) {
         const errBody = await patchR.text();
         let msg = `HTTP ${patchR.status}`;
-        if (patchR.status === 403) msg = 'Permissão negada — redeploy as regras do Firestore (firebase deploy --only firestore)';
+        if (patchR.status === 403) msg = 'Permissão negada — redeploy as regras do Firestore';
         else if (patchR.status === 404) msg = 'Usuário não encontrado no Firestore';
         else msg += ': ' + errBody.slice(0, 100);
         throw new Error(msg);
       }
-
       _showAdminToast(estaBanido ? '✅ Jogador desbanido!' : '🚫 Jogador banido!');
       carregarJogadores(document.getElementById('admin-busca')?.value || '');
     } catch(e) {
@@ -287,7 +272,6 @@ const ADMIN = (() => {
           ]}
         }
       });
-
       const items = res.filter(r => r.document).map(r => {
         const uid = r.document.name.split('/').pop();
         return { uid, ..._parseFields(r.document.fields) };
@@ -298,7 +282,6 @@ const ADMIN = (() => {
         lista.innerHTML = '<div class="admin-empty">Pódio vazio.</div>';
         return;
       }
-
       lista.innerHTML = items.map((p, i) => `
         <div class="admin-podio-row">
           <div class="admin-podio-pos">#${i+1}</div>
@@ -307,10 +290,9 @@ const ADMIN = (() => {
             <div class="admin-podio-detalhe">${p.totalJogos || 0} jogos · ${p.ultimaPartida ? new Date(p.ultimaPartida).toLocaleDateString('pt-BR') : '—'}</div>
           </div>
           <div class="admin-podio-score">${p.melhorScore || 0}</div>
-          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerDoPodio('${p.uid}', '${(p.player||'').replace(/'/g,"\\'")}');">🗑️</button>
+          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerDoPodio('${p.uid}', '${(p.player||'').replace(/'/g,"\\'")}')">🗑️</button>
         </div>
       `).join('');
-
     } catch(e) {
       _showAdminError('admin-podio-lista', 'Erro: ' + e.message);
     }
@@ -351,18 +333,16 @@ const ADMIN = (() => {
     }
   }
 
-  /* ── CONTEÚDO DO JOGO ───────────────────────────── */
-  async function carregarConteudo() {
+  /* ── SETORES ────────────────────────────────────── */
+  async function carregarSetores() {
     _setLoading('admin-conteudo-body', true);
     try {
-      // Busca pódio e extrai setores do melhorPorSetor
       const res = await _query({
         structuredQuery: {
           from: [{ collectionId: 'podio' }],
           select: { fields: [{ fieldPath: 'melhorPorSetor' }, { fieldPath: 'totalJogos' }] }
         }
       });
-
       const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
       const setores = {};
       for (const doc of docs) {
@@ -373,16 +353,14 @@ const ADMIN = (() => {
           setores[setor].totalScore += (dados.score || 0);
         }
       }
-
       const body = document.getElementById('admin-conteudo-body');
       const rows = Object.entries(setores).sort((a,b) => b[1].count - a[1].count).map(([setor, d]) => `
         <div class="admin-conteudo-row">
-          <div class="admin-conteudo-setor">${_emojiSetor(setor)} ${setor}</div>
+          <div class="admin-conteudo-setor">${_emojiSetor(setor)} ${setor.charAt(0).toUpperCase() + setor.slice(1)}</div>
           <div class="admin-conteudo-stat">${d.count} jogadores</div>
           <div class="admin-conteudo-stat">Média: ${Math.round(d.totalScore / d.count)} pts</div>
         </div>
       `).join('');
-
       body.innerHTML = rows || '<div class="admin-empty">Sem dados ainda.</div>';
     } catch(e) {
       _showAdminError('admin-conteudo-body', 'Erro: ' + e.message);
@@ -404,9 +382,14 @@ const ADMIN = (() => {
       const mntEl = document.getElementById('admin-manutencao');
       if (msgEl) msgEl.value = fields.mensagem || '';
       if (mntEl) mntEl.checked = !!fields.manutencao;
-    } catch(e) {
-      // Documento pode não existir ainda, tudo bem
-    }
+      _atualizarBannerManutencao(!!fields.manutencao);
+    } catch(e) { /* doc pode não existir */ }
+    carregarAdmins();
+  }
+
+  function _atualizarBannerManutencao(ativo) {
+    const banner = document.getElementById('admin-manutencao-banner');
+    if (banner) banner.style.display = ativo ? 'flex' : 'none';
   }
 
   async function salvarConfigGlobal() {
@@ -416,6 +399,7 @@ const ADMIN = (() => {
     if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = '⏳ Salvando...'; }
     try {
       const tok = await _token();
+      // FIX: `r` em vez de `patchR` (bug original causava ReferenceError)
       const r = await fetch(
         `${FS}/config/global?updateMask.fieldPaths=mensagem&updateMask.fieldPaths=manutencao`,
         {
@@ -429,13 +413,14 @@ const ADMIN = (() => {
       );
       if (!r.ok) {
         const errBody = await r.text();
-        throw new Error(patchR.status === 403
+        throw new Error(r.status === 403
           ? 'Permissão negada — redeploy as regras do Firestore'
           : `HTTP ${r.status}: ${errBody.slice(0,80)}`);
       }
+      _atualizarBannerManutencao(manutencao);
       const statusMsg = manutencao
-        ? '🔧 Manutenção ATIVADA — jogadores serão expulsos em até 20s'
-        : msg ? `📢 Mensagem global salva` : '✅ Configurações salvas';
+        ? '🔧 Manutenção ATIVADA — jogadores serão expulsos em até 5s'
+        : msg ? '📢 Mensagem global salva' : '✅ Configurações salvas';
       _showAdminToast(statusMsg);
     } catch(e) {
       _showAdminToast('Erro: ' + e.message, true);
@@ -444,25 +429,89 @@ const ADMIN = (() => {
     }
   }
 
-  /* ── VERIFICAR BAN NO BOOT ──────────────────────── */
+  /* ── GERENCIAMENTO DE ADMINS ────────────────────── */
+  async function carregarAdmins() {
+    const container = document.getElementById('admin-admins-lista');
+    if (!container) return;
+    container.innerHTML = '<div class="admin-loading">Carregando...</div>';
+    try {
+      const doc = await _get('config/admins');
+      const uids = _val(doc.fields?.uids) || [];
+      _adminUids = uids;
+      if (!uids.length) {
+        container.innerHTML = '<div class="admin-empty">Nenhum admin cadastrado.</div>';
+        return;
+      }
+      container.innerHTML = uids.map(uid => `
+        <div class="admin-uid-row">
+          <span class="admin-uid-text">${uid}</span>
+          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${uid}')">✕</button>
+        </div>
+      `).join('');
+    } catch(e) {
+      container.innerHTML = '<div class="admin-empty">Sem admins cadastrados.</div>';
+    }
+  }
+
+  async function adicionarAdmin() {
+    const input = document.getElementById('admin-novo-uid');
+    const uid = input?.value?.trim();
+    if (!uid) { _showAdminToast('Digite um UID válido.', true); return; }
+    if (_adminUids.includes(uid)) { _showAdminToast('Já é admin.', true); return; }
+    try {
+      const uids = [..._adminUids, uid];
+      const tok = await _token();
+      const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: {
+          uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } }
+        }})
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      _adminUids = uids;
+      if (input) input.value = '';
+      _showAdminToast('✅ Admin adicionado!');
+      carregarAdmins();
+    } catch(e) {
+      _showAdminToast('Erro: ' + e.message, true);
+    }
+  }
+
+  async function removerAdmin(uid) {
+    if (!confirm(`Remover ${uid} dos admins?`)) return;
+    try {
+      const uids = _adminUids.filter(u => u !== uid);
+      const tok = await _token();
+      const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: {
+          uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } }
+        }})
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      _adminUids = uids;
+      _showAdminToast('Admin removido.');
+      carregarAdmins();
+    } catch(e) {
+      _showAdminToast('Erro: ' + e.message, true);
+    }
+  }
+
+  /* ── VERIFICAR BAN / CONFIG GLOBAL ─────────────── */
   async function verificarBan(uid) {
     try {
       const doc = await _get(`usuarios/${uid}`);
       return !!_val(doc.fields?.banido);
-    } catch(e) {
-      return false;
-    }
+    } catch(e) { return false; }
   }
 
   async function verificarMensagemGlobal() {
     try {
       const doc = await _get('config/global');
       const fields = _parseFields(doc.fields || {});
-      // Retorna TODOS os campos para o cliente decidir o que fazer
-      return {
-        manutencao: !!fields.manutencao,
-        mensagem: fields.mensagem || ''
-      };
+      return { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '' };
     } catch(e) {
       return { manutencao: false, mensagem: '' };
     }
@@ -471,8 +520,7 @@ const ADMIN = (() => {
   /* ── UI HELPERS ─────────────────────────────────── */
   function _setLoading(id, on) {
     const el = document.getElementById(id);
-    if (!el) return;
-    if (on) el.innerHTML = '<div class="admin-loading">⏳ Carregando...</div>';
+    if (el && on) el.innerHTML = '<div class="admin-loading">Carregando...</div>';
   }
 
   function _showAdminError(id, msg) {
@@ -498,13 +546,11 @@ const ADMIN = (() => {
     const btn = document.querySelector(`.admin-nav-btn[data-sec="${id}"]`);
     if (sec) sec.style.display = 'block';
     if (btn) btn.classList.add('active');
-
-    // Carrega dados da seção
-    if (id === 'visao-geral')  carregarVisaoGeral();
-    if (id === 'jogadores')    carregarJogadores();
-    if (id === 'podio')        carregarPodioAdmin();
-    if (id === 'conteudo')     carregarConteudo();
-    if (id === 'config')       carregarConfigGlobal();
+    if (id === 'visao-geral') carregarVisaoGeral();
+    if (id === 'jogadores')   carregarJogadores();
+    if (id === 'podio')       carregarPodioAdmin();
+    if (id === 'conteudo')    carregarSetores();
+    if (id === 'config')      carregarConfigGlobal();
   }
 
   function fecharModal() {
@@ -513,16 +559,12 @@ const ADMIN = (() => {
   }
 
   return {
-    verificarAdmin,
-    verificarBan,
-    verificarMensagemGlobal,
+    verificarAdmin, verificarBan, verificarMensagemGlobal,
     irParaSecao,
-    carregarJogadores,
-    verHistoricoJogador,
-    toggleBan,
-    removerDoPodio,
-    resetarPodioPorSetor,
+    carregarJogadores, verHistoricoJogador, toggleBan,
+    removerDoPodio, resetarPodioPorSetor,
     salvarConfigGlobal,
+    adicionarAdmin, removerAdmin,
     fecharModal,
   };
 

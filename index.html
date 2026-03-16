@@ -106,7 +106,6 @@
   <!-- ══ LOGIN ══ -->
   <div id="screen-login" class="screen active">
     <div class="login-topbar">
-      <img src="logo.jpg" alt="Under Pressure" class="login-brand-logo">
       <div style="display:flex;gap:6px">
         <button class="btn-ghost" onclick="BetaUI.toggleFullscreen()">⛶</button>
         <button class="btn-ghost" onclick="BetaUI.openGlossary()" style="color:var(--s-text);font-weight:700">?</button>
@@ -161,7 +160,7 @@
             <input type="password" id="auth-login-pass" class="input-field auth-input"
               placeholder="••••••••" autocomplete="current-password"
               onkeydown="if(event.key==='Enter')BetaUI.authLogin()">
-            <button class="auth-eye" onclick="BetaUI.authTogglePass('auth-login-pass',this)" tabindex="-1">👁</button>
+            <button class="auth-eye" onclick="BetaUI.authTogglePass('auth-login-pass',this)" tabindex="-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
         </div>
         <div class="auth-forgot">
@@ -170,7 +169,7 @@
         <div class="auth-err" id="auth-login-err"></div>
         <button class="btn btn-primary auth-submit" id="auth-login-btn" onclick="BetaUI.authLogin()">
           <span id="auth-login-label">Entrar</span>
-          <span class="auth-spinner" id="auth-login-spinner" style="display:none">⏳</span>
+          <span class="auth-spinner" id="auth-login-spinner" style="display:none"><span class="spinner-ring"></span></span>
         </button>
         <div class="auth-divider"><span>ou</span></div>
         <button class="btn auth-google-btn" onclick="BetaUI.authGoogle()">
@@ -205,13 +204,13 @@
             <input type="password" id="auth-reg-pass" class="input-field auth-input"
               placeholder="••••••••" autocomplete="new-password"
               onkeydown="if(event.key==='Enter')BetaUI.authCadastrar()">
-            <button class="auth-eye" onclick="BetaUI.authTogglePass('auth-reg-pass',this)" tabindex="-1">👁</button>
+            <button class="auth-eye" onclick="BetaUI.authTogglePass('auth-reg-pass',this)" tabindex="-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
         </div>
         <div class="auth-err" id="auth-reg-err"></div>
         <button class="btn btn-primary auth-submit" id="auth-reg-btn" onclick="BetaUI.authCadastrar()">
           <span id="auth-reg-label">Criar conta</span>
-          <span class="auth-spinner" id="auth-reg-spinner" style="display:none">⏳</span>
+          <span class="auth-spinner" id="auth-reg-spinner" style="display:none"><span class="spinner-ring"></span></span>
         </button>
         <div class="auth-divider"><span>ou</span></div>
         <button class="btn auth-google-btn" onclick="BetaUI.authGoogle()">
@@ -245,7 +244,7 @@
         </div>
         <button class="btn btn-primary auth-submit" id="auth-rec-btn" onclick="BetaUI.authRecuperar()">
           <span id="auth-rec-label">Enviar link</span>
-          <span class="auth-spinner" id="auth-rec-spinner" style="display:none">⏳</span>
+          <span class="auth-spinner" id="auth-rec-spinner" style="display:none"><span class="spinner-ring"></span></span>
         </button>
         <button class="auth-link auth-back-link" onclick="BetaUI.authMudarAba('login')">← Voltar para o login</button>
       </div>
@@ -290,7 +289,6 @@
       <button class="home-tab-btn" onclick="BetaUI.irParaPerfil()">👤 Perfil</button>
       <button class="home-tab-btn" onclick="BetaUI.irParaPodio()">🏆 Pódio</button>
       <button class="home-tab-btn" onclick="BetaUI.irParaHistoricoJogos()">📋 Histórico</button>
-      <button class="home-tab-btn" onclick="BetaUI.sair()">Sair</button>
     </div>
   </div>
 
@@ -480,6 +478,9 @@
 
   <!-- ══ FEEDBACK ══ -->
   <div id="screen-feedback" class="screen">
+    <div class="fb-round-bar">
+      <span id="fb-round-indicator" class="fb-round-label"></span>
+    </div>
     <div id="fb-veredito" class="feedback-top">
       <div id="fb-veredito-badge" class="verdict-icon verdict-boa">✅</div>
       <div>
@@ -582,7 +583,7 @@
   <!-- ══ ADMIN ══ -->
   <div id="screen-admin" class="screen">
     <div class="podio-header">
-      <button class="btn-back" onclick="BetaUI.voltar('screen-home')">‹</button>
+      <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
       <span class="podio-title">🛠️ Painel Admin</span>
     </div>
 
@@ -642,12 +643,26 @@
           <label class="admin-label">Mensagem global (aparece para todos ao abrir o jogo)</label>
           <textarea id="admin-msg-global" class="admin-input admin-textarea" placeholder="Deixe vazio para desativar..."></textarea>
 
+          <!-- Banner de alerta quando manutenção está ativa -->
+          <div id="admin-manutencao-banner" class="admin-manutencao-banner" style="display:none">
+            🔧 MANUTENÇÃO ATIVA — todos os jogadores estão bloqueados
+          </div>
           <div class="admin-toggle-row">
             <label class="admin-label">Modo manutenção (bloqueia acesso ao jogo)</label>
-            <input type="checkbox" id="admin-manutencao" class="admin-checkbox">
+            <label class="admin-switch">
+              <input type="checkbox" id="admin-manutencao">
+              <span class="admin-switch-track"></span>
+            </label>
           </div>
 
-          <button class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()">💾 Salvar configurações</button>
+          <button id="btn-salvar-config" class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()">💾 Salvar</button>
+          <!-- Gerenciamento de Admins -->
+          <div class="admin-label" style="margin-top:8px;border-top:1px solid var(--line);padding-top:14px">UIDs com acesso admin</div>
+          <div id="admin-admins-lista"></div>
+          <div class="admin-uid-add-row">
+            <input id="admin-novo-uid" class="admin-input" placeholder="Colar UID do Firebase..." style="flex:1">
+            <button class="admin-btn admin-btn-ok" onclick="ADMIN.adicionarAdmin()">+ Adicionar</button>
+          </div>
         </div>
       </div>
 
@@ -668,96 +683,6 @@
     <div id="admin-toast" class="admin-toast" style="display:none"></div>
   </div>
 
-
-  <!-- ══ OVERLAYS ══ -->
-  <!-- ══ ADMIN ══ -->
-  <div id="screen-admin" class="screen">
-    <div class="podio-header">
-      <button class="btn-back" onclick="BetaUI.voltar('screen-home')">‹</button>
-      <span class="podio-title">🛠️ Painel Admin</span>
-    </div>
-
-    <!-- Nav -->
-    <div class="admin-nav">
-      <button class="admin-nav-btn active" data-sec="visao-geral" onclick="ADMIN.irParaSecao('visao-geral')">📊 Geral</button>
-      <button class="admin-nav-btn" data-sec="jogadores" onclick="ADMIN.irParaSecao('jogadores')">👥 Jogadores</button>
-      <button class="admin-nav-btn" data-sec="podio" onclick="ADMIN.irParaSecao('podio')">🏆 Pódio</button>
-      <button class="admin-nav-btn" data-sec="conteudo" onclick="ADMIN.irParaSecao('conteudo')">🎮 Conteúdo</button>
-      <button class="admin-nav-btn" data-sec="config" onclick="ADMIN.irParaSecao('config')">⚙️ Config</button>
-    </div>
-
-    <div class="admin-body">
-
-      <!-- VISÃO GERAL -->
-      <div id="admin-sec-visao-geral" class="admin-section">
-        <div class="admin-cards">
-          <div class="admin-card"><div class="admin-card-val" id="admin-total-jogadores">—</div><div class="admin-card-label">Jogadores</div></div>
-          <div class="admin-card"><div class="admin-card-val" id="admin-total-partidas">—</div><div class="admin-card-label">No Pódio</div></div>
-          <div class="admin-card"><div class="admin-card-val" id="admin-partidas-dia">—</div><div class="admin-card-label">Últimas 24h</div></div>
-          <div class="admin-card"><div class="admin-card-val" id="admin-partidas-semana">—</div><div class="admin-card-label">Última semana</div></div>
-          <div class="admin-card"><div class="admin-card-val" id="admin-score-medio">—</div><div class="admin-card-label">Score médio</div></div>
-        </div>
-      </div>
-
-      <!-- JOGADORES -->
-      <div id="admin-sec-jogadores" class="admin-section" style="display:none">
-        <div class="admin-busca-row">
-          <input id="admin-busca" class="admin-input" placeholder="Buscar por nome ou e-mail..." oninput="ADMIN.carregarJogadores(this.value)">
-        </div>
-        <div id="admin-jogadores-lista"></div>
-      </div>
-
-      <!-- PÓDIO -->
-      <div id="admin-sec-podio" class="admin-section" style="display:none">
-        <div class="admin-reset-row">
-          <select id="admin-setor-reset" class="admin-input" style="flex:1">
-            <option value="">Selecionar setor...</option>
-            <option value="tecnologia">🚀 Tecnologia</option>
-            <option value="varejo">🛒 Varejo</option>
-            <option value="logistica">🚛 Logística</option>
-            <option value="industria">🏭 Indústria</option>
-          </select>
-          <button class="admin-btn admin-btn-danger" onclick="ADMIN.resetarPodioPorSetor()">🗑️ Resetar setor</button>
-        </div>
-        <div id="admin-podio-lista"></div>
-      </div>
-
-      <!-- CONTEÚDO -->
-      <div id="admin-sec-conteudo" class="admin-section" style="display:none">
-        <div id="admin-conteudo-body"></div>
-      </div>
-
-      <!-- CONFIG -->
-      <div id="admin-sec-config" class="admin-section" style="display:none">
-        <div class="admin-config-form">
-          <label class="admin-label">Mensagem global (aparece para todos ao abrir o jogo)</label>
-          <textarea id="admin-msg-global" class="admin-input admin-textarea" placeholder="Deixe vazio para desativar..."></textarea>
-
-          <div class="admin-toggle-row">
-            <label class="admin-label">Modo manutenção (bloqueia acesso ao jogo)</label>
-            <input type="checkbox" id="admin-manutencao" class="admin-checkbox">
-          </div>
-
-          <button class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()">💾 Salvar configurações</button>
-        </div>
-      </div>
-
-    </div><!-- /admin-body -->
-
-    <!-- Modal histórico -->
-    <div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
-      <div style="background:var(--bg1);border-radius:var(--r3);width:100%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)">
-          <span id="admin-modal-title" style="font-weight:700;color:var(--t1)"></span>
-          <button onclick="ADMIN.fecharModal()" style="background:none;border:none;color:var(--t2);font-size:1.2rem;cursor:pointer">✕</button>
-        </div>
-        <div id="admin-modal-body" style="overflow-y:auto;padding:16px;flex:1"></div>
-      </div>
-    </div>
-
-    <!-- Toast -->
-    <div id="admin-toast" class="admin-toast" style="display:none"></div>
-  </div>
 
 
   <!-- ══ OVERLAYS (fora do #app para evitar conflito de stacking context) ══ -->

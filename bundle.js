@@ -75,6 +75,7 @@ const BetaState = (() => {
     }
 
     function get()           { return _state; }
+    function set(newState)   { _state = newState; }  // restauração de sessão
     function getIndicators() { return _state.indicators; }
 
     function applyEffects(effects) {
@@ -135,7 +136,7 @@ const BetaState = (() => {
     function setSituacaoStatus(s)     { _state.situacaoStatus = s; }
 
     return {
-        init, get, getIndicators, applyEffects,
+        init, get, set, getIndicators, applyEffects,
         applyGestorEffects, getGestor, addStakeholderLog,
         addHistory, addEvent, nextRound, setPhase,
         addFlag, setFase, setReputacao, addEstiloGestao,
@@ -2705,7 +2706,7 @@ function registrarUI(callbacks) { _ui = callbacks; }
 ═══════════════════════════════════════════════════════ */
 function iniciar(sectorId, groupName, companyName) {
     const setorFinal = sectorId === "aleatorio"
-        ? Object.keys(EMPRESAS)[Math.floor(Math.random() * 4)]
+        ? Object.keys(EMPRESAS)[Math.floor(Math.random() * Object.keys(EMPRESAS).length)]
         : sectorId;
 
     BetaImprevisto.resetar();
@@ -3226,11 +3227,53 @@ function _sincronizarFirebaseBackground(player) {
     window.GSPSync.carregarPodio(),
     window.GSPSync.carregarSessao(player.uid)
   ]).then(([histFS, podioFS, sessFS]) => {
-    if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) })));
+    if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts || Date.now() })));
     // Sempre sincroniza o localStorage com o Firestore — mesmo se vier vazio
-    LS.set(SK.PODIO, (podioFS || []).map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
-    if (sessFS) LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
+    // FIX: só sobrescreve pódio local se Firestore retornar dados (evita apagar cache com array vazio)
+    if (podioFS?.length > 0) LS.set(SK.PODIO, podioFS.map(p => ({ ...p, ts: p.ts || Date.now() })));
+    if (sessFS) LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts || Date.now() });
+  }).then(() => {
+    // Reenvia partidas pendentes que falharam anteriormente
+    _reenviarSavesPendentes(player);
   }).catch(() => {});
+}
+
+/* ── FILA DE RETRY PARA SAVES FALHOS ────────────────────────── */
+const PENDING_SAVES_KEY = 'gsp_pending_saves';
+
+function _adicionarSavePendente(entrada) {
+  try {
+    const fila = JSON.parse(localStorage.getItem(PENDING_SAVES_KEY) || '[]');
+    // Evita duplicatas pelo timestamp
+    if (!fila.find(e => e.ts === entrada.ts)) {
+      fila.push(entrada);
+      // Limita a 10 entradas para não crescer indefinidamente
+      localStorage.setItem(PENDING_SAVES_KEY, JSON.stringify(fila.slice(-10)));
+    }
+  } catch(e) {}
+}
+
+function _removerSavePendente(ts) {
+  try {
+    const fila = JSON.parse(localStorage.getItem(PENDING_SAVES_KEY) || '[]');
+    localStorage.setItem(PENDING_SAVES_KEY, JSON.stringify(fila.filter(e => e.ts !== ts)));
+  } catch(e) {}
+}
+
+async function _reenviarSavesPendentes(player) {
+  if (!player?.uid || !window.GSPSync) return;
+  try {
+    const fila = JSON.parse(localStorage.getItem(PENDING_SAVES_KEY) || '[]');
+    if (!fila.length) return;
+    console.log(`[GSP] Reenviando ${fila.length} save(s) pendente(s)...`);
+    for (const entrada of fila) {
+      try {
+        await window.GSPSync.salvarPartida(player.uid, entrada);
+        await window.GSPSync.salvarNoPodio(player.uid, entrada);
+        _removerSavePendente(entrada.ts);
+      } catch(e) { /* mantém na fila para próxima tentativa */ }
+    }
+  } catch(e) {}
 }
 
 function _setLoadingMsg(msg, sub, progress) {
@@ -3313,8 +3356,13 @@ function sair() {
   _pararPollingGlobal();
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
+  LS.remove(SK.HISTORICO);
+  LS.remove(SK.PODIO);
+  LS.remove(SK.HIST_GUEST);
+  localStorage.removeItem('gsp_session_state');
   _player = null;
   _isAdmin = false;
+  _aplicarTemaSetor(null);
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
@@ -3331,12 +3379,19 @@ function _atualizarHome() {
 ════════════════════════════════════════════════════ */
 function _salvarSessao() {
   const state = BetaState.get();
-  if (!state || state.phase === "result") { LS.remove(SK.SESSION); return; }
+  if (!state || state.phase === "result") {
+    LS.remove(SK.SESSION);
+    localStorage.removeItem('gsp_session_state');
+    return;
+  }
+  // Salva metadados resumidos para o banner de restauração
   LS.set(SK.SESSION, {
     sector: state.sector, companyName: state.companyName,
     currentRound: state.currentRound, totalRounds: state.totalRounds,
     ts: Date.now(),
   });
+  // Salva estado completo para restauração real
+  try { localStorage.setItem('gsp_session_state', JSON.stringify(state)); } catch(e) {}
 }
 
 function _verificarSessaoSalva() {
@@ -3356,18 +3411,24 @@ function _verificarSessaoSalva() {
 function restaurarSessao() {
   const sess = LS.get(SK.SESSION);
   if (!sess) return;
-  // BUG #12 FIX: verificar se há estado completo salvo
-  const estadoCompleto = LS.get('gsp_session_state');
-  if (estadoCompleto && estadoCompleto.sector === sess.sector) {
-    // Restaurar estado real: setor, rodada e companyName corretos
-    iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
-    // Notificar jogador que começa da rodada onde parou (próxima melhoria: restaurar state completo)
-    setTimeout(() => mostrarSucesso(`Sessão restaurada: ${sess.companyName} · Rodada ${sess.currentRound + 1}`), 500);
-  } else {
-    // Fallback: iniciar do começo, mas avisar jogador
-    iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
-    setTimeout(() => mostrarAviso('Sessão reiniciada do início. Progresso anterior não recuperável.'), 500);
-  }
+  try {
+    const raw = localStorage.getItem('gsp_session_state');
+    const estadoCompleto = raw ? JSON.parse(raw) : null;
+    if (estadoCompleto && estadoCompleto.sector === sess.sector && estadoCompleto.currentRound > 0) {
+      // Restaura estado real: reinicia o engine com o estado salvo
+      BetaState.set(estadoCompleto);
+      _aplicarTemaSetor(estadoCompleto.sector);
+      mostrarTela('screen-game');
+      const empresa = EMPRESAS[estadoCompleto.sector];
+      _ui.renderSidebar?.(estadoCompleto, empresa);
+      _ui.renderRodada?.(estadoCompleto);
+      setTimeout(() => mostrarSucesso(`Sessão restaurada: ${sess.companyName} · Rodada ${sess.currentRound + 1}`), 400);
+      return;
+    }
+  } catch(e) {}
+  // Fallback: recomeça do início com a mesma empresa
+  iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
+  setTimeout(() => mostrarAviso('Sessão reiniciada do início.'), 500);
 }
 
 function descartarSessao() {
@@ -3416,18 +3477,22 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
       if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
       const _statusEl = () => document.getElementById('result-cloud-status');
       if (_settings.cloudStatus !== false) {
-        if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().textContent = '☁️ Salvando na nuvem...'; }
+        if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().textContent = '☁️ Salvando na nuvem...'; setTimeout(() => _statusEl()?.classList.add('visible'), 10); }
       }
       Promise.all([
         window.GSPSync.salvarPartida(_player.uid, entrada),
         window.GSPSync.salvarNoPodio(_player.uid, entrada)
       ])
         .then(() => {
-          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().textContent = '✅ Salvo na nuvem!';
+          if (_settings.cloudStatus !== false && _statusEl()) { _statusEl().textContent = '✅ Salvo na nuvem!'; _statusEl().classList.add('visible'); }
+          // Remove da fila de pendentes se estava lá
+          _removerSavePendente(entrada.ts);
         })
         .catch(e => {
           console.error('[GSP] Erro ao salvar resultado:', e);
-          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().textContent = '❌ Erro: ' + (e?.code || e?.message || 'desconhecido');
+          if (_settings.cloudStatus !== false && _statusEl()) { _statusEl().textContent = '❌ Erro ao salvar — reenvio automático'; _statusEl().classList.add('visible'); }
+          // Adiciona na fila para reenvio posterior
+          _adicionarSavePendente(entrada);
         });
     };
     if (window.GSPSync) {
@@ -3459,7 +3524,7 @@ function irParaHistoricoJogos() {
   if (!isGuest && _player?.uid && window.GSPSync) {
     window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
       if (!histFS?.length) return;
-      const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
+      const c = histFS.map(h => ({ ...h, ts: h.ts || Date.now() }));
       LS.set(SK.HISTORICO, c);
       _renderHistorico(lista, c, false);
     }).catch(() => {});
@@ -3614,7 +3679,26 @@ function mostrarIntro(state, empresa) {
   }
 }
 
-function comecaJogo() {
+async function comecaJogo() {
+  // Verifica ban e manutenção antes de permitir iniciar (cobre gap do polling)
+  if (window.ADMIN) {
+    try {
+      // Verifica ban para usuários logados
+      if (!_isAdmin && _player?.uid && _player.tipo !== 'guest') {
+        const banido = await window.ADMIN.verificarBan(_player.uid).catch(() => false);
+        if (banido) { _forcarSaida('🚫 Sua conta foi suspensa pelo administrador.'); return; }
+      }
+      // Verifica manutenção para todos (incluindo convidados)
+      if (!_isAdmin) {
+        const cfg = await window.ADMIN.verificarMensagemGlobal().catch(() => null);
+        if (cfg?.manutencao) {
+          mostrarTela('screen-home');
+          setTimeout(() => mostrarAviso('🔧 Jogo em manutenção. Tente novamente em breve.'), 300);
+          return;
+        }
+      }
+    } catch(e) { /* falha silenciosa — não bloquear o jogo por erro de rede */ }
+  }
   iniciarRodadas();
   _renderEmpresaTab();
   _iniciarVerificacaoManutencao();
@@ -3656,7 +3740,7 @@ function _iniciarPollingGlobal(uid) {
   };
 
   _tick(); // executa imediatamente no login
-  _globalPollInterval = setInterval(_tick, 20000);
+  _globalPollInterval = setInterval(_tick, 5000);
 }
 
 function _pararPollingGlobal() {
@@ -3669,6 +3753,10 @@ function _forcarSaida(msg) {
   _pararTimer();
   LS.remove(SK.SESSION);
   LS.remove(SK.PLAYER);
+  LS.remove(SK.HISTORICO);
+  LS.remove(SK.PODIO);
+  LS.remove(SK.HIST_GUEST);
+  localStorage.removeItem('gsp_session_state');
   _player = null;
   _isAdmin = false;
   _aplicarTemaSetor(null);
@@ -4005,6 +4093,14 @@ function _pararTimer() {
 function mostrarFeedback(data, callback) {
   _feedbackCallback = callback;
   mostrarTela("screen-feedback");
+  // Preenche indicador de rodada no topo da tela de feedback
+  const roundIndicator = document.getElementById("fb-round-indicator");
+  if (roundIndicator) {
+    const state = BetaState.get();
+    if (state) {
+      roundIndicator.textContent = `Rodada ${state.currentRound + 1} de ${state.totalRounds}`;
+    }
+  }
   const corMap   = { boa:"var(--good)", media:"var(--warn)", ruim:"var(--danger)" };
   const iconMap  = { boa:"✅", media:"⚠️", ruim:"❌" };
   const labelMap = { boa:"BOA DECISÃO", media:"DECISÃO COM TRADE-OFFS", ruim:"MÁ DECISÃO" };
@@ -4083,11 +4179,24 @@ function mostrarFeedback(data, callback) {
   } else if (histEl) { histEl.style.display="none"; }
 }
 
-function avancar() {
+async function avancar() {
   if (!_feedbackCallback) return;
+  // Verifica ban e manutenção no momento de avançar (cobre banimentos durante a partida)
+  if (window.ADMIN) {
+    try {
+      if (!_isAdmin && _player?.uid && _player.tipo !== 'guest') {
+        const banido = await window.ADMIN.verificarBan(_player.uid).catch(() => false);
+        if (banido) { _forcarSaida('🚫 Sua conta foi suspensa pelo administrador.'); return; }
+      }
+      if (!_isAdmin) {
+        const cfg = await window.ADMIN.verificarMensagemGlobal().catch(() => null);
+        if (cfg?.manutencao) { _forcarSaida('🔧 Jogo em manutenção. Você será desconectado.'); return; }
+      }
+    } catch(e) { /* falha silenciosa */ }
+  }
   const cb = _feedbackCallback;
   _feedbackCallback = null;
-  _bloqueioAte = Date.now() + 400; // bloqueia escolher() durante transição
+  _bloqueioAte = Date.now() + 400;
   cb();
 }
 
@@ -4547,7 +4656,7 @@ async function irParaPerfil() {
   if (!isGuest && _player?.uid && window.GSPSync) {
     window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
       if (histFS.length > 0) {
-        const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
+        const c = histFS.map(h => ({ ...h, ts: h.ts || Date.now() }));
         const localHist = LS.get(SK.HISTORICO) || [];
         // Só re-renderiza se vier dado novo do servidor
         if (c.length !== localHist.length) {
@@ -4691,7 +4800,7 @@ function _buscarEAtualizarPodio(lista, setor) {
     const syncMsg = document.getElementById(msgId);
     if (syncMsg) syncMsg.remove();
     const c = (podioFS || []).map(p => ({
-      ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now())
+      ...p, ts: p.ts || Date.now()
     }));
     _podioCache[setor] = c;
     // Sempre atualiza localStorage para espelhar o banco (inclusive quando vazio)

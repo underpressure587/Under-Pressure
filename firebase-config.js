@@ -6,13 +6,8 @@ import {
   GoogleAuthProvider, sendPasswordResetEmail,
   onAuthStateChanged, signOut, updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  initializeFirestore,
-  getFirestore,
-  doc, setDoc, getDoc, deleteDoc, addDoc,
-  collection, query, orderBy, limit, getDocs, where,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeFirestore }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyB_Zkl12AyT5RMfg9eJ68QFTakdBKSioVU",
@@ -24,9 +19,8 @@ const firebaseConfig = {
 };
 
 const PROJECT_ID = "under-pressure-49320";
-const FS_BASE = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/(default)/documents";
 
-let app, auth, db, googleProvider;
+let app, auth, googleProvider;
 let _firebaseReady = false;
 let _cachedAuthUser = undefined; // undefined = ainda não resolveu, null = sem usuário
 
@@ -43,7 +37,7 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
   try {
     app            = initializeApp(firebaseConfig);
     auth           = getAuth(app);
-    db             = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+    initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
     googleProvider = new GoogleAuthProvider();
     _firebaseReady = true;
     // Captura usuário imediatamente ao inicializar
@@ -120,20 +114,6 @@ window.GSPAuth = {
     }
   },
 
-  async processarRedirectGoogle() {
-    if (!_firebaseReady) return null;
-    try {
-      const cred = await getRedirectResult(auth);
-      if (!cred || !cred.user) return null;
-      const nome = cred.user.displayName || cred.user.email.split("@")[0];
-      await GSPAuth._salvarPerfil(cred.user, nome);
-      return { uid: cred.user.uid, nome, email: cred.user.email, tipo: "user" };
-    } catch(e) {
-      console.warn("[GSP] processarRedirectGoogle:", e.message);
-      return null;
-    }
-  },
-
   async recuperarSenha(email) {
     if (!_firebaseReady) throw new Error("Firebase não configurado.");
     await sendPasswordResetEmail(auth, email);
@@ -172,12 +152,11 @@ window.GSPAuth = {
         await new Promise(r => setTimeout(r, 500));
       }
       if (!token) { console.warn("[GSP] _salvarPerfil: sem token"); return; }
-      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + user.uid + "?updateMask.fieldPaths=nome&updateMask.fieldPaths=email&updateMask.fieldPaths=mandatos&updateMask.fieldPaths=melhorScore";
+      // FIX: apenas nome e email — nunca sobrescrever mandatos/melhorScore (resetaria stats do jogador)
+      const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + user.uid + "?updateMask.fieldPaths=nome&updateMask.fieldPaths=email";
       const body = { fields: {
-        nome:        { stringValue:  nome || '' },
-        email:       { stringValue:  user.email || '' },
-        mandatos:    { integerValue: "0" },
-        melhorScore: { integerValue: "0" },
+        nome:  { stringValue: nome || '' },
+        email: { stringValue: user.email || '' },
       }};
       await fetch(url, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     } catch (e) { console.warn("[GSP] _salvarPerfil:", e.message); }

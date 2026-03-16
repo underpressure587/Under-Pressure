@@ -562,12 +562,14 @@ body::after{
   border: none;
   cursor: pointer;
   font-size: 1rem;
-  opacity: .6;
-  transition: opacity .15s;
+  opacity: .55;
+  color: var(--t2);
+  transition: opacity .15s, color .15s;
   padding: 4px;
   line-height: 1;
+  display: flex; align-items: center; justify-content: center;
 }
-.auth-eye:hover { opacity: 1; }
+.auth-eye:hover { opacity: 1; color: var(--s-text); }
 
 .auth-forgot {
   text-align: right;
@@ -610,6 +612,18 @@ body::after{
   margin-top: 4px;
   position: relative;
 }
+/* Spinner CSS animado (substituiu emoji ⏳) */
+.spinner-ring {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .auth-spinner {
   margin-left: 8px;
   font-size: .9rem;
@@ -656,17 +670,14 @@ body::after{
 }
 
 .auth-guest-btn {
-  color: var(--t3) !important;
-  font-size: .82rem !important;
-  padding: 14px 20px !important;
-  border: none !important;
-  text-decoration: underline;
-  width: 100% !important;
-  text-align: center !important;
-  display: block !important;
-  white-space: nowrap !important;
+  font-size: .82rem;
+  opacity: .65;
+  border-color: rgba(255,255,255,.1);
+  color: var(--t2);
+  margin-top: -4px;
+  padding: 11px;
 }
-.auth-guest-btn:hover { color: var(--t2) !important; }
+.auth-guest-btn:hover { opacity: .88; border-color: var(--line2); color: var(--t1); }
 
 /* Recuperar senha */
 .auth-recover-head {
@@ -1575,6 +1586,16 @@ body::after{
 /* ════════════════════════════════════════════════════
    FEEDBACK
 ════════════════════════════════════════════════════ */
+/* Barra de progresso da rodada no topo do feedback */
+.fb-round-bar {
+  padding: 8px var(--sp2) 0;
+  flex-shrink: 0;
+}
+.fb-round-label {
+  font-size: .68rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--t3);
+}
+
 #screen-feedback{ background:var(--bg); }
 
 .feedback-top{
@@ -1749,8 +1770,10 @@ body::after{
   text-align:center; font-size:.78rem; font-weight:600;
   color:#fff; letter-spacing:.03em;
   padding:8px var(--sp3) 0;
-  opacity:.9;
+  opacity: 0;
+  transition: opacity .4s ease;
 }
+#result-cloud-status.visible { opacity: .9; }
 
 
 ════════════════════════════════════════════════════ */
@@ -3102,7 +3125,7 @@ body::after{
 
 /* Cards visão geral */
 .admin-cards{
-  display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:var(--sp2);
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:10px; margin-bottom:var(--sp2);
 }
 .admin-card{
   background:var(--bg2); border:1px solid var(--line2);
@@ -3153,7 +3176,56 @@ body::after{
 .admin-label{ font-size:.78rem; font-weight:600; color:var(--t2); margin-bottom:4px; display:block; }
 .admin-textarea{ min-height:80px; resize:vertical; }
 .admin-toggle-row{ display:flex; justify-content:space-between; align-items:center; }
-.admin-checkbox{ width:20px; height:20px; cursor:pointer; }
+/* Toggle switch — substitui checkbox nativo */
+.admin-checkbox { display: none; } /* oculta o nativo caso ainda exista */
+
+.admin-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
+.admin-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.admin-switch-track {
+  position: absolute; inset: 0;
+  background: var(--bg4); border: 1px solid var(--line2);
+  border-radius: var(--rpill);
+  transition: background .2s, border-color .2s;
+}
+.admin-switch-track::after {
+  content: '';
+  position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--t3);
+  transition: transform .2s, background .2s;
+}
+.admin-switch input:checked + .admin-switch-track {
+  background: var(--err); border-color: var(--err2);
+}
+.admin-switch input:checked + .admin-switch-track::after {
+  transform: translateX(20px); background: #fff;
+}
+
+/* Banner de alerta de manutenção ativa */
+.admin-manutencao-banner {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(231,76,60,.15); border: 1px solid rgba(231,76,60,.4);
+  border-radius: var(--r); padding: 10px 14px;
+  font-size: .8rem; font-weight: 700; color: var(--err);
+  animation: pulse-border 2s ease-in-out infinite;
+}
+@keyframes pulse-border {
+  0%, 100% { border-color: rgba(231,76,60,.4); }
+  50%       { border-color: rgba(231,76,60,.8); }
+}
+
+/* Lista de UIDs admin */
+.admin-uid-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--line);
+}
+.admin-uid-text {
+  flex: 1; font-size: .75rem; color: var(--t2);
+  font-family: monospace; overflow: hidden; text-overflow: ellipsis;
+}
+.admin-uid-add-row {
+  display: flex; gap: 8px; margin-top: 8px; align-items: center;
+}
 
 /* Histórico modal */
 .admin-hist-row{
@@ -3190,14 +3262,80 @@ body::after{
 .admin-input:focus{ outline:none; border-color:var(--s-primary); }
 
 /* Estados */
-.admin-loading{ text-align:center; color:var(--t3); padding:24px; font-size:.85rem; }
+.admin-loading{ text-align:center; color:var(--t3); padding:24px; font-size:.85rem; letter-spacing:.03em; }
 .admin-empty{ text-align:center; color:var(--t3); padding:24px; font-size:.85rem; }
 
 /* Toast */
 .admin-toast{
-  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
   padding:10px 20px; border-radius:var(--rpill); font-size:.82rem; font-weight:600;
-  z-index:99999; animation:slideDown .2s ease;
+  z-index:99999; animation:toastIn .25s cubic-bezier(.22,.68,0,1.2);
+  white-space: nowrap; max-width: calc(100vw - 40px); text-align: center;
 }
 .admin-toast-ok{ background:var(--s-gradient); color:#fff; }
 .admin-toast-err{ background:var(--err); color:#fff; }
+
+/* ════════════════════════════════════════════════════
+   ADMIN — LAYOUT DESKTOP (min-width: 800px)
+════════════════════════════════════════════════════ */
+@media (min-width: 800px) {
+  #screen-admin {
+    display: grid !important;
+    grid-template-columns: 200px 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "header header"
+      "nav    body";
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Topbar ocupa a linha inteira */
+  #screen-admin .podio-header {
+    grid-area: header;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Nav lateral fixa */
+  #screen-admin .admin-nav {
+    grid-area: nav;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-bottom: none;
+    border-right: 1px solid var(--line);
+    padding: 16px 12px;
+    gap: 4px;
+    align-items: stretch;
+  }
+
+  #screen-admin .admin-nav-btn {
+    border-radius: var(--r);
+    text-align: left;
+    padding: 9px 14px;
+    font-size: .8rem;
+  }
+
+  /* Body ocupa o restante */
+  #screen-admin .admin-body {
+    grid-area: body;
+    overflow-y: auto;
+    padding: var(--sp3);
+  }
+
+  /* Config — two columns: mensagem à esquerda, toggle + admins à direita */
+  #admin-sec-config .admin-config-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  /* Labels do config como separadores de coluna */
+  #admin-sec-config .admin-config-form > label:first-child { grid-column: 1; }
+  #admin-sec-config .admin-config-form > .admin-textarea   { grid-column: 1; }
+
+  /* Cards da visão geral em 5 colunas no desktop */
+  .admin-cards {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
