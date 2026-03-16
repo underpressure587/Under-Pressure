@@ -679,9 +679,45 @@ const ADMIN = (() => {
     }
   }
 
+  let _banConfirmPending = false;
+  let _banConfirmTimer = null;
+
   async function confirmarBan(uid, estaBanido) {
-    const btn = document.querySelector('#admin-ban-foot .admin-btn-danger, #admin-ban-foot .admin-btn-ok');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Processando...'; }
+    // Desbanimento: ação reversível, clique único
+    if (estaBanido) {
+      await _executarBan(uid, true);
+      return;
+    }
+
+    // Banimento: requer duplo clique para evitar acidente
+    const btn = document.querySelector('#admin-ban-foot .admin-btn-danger');
+    if (!btn) return;
+
+    if (!_banConfirmPending) {
+      // Primeiro clique — entra em estado de confirmação
+      _banConfirmPending = true;
+      btn.textContent = '⚠️ Clique novamente para confirmar';
+      btn.style.background = 'rgba(231,76,60,.35)';
+      btn.style.borderColor = 'var(--err)';
+      // Cancela automaticamente após 3s
+      _banConfirmTimer = setTimeout(() => {
+        _banConfirmPending = false;
+        btn.textContent = '🚫 Confirmar Banimento';
+        btn.style.background = '';
+        btn.style.borderColor = '';
+      }, 3000);
+    } else {
+      // Segundo clique — executa
+      clearTimeout(_banConfirmTimer);
+      _banConfirmPending = false;
+      await _executarBan(uid, false);
+    }
+  }
+
+  async function _executarBan(uid, estaBanido) {
+    const foot = document.getElementById('admin-ban-foot');
+    const btns = foot?.querySelectorAll('button');
+    btns?.forEach(b => { b.disabled = true; });
     try {
       const patchR = await fetch(`${FS}/usuarios/${uid}?updateMask.fieldPaths=banido`, {
         method: 'PATCH',
@@ -696,14 +732,13 @@ const ADMIN = (() => {
         throw new Error(msg);
       }
       fecharModalBan();
-      _showAdminToast(estaBanido ? '✅ Jogador desbanido com sucesso!' : '🚫 Jogador banido com sucesso!');
-      // Atualiza lista de jogadores se estiver aberta
+      _showAdminToast(estaBanido ? '✅ Jogador desbanido!' : '🚫 Jogador banido!');
       if (_currentSection === 'jogadores') {
         carregarJogadores(document.getElementById('admin-busca')?.value || '');
       }
     } catch(e) {
       _showAdminToast('Erro: ' + e.message, true);
-      if (btn) { btn.disabled = false; btn.textContent = btn.textContent.includes('Desban') ? '✅ Confirmar Desbanimento' : '🚫 Confirmar Banimento'; }
+      btns?.forEach(b => { b.disabled = false; });
     }
   }
 

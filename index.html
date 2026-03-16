@@ -737,6 +737,27 @@
 
 
 
+  <!-- ══ OVERLAY: MANUTENÇÃO ══ -->
+  <div id="overlay-manutencao" style="display:none">
+    <div class="manut-card">
+      <div class="manut-icon">🔧</div>
+      <div class="manut-titulo">Jogo em Manutenção</div>
+      <p class="manut-desc">Estamos realizando melhorias. Aguarde alguns instantes — o jogo voltará automaticamente assim que a manutenção for concluída.</p>
+      <div id="manut-msg-extra" class="manut-msg-global" style="display:none"></div>
+      <button class="manut-btn-salvar" id="manut-btn-salvar" onclick="BetaUI.manutencaoSalvarSair()">💾 Salvar e Sair</button>
+    </div>
+  </div>
+
+  <!-- ══ OVERLAY: MENSAGEM GLOBAL ══ -->
+  <div id="overlay-msg-global" style="display:none">
+    <div class="msg-global-card">
+      <div class="msg-global-icon">📢</div>
+      <div class="msg-global-titulo">Aviso do Sistema</div>
+      <p class="msg-global-texto" id="overlay-msg-global-texto"></p>
+      <button class="msg-global-btn" onclick="BetaUI.fecharMsgGlobal()">Entendi</button>
+    </div>
+  </div>
+
   <!-- ══ OVERLAYS (fora do #app para evitar conflito de stacking context) ══ -->
   
   <!-- OVERLAY: PAUSA -->

@@ -724,9 +724,11 @@ body::after{
 }
 .home-id{ display:flex; align-items:center; gap:10px; }
 .home-avatar{
-  width:38px; height:38px; border-radius:50%;
+  width:38px; height:38px; min-width:38px; min-height:38px;
+  border-radius:50%; aspect-ratio:1;
   background:var(--s-bg-accent); border:1.5px solid var(--s-bd-accent);
-  display:flex; align-items:center; justify-content:center; font-size:.95rem;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.95rem; font-style:normal; flex-shrink:0; overflow:hidden;
 }
 .home-id-label{
   font-size:.6rem; font-weight:600; letter-spacing:.14em;
@@ -2145,11 +2147,12 @@ body::after{
 .perfil-body{ flex:1; overflow-y:auto; padding:var(--sp3) var(--sp3) calc(var(--sp3) + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:var(--sp3); }
 .perfil-avatar-block{ display:flex; flex-direction:column; align-items:center; gap:6px; }
 .perfil-avatar{
-  width:80px; height:80px; border-radius:50%;
+  width:80px; height:80px; min-width:80px; min-height:80px;
+  border-radius:50%; aspect-ratio:1;
   background:var(--s-bg-accent); border:2px solid var(--s-bd-accent);
   display:flex; align-items:center; justify-content:center;
   font-family:var(--serif); font-size:2rem; font-weight:700; color:var(--s-text);
-  box-shadow:0 0 32px var(--s-glow);
+  box-shadow:0 0 32px var(--s-glow); flex-shrink:0; overflow:hidden;
   animation: avatarPop .4s cubic-bezier(.22,.68,0,1.2) both;
 }
 @keyframes avatarPop { from{transform:scale(.7);opacity:0} to{transform:scale(1);opacity:1} }
@@ -3435,42 +3438,25 @@ body::after{
   inset: 0;
   background: rgba(0,0,0,.82);
   z-index: 9999;
-  align-items: flex-end; /* slide from bottom on mobile */
+  align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 20px;
   backdrop-filter: blur(4px);
   animation: fadeIn .18s ease;
-}
-@media (min-width: 600px) {
-  .admin-modal-overlay {
-    align-items: center;
-    padding: 20px;
-  }
 }
 
 .admin-modal-card {
   background: var(--bg1);
   border: 1px solid var(--line2);
-  border-radius: var(--r3) var(--r3) 0 0;
+  border-radius: var(--r3);
   width: 100%;
+  max-width: 440px;
   max-height: 88vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 -8px 40px rgba(0,0,0,.6);
-  animation: slideUp .22s cubic-bezier(.22,.68,0,1.2);
-}
-@media (min-width: 600px) {
-  .admin-modal-card {
-    border-radius: var(--r3);
-    max-width: 440px;
-    box-shadow: var(--sh3);
-    animation: popIn .22s cubic-bezier(.22,.68,0,1.2);
-  }
-}
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  box-shadow: var(--sh3), 0 0 0 1px rgba(255,255,255,.04);
+  animation: popIn .25s cubic-bezier(.22,.68,0,1.2);
 }
 
 .admin-modal-head {
@@ -3598,3 +3584,161 @@ body::after{
   border-top: 1px solid var(--line);
   padding-top: 12px;
 }
+
+/* ════════════════════════════════════════════════════
+   OVERLAY DE MANUTENÇÃO (não expulsa — bloqueia jogo)
+════════════════════════════════════════════════════ */
+#overlay-manutencao {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.88);
+  z-index: 99990;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(6px);
+  animation: fadeIn .3s ease;
+}
+.manut-card {
+  background: var(--bg1);
+  border: 1px solid rgba(243,156,18,.25);
+  border-radius: var(--r3);
+  width: 100%;
+  max-width: 360px;
+  padding: 32px 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 0 60px rgba(243,156,18,.08), var(--sh3);
+  animation: popIn .3s cubic-bezier(.22,.68,0,1.2);
+}
+.manut-icon {
+  font-size: 2.4rem;
+  line-height: 1;
+  animation: spin 3s linear infinite;
+}
+.manut-titulo {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--warn);
+  letter-spacing: .02em;
+}
+.manut-desc {
+  font-size: .84rem;
+  color: var(--t2);
+  line-height: 1.65;
+  margin: 0;
+}
+.manut-msg-global {
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  padding: 10px 14px;
+  font-size: .83rem;
+  color: var(--t1);
+  width: 100%;
+  line-height: 1.55;
+  box-sizing: border-box;
+}
+.manut-btn-salvar {
+  margin-top: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  color: var(--warn);
+  font-size: .82rem;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: var(--rpill);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: background .18s;
+  display: none; /* só visível no meio de uma partida */
+}
+.manut-btn-salvar:hover { background: var(--bg4); }
+
+/* ── Botão Iniciar Mandato bloqueado durante manutenção ── */
+.home-start-btn.manutencao-ativa {
+  opacity: .35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.home-start-btn.manutencao-ativa::after {
+  content: 'Manutenção';
+  display: block;
+  font-size: .58rem;
+  letter-spacing: .12em;
+  color: var(--warn);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ════════════════════════════════════════════════════
+   OVERLAY DE MENSAGEM GLOBAL
+════════════════════════════════════════════════════ */
+#overlay-msg-global {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 99991;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+  animation: fadeIn .25s ease;
+}
+.msg-global-card {
+  background: var(--bg1);
+  border: 1px solid var(--s-bd-accent);
+  border-radius: var(--r3);
+  width: 100%;
+  max-width: 360px;
+  padding: 28px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 0 40px var(--s-glow), var(--sh3);
+  animation: popIn .3s cubic-bezier(.22,.68,0,1.2);
+}
+.msg-global-icon {
+  width: 44px; height: 44px;
+  background: var(--s-bg-accent);
+  border: 1.5px solid var(--s-bd-accent);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+}
+.msg-global-titulo {
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--s-text);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.msg-global-texto {
+  font-size: .88rem;
+  color: var(--t1);
+  line-height: 1.7;
+  margin: 0;
+}
+.msg-global-btn {
+  background: var(--s-gradient);
+  border: none;
+  color: #fff;
+  font-size: .88rem;
+  font-weight: 700;
+  padding: 12px 32px;
+  border-radius: var(--rpill);
+  cursor: pointer;
+  font-family: var(--sans);
+  letter-spacing: .04em;
+  transition: opacity .18s;
+}
+.msg-global-btn:hover { opacity: .85; }

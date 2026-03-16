@@ -3315,7 +3315,7 @@ function mostrarTela(id, goBack) {
     _mostrarBotaoAdmin();
     // Exibe mensagem global se houver
     if (window._mensagemGlobal) {
-      setTimeout(() => mostrarSucesso(window._mensagemGlobal), 800);
+      setTimeout(() => _mostrarOverlayMsgGlobal(window._mensagemGlobal), 800);
       window._mensagemGlobal = null;
     }
   }
@@ -3692,8 +3692,7 @@ async function comecaJogo() {
       if (!_isAdmin) {
         const cfg = await window.ADMIN.verificarMensagemGlobal().catch(() => null);
         if (cfg?.manutencao) {
-          mostrarTela('screen-home');
-          setTimeout(() => mostrarAviso('🔧 Jogo em manutenção. Tente novamente em breve.'), 300);
+          _ativarOverlayManutencao(cfg?.mensagem || '');
           return;
         }
       }
@@ -3707,6 +3706,68 @@ async function comecaJogo() {
 // ─── POLLING UNIVERSAL ─────────────────────────────────────────
 // Roda sempre que o usuário está logado (home, jogo, perfil, etc.)
 // Verifica: ban + manutenção + mensagem global — a cada 20 segundos
+
+/* ── OVERLAYS DE MANUTENÇÃO E MENSAGEM GLOBAL ─────── */
+
+function _ativarOverlayManutencao(msgExtra, durantePartida = false) {
+  const overlay = document.getElementById('overlay-manutencao');
+  if (!overlay) return;
+
+  // Exibe mensagem extra se houver
+  const msgEl = document.getElementById('manut-msg-extra');
+  if (msgEl) {
+    if (msgExtra) { msgEl.textContent = msgExtra; msgEl.style.display = 'block'; }
+    else { msgEl.style.display = 'none'; }
+  }
+
+  // Mostra botão "Salvar e Sair" só se estiver no meio de uma partida
+  const btnSalvar = document.getElementById('manut-btn-salvar');
+  const telaAtual = document.querySelector('.screen.active')?.id;
+  const emJogo = durantePartida ||
+    telaAtual === 'screen-game' || telaAtual === 'screen-feedback';
+  if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
+
+  overlay.style.display = 'flex';
+
+  // Bloqueia o botão Iniciar Mandato
+  const btnStart = document.querySelector('.home-start-btn');
+  if (btnStart) btnStart.classList.add('manutencao-ativa');
+}
+
+function _desativarOverlayManutencao() {
+  const overlay = document.getElementById('overlay-manutencao');
+  if (overlay && overlay.style.display !== 'none') {
+    overlay.style.display = 'none';
+  }
+  // Desbloqueia o botão Iniciar Mandato
+  const btnStart = document.querySelector('.home-start-btn');
+  if (btnStart) btnStart.classList.remove('manutencao-ativa');
+}
+
+function manutencaoSalvarSair() {
+  // Encerra a partida salvando o progresso local e volta para a home
+  _pararTimer();
+  LS.remove(SK.SESSION);
+  localStorage.removeItem('gsp_session_state');
+  _aplicarTemaSetor(null);
+  _desativarOverlayManutencao();
+  mostrarTela('screen-home');
+  setTimeout(() => mostrarAviso('Partida encerrada. Aguardando fim da manutenção.'), 400);
+}
+
+function _mostrarOverlayMsgGlobal(texto) {
+  if (!texto) return;
+  const overlay = document.getElementById('overlay-msg-global');
+  const textoEl = document.getElementById('overlay-msg-global-texto');
+  if (!overlay || !textoEl) return;
+  textoEl.textContent = texto;
+  overlay.style.display = 'flex';
+}
+
+function fecharMsgGlobal() {
+  const overlay = document.getElementById('overlay-msg-global');
+  if (overlay) overlay.style.display = 'none';
+}
 
 function _iniciarPollingGlobal(uid) {
   _pararPollingGlobal(); // limpa qualquer poll anterior
@@ -3727,14 +3788,17 @@ function _iniciarPollingGlobal(uid) {
       const cfg = await window.ADMIN.verificarMensagemGlobal();
 
       if (cfg.manutencao && !_isAdmin) {
-        _forcarSaida('🔧 Jogo em manutenção. Você será desconectado.');
+        _ativarOverlayManutencao(cfg.mensagem);
         return;
+      } else if (!cfg.manutencao) {
+        // Manutenção encerrada — remove o overlay e desbloqueia o botão
+        _desativarOverlayManutencao();
       }
 
-      // 3. Mensagem global — mostra só se mudou desde a última vez
+      // 3. Mensagem global — exibe overlay dedicado (só se mudou desde a última vez)
       if (cfg.mensagem && cfg.mensagem !== _ultimaMensagemGlobal) {
         _ultimaMensagemGlobal = cfg.mensagem;
-        mostrarSucesso(cfg.mensagem);
+        _mostrarOverlayMsgGlobal(cfg.mensagem);
       }
     } catch(e) { /* ignora erros de rede temporários */ }
   };
@@ -4190,7 +4254,10 @@ async function avancar() {
       }
       if (!_isAdmin) {
         const cfg = await window.ADMIN.verificarMensagemGlobal().catch(() => null);
-        if (cfg?.manutencao) { _forcarSaida('🔧 Jogo em manutenção. Você será desconectado.'); return; }
+        if (cfg?.manutencao) {
+          _ativarOverlayManutencao(cfg?.mensagem || '', true); // true = estamos no meio do jogo
+          return;
+        }
       }
     } catch(e) { /* falha silenciosa */ }
   }
@@ -5390,7 +5457,7 @@ async function _loginOk(player) {
       return;
     }
     if (cfg?.mensagem) {
-      window._mensagemGlobal = cfg.mensagem;
+      window._mensagemGlobal = cfg.mensagem; // será exibido ao entrar na home
     }
   }
 
@@ -5447,6 +5514,7 @@ async function irParaAdmin() {
 
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
+  manutencaoSalvarSair, fecharMsgGlobal,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
   irParaSetores, irParaPodio, irParaHistoricoJogos,
   irParaPerfil, filtrarPodio, _copiarId,
