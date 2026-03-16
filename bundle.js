@@ -3313,6 +3313,11 @@ function mostrarTela(id, goBack) {
   // Atualiza botão admin ao entrar na home
   if (id === 'screen-home') {
     _mostrarBotaoAdmin();
+    // Manutenção ativa — mostra overlay e bloqueia o botão de iniciar
+    if (window._manutencaoAtiva) {
+      setTimeout(() => _ativarOverlayManutencao(window._manutencaoAtiva.mensagem), 400);
+      window._manutencaoAtiva = null;
+    }
     // Exibe mensagem global se houver
     if (window._mensagemGlobal) {
       setTimeout(() => _mostrarOverlayMsgGlobal(window._mensagemGlobal), 800);
@@ -5448,15 +5453,15 @@ async function _loginOk(player) {
   // Verifica se é admin antes de qualquer outra coisa
   await _atualizarBotaoAdmin(player.uid);
 
-  // Verifica manutenção — admin bypassa, usuários comuns são bloqueados
+  // Verifica manutenção e mensagem global — admin bypassa restrições
   if (!_isAdmin && window.ADMIN) {
     const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
     if (cfg?.manutencao) {
-      mostrarTela('screen-login');
-      setTimeout(() => mostrarAviso('🔧 Jogo em manutenção. Volte em breve!'), 500);
-      return;
+      // Deixa o jogador entrar na home mas bloqueia o jogo com o overlay
+      // (não expulsa — mantém a sessão e trava o botão de iniciar)
+      window._manutencaoAtiva = { mensagem: cfg?.mensagem || '' };
     }
-    if (cfg?.mensagem) {
+    if (cfg?.mensagem && !cfg?.manutencao) {
       window._mensagemGlobal = cfg.mensagem; // será exibido ao entrar na home
     }
   }
