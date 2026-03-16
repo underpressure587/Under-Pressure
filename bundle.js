@@ -1286,11 +1286,11 @@ const Protagonista = (() => {
         const esgotamento = state?.gestor?.esgotamento ?? 0;
         if (esgotamento >= 7 && Math.random() < 0.35) {
             const frase = FRASES_PREOCUPACAO[Math.floor(Math.random() * FRASES_PREOCUPACAO.length)];
-            return { nome: maisAfetado.nome, icone: "🟡", texto: frase };
+            return { nome: maisAfetado.nome, icone: '<span class="status-dot dot-warn"></span>', texto: frase };
         }
 
         const pool  = saldo >= 0 ? FRASES_POS : FRASES_NEG;
-        const icone = saldo >= 0 ? "🟢" : "🔴";
+        const icone = saldo >= 0 ? '<span class="status-dot dot-ok"></span>' : '<span class="status-dot dot-err"></span>';
         const texto = pool[Math.floor(Math.random() * pool.length)];
 
         return { nome: maisAfetado.nome, icone, texto };
@@ -3126,6 +3126,17 @@ async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
 
+  // Verifica banimento persistido antes de qualquer outra coisa
+  const banInfoRaw = localStorage.getItem('gsp_ban_info');
+  if (banInfoRaw) {
+    try {
+      const info = JSON.parse(banInfoRaw);
+      mostrarTela('screen-login');
+      setTimeout(() => _mostrarOverlayBan(info.motivo || '', info.uid || ''), 300);
+      return;
+    } catch(e) { localStorage.removeItem('gsp_ban_info'); }
+  }
+
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
   if (saved) {
@@ -3489,13 +3500,13 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
         window.GSPSync.salvarNoPodio(_player.uid, entrada)
       ])
         .then(() => {
-          if (_settings.cloudStatus !== false && _statusEl()) { _statusEl().textContent = '✅ Salvo na nuvem!'; _statusEl().classList.add('visible'); }
+          if (_settings.cloudStatus !== false && _statusEl()) { _statusEl().dataset.state = 'ok'; _statusEl().textContent = 'Salvo na nuvem!'; _statusEl().classList.add('visible'); }
           // Remove da fila de pendentes se estava lá
           _removerSavePendente(entrada.ts);
         })
         .catch(e => {
           console.error('[GSP] Erro ao salvar resultado:', e);
-          if (_settings.cloudStatus !== false && _statusEl()) { _statusEl().textContent = '❌ Erro ao salvar — reenvio automático'; _statusEl().classList.add('visible'); }
+          if (_settings.cloudStatus !== false && _statusEl()) { _statusEl().dataset.state = 'err'; _statusEl().textContent = 'Erro ao salvar'; _statusEl().classList.add('visible'); }
           // Adiciona na fila para reenvio posterior
           _adicionarSavePendente(entrada);
         });
@@ -3667,7 +3678,7 @@ function mostrarIntro(state, empresa) {
     criseEl.style.display = "";
     criseEl.innerHTML = `
       <div class="intro-crise-header">
-        <span class="intro-crise-badge">⚠ CRISE ATIVA</span>
+        <span class="intro-crise-badge">CRISE ATIVA</span>
         <span class="intro-crise-titulo">${crise.titulo}</span>
       </div>
       <div class="intro-crise-texto">${crise.historia}</div>`;
@@ -3713,6 +3724,80 @@ async function comecaJogo() {
 // Verifica: ban + manutenção + mensagem global — a cada 20 segundos
 
 /* ── OVERLAYS DE MANUTENÇÃO E MENSAGEM GLOBAL ─────── */
+
+/* ── OVERLAY DE BANIMENTO ───────────────────────────── */
+let _banCountdownInterval = null;
+let _banUnbanCheckInterval = null;
+
+function _mostrarOverlayBan(motivo, uid) {
+  const overlay = document.getElementById('overlay-ban');
+  if (!overlay) return;
+
+  const motivoBox   = document.getElementById('ban-motivo-display');
+  const motivoTexto = document.getElementById('ban-motivo-texto');
+  if (motivoBox && motivoTexto) {
+    if (motivo) { motivoTexto.textContent = motivo; motivoBox.style.display = 'block'; }
+    else { motivoBox.style.display = 'none'; }
+  }
+
+  const uidEl = document.getElementById('ban-uid-display');
+  if (uidEl && uid) uidEl.textContent = 'ID: ' + uid.substring(0, 12).toUpperCase() + '...';
+
+  overlay.style.display = 'flex';
+
+  // Countdown 10s com barra de progresso CSS
+  let segs = 10;
+  const countdownEl  = document.getElementById('ban-countdown');
+  const progressBar  = document.getElementById('ban-progress-bar');
+  if (progressBar) {
+    progressBar.style.transition = 'none';
+    progressBar.style.width = '100%';
+    progressBar.getBoundingClientRect(); // force reflow
+    progressBar.style.transition = 'width ' + segs + 's linear';
+    progressBar.style.width = '0%';
+  }
+  if (countdownEl) countdownEl.textContent = 'Redirecionando em ' + segs + 's...';
+
+  clearInterval(_banCountdownInterval);
+  _banCountdownInterval = setInterval(function() {
+    segs--;
+    if (countdownEl) countdownEl.textContent = 'Redirecionando em ' + segs + 's...';
+    if (segs <= 0) { clearInterval(_banCountdownInterval); _banFecharEIrLogin(); }
+  }, 1000);
+
+  // Verifica desban a cada 30s
+  clearInterval(_banUnbanCheckInterval);
+  if (uid && window.ADMIN) {
+    _banUnbanCheckInterval = setInterval(async function() {
+      try {
+        const aindaBanido = await window.ADMIN.verificarBan(uid);
+        if (!aindaBanido) {
+          clearInterval(_banCountdownInterval);
+          clearInterval(_banUnbanCheckInterval);
+          const statusEl = document.getElementById('ban-unban-status');
+          const cEl      = document.getElementById('ban-countdown');
+          const btnLogin  = document.querySelector('.ban-btn-login');
+          if (statusEl) statusEl.style.display = 'block';
+          if (cEl) cEl.style.display = 'none';
+          if (btnLogin) btnLogin.textContent = 'Entrar agora';
+          localStorage.removeItem('gsp_ban_info');
+        }
+      } catch(e) {}
+    }, 30000);
+  }
+}
+
+function banIrParaLogin() {
+  clearInterval(_banCountdownInterval);
+  clearInterval(_banUnbanCheckInterval);
+  _banFecharEIrLogin();
+}
+
+function _banFecharEIrLogin() {
+  const overlay = document.getElementById('overlay-ban');
+  if (overlay) overlay.style.display = 'none';
+  localStorage.removeItem('gsp_ban_info');
+}
 
 function _ativarOverlayManutencao(msgExtra, durantePartida = false) {
   const overlay = document.getElementById('overlay-manutencao');
@@ -3817,7 +3902,13 @@ function _pararPollingGlobal() {
   if (_manutencaoInterval) { clearInterval(_manutencaoInterval); _manutencaoInterval = null; }
 }
 
+let _expulsaoEmAndamento = false; // guard contra chamadas duplas
+
 function _forcarSaida(msg) {
+  // Evita executar duas vezes em rápida sucessão (polling + comecaJogo)
+  if (_expulsaoEmAndamento) return;
+  _expulsaoEmAndamento = true;
+
   _pararPollingGlobal();
   _pararTimer();
   LS.remove(SK.SESSION);
@@ -3830,8 +3921,33 @@ function _forcarSaida(msg) {
   _isAdmin = false;
   _aplicarTemaSetor(null);
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
-  mostrarTela('screen-login');
-  setTimeout(() => mostrarAviso(msg), 600);
+
+  // Banimento: mostra overlay dedicado em vez de toast
+  const ehBanimento = msg.includes('suspensa') || msg.includes('banid');
+  if (ehBanimento) {
+    mostrarTela('screen-login');
+    const _bannedUid = _player?.uid || null;
+    setTimeout(async () => {
+      let motivoBan = '';
+      if (_bannedUid && window.ADMIN) {
+        try {
+          const doc = await window.ADMIN._getBanInfo(_bannedUid);
+          motivoBan = doc?.motivoBan || '';
+        } catch(e) {}
+      }
+      if (_bannedUid) {
+        localStorage.setItem('gsp_ban_info', JSON.stringify({
+          uid: _bannedUid, motivo: motivoBan, ts: Date.now()
+        }));
+      }
+      _mostrarOverlayBan(motivoBan, _bannedUid || '');
+      _expulsaoEmAndamento = false;
+    }, 300);
+  } else {
+    // Outras saídas forçadas (manutenção via código antigo, etc.) — toast simples
+    mostrarTela('screen-login');
+    setTimeout(() => { mostrarAviso(msg); _expulsaoEmAndamento = false; }, 600);
+  }
 }
 
 // Mantido para não quebrar chamadas de comecaJogo/abandonarJogo
@@ -4476,7 +4592,7 @@ function _atualizarBotaoFullscreen() {
   const btn = document.getElementById("settings-fs-btn");
   if (!btn) return;
   const isFs = !!document.fullscreenElement;
-  btn.textContent = isFs ? "✕ Sair" : "⛶ Ativar";
+  btn.innerHTML = isFs ? "<span style='display:flex;align-items:center;gap:5px'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg> Sair</span>" : "<span style='display:flex;align-items:center;gap:5px'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Ativar</span>";
 }
 document.addEventListener("fullscreenchange", _atualizarBotaoFullscreen);
 
@@ -4617,9 +4733,11 @@ async function irParaPerfil() {
     }
   }
 
-  // Botão logout visível só para logados
+  // Botão logout: para logados = "Sair da conta", para convidados = "Sair"
   const logoutBtn = document.getElementById('perfil-logout-btn');
+  const logoutGuestBtn = document.getElementById('perfil-guest-sair-btn');
   if (logoutBtn) logoutBtn.style.display = (!isGuest && _player?.uid) ? '' : 'none';
+  if (logoutGuestBtn) logoutGuestBtn.style.display = isGuest ? '' : 'none';
 
   const total  = hist.length;
   const melhor = total ? Math.max(...hist.map(h => h.score)) : 0;
@@ -4708,7 +4826,7 @@ async function irParaPerfil() {
   if (cqEl) {
     cqEl.innerHTML = conquistas.map(c => `
       <div class="perfil-conquista ${c.unlocked ? 'unlocked' : ''}">
-        <div class="perfil-conquista-icon">${c.unlocked ? c.icon : '🔒'}</div>
+        <div class="perfil-conquista-icon">${c.unlocked ? c.icon : '<span class=\"conquista-lock\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0110 0v4\"/></svg></span>'}</div>
         <div>
           <div class="perfil-conquista-nome">${c.nome}</div>
           <div class="perfil-conquista-desc">${c.desc}</div>
@@ -4843,7 +4961,7 @@ function irParaPodio() {
 
   // Convidados não têm acesso ao pódio
   if (!_player?.uid || _player?.tipo === 'guest') {
-    lista.innerHTML = `<div class="podio-empty">🔒 Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
+    lista.innerHTML = `<div class="podio-empty">Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
     return;
   }
 
@@ -5447,6 +5565,7 @@ async function authRecuperar() {
 }
 
 async function _loginOk(player) {
+  _expulsaoEmAndamento = false; // reset ao logar
   _player = player;
   LS.set(SK.PLAYER, _player);
 
@@ -5519,7 +5638,7 @@ async function irParaAdmin() {
 
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
-  manutencaoSalvarSair, fecharMsgGlobal,
+  manutencaoSalvarSair, fecharMsgGlobal, banIrParaLogin,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
   irParaSetores, irParaPodio, irParaHistoricoJogos,
   irParaPerfil, filtrarPodio, _copiarId,

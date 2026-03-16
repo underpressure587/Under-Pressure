@@ -18,9 +18,9 @@
   <!-- Fontes sem bloquear renderizacao -->
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="./style.css?v=2b17c15">
+  <link rel="stylesheet" href="./style.css?v=CACHE_VERSION">
   <!-- Firebase -->
-  <script type="module" src="./firebase-config.js?v=2b17c15"></script>
+  <script type="module" src="./firebase-config.js?v=CACHE_VERSION"></script>
 
 </head>
 <body>
@@ -91,7 +91,7 @@
   <!-- ══ LOADING ══ -->
   <div id="screen-loading" class="screen">
     <div class="loading-wrap">
-      <div class="loading-logo">🎮</div>
+      <div class="loading-logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
       <div class="loading-title">Under Pressure</div>
       <div class="loading-bar-wrap">
         <div class="loading-bar-track">
@@ -107,7 +107,7 @@
   <div id="screen-login" class="screen active">
     <div class="login-topbar">
       <div style="display:flex;gap:6px">
-        <button class="btn-ghost" onclick="BetaUI.toggleFullscreen()">⛶</button>
+        <button class="btn-ghost btn-icon" onclick="BetaUI.toggleFullscreen()" title="Tela cheia"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
         <button class="btn-ghost" onclick="BetaUI.openGlossary()" style="color:var(--s-text);font-weight:700">?</button>
       </div>
     </div>
@@ -228,7 +228,7 @@
       <!-- ── RECUPERAR SENHA ── -->
       <div class="auth-form" id="auth-form-recuperar" style="display:none">
         <div class="auth-recover-head">
-          <div class="auth-recover-icon">🔑</div>
+          <div class="auth-recover-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="5"/><path d="M15.09 10.72L21 4.81"/><path d="M18.5 8.3l1.7 1.7"/><path d="M13.5 13.3l1.7 1.7"/></svg></div>
           <h2 class="auth-recover-title">Recuperar senha</h2>
           <p class="auth-recover-desc">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
         </div>
@@ -256,7 +256,7 @@
   <div id="screen-home" class="screen">
     <div class="home-header">
       <div class="home-id" onclick="BetaUI.irParaPerfil()" style="cursor:pointer">
-        <div class="home-avatar" id="home-avatar-icon">👤</div>
+        <div class="home-avatar" id="home-avatar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
         <div>
           <div class="home-id-label">Gestor</div>
           <div class="home-id-name" id="home-player-name">JOGADOR</div>
@@ -268,7 +268,7 @@
           <span id="firebase-status-label" class="firebase-status-label">Conectando</span>
         </div>
         <button class="btn-ghost" onclick="BetaUI.openGlossary()" style="color:var(--s-text);font-weight:700">?</button>
-        <button class="btn-ghost" onclick="BetaUI.openSettings()">⚙</button>
+        <button class="btn-ghost btn-icon" onclick="BetaUI.openSettings()" title="Configurações"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
       </div>
     </div>
     <div id="session-restore-banner" class="session-banner" style="display:none">
@@ -287,8 +287,8 @@
     </div>
     <div class="home-tab-bar">
       <button class="home-tab-btn" onclick="BetaUI.irParaPerfil()">👤 Perfil</button>
-      <button class="home-tab-btn" onclick="BetaUI.irParaPodio()">🏆 Pódio</button>
-      <button class="home-tab-btn" onclick="BetaUI.irParaHistoricoJogos()">📋 Histórico</button>
+      <button class="home-tab-btn" onclick="BetaUI.irParaPodio()" style="display:flex;align-items:center;gap:5px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg> Pódio</button>
+      <button class="home-tab-btn" onclick="BetaUI.irParaHistoricoJogos()" style="display:flex;align-items:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Histórico</button>
     </div>
   </div>
 
@@ -298,6 +298,7 @@
       <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
       <span class="podio-title">👤 Meu Perfil</span>
       <button class="perfil-logout-btn" id="perfil-logout-btn" onclick="BetaUI.sair()" style="display:none">Sair</button>
+        <button id="perfil-guest-sair-btn" class="perfil-logout-btn perfil-guest-sair" style="display:none" onclick="BetaUI.sair()">← Sair do modo convidado</button>
     </div>
     <div class="perfil-body">
       <div class="perfil-avatar-block">
@@ -420,7 +421,7 @@
           <span class="game-rod" id="game-round-badge">Rod. 1/15</span>
           <button class="btn-xs" onclick="BetaUI.pausarJogo()" title="Pausar">⏸</button>
           <button class="btn-xs" onclick="BetaUI.openGlossary()" style="color:var(--s-text);font-weight:700">?</button>
-          <button class="btn-xs" onclick="BetaUI.openSettings()">⚙</button>
+          <button class="btn-xs btn-icon" onclick="BetaUI.openSettings()" title="Configurações"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
         </div>
       </div>
       <div class="game-prog-track">
@@ -584,14 +585,14 @@
   <div id="screen-admin" class="screen">
     <div class="podio-header">
       <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
-      <span class="podio-title">🛠️ Painel Admin</span>
+      <span class="podio-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> Painel Admin</span>
     </div>
 
     <!-- Nav -->
     <div class="admin-nav">
       <button class="admin-nav-btn active" data-sec="visao-geral" onclick="ADMIN.irParaSecao('visao-geral')">📊 Geral</button>
       <button class="admin-nav-btn" data-sec="jogadores" onclick="ADMIN.irParaSecao('jogadores')">👥 Jogadores</button>
-      <button class="admin-nav-btn" data-sec="podio" onclick="ADMIN.irParaSecao('podio')">🏆 Pódio</button>
+      <button class="admin-nav-btn" data-sec="podio" onclick="ADMIN.irParaSecao('podio')" style="display:flex;align-items:center;gap:5px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg> Pódio</button>
       <button class="admin-nav-btn" data-sec="conteudo" onclick="ADMIN.irParaSecao('conteudo')">🎮 Conteúdo</button>
       <button class="admin-nav-btn" data-sec="config" onclick="ADMIN.irParaSecao('config')">⚙️ Config</button>
     </div>
@@ -634,7 +635,7 @@
               <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('industria', '🏭 Indústria')">🏭 Indústria</button>
             </div>
           </div>
-          <button class="admin-btn admin-btn-danger" onclick="ADMIN.resetarPodioPorSetor()">🗑️ Resetar setor</button>
+          <button class="admin-btn admin-btn-danger" onclick="ADMIN.resetarPodioPorSetor()" style="display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg> Resetar</button>
         </div>
         <div id="admin-podio-lista"></div>
       </div>
@@ -648,11 +649,11 @@
       <div id="admin-sec-config" class="admin-section" style="display:none">
         <div class="admin-config-form">
           <!-- Mensagem global agora é gerenciada pelo modal dedicado -->
-          <button class="admin-btn admin-btn-ok" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t1)" onclick="ADMIN.abrirModalMsg()">📢 Gerenciar Mensagem Global</button>
+          <button class="admin-btn admin-btn-ok" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t1)" onclick="ADMIN.abrirModalMsg()" style="display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Mensagem Global</button>
 
           <!-- Banner de alerta quando manutenção está ativa -->
           <div id="admin-manutencao-banner" class="admin-manutencao-banner" style="display:none">
-            🔧 MANUTENÇÃO ATIVA — todos os jogadores estão bloqueados
+            ⚠ MANUTENÇÃO ATIVA — todos os jogadores estão bloqueados
           </div>
           <div class="admin-toggle-row">
             <label class="admin-label">Modo manutenção (bloqueia acesso ao jogo)</label>
@@ -662,7 +663,7 @@
             </label>
           </div>
 
-          <button id="btn-salvar-config" class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()">💾 Salvar</button>
+          <button id="btn-salvar-config" class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()" style="display:flex;align-items:center;gap:6px;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar</button>
           <!-- Gerenciamento de Admins -->
           <div class="admin-label" style="margin-top:8px;border-top:1px solid var(--line);padding-top:14px">UIDs com acesso admin</div>
           <div id="admin-admins-lista"></div>
@@ -680,7 +681,7 @@
       <div style="background:var(--bg1);border-radius:var(--r3);width:100%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)">
           <span id="admin-modal-title" style="font-weight:700;color:var(--t1)"></span>
-          <button onclick="ADMIN.fecharModal()" style="background:none;border:none;color:var(--t2);font-size:1.2rem;cursor:pointer">✕</button>
+          <button class="admin-modal-close" onclick="ADMIN.fecharModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <div id="admin-modal-body" style="overflow-y:auto;padding:16px;flex:1"></div>
       </div>
@@ -691,7 +692,7 @@
       <div class="admin-modal-card">
         <div class="admin-modal-head">
           <span class="admin-modal-title">📢 Mensagem Global</span>
-          <button class="admin-modal-close" onclick="ADMIN.fecharModalMsg()">✕</button>
+          <button class="admin-modal-close" onclick="ADMIN.fecharModalMsg()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <div class="admin-modal-body">
           <p class="admin-modal-desc">Esta mensagem aparece como notificação para <strong>todos os jogadores</strong> que estão online. Deixe vazio para desativar.</p>
@@ -704,7 +705,7 @@
         </div>
         <div class="admin-modal-foot">
           <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2)" onclick="ADMIN.fecharModalMsg()">Cancelar</button>
-          <button class="admin-btn admin-btn-danger" onclick="ADMIN.limparMensagemGlobal()">🗑 Limpar</button>
+          <button class="admin-btn admin-btn-danger" onclick="ADMIN.limparMensagemGlobal()" style="display:flex;align-items:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg> Limpar</button>
           <button id="btn-salvar-msg" class="admin-btn admin-btn-ok" onclick="ADMIN.salvarMensagemGlobal()">📢 Enviar</button>
         </div>
       </div>
@@ -714,14 +715,32 @@
     <div id="admin-modal-ban" class="admin-modal-overlay" style="display:none">
       <div class="admin-modal-card">
         <div class="admin-modal-head">
-          <span class="admin-modal-title" id="admin-ban-title">🚫 Banir Jogador</span>
-          <button class="admin-modal-close" onclick="ADMIN.fecharModalBan()">✕</button>
+          <span class="admin-modal-title" id="admin-ban-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Banir Jogador</span>
+          <button class="admin-modal-close" onclick="ADMIN.fecharModalBan()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <div class="admin-modal-body">
           <div class="admin-ban-player-card" id="admin-ban-player-card"></div>
           <div class="admin-ban-status" id="admin-ban-status"></div>
-          <label class="admin-label" id="admin-ban-motivo-label">Motivo do banimento <span style="opacity:.5;font-weight:400">(opcional)</span></label>
-          <textarea id="admin-ban-motivo" class="admin-input admin-textarea" style="min-height:64px" placeholder="Ex: Abuso de sistema, linguagem ofensiva..."></textarea>
+
+          <!-- Seção de motivo: só aparece ao banir -->
+          <div id="admin-ban-motivo-section" style="display:none">
+            <div class="admin-label">Motivo do banimento <span style="color:var(--err);font-size:.7rem">obrigatório</span></div>
+            <div class="admin-motivo-grid" id="admin-ban-motivo-grid"></div>
+            <!-- Campo de detalhe livre — aparece só em "Outro" -->
+            <div id="admin-ban-detalhe-wrap" style="display:none;margin-top:8px">
+              <div class="admin-label" style="display:flex;justify-content:space-between">
+                <span>Detalhe</span>
+                <span id="admin-ban-detalhe-contador" style="color:var(--t3);font-weight:400">0/200</span>
+              </div>
+              <textarea id="admin-ban-detalhe" class="admin-input admin-textarea" style="min-height:56px" maxlength="200"
+                placeholder="Descreva o motivo específico..." oninput="ADMIN._atualizarContadorDetalhe?.()"></textarea>
+            </div>
+          </div>
+
+          <!-- Histórico de banimentos anteriores (admin only) -->
+          <div id="admin-ban-hist-admin" style="display:none"></div>
+
+          <!-- Histórico de partidas -->
           <div id="admin-ban-historico" class="admin-ban-hist-section" style="display:none">
             <div class="admin-label" style="margin-top:12px">Histórico de partidas</div>
             <div id="admin-ban-hist-lista"></div>
@@ -755,6 +774,28 @@
       <div class="msg-global-titulo">Aviso do Sistema</div>
       <p class="msg-global-texto" id="overlay-msg-global-texto"></p>
       <button class="msg-global-btn" onclick="BetaUI.fecharMsgGlobal()">Entendi</button>
+    </div>
+  </div>
+
+  <!-- ══ OVERLAY: BANIMENTO ══ -->
+  <div id="overlay-ban" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99992;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)">
+    <div class="ban-card">
+      <div class="ban-icon-svg" style="color:var(--err)"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+      <div class="ban-titulo">Acesso Suspenso</div>
+      <div class="ban-motivo-box" id="ban-motivo-display" style="display:none">
+        <div class="ban-motivo-label">Motivo</div>
+        <div class="ban-motivo-texto" id="ban-motivo-texto"></div>
+      </div>
+      <p class="ban-desc">Anote seu ID abaixo e entre em contato com o suporte se acredita que isso foi um engano.</p>
+      <div class="ban-uid" id="ban-uid-display"></div>
+      <div class="ban-progress-wrap">
+        <div class="ban-progress-bar" id="ban-progress-bar"></div>
+      </div>
+      <div class="ban-countdown" id="ban-countdown">Redirecionando em 10s...</div>
+      <button class="ban-btn-login" onclick="BetaUI.banIrParaLogin()">Ir para o login</button>
+      <div class="ban-unban-status" id="ban-unban-status" style="display:none">
+        <span style="color:var(--ok)">✓</span> Suspensão encerrada — você já pode entrar
+      </div>
     </div>
   </div>
 
@@ -824,7 +865,7 @@
 </div>
 
 
-<script src="./admin.js?v=2b17c15"></script>
-<script src="./bundle.js?v=2b17c15"></script>
+<script src="./admin.js?v=CACHE_VERSION"></script>
+<script src="./bundle.js?v=CACHE_VERSION"></script>
 </body>
 </html>
