@@ -670,14 +670,17 @@ body::after{
 }
 
 .auth-guest-btn {
+  width: 100%;
+  display: block;
   font-size: .82rem;
-  opacity: .65;
-  border-color: rgba(255,255,255,.1);
-  color: var(--t2);
-  margin-top: -4px;
-  padding: 11px;
+  opacity: .6;
+  border-color: rgba(255,255,255,.08);
+  color: var(--t3);
+  margin-top: 2px;
+  padding: 12px;
+  text-align: center;
 }
-.auth-guest-btn:hover { opacity: .88; border-color: var(--line2); color: var(--t1); }
+.auth-guest-btn:hover { opacity: .85; border-color: var(--line2); color: var(--t2); }
 
 /* Recuperar senha */
 .auth-recover-head {
