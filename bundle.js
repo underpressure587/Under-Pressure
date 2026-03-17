@@ -3562,7 +3562,7 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
       if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
       const _statusEl = () => document.getElementById('result-cloud-status');
       if (_settings.cloudStatus !== false) {
-        if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().textContent = '☁️ Salvando na nuvem...'; setTimeout(() => _statusEl()?.classList.add('visible'), 10); }
+        if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().dataset.state = 'saving'; _statusEl().textContent = 'Salvando na nuvem...'; setTimeout(() => _statusEl()?.classList.add('visible'), 10); }
       }
       Promise.all([
         window.GSPSync.salvarPartida(_player.uid, entrada),
@@ -4326,10 +4326,10 @@ function _iniciarTimer() {
   const el = document.getElementById("timer-display");
   if (!el) return;
   el.classList.add("active"); el.classList.remove("danger");
-  el.textContent = `⏱ ${_timerSegs}s`;
+  el.textContent = `${_timerSegs}s`;
   _timerInterval = setInterval(() => {
     _timerSegs--;
-    el.textContent = `⏱ ${_timerSegs}s`;
+    el.textContent = `${_timerSegs}s`;
     if (_timerSegs <= 10) el.classList.add("danger");
     if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }
   }, 1000);
@@ -4356,11 +4356,11 @@ function mostrarFeedback(data, callback) {
     }
   }
   const corMap   = { boa:"var(--good)", media:"var(--warn)", ruim:"var(--danger)" };
-  const iconMap  = { boa:"✅", media:"⚠️", ruim:"❌" };
+  const iconMap  = { boa:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`, media:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`, ruim:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--err)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>` };
   const labelMap = { boa:"BOA DECISÃO", media:"DECISÃO COM TRADE-OFFS", ruim:"MÁ DECISÃO" };
   const badgeClass = { boa:"verdict-boa", media:"verdict-media", ruim:"verdict-ruim" };
   const badge = document.getElementById("fb-veredito-badge");
-  if (badge) { badge.className=`verdict-badge ${badgeClass[data.avaliacao]||"verdict-media"}`; badge.textContent=iconMap[data.avaliacao]||"⚠️"; }
+  if (badge) { badge.className=`verdict-badge ${badgeClass[data.avaliacao]||"verdict-media"}`; badge.innerHTML=iconMap[data.avaliacao]||iconMap.media; }
   const lbl = document.getElementById("fb-veredito-label");
   if (lbl) { lbl.textContent=labelMap[data.avaliacao]||"DECISÃO"; lbl.style.color=corMap[data.avaliacao]; }
   document.getElementById("fb-veredito-sub").textContent   = data.avaliacao==="boa"?"Decisão acertada":data.avaliacao==="ruim"?"Decisão equivocada":"Decisão com trade-offs";
@@ -4407,7 +4407,7 @@ function mostrarFeedback(data, callback) {
   const stEl=document.getElementById("fb-stakeholder");
   if (data.stakeholderReacao && stEl) {
     stEl.style.display="";
-    document.getElementById("fb-st-icon").textContent=data.stakeholderReacao.icone||"👤";
+    document.getElementById("fb-st-icon").innerHTML=data.stakeholderReacao.icone||'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
     document.getElementById("fb-st-nome").textContent=data.stakeholderReacao.nome||"";
     document.getElementById("fb-st-txt").textContent=data.stakeholderReacao.texto||"";
   } else if (stEl) { stEl.style.display="none"; }
@@ -4677,15 +4677,15 @@ function _showToast(msg, tipo = "info", duracao = 3200) {
   const div = document.createElement("div");
   div.className = "toast-msg";
   const cores = {
-    erro:    { bg:"rgba(231,76,60,.92)",  borda:"rgba(231,76,60,.5)",  icone:"❌" },
-    aviso:   { bg:"rgba(243,156,18,.92)", borda:"rgba(243,156,18,.5)", icone:"⚠️" },
-    ok:      { bg:"rgba(46,204,113,.92)", borda:"rgba(46,204,113,.5)", icone:"✅" },
-    info:    { bg:"var(--bg4)",           borda:"var(--line2)",        icone:"ℹ️" },
-    critico: { bg:"rgba(192,57,43,.95)",  borda:"rgba(192,57,43,.6)",  icone:"🚨" },
+    erro:    { bg:"rgba(231,76,60,.92)",  borda:"rgba(231,76,60,.5)",  icone:"✕", cor:"#fff" },
+    aviso:   { bg:"rgba(243,156,18,.92)", borda:"rgba(243,156,18,.5)", icone:"!",  cor:"#fff" },
+    ok:      { bg:"rgba(46,204,113,.92)", borda:"rgba(46,204,113,.5)", icone:"✓",  cor:"#fff" },
+    info:    { bg:"var(--bg4)",           borda:"var(--line2)",        icone:"i",  cor:"var(--t2)" },
+    critico: { bg:"rgba(192,57,43,.95)",  borda:"rgba(192,57,43,.6)",  icone:"!!!", cor:"#fff" },
   };
   const c = cores[tipo] || cores.info;
   div.style.cssText = `background:${c.bg};border-color:${c.borda};`;
-  div.textContent = `${c.icone} ${msg}`;
+  div.innerHTML = `<span style="font-weight:800;margin-right:7px;font-size:.9rem">${c.icone}</span>${msg}`;
   container.appendChild(div);
   setTimeout(() => {
     div.classList.add("removing");
@@ -5055,7 +5055,7 @@ function _buscarEAtualizarPodio(lista, setor) {
   if (!syncEl) {
     syncEl = document.createElement('div');
     syncEl.id = msgId; syncEl.className = 'podio-sync';
-    syncEl.textContent = '🔄 Atualizando ranking...';
+    syncEl.textContent = 'Atualizando ranking...';
     lista.prepend(syncEl);
   }
 
@@ -5071,7 +5071,7 @@ function _buscarEAtualizarPodio(lista, setor) {
     if (_podioFiltro === (setor || 'all')) _renderPodio(lista, c, setor);
   }).catch(e => {
     const syncMsg = document.getElementById(msgId);
-    if (syncMsg) syncMsg.textContent = '⚠️ Erro ao carregar ranking. Tente novamente.';
+    if (syncMsg) syncMsg.textContent = 'Erro ao carregar ranking. Tente novamente.';
     setTimeout(() => document.getElementById(msgId)?.remove(), 3000);
     console.warn('[GSP] _buscarEAtualizarPodio:', e);
   });
@@ -5181,7 +5181,7 @@ function continuarJogo() {
     if (el) { el.classList.add('active'); if (_timerSegs <= 10) el.classList.add('danger'); }
     _timerInterval = setInterval(() => {
       _timerSegs--;
-      if (el) el.textContent = `⏱ ${_timerSegs}s`;
+      if (el) el.textContent = `${_timerSegs}s`;
       if (_timerSegs <= 10 && el) el.classList.add('danger');
       if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }
     }, 1000);
@@ -5626,7 +5626,7 @@ async function authRecuperar() {
   try {
     await window.GSPAuth.recuperarSenha(email);
     const ok = document.getElementById("auth-rec-ok");
-    if (ok) { ok.style.display = "block"; ok.textContent = "✅ E-mail enviado! Verifique sua caixa de entrada."; }
+    if (ok) { ok.style.display = "block"; ok.textContent = "E-mail enviado! Verifique sua caixa de entrada."; }
     mostrarSucesso("E-mail de recuperação enviado!");
   } catch(e) {
     const msg = _traduzirErroFirebase(e.code);
