@@ -3383,9 +3383,78 @@ function sair() {
   mostrarTela("screen-login");
 }
 
+/* ── CONFIRMAÇÃO DE SAÍDA ─────────────────────────── */
+let _saidaTipo = null; // 'conta' | 'convidado' | 'partida'
+
+function pedirConfirmacaoSaida(tipo) {
+  _saidaTipo = tipo;
+  const overlay = document.getElementById('overlay-confirmar-saida');
+  const icon  = document.getElementById('confirmar-saida-icon');
+  const titulo = document.getElementById('confirmar-saida-titulo');
+  const desc  = document.getElementById('confirmar-saida-desc');
+  const btn   = document.getElementById('confirmar-saida-btn');
+  if (!overlay) return;
+
+  const configs = {
+    conta: {
+      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+      titulo: 'Sair da conta?',
+      desc: 'Você será desconectado. Seu progresso salvo na nuvem não será perdido.',
+      btnTxt: 'Sair da conta',
+      btnClass: 'confirmar-saida-confirmar--neutro',
+    },
+    convidado: {
+      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+      titulo: 'Sair do modo convidado?',
+      desc: 'Seu histórico local desta sessão será apagado. Crie uma conta para salvar seu progresso.',
+      btnTxt: 'Sair mesmo assim',
+      btnClass: 'confirmar-saida-confirmar--warn',
+    },
+    partida: {
+      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+      titulo: 'Abandonar o mandato?',
+      desc: 'O progresso desta partida será perdido. As rodadas concluídas não serão salvas no seu histórico.',
+      btnTxt: 'Abandonar',
+      btnClass: 'confirmar-saida-confirmar--danger',
+    },
+  };
+
+  const cfg = configs[tipo] || configs.conta;
+  if (icon)  icon.innerHTML = cfg.icon;
+  if (titulo) titulo.textContent = cfg.titulo;
+  if (desc)  desc.textContent = cfg.desc;
+  if (btn) {
+    btn.textContent = cfg.btnTxt;
+    btn.className = 'btn confirmar-saida-confirmar ' + cfg.btnClass;
+  }
+
+  overlay.style.display = 'flex';
+}
+
+function cancelarSaida() {
+  const overlay = document.getElementById('overlay-confirmar-saida');
+  if (overlay) overlay.style.display = 'none';
+  _saidaTipo = null;
+}
+
+function confirmarSaida() {
+  const overlay = document.getElementById('overlay-confirmar-saida');
+  if (overlay) overlay.style.display = 'none';
+  if (_saidaTipo === 'partida') {
+    abandonarJogo();
+  } else {
+    sair();
+  }
+  _saidaTipo = null;
+}
+
 function _atualizarHome() {
   const el = document.getElementById("home-player-name");
-  if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;
+  if (el) {
+    // Trunca nomes longos para evitar quebra de linha no header
+    const nome = (_player?.nome || "JOGADOR").toUpperCase();
+    el.textContent = `OLÁ, ${nome.length > 16 ? nome.substring(0, 14) + "…" : nome}`;
+  }
   const av = document.getElementById("home-avatar-icon");
   if (av && _player?.nome) av.textContent = _player.nome.charAt(0).toUpperCase();
 }
@@ -4172,7 +4241,7 @@ function _renderHistoricoTab(state) {
         const efeitos = Object.entries(h.efeitos||{}).filter(([,v])=>v!==0).slice(0,3)
           .map(([k,v])=>`<span class="efeito-tag ${v>0?'efeito-pos':'efeito-neg'}">${v>0?"+":""}${v} ${BetaIndicadores.LABELS[k]||k}</span>`)
           .join(" ");
-        const emo = h.avaliacao==="boa"?"✅":h.avaliacao==="ruim"?"❌":"⚠️";
+        const emo = h.avaliacao==="boa" ? '<span style="color:var(--ok)">✓</span>' : h.avaliacao==="ruim" ? '<span style="color:var(--err)">✕</span>' : '<span style="color:var(--warn)">~</span>';
         return `<div class="historico-item">
           <div class="historico-item-round">${emo} Rod.${h.rodada} — ${h.titulo}</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${efeitos}</div>
@@ -4183,7 +4252,7 @@ function _renderHistoricoTab(state) {
   if (recEl) {
     const recs = _gerarRecomendacoes(state);
     recEl.innerHTML = recs.length
-      ? recs.map(r=>`<div class="rec-item"><div class="rec-item-title">${r.titulo}</div><div class="rec-item-desc">${r.desc}</div></div>`).join("")
+      ? recs.map(r=>`<div class="rec-item"><div class="rec-item-title"><span class="rec-warn-dot"></span>${r.titulo}</div><div class="rec-item-desc">${r.desc}</div></div>`).join("")
       : `<span style="color:var(--text-muted);font-size:.78rem;">Recomendações aparecem conforme o jogo avança.</span>`;
   }
 }
@@ -4965,7 +5034,7 @@ function irParaPodio() {
 
   // Convidados não têm acesso ao pódio
   if (!_player?.uid || _player?.tipo === 'guest') {
-    lista.innerHTML = `<div class="podio-empty">Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
+    lista.innerHTML = `<div class="podio-empty podio-empty-login">Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
     return;
   }
 
@@ -5642,6 +5711,7 @@ async function irParaAdmin() {
 
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
+  pedirConfirmacaoSaida, cancelarSaida, confirmarSaida,
   manutencaoSalvarSair, fecharMsgGlobal, banIrParaLogin,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
   irParaSetores, irParaPodio, irParaHistoricoJogos,

@@ -3988,3 +3988,161 @@ body::after{
 .tipo-unban { background: rgba(46,204,113,.12); color: var(--ok); }
 .admin-ban-hist-motivo { flex: 1; color: var(--t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-ban-hist-data   { color: var(--t3); flex-shrink: 0; }
+
+/* ════════════════════════════════════════════════════
+   TAB BAR — HOME E JOGO
+════════════════════════════════════════════════════ */
+
+/* Home tab bar: ícones e texto com cor do tema */
+.home-tab-btn {
+  color: var(--t3);
+  transition: color .18s;
+}
+.home-tab-btn:hover,
+.home-tab-btn:active {
+  color: var(--s-text);
+}
+.home-tab-btn svg {
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+/* Game tab bar: ícones SVG herdam a cor do btn */
+.tab-btn svg {
+  stroke: currentColor;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ════════════════════════════════════════════════════
+   PERFIL — AJUSTES VISUAIS
+════════════════════════════════════════════════════ */
+
+/* Botão logout neutro — sem vermelho */
+.perfil-logout-neutro {
+  background: transparent;
+  border: 1px solid var(--line2);
+  color: var(--t3);
+  font-size: .82rem;
+  padding: 9px 18px;
+  border-radius: var(--rpill);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: color .18s, border-color .18s;
+}
+.perfil-logout-neutro:hover {
+  color: var(--t1);
+  border-color: var(--line3);
+}
+
+/* Card setor favorito com cor temática */
+.perfil-stat.setor-card {
+  background: var(--s-bg-accent);
+  border-color: var(--s-bd-accent);
+}
+.perfil-stat.setor-card .perfil-stat-val {
+  color: var(--s-text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* ════════════════════════════════════════════════════
+   PÓDIO — ESTADO ESPARSO
+════════════════════════════════════════════════════ */
+.podio-empty-login {
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--t3);
+  font-size: .85rem;
+  text-align: center;
+}
+
+/* ════════════════════════════════════════════════════
+   RECOMENDAÇÕES — WARNING DOT
+════════════════════════════════════════════════════ */
+.rec-warn-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: var(--warn);
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  box-shadow: 0 0 5px var(--warn);
+}
+
+/* ════════════════════════════════════════════════════
+   OVERLAY CONFIRMAÇÃO DE SAÍDA
+════════════════════════════════════════════════════ */
+.confirmar-saida-card {
+  background: var(--bg1);
+  border: 1px solid var(--line2);
+  border-radius: var(--r3);
+  width: 100%;
+  max-width: 340px;
+  padding: 32px 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--sh3);
+  animation: popIn .25s cubic-bezier(.22,.68,0,1.2);
+}
+.confirmar-saida-icon {
+  color: var(--t2);
+  opacity: .8;
+  line-height: 1;
+}
+.confirmar-saida-titulo {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--t1);
+}
+.confirmar-saida-desc {
+  font-size: .83rem;
+  color: var(--t2);
+  line-height: 1.65;
+  margin: 0;
+}
+.confirmar-saida-btns {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+.confirmar-saida-btns .btn {
+  flex: 1;
+  padding: 13px;
+  font-size: .88rem;
+}
+.confirmar-saida-cancelar {
+  background: var(--bg3);
+  border-color: var(--line2);
+  color: var(--t2);
+}
+/* Variantes do botão de confirmar */
+.confirmar-saida-confirmar--neutro {
+  background: var(--bg3);
+  border: 1px solid var(--line3);
+  color: var(--t1);
+}
+.confirmar-saida-confirmar--warn {
+  background: rgba(243,156,18,.15);
+  border: 1px solid rgba(243,156,18,.3);
+  color: var(--warn);
+}
+.confirmar-saida-confirmar--danger {
+  background: rgba(231,76,60,.15);
+  border: 1px solid rgba(231,76,60,.3);
+  color: var(--err);
+}
