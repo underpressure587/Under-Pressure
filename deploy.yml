@@ -1,0 +1,58 @@
+# ═══════════════════════════════════════════════════════════════
+#  Under Pressure — Deploy Automático
+#
+#  O que esse arquivo faz:
+#  Toda vez que você faz push na branch "main", o GitHub
+#  automaticamente roda node build.js e faz o deploy no Firebase.
+#  Você nunca mais precisa abrir Cloud Shell ou Termux para isso.
+#
+#  CONFIGURAÇÃO NECESSÁRIA (só uma vez):
+#
+#  1. Gere a chave de serviço do Firebase:
+#     - Acesse: console.firebase.google.com
+#     - Projeto under-pressure-49320 → Configurações → Contas de serviço
+#     - Clique em "Gerar nova chave privada" → baixe o JSON
+#
+#  2. Adicione os segredos no GitHub:
+#     - No seu repositório: Settings → Secrets and variables → Actions
+#     - Crie: FIREBASE_SERVICE_ACCOUNT → cole TODO o conteúdo do JSON baixado
+#     - Crie: FIREBASE_PROJECT_ID     → valor: under-pressure-49320
+#
+#  Pronto. A partir daí, cada push na main faz o deploy sozinho.
+# ═══════════════════════════════════════════════════════════════
+
+name: Build e Deploy — Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main  # dispara sempre que você der push na branch main
+
+jobs:
+  build-and-deploy:
+    name: Build e Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Baixa o código do repositório
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      # 2. Configura o Node.js (necessário para rodar o build.js)
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Roda o build.js — gera o bundle.js a partir dos 21 arquivos fonte
+      - name: Gerar bundle.js
+        run: node build.js
+
+      # 4. Faz o deploy no Firebase Hosting + Firestore Rules
+      - name: Deploy no Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
+          channelId: live  # deploy direto no canal de produção

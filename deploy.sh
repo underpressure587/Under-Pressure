@@ -17,13 +17,17 @@ echo "🔖 Versão: $VERSION"
 sed -i "s/\?v=[A-Za-z0-9_-]*/\?v=$VERSION/g" index.html
 echo "✅ Cache busting aplicado em index.html"
 
-# ── 3. Faz o push para o GitHub
-git add index.html
+# ── 3. Gera o bundle.js a partir dos 21 arquivos fonte
+node build.js
+echo "✅ Bundle gerado"
+
+# ── 4. Faz o push para o GitHub (inclui bundle.js atualizado)
+git add index.html bundle.js
 git commit -m "deploy: cache bust $VERSION" --allow-empty
 git push
 echo "✅ Push concluído"
 
-# ── 4. Deploy no Firebase (apenas hosting — não toca no Firestore)
+# ── 5. Deploy no Firebase (apenas hosting — não toca no Firestore)
 firebase deploy --only hosting
 echo ""
 echo "🚀 Deploy concluído! Versão $VERSION no ar."
