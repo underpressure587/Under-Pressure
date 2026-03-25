@@ -129,7 +129,7 @@ async function _boot() {
     _player = saved;
     _verificarSessaoSalva();
     _atualizarHome();
-    _atualizarBotaoAdmin(saved.uid);
+    await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
     _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
@@ -549,6 +549,31 @@ function selecionarSetor(sector) {
   document.querySelector(`[data-sector="${sector}"]`)?.classList.add("selected");
   document.getElementById("sector-hidden").value = sector;
   // Tema só é aplicado quando o jogo começa
+}
+
+const _NOMES_ALEATORIOS = [
+  "Nexora S.A.", "Veltrix Corp", "Aurum Group", "Solera Holding",
+  "Kairos Ventures", "Fenix Soluções", "Orbis Gestão", "Zentra S.A.",
+  "Caldera Corp", "Lumis Group", "Veritas S.A.", "Ápex Holding",
+  "Norax Indústrias", "Solum Gestão", "Acera Corp", "Trivela S.A.",
+  "Polaris Group", "Vexor Holding", "Alcora S.A.", "Mantis Corp",
+  "Stratum Group", "Fulcrum S.A.", "Helix Ventures", "Crestline Corp"
+];
+
+function gerarNomeAleatorio() {
+  const el = document.getElementById("companyName");
+  if (!el) return;
+  // Embaralha e pega um nome diferente do atual
+  let nome;
+  do {
+    nome = _NOMES_ALEATORIOS[Math.floor(Math.random() * _NOMES_ALEATORIOS.length)];
+  } while (nome === el.value && _NOMES_ALEATORIOS.length > 1);
+  el.value = nome;
+  el.classList.remove("input-error-shake");
+  // Animação rápida de feedback
+  el.style.transition = "border-color .15s";
+  el.style.borderColor = "var(--s-primary)";
+  setTimeout(() => { el.style.borderColor = ""; }, 400);
 }
 
 function lancarJogo() {
@@ -1826,6 +1851,75 @@ function abandonarJogo() {
 }
 
 /* ════════════════════════════════════════════════════
+   CONFIRMAÇÃO DE SAÍDA
+════════════════════════════════════════════════════ */
+let _saidaTipo = null;
+
+function pedirConfirmacaoSaida(tipo) {
+  _saidaTipo = tipo;
+  const overlay = document.getElementById('overlay-confirmar-saida');
+  const icon    = document.getElementById('confirmar-saida-icon');
+  const titulo  = document.getElementById('confirmar-saida-titulo');
+  const desc    = document.getElementById('confirmar-saida-desc');
+  const btn     = document.getElementById('confirmar-saida-btn');
+  if (!overlay) return;
+
+  const configs = {
+    conta: {
+      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+      titulo: 'Sair da conta?',
+      desc: 'Você será desconectado. Seu progresso salvo na nuvem não será perdido.',
+      btnTxt: 'Sair da conta',
+      btnClass: 'confirmar-saida-confirmar--neutro',
+    },
+    convidado: {
+      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+      titulo: 'Sair do modo convidado?',
+      desc: 'Seu histórico local desta sessão será apagado. Crie uma conta para salvar seu progresso.',
+      btnTxt: 'Sair mesmo assim',
+      btnClass: 'confirmar-saida-confirmar--warn',
+    },
+    partida: {
+      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+      titulo: 'Abandonar o mandato?',
+      desc: 'O progresso desta partida será perdido. As rodadas concluídas não serão salvas no seu histórico.',
+      btnTxt: 'Abandonar',
+      btnClass: 'confirmar-saida-confirmar--danger',
+    },
+  };
+
+  const cfg = configs[tipo] || configs.conta;
+  if (icon)  icon.innerHTML  = cfg.icon;
+  if (titulo) titulo.textContent = cfg.titulo;
+  if (desc)  desc.textContent  = cfg.desc;
+  if (btn) {
+    btn.textContent = cfg.btnTxt;
+    btn.className   = 'btn confirmar-saida-confirmar ' + cfg.btnClass;
+  }
+
+  // Garante que aparece acima de qualquer overlay (z-index 100001 no HTML)
+  if (overlay.parentNode !== document.body) document.body.appendChild(overlay);
+  overlay.style.display = 'flex';
+}
+
+function cancelarSaida() {
+  const overlay = document.getElementById('overlay-confirmar-saida');
+  if (overlay) overlay.style.display = 'none';
+  _saidaTipo = null;
+}
+
+function confirmarSaida() {
+  const overlay = document.getElementById('overlay-confirmar-saida');
+  if (overlay) overlay.style.display = 'none';
+  if (_saidaTipo === 'partida') {
+    abandonarJogo();
+  } else {
+    sair();
+  }
+  _saidaTipo = null;
+}
+
+/* ════════════════════════════════════════════════════
    TOOLTIP DE INDICADORES DO GESTOR
 ════════════════════════════════════════════════════ */
 const INDICADOR_INFO = {
@@ -2342,10 +2436,12 @@ window.BetaUI = {
   // Novos
   pularTutorial, tutorialStep, irParaSlide,
   pausarJogo, continuarJogo, abandonarJogo,
+  pedirConfirmacaoSaida, cancelarSaida, confirmarSaida,
   abrirTooltipIndicador, closeTooltip,
   toggleModoTreino,
   compartilharResultado,
   irParaAdmin,
+  gerarNomeAleatorio,
 };
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando

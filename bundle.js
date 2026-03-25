@@ -75,7 +75,6 @@ const BetaState = (() => {
     }
 
     function get()           { return _state; }
-    function set(newState)   { _state = newState; }  // restauração de sessão
     function getIndicators() { return _state.indicators; }
 
     function applyEffects(effects) {
@@ -136,7 +135,7 @@ const BetaState = (() => {
     function setSituacaoStatus(s)     { _state.situacaoStatus = s; }
 
     return {
-        init, get, set, getIndicators, applyEffects,
+        init, get, getIndicators, applyEffects,
         applyGestorEffects, getGestor, addStakeholderLog,
         addHistory, addEvent, nextRound, setPhase,
         addFlag, setFase, setReputacao, addEstiloGestao,
@@ -1286,11 +1285,11 @@ const Protagonista = (() => {
         const esgotamento = state?.gestor?.esgotamento ?? 0;
         if (esgotamento >= 7 && Math.random() < 0.35) {
             const frase = FRASES_PREOCUPACAO[Math.floor(Math.random() * FRASES_PREOCUPACAO.length)];
-            return { nome: maisAfetado.nome, icone: '<span class="status-dot dot-warn"></span>', texto: frase };
+            return { nome: maisAfetado.nome, icone: "🟡", texto: frase };
         }
 
         const pool  = saldo >= 0 ? FRASES_POS : FRASES_NEG;
-        const icone = saldo >= 0 ? '<span class="status-dot dot-ok"></span>' : '<span class="status-dot dot-err"></span>';
+        const icone = saldo >= 0 ? "🟢" : "🔴";
         const texto = pool[Math.floor(Math.random() * pool.length)];
 
         return { nome: maisAfetado.nome, icone, texto };
@@ -1303,7 +1302,7 @@ const Protagonista = (() => {
 /* --empresas/tecnologia.js-- */
 /* ═══════════════════════════════════════════════════════
    BETA · EMPRESA · Tecnologia
-   10 histórias de intro — 1 sorteada por jogo
+   3 histórias de intro — 1 sorteada por jogo
 ═══════════════════════════════════════════════════════ */
 
 const EmpresaTecnologia = {
@@ -1345,9 +1344,69 @@ const EmpresaTecnologia = {
             ],
             alerta: { icone: "🚨", titulo: "Crise em Andamento" },
             rodape: "Você tem {totalRounds} rodadas para tomar decisões e conduzir a empresa ao resultado."
+        },
+
+        /* ── 2 ─────────────────────────────────────── */
+        {
+            badge:     "EdTech · Ensino Digital B2C",
+            subtitulo: "O boom acabou. Agora é hora de construir um negócio de verdade.",
+            secoes: [
+                {
+                    icone: "🏢",
+                    titulo: "A Empresa",
+                    corpo: "Sua plataforma de educação online nasceu no auge da pandemia e chegou a 180 mil alunos ativos em 2021. Com R$ 22 milhões em receita anual e 95 colaboradores, a empresa se tornou referência em cursos de tecnologia e negócios para jovens profissionais. O modelo de assinatura mensal respondia por 70% da receita recorrente."
+                },
+                {
+                    icone: "📉",
+                    titulo: "Contexto de Mercado",
+                    corpo: "A volta ao presencial reduziu a demanda por cursos online em 34% no setor. Plataformas internacionais como Coursera e Udemy ampliaram sua presença no Brasil com preços agressivos. O mercado de EdTech enfrenta uma onda de consolidação: quatro startups do setor faliram nos últimos seis meses, abrindo espaço — mas também gerando desconfiança nos investidores."
+                },
+                {
+                    icone: "⚠️",
+                    titulo: "Situação Atual",
+                    corpo: "A base de assinantes caiu de 180 mil para 94 mil em 18 meses. O CAC triplicou enquanto o LTV encolheu. O runway atual é de 8 meses — insuficiente para chegar ao break-even sem um corte cirúrgico de custos ou uma entrada de capital. O time de conteúdo, responsável pela qualidade que diferencia o produto, está sobrecarregado e desmotivado."
+                },
+                {
+                    icone: "🎯",
+                    titulo: "Principal Desafio Estratégico",
+                    corpo: "Decidir entre dois caminhos: pivotar para o modelo B2B (vender licenças corporativas para treinamento de equipes, onde as margens são maiores) ou focar no B2C e recuperar a base com um produto mais enxuto e preço competitivo. Cada caminho exige um perfil de time diferente — e você não tem capital para tentar os dois ao mesmo tempo."
+                }
+            ],
+            alerta: { icone: "🚨", titulo: "Runway Crítico" },
+            rodape: "Você tem {totalRounds} rodadas para tomar decisões e definir o futuro da empresa."
+        },
+
+        /* ── 3 ─────────────────────────────────────── */
+        {
+            badge:     "Scale-up de IA · Automação Corporativa",
+            subtitulo: "O produto funciona. O problema é que o mercado ainda não sabe disso.",
+            secoes: [
+                {
+                    icone: "🏢",
+                    titulo: "A Empresa",
+                    corpo: "Sua empresa desenvolve uma plataforma de automação inteligente para processos de RH e compliance. Fundada há 3 anos por ex-pesquisadores de IA da USP, o produto ganhou dois prêmios de inovação e tem NPS de 83 entre os 40 clientes atuais. O faturamento é de R$ 6,8 milhões em ARR, com 58 funcionários — a maioria formada por cientistas de dados e engenheiros sênior."
+                },
+                {
+                    icone: "📉",
+                    titulo: "Contexto de Mercado",
+                    corpo: "O hype de IA generativa fez grandes players — SAP, Oracle e startups bem capitalizadas — anunciarem soluções similares para os próximos 12 meses. Clientes enterprise que demonstravam interesse passaram a 'aguardar o mercado amadurecer'. Ao mesmo tempo, o segmento de PMEs que a empresa atende hoje tem tíquete médio baixo e ciclo de vendas longo, comprimindo a eficiência comercial."
+                },
+                {
+                    icone: "⚠️",
+                    titulo: "Situação Atual",
+                    corpo: "O pipeline comercial está travado: 60% das oportunidades estão em 'avaliação técnica' há mais de 90 dias. A equipe de vendas, de apenas 4 pessoas, não tem experiência em vendas enterprise. O time técnico, excelente, não se comunica bem com compradores não-técnicos — e as demos frequentemente afastam em vez de convencer os decisores de negócio."
+                },
+                {
+                    icone: "🎯",
+                    titulo: "Principal Desafio Estratégico",
+                    corpo: "Transformar um produto tecnicamente superior em um negócio comercialmente viável antes que os grandes players lancem suas soluções. Isso exige construir capacidade de vendas enterprise, simplificar a proposta de valor e, possivelmente, escolher um vertical específico onde a empresa possa dominar antes de expandir. O tempo é o recurso mais escasso."
+                }
+            ],
+            alerta: { icone: "🚨", titulo: "Pipeline Travado" },
+            rodape: "Você tem {totalRounds} rodadas para transformar o potencial em resultado real."
         }
 
-    ] /* fim de intros[] — histórias 2-10 removidas para teste beta */
+    ] /* fim de intros[] */
 };
 /* --empresas/varejo.js-- */
 /* ═══════════════════════════════════════════════════════
@@ -1390,6 +1449,67 @@ const EmpresaVarejo = {
             ],
             alerta: { icone: "🚨", titulo: "Margem em Queda" },
             rodape: "Você tem {totalRounds} rodadas para tomar decisões e reconstruir a rentabilidade da rede."
+        },
+
+        /* ── 2 ─────────────────────────────────────── */
+        {
+            badge:     "Rede de Farmácias · Varejo de Saúde",
+            subtitulo: "As redes nacionais chegaram na sua cidade. E trouxeram preços que você não consegue bater.",
+            secoes: [
+                {
+                    icone: "🏢",
+                    titulo: "A Empresa",
+                    corpo: "Sua rede regional de farmácias foi fundada há 27 anos na região metropolitana de Fortaleza. Com 24 lojas, 360 funcionários e R$ 110 milhões em receita anual, a empresa construiu uma base fiel de clientes graças ao atendimento humanizado e ao relacionamento de longo prazo com médicos locais. O programa de fidelidade tem 94 mil clientes ativos e a participação de mercado regional sempre foi estável, em torno de 18%."
+                },
+                {
+                    icone: "📉",
+                    titulo: "Contexto de Mercado",
+                    corpo: "Duas grandes redes nacionais abriram 31 lojas na região nos últimos 18 meses, com preços até 15% abaixo dos praticados localmente graças ao poder de compra centralizado. A digitalização do setor farmacêutico acelerou: aplicativos de comparação de preço e delivery de medicamentos em até 1 hora passaram a ser o padrão de exigência dos consumidores mais jovens. Margens de medicamentos de referência foram comprimidas pela pressão dos genéricos."
+                },
+                {
+                    icone: "⚠️",
+                    titulo: "Situação Atual",
+                    corpo: "A receita caiu 11% no último semestre e quatro lojas em áreas onde os concorrentes nacionais abriram pontos registram resultado negativo. O ticket médio por cliente recuou de R$ 98 para R$ 81. O sistema de gestão de estoque está desatualizado, gerando rupturas frequentes nos produtos de maior giro. A equipe de farmacêuticos — o principal diferencial de atendimento — está com salários defasados em relação às ofertas dos concorrentes."
+                },
+                {
+                    icone: "🎯",
+                    titulo: "Principal Desafio Estratégico",
+                    corpo: "Reposicionar a rede para competir no que as grandes redes não conseguem replicar — proximidade, confiança e serviço personalizado — enquanto moderniza a operação e decide quais lojas defender, quais transformar e quais fechar. Tentar competir em preço é um caminho direto para a destruição de margem. O verdadeiro diferencial está em saber qual batalha é possível vencer."
+                }
+            ],
+            alerta: { icone: "🚨", titulo: "Concorrência Nacional Chegou" },
+            rodape: "Você tem {totalRounds} rodadas para reposicionar a rede antes que a erosão de clientes se torne irreversível."
+        },
+
+        /* ── 3 ─────────────────────────────────────── */
+        {
+            badge:     "Atacarejo Regional · Autosserviço",
+            subtitulo: "Você dobrou o tamanho em 3 anos. Agora o crescimento rápido está cobrando a conta.",
+            secoes: [
+                {
+                    icone: "🏢",
+                    titulo: "A Empresa",
+                    corpo: "Seu atacarejo cresceu de 2 para 7 lojas nos últimos 3 anos, aproveitando o movimento de migração de consumidores para o formato cash-and-carry durante o período de alta inflação. Com 980 funcionários e R$ 420 milhões em receita anual, a rede se tornou referência no interior de Minas Gerais. O modelo atende tanto o consumidor final quanto pequenos comerciantes e restaurantes, com tíquete médio de R$ 310."
+                },
+                {
+                    icone: "📉",
+                    titulo: "Contexto de Mercado",
+                    corpo: "A normalização da inflação reduziu o ímpeto do consumidor para o formato atacarejo. Grandes redes do segmento — Atacadão e Assaí — estão em franca expansão para o interior do estado, com lojas maiores e preços beneficiados por escala nacional. O custo de ocupação das novas lojas abertas nos últimos 2 anos pesa cada vez mais no resultado, especialmente nas unidades que ainda não atingiram maturidade de volume."
+                },
+                {
+                    icone: "⚠️",
+                    titulo: "Situação Atual",
+                    corpo: "Três das sete lojas abertas recentemente ainda operam abaixo do ponto de equilíbrio. A dívida contraída para financiar a expansão representa 2,8x o EBITDA — acima do limite confortável para o setor. O time de gestão, que funcionava bem com 2 lojas, está sobrecarregado e sem processos estruturados para operar 7 unidades. A taxa de perdas (quebra e furto) subiu de 1,4% para 2,9% da receita."
+                },
+                {
+                    icone: "🎯",
+                    titulo: "Principal Desafio Estratégico",
+                    corpo: "Desacelerar o crescimento e colocar as lojas existentes no azul antes que a chegada dos grandes concorrentes reduza ainda mais as margens. Isso exige profissionalizar a gestão, controlar perdas, reduzir o endividamento e possivelmente rever o mix de produtos para focar nos segmentos onde a rede tem vantagem real frente às grandes redes nacionais."
+                }
+            ],
+            alerta: { icone: "🚨", titulo: "Expansão Desequilibrada" },
+            rodape: "Você tem {totalRounds} rodadas para consolidar a operação e recuperar a rentabilidade da rede."
+        }
         }
     ]
 };
@@ -1434,6 +1554,67 @@ const EmpresaLogistica = {
             ],
             alerta: { icone: "🚨", titulo: "SLA em Descumprimento" },
             rodape: "Você tem {totalRounds} rodadas para recolocar a operação nos trilhos antes que os clientes percam a confiança."
+        },
+
+        /* ── 2 ─────────────────────────────────────── */
+        {
+            badge:     "Logística Refrigerada · Cadeia do Frio",
+            subtitulo: "Uma falha na cadeia do frio não é apenas prejuízo — é risco sanitário.",
+            secoes: [
+                {
+                    icone: "🏢",
+                    titulo: "A Empresa",
+                    corpo: "Sua operadora de logística refrigerada atua há 14 anos no transporte e armazenagem de alimentos perecíveis, medicamentos e insumos hospitalares. Com 190 colaboradores, 87 veículos refrigerados e 3 armazéns frigorificados no eixo SP-RJ-BH, a empresa fatura R$ 38 milhões anuais. Os contratos com redes de supermercados e distribuidoras farmacêuticas exigem rastreabilidade contínua e temperatura garantida."
+                },
+                {
+                    icone: "📉",
+                    titulo: "Contexto de Mercado",
+                    corpo: "A ANVISA intensificou auditorias na cadeia do frio após episódios de contaminação em outros operadores do setor. Seguradoras elevaram os prêmios de cobertura de carga perecível em 40%. Ao mesmo tempo, grandes redes varejistas estão verticalizando parte da operação logística, reduzindo o volume disponível para terceiros. O custo de energia para refrigeração subiu 22% no último ano."
+                },
+                {
+                    icone: "⚠️",
+                    titulo: "Situação Atual",
+                    corpo: "Um sensor de temperatura falhou em um veículo durante uma entrega para rede farmacêutica, resultando na devolução de R$ 620 mil em medicamentos. O cliente acionou a cláusula de auditoria do contrato. Internamente, o diagnóstico revelou que 18% da frota refrigerada está com sistemas de monitoramento desatualizados. O responsável de qualidade identificou o problema há 4 meses, mas o investimento foi adiado por restrições orçamentárias."
+                },
+                {
+                    icone: "🎯",
+                    titulo: "Principal Desafio Estratégico",
+                    corpo: "Modernizar o sistema de monitoramento de temperatura de toda a frota sem paralisar a operação, reconstituir a confiança do cliente farmacêutico e estabelecer um protocolo de qualidade que passe na auditoria iminente — tudo isso gerenciando um caixa apertado e uma equipe operacional sob pressão máxima. Uma segunda falha neste momento pode custar o contrato mais importante da empresa."
+                }
+            ],
+            alerta: { icone: "🚨", titulo: "Falha na Cadeia do Frio" },
+            rodape: "Você tem {totalRounds} rodadas para reconquistar a confiança e modernizar a operação."
+        },
+
+        /* ── 3 ─────────────────────────────────────── */
+        {
+            badge:     "Fulfillment de E-commerce · Operação Omnichannel",
+            subtitulo: "O contrato com o marketplace maior do Brasil começou. A operação não estava pronta.",
+            secoes: [
+                {
+                    icone: "🏢",
+                    titulo: "A Empresa",
+                    corpo: "Especializada em fulfillment para e-commerce, sua empresa opera 2 centros de distribuição na região de Campinas e processa 18 mil pedidos por dia. Com 310 funcionários e faturamento de R$ 45 milhões, a empresa cresceu 3x nos últimos 2 anos acompanhando o boom do comércio eletrônico. O diferencial é a integração com os principais marketplaces nacionais e o SLA de despacho em até 4 horas do recebimento do pedido."
+                },
+                {
+                    icone: "📉",
+                    titulo: "Contexto de Mercado",
+                    corpo: "A guerra de entrega entre marketplaces empurrou o SLA padrão de same-day para next-day nas regiões metropolitanas. Gigantes do e-commerce estão construindo seus próprios CDs, ameaçando contratos de operadores independentes. A escassez de mão de obra especializada em operações de CD elevou o custo de contratação em 35%, enquanto a automação ainda está fora do alcance financeiro da maioria dos operadores de médio porte."
+                },
+                {
+                    icone: "⚠️",
+                    titulo: "Situação Atual",
+                    corpo: "A entrada de um contrato com um marketplace de grande porte elevou o volume de pedidos em 62% de um mês para o outro. O CD principal está operando acima de 110% da capacidade, gerando filas internas, erros de separação e atrasos. O índice de pedidos com problema saltou de 1,2% para 4,7% — acima do limite contratual de 2%. O marketplace já emitiu alerta formal e tem cláusula de rescisão por performance."
+                },
+                {
+                    icone: "🎯",
+                    titulo: "Principal Desafio Estratégico",
+                    corpo: "Absorver o volume adicional rapidamente sem comprometer a qualidade das entregas dos clientes já existentes, antes que o marketplace acione a cláusula de rescisão. Isso exige decisões simultâneas de infraestrutura, pessoas e processo — em um ambiente onde cada erro é visível em tempo real no painel do contratante e pode virar notícia nas redes sociais dos consumidores finais."
+                }
+            ],
+            alerta: { icone: "🚨", titulo: "Capacidade no Limite" },
+            rodape: "Você tem {totalRounds} rodadas para estabilizar a operação e honrar os contratos."
+        }
         }
     ]
 };
@@ -1478,6 +1659,67 @@ const EmpresaIndustria = {
             ],
             alerta: { icone: "🚨", titulo: "Segurança e ISO em Risco" },
             rodape: "Você tem {totalRounds} rodadas para transformar a fábrica antes que os problemas acumulados se tornem irreversíveis."
+        },
+
+        /* ── 2 ─────────────────────────────────────── */
+        {
+            badge:     "Indústria de Embalagens · Bens de Consumo",
+            subtitulo: "Seus maiores clientes querem embalagens sustentáveis. Sua linha de produção não está pronta.",
+            secoes: [
+                {
+                    icone: "🏢",
+                    titulo: "A Empresa",
+                    corpo: "Com 18 anos de operação no interior do Paraná, sua indústria de embalagens plásticas atende 62 clientes no setor alimentício e de higiene pessoal. São 430 funcionários, duas plantas industriais e faturamento de R$ 94 milhões anuais. A empresa é fornecedora homologada de três grandes redes varejistas e de dois dos maiores fabricantes de alimentos do país — contratos que representam 58% da receita."
+                },
+                {
+                    icone: "📉",
+                    titulo: "Contexto de Mercado",
+                    corpo: "A pressão ESG chegou à cadeia de fornecedores: os grandes clientes passaram a exigir que ao menos 30% dos insumos usados nas embalagens sejam de origem reciclada ou renovável até o próximo ano. A regulamentação federal de responsabilidade pós-consumo também avança, com multas previstas para produtores que não comprovarem destinação adequada de resíduos. Concorrentes já iniciaram conversões de linha."
+                },
+                {
+                    icone: "⚠️",
+                    titulo: "Situação Atual",
+                    corpo: "A conversão de uma linha de produção para insumos reciclados custa entre R$ 8 e R$ 12 milhões e leva de 6 a 10 meses. A empresa não tem caixa suficiente para converter as duas plantas simultaneamente. Um dos clientes-âncora enviou carta formal solicitando cronograma de adequação — e deixou claro que avaliará outros fornecedores caso o prazo não seja cumprido."
+                },
+                {
+                    icone: "🎯",
+                    titulo: "Principal Desafio Estratégico",
+                    corpo: "Priorizar qual linha converter primeiro sem perder os clientes que exigem o prazo mais curto, ao mesmo tempo em que negocia financiamento para a conversão e mantém a produção corrente funcionando. Cada mês de atraso aumenta o risco de perder contratos; cada decisão precipitada pode comprometer a qualidade do produto e gerar devoluções que destroem a margem."
+                }
+            ],
+            alerta: { icone: "🚨", titulo: "Adequação ESG Urgente" },
+            rodape: "Você tem {totalRounds} rodadas para modernizar a operação sem perder os contratos que sustentam a empresa."
+        },
+
+        /* ── 3 ─────────────────────────────────────── */
+        {
+            badge:     "Indústria Química · Especialidades",
+            subtitulo: "Uma autuação ambiental parou a planta. A retomada depende de você.",
+            secoes: [
+                {
+                    icone: "🏢",
+                    titulo: "A Empresa",
+                    corpo: "Fundada há 30 anos no ABC paulista, sua indústria química produz aditivos e solventes para o segmento de tintas, vernizes e adesivos industriais. Com 280 funcionários e R$ 71 milhões em receita anual, a empresa é fornecedora de referência para construtoras e fabricantes de móveis. A reputação técnica construída ao longo de três décadas é o principal ativo da marca."
+                },
+                {
+                    icone: "📉",
+                    titulo: "Contexto de Mercado",
+                    corpo: "A fiscalização ambiental no setor químico intensificou-se após acidentes em concorrentes regionais. Licenças de operação estão sendo revisadas em todo o setor. Ao mesmo tempo, a alta do dólar encareceu os insumos importados em 27% nos últimos 12 meses, comprimindo margens. Clientes construtoras, por sua vez, atravessam um ciclo de baixa e têm reduzido pedidos."
+                },
+                {
+                    icone: "⚠️",
+                    titulo: "Situação Atual",
+                    corpo: "O IBAMA autuou a empresa por descarte irregular de resíduo em área de proteção ambiental. A multa inicial é de R$ 4,1 milhões, e a planta está operando em regime parcial sob monitoramento do órgão. O responsável técnico ambiental pediu demissão no dia seguinte à autuação. A imprensa regional noticiou o caso, e dois clientes sinalizaram revisão de contrato."
+                },
+                {
+                    icone: "🎯",
+                    titulo: "Principal Desafio Estratégico",
+                    corpo: "Regularizar a situação ambiental com agilidade para retomar a operação plena, reconstruir a credibilidade com clientes e órgãos reguladores, e simultaneamente reorganizar o processo de gestão de resíduos para evitar recorrência. A crise expõe a fragilidade da governança interna — e a janela para agir antes de perder contratos críticos é estreita."
+                }
+            ],
+            alerta: { icone: "🚨", titulo: "Autuação Ambiental Ativa" },
+            rodape: "Você tem {totalRounds} rodadas para regularizar a operação e reconstruir a confiança do mercado."
+        }
         }
     ]
 };
@@ -2706,7 +2948,7 @@ function registrarUI(callbacks) { _ui = callbacks; }
 ═══════════════════════════════════════════════════════ */
 function iniciar(sectorId, groupName, companyName) {
     const setorFinal = sectorId === "aleatorio"
-        ? Object.keys(EMPRESAS)[Math.floor(Math.random() * Object.keys(EMPRESAS).length)]
+        ? Object.keys(EMPRESAS)[Math.floor(Math.random() * 4)]
         : sectorId;
 
     BetaImprevisto.resetar();
@@ -3126,24 +3368,13 @@ async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
 
-  // Verifica banimento persistido antes de qualquer outra coisa
-  const banInfoRaw = localStorage.getItem('gsp_ban_info');
-  if (banInfoRaw) {
-    try {
-      const info = JSON.parse(banInfoRaw);
-      mostrarTela('screen-login');
-      setTimeout(() => _mostrarOverlayBan(info.motivo || '', info.uid || ''), 300);
-      return;
-    } catch(e) { localStorage.removeItem('gsp_ban_info'); }
-  }
-
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
   if (saved) {
     _player = saved;
     _verificarSessaoSalva();
     _atualizarHome();
-    _atualizarBotaoAdmin(saved.uid);
+    await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
     _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
@@ -3238,53 +3469,11 @@ function _sincronizarFirebaseBackground(player) {
     window.GSPSync.carregarPodio(),
     window.GSPSync.carregarSessao(player.uid)
   ]).then(([histFS, podioFS, sessFS]) => {
-    if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts || Date.now() })));
+    if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) })));
     // Sempre sincroniza o localStorage com o Firestore — mesmo se vier vazio
-    // FIX: só sobrescreve pódio local se Firestore retornar dados (evita apagar cache com array vazio)
-    if (podioFS?.length > 0) LS.set(SK.PODIO, podioFS.map(p => ({ ...p, ts: p.ts || Date.now() })));
-    if (sessFS) LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts || Date.now() });
-  }).then(() => {
-    // Reenvia partidas pendentes que falharam anteriormente
-    _reenviarSavesPendentes(player);
+    LS.set(SK.PODIO, (podioFS || []).map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
+    if (sessFS) LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
   }).catch(() => {});
-}
-
-/* ── FILA DE RETRY PARA SAVES FALHOS ────────────────────────── */
-const PENDING_SAVES_KEY = 'gsp_pending_saves';
-
-function _adicionarSavePendente(entrada) {
-  try {
-    const fila = JSON.parse(localStorage.getItem(PENDING_SAVES_KEY) || '[]');
-    // Evita duplicatas pelo timestamp
-    if (!fila.find(e => e.ts === entrada.ts)) {
-      fila.push(entrada);
-      // Limita a 10 entradas para não crescer indefinidamente
-      localStorage.setItem(PENDING_SAVES_KEY, JSON.stringify(fila.slice(-10)));
-    }
-  } catch(e) {}
-}
-
-function _removerSavePendente(ts) {
-  try {
-    const fila = JSON.parse(localStorage.getItem(PENDING_SAVES_KEY) || '[]');
-    localStorage.setItem(PENDING_SAVES_KEY, JSON.stringify(fila.filter(e => e.ts !== ts)));
-  } catch(e) {}
-}
-
-async function _reenviarSavesPendentes(player) {
-  if (!player?.uid || !window.GSPSync) return;
-  try {
-    const fila = JSON.parse(localStorage.getItem(PENDING_SAVES_KEY) || '[]');
-    if (!fila.length) return;
-    console.log(`[GSP] Reenviando ${fila.length} save(s) pendente(s)...`);
-    for (const entrada of fila) {
-      try {
-        await window.GSPSync.salvarPartida(player.uid, entrada);
-        await window.GSPSync.salvarNoPodio(player.uid, entrada);
-        _removerSavePendente(entrada.ts);
-      } catch(e) { /* mantém na fila para próxima tentativa */ }
-    }
-  } catch(e) {}
 }
 
 function _setLoadingMsg(msg, sub, progress) {
@@ -3324,14 +3513,9 @@ function mostrarTela(id, goBack) {
   // Atualiza botão admin ao entrar na home
   if (id === 'screen-home') {
     _mostrarBotaoAdmin();
-    // Manutenção ativa — mostra overlay e bloqueia o botão de iniciar
-    if (window._manutencaoAtiva) {
-      setTimeout(() => _ativarOverlayManutencao(window._manutencaoAtiva.mensagem), 400);
-      window._manutencaoAtiva = null;
-    }
     // Exibe mensagem global se houver
     if (window._mensagemGlobal) {
-      setTimeout(() => _mostrarOverlayMsgGlobal(window._mensagemGlobal), 800);
+      setTimeout(() => mostrarSucesso(window._mensagemGlobal), 800);
       window._mensagemGlobal = null;
     }
   }
@@ -3372,89 +3556,15 @@ function sair() {
   _pararPollingGlobal();
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
-  LS.remove(SK.HISTORICO);
-  LS.remove(SK.PODIO);
-  LS.remove(SK.HIST_GUEST);
-  localStorage.removeItem('gsp_session_state');
   _player = null;
   _isAdmin = false;
-  _aplicarTemaSetor(null);
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
 
-/* ── CONFIRMAÇÃO DE SAÍDA ─────────────────────────── */
-let _saidaTipo = null; // 'conta' | 'convidado' | 'partida'
-
-function pedirConfirmacaoSaida(tipo) {
-  _saidaTipo = tipo;
-  const overlay = document.getElementById('overlay-confirmar-saida');
-  const icon  = document.getElementById('confirmar-saida-icon');
-  const titulo = document.getElementById('confirmar-saida-titulo');
-  const desc  = document.getElementById('confirmar-saida-desc');
-  const btn   = document.getElementById('confirmar-saida-btn');
-  if (!overlay) return;
-
-  const configs = {
-    conta: {
-      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
-      titulo: 'Sair da conta?',
-      desc: 'Você será desconectado. Seu progresso salvo na nuvem não será perdido.',
-      btnTxt: 'Sair da conta',
-      btnClass: 'confirmar-saida-confirmar--neutro',
-    },
-    convidado: {
-      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
-      titulo: 'Sair do modo convidado?',
-      desc: 'Seu histórico local desta sessão será apagado. Crie uma conta para salvar seu progresso.',
-      btnTxt: 'Sair mesmo assim',
-      btnClass: 'confirmar-saida-confirmar--warn',
-    },
-    partida: {
-      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
-      titulo: 'Abandonar o mandato?',
-      desc: 'O progresso desta partida será perdido. As rodadas concluídas não serão salvas no seu histórico.',
-      btnTxt: 'Abandonar',
-      btnClass: 'confirmar-saida-confirmar--danger',
-    },
-  };
-
-  const cfg = configs[tipo] || configs.conta;
-  if (icon)  icon.innerHTML = cfg.icon;
-  if (titulo) titulo.textContent = cfg.titulo;
-  if (desc)  desc.textContent = cfg.desc;
-  if (btn) {
-    btn.textContent = cfg.btnTxt;
-    btn.className = 'btn confirmar-saida-confirmar ' + cfg.btnClass;
-  }
-
-  overlay.style.display = 'flex';
-}
-
-function cancelarSaida() {
-  const overlay = document.getElementById('overlay-confirmar-saida');
-  if (overlay) overlay.style.display = 'none';
-  _saidaTipo = null;
-}
-
-function confirmarSaida() {
-  const overlay = document.getElementById('overlay-confirmar-saida');
-  if (overlay) overlay.style.display = 'none';
-  if (_saidaTipo === 'partida') {
-    abandonarJogo();
-  } else {
-    sair();
-  }
-  _saidaTipo = null;
-}
-
 function _atualizarHome() {
   const el = document.getElementById("home-player-name");
-  if (el) {
-    // Trunca nomes longos para evitar quebra de linha no header
-    const nome = (_player?.nome || "JOGADOR").toUpperCase();
-    el.textContent = `OLÁ, ${nome.length > 16 ? nome.substring(0, 14) + "…" : nome}`;
-  }
+  if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;
   const av = document.getElementById("home-avatar-icon");
   if (av && _player?.nome) av.textContent = _player.nome.charAt(0).toUpperCase();
 }
@@ -3464,19 +3574,12 @@ function _atualizarHome() {
 ════════════════════════════════════════════════════ */
 function _salvarSessao() {
   const state = BetaState.get();
-  if (!state || state.phase === "result") {
-    LS.remove(SK.SESSION);
-    localStorage.removeItem('gsp_session_state');
-    return;
-  }
-  // Salva metadados resumidos para o banner de restauração
+  if (!state || state.phase === "result") { LS.remove(SK.SESSION); return; }
   LS.set(SK.SESSION, {
     sector: state.sector, companyName: state.companyName,
     currentRound: state.currentRound, totalRounds: state.totalRounds,
     ts: Date.now(),
   });
-  // Salva estado completo para restauração real
-  try { localStorage.setItem('gsp_session_state', JSON.stringify(state)); } catch(e) {}
 }
 
 function _verificarSessaoSalva() {
@@ -3496,24 +3599,18 @@ function _verificarSessaoSalva() {
 function restaurarSessao() {
   const sess = LS.get(SK.SESSION);
   if (!sess) return;
-  try {
-    const raw = localStorage.getItem('gsp_session_state');
-    const estadoCompleto = raw ? JSON.parse(raw) : null;
-    if (estadoCompleto && estadoCompleto.sector === sess.sector && estadoCompleto.currentRound > 0) {
-      // Restaura estado real: reinicia o engine com o estado salvo
-      BetaState.set(estadoCompleto);
-      _aplicarTemaSetor(estadoCompleto.sector);
-      mostrarTela('screen-game');
-      const empresa = EMPRESAS[estadoCompleto.sector];
-      _ui.renderSidebar?.(estadoCompleto, empresa);
-      _ui.renderRodada?.(estadoCompleto);
-      setTimeout(() => mostrarSucesso(`Sessão restaurada: ${sess.companyName} · Rodada ${sess.currentRound + 1}`), 400);
-      return;
-    }
-  } catch(e) {}
-  // Fallback: recomeça do início com a mesma empresa
-  iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
-  setTimeout(() => mostrarAviso('Sessão reiniciada do início.'), 500);
+  // BUG #12 FIX: verificar se há estado completo salvo
+  const estadoCompleto = LS.get('gsp_session_state');
+  if (estadoCompleto && estadoCompleto.sector === sess.sector) {
+    // Restaurar estado real: setor, rodada e companyName corretos
+    iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
+    // Notificar jogador que começa da rodada onde parou (próxima melhoria: restaurar state completo)
+    setTimeout(() => mostrarSucesso(`Sessão restaurada: ${sess.companyName} · Rodada ${sess.currentRound + 1}`), 500);
+  } else {
+    // Fallback: iniciar do começo, mas avisar jogador
+    iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
+    setTimeout(() => mostrarAviso('Sessão reiniciada do início. Progresso anterior não recuperável.'), 500);
+  }
 }
 
 function descartarSessao() {
@@ -3562,22 +3659,18 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
       if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
       const _statusEl = () => document.getElementById('result-cloud-status');
       if (_settings.cloudStatus !== false) {
-        if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().dataset.state = 'saving'; _statusEl().textContent = 'Salvando na nuvem...'; setTimeout(() => _statusEl()?.classList.add('visible'), 10); }
+        if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().textContent = '☁️ Salvando na nuvem...'; }
       }
       Promise.all([
         window.GSPSync.salvarPartida(_player.uid, entrada),
         window.GSPSync.salvarNoPodio(_player.uid, entrada)
       ])
         .then(() => {
-          if (_settings.cloudStatus !== false && _statusEl()) { _statusEl().dataset.state = 'ok'; _statusEl().textContent = 'Salvo na nuvem!'; _statusEl().classList.add('visible'); }
-          // Remove da fila de pendentes se estava lá
-          _removerSavePendente(entrada.ts);
+          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().textContent = '✅ Salvo na nuvem!';
         })
         .catch(e => {
           console.error('[GSP] Erro ao salvar resultado:', e);
-          if (_settings.cloudStatus !== false && _statusEl()) { _statusEl().dataset.state = 'err'; _statusEl().textContent = 'Erro ao salvar'; _statusEl().classList.add('visible'); }
-          // Adiciona na fila para reenvio posterior
-          _adicionarSavePendente(entrada);
+          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().textContent = '❌ Erro: ' + (e?.code || e?.message || 'desconhecido');
         });
     };
     if (window.GSPSync) {
@@ -3609,7 +3702,7 @@ function irParaHistoricoJogos() {
   if (!isGuest && _player?.uid && window.GSPSync) {
     window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
       if (!histFS?.length) return;
-      const c = histFS.map(h => ({ ...h, ts: h.ts || Date.now() }));
+      const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
       LS.set(SK.HISTORICO, c);
       _renderHistorico(lista, c, false);
     }).catch(() => {});
@@ -3703,6 +3796,31 @@ function selecionarSetor(sector) {
   // Tema só é aplicado quando o jogo começa
 }
 
+const _NOMES_ALEATORIOS = [
+  "Nexora S.A.", "Veltrix Corp", "Aurum Group", "Solera Holding",
+  "Kairos Ventures", "Fenix Soluções", "Orbis Gestão", "Zentra S.A.",
+  "Caldera Corp", "Lumis Group", "Veritas S.A.", "Ápex Holding",
+  "Norax Indústrias", "Solum Gestão", "Acera Corp", "Trivela S.A.",
+  "Polaris Group", "Vexor Holding", "Alcora S.A.", "Mantis Corp",
+  "Stratum Group", "Fulcrum S.A.", "Helix Ventures", "Crestline Corp"
+];
+
+function gerarNomeAleatorio() {
+  const el = document.getElementById("companyName");
+  if (!el) return;
+  // Embaralha e pega um nome diferente do atual
+  let nome;
+  do {
+    nome = _NOMES_ALEATORIOS[Math.floor(Math.random() * _NOMES_ALEATORIOS.length)];
+  } while (nome === el.value && _NOMES_ALEATORIOS.length > 1);
+  el.value = nome;
+  el.classList.remove("input-error-shake");
+  // Animação rápida de feedback
+  el.style.transition = "border-color .15s";
+  el.style.borderColor = "var(--s-primary)";
+  setTimeout(() => { el.style.borderColor = ""; }, 400);
+}
+
 function lancarJogo() {
   const sector        = document.getElementById("sector-hidden").value;
   const companyNameEl = document.getElementById("companyName");
@@ -3747,7 +3865,7 @@ function mostrarIntro(state, empresa) {
     criseEl.style.display = "";
     criseEl.innerHTML = `
       <div class="intro-crise-header">
-        <span class="intro-crise-badge">CRISE ATIVA</span>
+        <span class="intro-crise-badge">⚠ CRISE ATIVA</span>
         <span class="intro-crise-titulo">${crise.titulo}</span>
       </div>
       <div class="intro-crise-texto">${crise.historia}</div>`;
@@ -3764,25 +3882,7 @@ function mostrarIntro(state, empresa) {
   }
 }
 
-async function comecaJogo() {
-  // Verifica ban e manutenção antes de permitir iniciar (cobre gap do polling)
-  if (window.ADMIN) {
-    try {
-      // Verifica ban para usuários logados
-      if (!_isAdmin && _player?.uid && _player.tipo !== 'guest') {
-        const banido = await window.ADMIN.verificarBan(_player.uid).catch(() => false);
-        if (banido) { _forcarSaida('🚫 Sua conta foi suspensa pelo administrador.'); return; }
-      }
-      // Verifica manutenção para todos (incluindo convidados)
-      if (!_isAdmin) {
-        const cfg = await window.ADMIN.verificarMensagemGlobal().catch(() => null);
-        if (cfg?.manutencao) {
-          _ativarOverlayManutencao(cfg?.mensagem || '');
-          return;
-        }
-      }
-    } catch(e) { /* falha silenciosa — não bloquear o jogo por erro de rede */ }
-  }
+function comecaJogo() {
   iniciarRodadas();
   _renderEmpresaTab();
   _iniciarVerificacaoManutencao();
@@ -3791,142 +3891,6 @@ async function comecaJogo() {
 // ─── POLLING UNIVERSAL ─────────────────────────────────────────
 // Roda sempre que o usuário está logado (home, jogo, perfil, etc.)
 // Verifica: ban + manutenção + mensagem global — a cada 20 segundos
-
-/* ── OVERLAYS DE MANUTENÇÃO E MENSAGEM GLOBAL ─────── */
-
-/* ── OVERLAY DE BANIMENTO ───────────────────────────── */
-let _banCountdownInterval = null;
-let _banUnbanCheckInterval = null;
-
-function _mostrarOverlayBan(motivo, uid) {
-  const overlay = document.getElementById('overlay-ban');
-  if (!overlay) return;
-
-  const motivoBox   = document.getElementById('ban-motivo-display');
-  const motivoTexto = document.getElementById('ban-motivo-texto');
-  if (motivoBox && motivoTexto) {
-    if (motivo) { motivoTexto.textContent = motivo; motivoBox.style.display = 'block'; }
-    else { motivoBox.style.display = 'none'; }
-  }
-
-  const uidEl = document.getElementById('ban-uid-display');
-  if (uidEl && uid) uidEl.textContent = 'ID: ' + uid.substring(0, 12).toUpperCase() + '...';
-
-  overlay.style.display = 'flex';
-
-  // Countdown 10s com barra de progresso CSS
-  let segs = 10;
-  const countdownEl  = document.getElementById('ban-countdown');
-  const progressBar  = document.getElementById('ban-progress-bar');
-  if (progressBar) {
-    progressBar.style.transition = 'none';
-    progressBar.style.width = '100%';
-    progressBar.getBoundingClientRect(); // force reflow
-    progressBar.style.transition = 'width ' + segs + 's linear';
-    progressBar.style.width = '0%';
-  }
-  if (countdownEl) countdownEl.textContent = 'Redirecionando em ' + segs + 's...';
-
-  clearInterval(_banCountdownInterval);
-  _banCountdownInterval = setInterval(function() {
-    segs--;
-    if (countdownEl) countdownEl.textContent = 'Redirecionando em ' + segs + 's...';
-    if (segs <= 0) { clearInterval(_banCountdownInterval); _banFecharEIrLogin(); }
-  }, 1000);
-
-  // Verifica desban a cada 30s
-  clearInterval(_banUnbanCheckInterval);
-  if (uid && window.ADMIN) {
-    _banUnbanCheckInterval = setInterval(async function() {
-      try {
-        const aindaBanido = await window.ADMIN.verificarBan(uid);
-        if (!aindaBanido) {
-          clearInterval(_banCountdownInterval);
-          clearInterval(_banUnbanCheckInterval);
-          const statusEl = document.getElementById('ban-unban-status');
-          const cEl      = document.getElementById('ban-countdown');
-          const btnLogin  = document.querySelector('.ban-btn-login');
-          if (statusEl) statusEl.style.display = 'block';
-          if (cEl) cEl.style.display = 'none';
-          if (btnLogin) btnLogin.textContent = 'Entrar agora';
-          localStorage.removeItem('gsp_ban_info');
-        }
-      } catch(e) {}
-    }, 30000);
-  }
-}
-
-function banIrParaLogin() {
-  clearInterval(_banCountdownInterval);
-  clearInterval(_banUnbanCheckInterval);
-  _banFecharEIrLogin();
-}
-
-function _banFecharEIrLogin() {
-  const overlay = document.getElementById('overlay-ban');
-  if (overlay) overlay.style.display = 'none';
-  localStorage.removeItem('gsp_ban_info');
-}
-
-function _ativarOverlayManutencao(msgExtra, durantePartida = false) {
-  const overlay = document.getElementById('overlay-manutencao');
-  if (!overlay) return;
-
-  // Exibe mensagem extra se houver
-  const msgEl = document.getElementById('manut-msg-extra');
-  if (msgEl) {
-    if (msgExtra) { msgEl.textContent = msgExtra; msgEl.style.display = 'block'; }
-    else { msgEl.style.display = 'none'; }
-  }
-
-  // Mostra botão "Salvar e Sair" só se estiver no meio de uma partida
-  const btnSalvar = document.getElementById('manut-btn-salvar');
-  const telaAtual = document.querySelector('.screen.active')?.id;
-  const emJogo = durantePartida ||
-    telaAtual === 'screen-game' || telaAtual === 'screen-feedback';
-  if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
-
-  overlay.style.display = 'flex';
-
-  // Bloqueia o botão Iniciar Mandato
-  const btnStart = document.querySelector('.home-start-btn');
-  if (btnStart) btnStart.classList.add('manutencao-ativa');
-}
-
-function _desativarOverlayManutencao() {
-  const overlay = document.getElementById('overlay-manutencao');
-  if (overlay && overlay.style.display !== 'none') {
-    overlay.style.display = 'none';
-  }
-  // Desbloqueia o botão Iniciar Mandato
-  const btnStart = document.querySelector('.home-start-btn');
-  if (btnStart) btnStart.classList.remove('manutencao-ativa');
-}
-
-function manutencaoSalvarSair() {
-  // Encerra a partida salvando o progresso local e volta para a home
-  _pararTimer();
-  LS.remove(SK.SESSION);
-  localStorage.removeItem('gsp_session_state');
-  _aplicarTemaSetor(null);
-  _desativarOverlayManutencao();
-  mostrarTela('screen-home');
-  setTimeout(() => mostrarAviso('Partida encerrada. Aguardando fim da manutenção.'), 400);
-}
-
-function _mostrarOverlayMsgGlobal(texto) {
-  if (!texto) return;
-  const overlay = document.getElementById('overlay-msg-global');
-  const textoEl = document.getElementById('overlay-msg-global-texto');
-  if (!overlay || !textoEl) return;
-  textoEl.textContent = texto;
-  overlay.style.display = 'flex';
-}
-
-function fecharMsgGlobal() {
-  const overlay = document.getElementById('overlay-msg-global');
-  if (overlay) overlay.style.display = 'none';
-}
 
 function _iniciarPollingGlobal(uid) {
   _pararPollingGlobal(); // limpa qualquer poll anterior
@@ -3947,23 +3911,20 @@ function _iniciarPollingGlobal(uid) {
       const cfg = await window.ADMIN.verificarMensagemGlobal();
 
       if (cfg.manutencao && !_isAdmin) {
-        _ativarOverlayManutencao(cfg.mensagem);
+        _forcarSaida('🔧 Jogo em manutenção. Você será desconectado.');
         return;
-      } else if (!cfg.manutencao) {
-        // Manutenção encerrada — remove o overlay e desbloqueia o botão
-        _desativarOverlayManutencao();
       }
 
-      // 3. Mensagem global — exibe overlay dedicado (só se mudou desde a última vez)
+      // 3. Mensagem global — mostra só se mudou desde a última vez
       if (cfg.mensagem && cfg.mensagem !== _ultimaMensagemGlobal) {
         _ultimaMensagemGlobal = cfg.mensagem;
-        _mostrarOverlayMsgGlobal(cfg.mensagem);
+        mostrarSucesso(cfg.mensagem);
       }
     } catch(e) { /* ignora erros de rede temporários */ }
   };
 
   _tick(); // executa imediatamente no login
-  _globalPollInterval = setInterval(_tick, 5000);
+  _globalPollInterval = setInterval(_tick, 20000);
 }
 
 function _pararPollingGlobal() {
@@ -3971,52 +3932,17 @@ function _pararPollingGlobal() {
   if (_manutencaoInterval) { clearInterval(_manutencaoInterval); _manutencaoInterval = null; }
 }
 
-let _expulsaoEmAndamento = false; // guard contra chamadas duplas
-
 function _forcarSaida(msg) {
-  // Evita executar duas vezes em rápida sucessão (polling + comecaJogo)
-  if (_expulsaoEmAndamento) return;
-  _expulsaoEmAndamento = true;
-
   _pararPollingGlobal();
   _pararTimer();
   LS.remove(SK.SESSION);
   LS.remove(SK.PLAYER);
-  LS.remove(SK.HISTORICO);
-  LS.remove(SK.PODIO);
-  LS.remove(SK.HIST_GUEST);
-  localStorage.removeItem('gsp_session_state');
   _player = null;
   _isAdmin = false;
   _aplicarTemaSetor(null);
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
-
-  // Banimento: mostra overlay dedicado em vez de toast
-  const ehBanimento = msg.includes('suspensa') || msg.includes('banid');
-  if (ehBanimento) {
-    mostrarTela('screen-login');
-    const _bannedUid = _player?.uid || null;
-    setTimeout(async () => {
-      let motivoBan = '';
-      if (_bannedUid && window.ADMIN) {
-        try {
-          const doc = await window.ADMIN._getBanInfo(_bannedUid);
-          motivoBan = doc?.motivoBan || '';
-        } catch(e) {}
-      }
-      if (_bannedUid) {
-        localStorage.setItem('gsp_ban_info', JSON.stringify({
-          uid: _bannedUid, motivo: motivoBan, ts: Date.now()
-        }));
-      }
-      _mostrarOverlayBan(motivoBan, _bannedUid || '');
-      _expulsaoEmAndamento = false;
-    }, 300);
-  } else {
-    // Outras saídas forçadas (manutenção via código antigo, etc.) — toast simples
-    mostrarTela('screen-login');
-    setTimeout(() => { mostrarAviso(msg); _expulsaoEmAndamento = false; }, 600);
-  }
+  mostrarTela('screen-login');
+  setTimeout(() => mostrarAviso(msg), 600);
 }
 
 // Mantido para não quebrar chamadas de comecaJogo/abandonarJogo
@@ -4241,7 +4167,7 @@ function _renderHistoricoTab(state) {
         const efeitos = Object.entries(h.efeitos||{}).filter(([,v])=>v!==0).slice(0,3)
           .map(([k,v])=>`<span class="efeito-tag ${v>0?'efeito-pos':'efeito-neg'}">${v>0?"+":""}${v} ${BetaIndicadores.LABELS[k]||k}</span>`)
           .join(" ");
-        const emo = h.avaliacao==="boa" ? '<span style="color:var(--ok)">✓</span>' : h.avaliacao==="ruim" ? '<span style="color:var(--err)">✕</span>' : '<span style="color:var(--warn)">~</span>';
+        const emo = h.avaliacao==="boa"?"✅":h.avaliacao==="ruim"?"❌":"⚠️";
         return `<div class="historico-item">
           <div class="historico-item-round">${emo} Rod.${h.rodada} — ${h.titulo}</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${efeitos}</div>
@@ -4252,7 +4178,7 @@ function _renderHistoricoTab(state) {
   if (recEl) {
     const recs = _gerarRecomendacoes(state);
     recEl.innerHTML = recs.length
-      ? recs.map(r=>`<div class="rec-item"><div class="rec-item-title"><span class="rec-warn-dot"></span>${r.titulo}</div><div class="rec-item-desc">${r.desc}</div></div>`).join("")
+      ? recs.map(r=>`<div class="rec-item"><div class="rec-item-title">${r.titulo}</div><div class="rec-item-desc">${r.desc}</div></div>`).join("")
       : `<span style="color:var(--text-muted);font-size:.78rem;">Recomendações aparecem conforme o jogo avança.</span>`;
   }
 }
@@ -4326,10 +4252,10 @@ function _iniciarTimer() {
   const el = document.getElementById("timer-display");
   if (!el) return;
   el.classList.add("active"); el.classList.remove("danger");
-  el.textContent = `${_timerSegs}s`;
+  el.textContent = `⏱ ${_timerSegs}s`;
   _timerInterval = setInterval(() => {
     _timerSegs--;
-    el.textContent = `${_timerSegs}s`;
+    el.textContent = `⏱ ${_timerSegs}s`;
     if (_timerSegs <= 10) el.classList.add("danger");
     if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }
   }, 1000);
@@ -4347,20 +4273,12 @@ function _pararTimer() {
 function mostrarFeedback(data, callback) {
   _feedbackCallback = callback;
   mostrarTela("screen-feedback");
-  // Preenche indicador de rodada no topo da tela de feedback
-  const roundIndicator = document.getElementById("fb-round-indicator");
-  if (roundIndicator) {
-    const state = BetaState.get();
-    if (state) {
-      roundIndicator.textContent = `Rodada ${state.currentRound + 1} de ${state.totalRounds}`;
-    }
-  }
   const corMap   = { boa:"var(--good)", media:"var(--warn)", ruim:"var(--danger)" };
-  const iconMap  = { boa:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`, media:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`, ruim:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--err)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>` };
+  const iconMap  = { boa:"✅", media:"⚠️", ruim:"❌" };
   const labelMap = { boa:"BOA DECISÃO", media:"DECISÃO COM TRADE-OFFS", ruim:"MÁ DECISÃO" };
   const badgeClass = { boa:"verdict-boa", media:"verdict-media", ruim:"verdict-ruim" };
   const badge = document.getElementById("fb-veredito-badge");
-  if (badge) { badge.className=`verdict-badge ${badgeClass[data.avaliacao]||"verdict-media"}`; badge.innerHTML=iconMap[data.avaliacao]||iconMap.media; }
+  if (badge) { badge.className=`verdict-badge ${badgeClass[data.avaliacao]||"verdict-media"}`; badge.textContent=iconMap[data.avaliacao]||"⚠️"; }
   const lbl = document.getElementById("fb-veredito-label");
   if (lbl) { lbl.textContent=labelMap[data.avaliacao]||"DECISÃO"; lbl.style.color=corMap[data.avaliacao]; }
   document.getElementById("fb-veredito-sub").textContent   = data.avaliacao==="boa"?"Decisão acertada":data.avaliacao==="ruim"?"Decisão equivocada":"Decisão com trade-offs";
@@ -4407,7 +4325,7 @@ function mostrarFeedback(data, callback) {
   const stEl=document.getElementById("fb-stakeholder");
   if (data.stakeholderReacao && stEl) {
     stEl.style.display="";
-    document.getElementById("fb-st-icon").innerHTML=data.stakeholderReacao.icone||'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    document.getElementById("fb-st-icon").textContent=data.stakeholderReacao.icone||"👤";
     document.getElementById("fb-st-nome").textContent=data.stakeholderReacao.nome||"";
     document.getElementById("fb-st-txt").textContent=data.stakeholderReacao.texto||"";
   } else if (stEl) { stEl.style.display="none"; }
@@ -4433,27 +4351,11 @@ function mostrarFeedback(data, callback) {
   } else if (histEl) { histEl.style.display="none"; }
 }
 
-async function avancar() {
+function avancar() {
   if (!_feedbackCallback) return;
-  // Verifica ban e manutenção no momento de avançar (cobre banimentos durante a partida)
-  if (window.ADMIN) {
-    try {
-      if (!_isAdmin && _player?.uid && _player.tipo !== 'guest') {
-        const banido = await window.ADMIN.verificarBan(_player.uid).catch(() => false);
-        if (banido) { _forcarSaida('🚫 Sua conta foi suspensa pelo administrador.'); return; }
-      }
-      if (!_isAdmin) {
-        const cfg = await window.ADMIN.verificarMensagemGlobal().catch(() => null);
-        if (cfg?.manutencao) {
-          _ativarOverlayManutencao(cfg?.mensagem || '', true); // true = estamos no meio do jogo
-          return;
-        }
-      }
-    } catch(e) { /* falha silenciosa */ }
-  }
   const cb = _feedbackCallback;
   _feedbackCallback = null;
-  _bloqueioAte = Date.now() + 400;
+  _bloqueioAte = Date.now() + 400; // bloqueia escolher() durante transição
   cb();
 }
 
@@ -4661,11 +4563,7 @@ function _atualizarBotaoFullscreen() {
   const btn = document.getElementById("settings-fs-btn");
   if (!btn) return;
   const isFs = !!document.fullscreenElement;
-  const svgExit = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>`;
-  const svgEnter = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`;
-  btn.innerHTML = isFs
-    ? `<span style="display:flex;align-items:center;gap:5px">${svgExit} Sair da tela cheia</span>`
-    : `<span style="display:flex;align-items:center;gap:5px">${svgEnter} Ativar tela cheia</span>`;
+  btn.textContent = isFs ? "✕ Sair" : "⛶ Ativar";
 }
 document.addEventListener("fullscreenchange", _atualizarBotaoFullscreen);
 
@@ -4677,15 +4575,15 @@ function _showToast(msg, tipo = "info", duracao = 3200) {
   const div = document.createElement("div");
   div.className = "toast-msg";
   const cores = {
-    erro:    { bg:"rgba(231,76,60,.92)",  borda:"rgba(231,76,60,.5)",  icone:"✕", cor:"#fff" },
-    aviso:   { bg:"rgba(243,156,18,.92)", borda:"rgba(243,156,18,.5)", icone:"!",  cor:"#fff" },
-    ok:      { bg:"rgba(46,204,113,.92)", borda:"rgba(46,204,113,.5)", icone:"✓",  cor:"#fff" },
-    info:    { bg:"var(--bg4)",           borda:"var(--line2)",        icone:"i",  cor:"var(--t2)" },
-    critico: { bg:"rgba(192,57,43,.95)",  borda:"rgba(192,57,43,.6)",  icone:"!!!", cor:"#fff" },
+    erro:    { bg:"rgba(231,76,60,.92)",  borda:"rgba(231,76,60,.5)",  icone:"❌" },
+    aviso:   { bg:"rgba(243,156,18,.92)", borda:"rgba(243,156,18,.5)", icone:"⚠️" },
+    ok:      { bg:"rgba(46,204,113,.92)", borda:"rgba(46,204,113,.5)", icone:"✅" },
+    info:    { bg:"var(--bg4)",           borda:"var(--line2)",        icone:"ℹ️" },
+    critico: { bg:"rgba(192,57,43,.95)",  borda:"rgba(192,57,43,.6)",  icone:"🚨" },
   };
   const c = cores[tipo] || cores.info;
   div.style.cssText = `background:${c.bg};border-color:${c.borda};`;
-  div.innerHTML = `<span style="font-weight:800;margin-right:7px;font-size:.9rem">${c.icone}</span>${msg}`;
+  div.textContent = `${c.icone} ${msg}`;
   container.appendChild(div);
   setTimeout(() => {
     div.classList.add("removing");
@@ -4806,11 +4704,9 @@ async function irParaPerfil() {
     }
   }
 
-  // Botão logout: para logados = "Sair da conta", para convidados = "Sair"
+  // Botão logout visível só para logados
   const logoutBtn = document.getElementById('perfil-logout-btn');
-  const logoutGuestBtn = document.getElementById('perfil-guest-sair-btn');
   if (logoutBtn) logoutBtn.style.display = (!isGuest && _player?.uid) ? '' : 'none';
-  if (logoutGuestBtn) logoutGuestBtn.style.display = isGuest ? '' : 'none';
 
   const total  = hist.length;
   const melhor = total ? Math.max(...hist.map(h => h.score)) : 0;
@@ -4899,7 +4795,7 @@ async function irParaPerfil() {
   if (cqEl) {
     cqEl.innerHTML = conquistas.map(c => `
       <div class="perfil-conquista ${c.unlocked ? 'unlocked' : ''}">
-        <div class="perfil-conquista-icon">${c.unlocked ? c.icon : '<span class=\"conquista-lock\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0110 0v4\"/></svg></span>'}</div>
+        <div class="perfil-conquista-icon">${c.unlocked ? c.icon : '🔒'}</div>
         <div>
           <div class="perfil-conquista-nome">${c.nome}</div>
           <div class="perfil-conquista-desc">${c.desc}</div>
@@ -4919,7 +4815,7 @@ async function irParaPerfil() {
   if (!isGuest && _player?.uid && window.GSPSync) {
     window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
       if (histFS.length > 0) {
-        const c = histFS.map(h => ({ ...h, ts: h.ts || Date.now() }));
+        const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
         const localHist = LS.get(SK.HISTORICO) || [];
         // Só re-renderiza se vier dado novo do servidor
         if (c.length !== localHist.length) {
@@ -5034,7 +4930,7 @@ function irParaPodio() {
 
   // Convidados não têm acesso ao pódio
   if (!_player?.uid || _player?.tipo === 'guest') {
-    lista.innerHTML = `<div class="podio-empty podio-empty-login">Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
+    lista.innerHTML = `<div class="podio-empty">🔒 Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
     return;
   }
 
@@ -5055,7 +4951,7 @@ function _buscarEAtualizarPodio(lista, setor) {
   if (!syncEl) {
     syncEl = document.createElement('div');
     syncEl.id = msgId; syncEl.className = 'podio-sync';
-    syncEl.textContent = 'Atualizando ranking...';
+    syncEl.textContent = '🔄 Atualizando ranking...';
     lista.prepend(syncEl);
   }
 
@@ -5063,7 +4959,7 @@ function _buscarEAtualizarPodio(lista, setor) {
     const syncMsg = document.getElementById(msgId);
     if (syncMsg) syncMsg.remove();
     const c = (podioFS || []).map(p => ({
-      ...p, ts: p.ts || Date.now()
+      ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now())
     }));
     _podioCache[setor] = c;
     // Sempre atualiza localStorage para espelhar o banco (inclusive quando vazio)
@@ -5071,7 +4967,7 @@ function _buscarEAtualizarPodio(lista, setor) {
     if (_podioFiltro === (setor || 'all')) _renderPodio(lista, c, setor);
   }).catch(e => {
     const syncMsg = document.getElementById(msgId);
-    if (syncMsg) syncMsg.textContent = 'Erro ao carregar ranking. Tente novamente.';
+    if (syncMsg) syncMsg.textContent = '⚠️ Erro ao carregar ranking. Tente novamente.';
     setTimeout(() => document.getElementById(msgId)?.remove(), 3000);
     console.warn('[GSP] _buscarEAtualizarPodio:', e);
   });
@@ -5181,7 +5077,7 @@ function continuarJogo() {
     if (el) { el.classList.add('active'); if (_timerSegs <= 10) el.classList.add('danger'); }
     _timerInterval = setInterval(() => {
       _timerSegs--;
-      if (el) el.textContent = `${_timerSegs}s`;
+      if (el) el.textContent = `⏱ ${_timerSegs}s`;
       if (_timerSegs <= 10 && el) el.classList.add('danger');
       if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }
     }, 1000);
@@ -5197,6 +5093,75 @@ function abandonarJogo() {
   LS.remove(SK.SESSION);
   _aplicarTemaSetor(null);
   mostrarTela('screen-home');
+}
+
+/* ════════════════════════════════════════════════════
+   CONFIRMAÇÃO DE SAÍDA
+════════════════════════════════════════════════════ */
+let _saidaTipo = null;
+
+function pedirConfirmacaoSaida(tipo) {
+  _saidaTipo = tipo;
+  const overlay = document.getElementById('overlay-confirmar-saida');
+  const icon    = document.getElementById('confirmar-saida-icon');
+  const titulo  = document.getElementById('confirmar-saida-titulo');
+  const desc    = document.getElementById('confirmar-saida-desc');
+  const btn     = document.getElementById('confirmar-saida-btn');
+  if (!overlay) return;
+
+  const configs = {
+    conta: {
+      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+      titulo: 'Sair da conta?',
+      desc: 'Você será desconectado. Seu progresso salvo na nuvem não será perdido.',
+      btnTxt: 'Sair da conta',
+      btnClass: 'confirmar-saida-confirmar--neutro',
+    },
+    convidado: {
+      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+      titulo: 'Sair do modo convidado?',
+      desc: 'Seu histórico local desta sessão será apagado. Crie uma conta para salvar seu progresso.',
+      btnTxt: 'Sair mesmo assim',
+      btnClass: 'confirmar-saida-confirmar--warn',
+    },
+    partida: {
+      icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+      titulo: 'Abandonar o mandato?',
+      desc: 'O progresso desta partida será perdido. As rodadas concluídas não serão salvas no seu histórico.',
+      btnTxt: 'Abandonar',
+      btnClass: 'confirmar-saida-confirmar--danger',
+    },
+  };
+
+  const cfg = configs[tipo] || configs.conta;
+  if (icon)  icon.innerHTML  = cfg.icon;
+  if (titulo) titulo.textContent = cfg.titulo;
+  if (desc)  desc.textContent  = cfg.desc;
+  if (btn) {
+    btn.textContent = cfg.btnTxt;
+    btn.className   = 'btn confirmar-saida-confirmar ' + cfg.btnClass;
+  }
+
+  // Garante que aparece acima de qualquer overlay (z-index 100001 no HTML)
+  if (overlay.parentNode !== document.body) document.body.appendChild(overlay);
+  overlay.style.display = 'flex';
+}
+
+function cancelarSaida() {
+  const overlay = document.getElementById('overlay-confirmar-saida');
+  if (overlay) overlay.style.display = 'none';
+  _saidaTipo = null;
+}
+
+function confirmarSaida() {
+  const overlay = document.getElementById('overlay-confirmar-saida');
+  if (overlay) overlay.style.display = 'none';
+  if (_saidaTipo === 'partida') {
+    abandonarJogo();
+  } else {
+    sair();
+  }
+  _saidaTipo = null;
 }
 
 /* ════════════════════════════════════════════════════
@@ -5494,13 +5459,8 @@ function authMudarAba(aba) {
 function authTogglePass(inputId, btn) {
   const inp = document.getElementById(inputId);
   if (!inp) return;
-  if (inp.type === "password") {
-    inp.type = "text";
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-  } else {
-    inp.type = "password";
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-  }
+  if (inp.type === "password") { inp.type = "text"; btn.textContent = "🙈"; }
+  else { inp.type = "password"; btn.textContent = "👁"; }
 }
 
 function _authSetLoading(prefix, on) {
@@ -5626,7 +5586,7 @@ async function authRecuperar() {
   try {
     await window.GSPAuth.recuperarSenha(email);
     const ok = document.getElementById("auth-rec-ok");
-    if (ok) { ok.style.display = "block"; ok.textContent = "E-mail enviado! Verifique sua caixa de entrada."; }
+    if (ok) { ok.style.display = "block"; ok.textContent = "✅ E-mail enviado! Verifique sua caixa de entrada."; }
     mostrarSucesso("E-mail de recuperação enviado!");
   } catch(e) {
     const msg = _traduzirErroFirebase(e.code);
@@ -5638,23 +5598,22 @@ async function authRecuperar() {
 }
 
 async function _loginOk(player) {
-  _expulsaoEmAndamento = false; // reset ao logar
   _player = player;
   LS.set(SK.PLAYER, _player);
 
   // Verifica se é admin antes de qualquer outra coisa
   await _atualizarBotaoAdmin(player.uid);
 
-  // Verifica manutenção e mensagem global — admin bypassa restrições
+  // Verifica manutenção — admin bypassa, usuários comuns são bloqueados
   if (!_isAdmin && window.ADMIN) {
     const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
     if (cfg?.manutencao) {
-      // Deixa o jogador entrar na home mas bloqueia o jogo com o overlay
-      // (não expulsa — mantém a sessão e trava o botão de iniciar)
-      window._manutencaoAtiva = { mensagem: cfg?.mensagem || '' };
+      mostrarTela('screen-login');
+      setTimeout(() => mostrarAviso('🔧 Jogo em manutenção. Volte em breve!'), 500);
+      return;
     }
-    if (cfg?.mensagem && !cfg?.manutencao) {
-      window._mensagemGlobal = cfg.mensagem; // será exibido ao entrar na home
+    if (cfg?.mensagem) {
+      window._mensagemGlobal = cfg.mensagem;
     }
   }
 
@@ -5711,8 +5670,6 @@ async function irParaAdmin() {
 
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
-  pedirConfirmacaoSaida, cancelarSaida, confirmarSaida,
-  manutencaoSalvarSair, fecharMsgGlobal, banIrParaLogin,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
   irParaSetores, irParaPodio, irParaHistoricoJogos,
   irParaPerfil, filtrarPodio, _copiarId,
@@ -5724,10 +5681,12 @@ window.BetaUI = {
   // Novos
   pularTutorial, tutorialStep, irParaSlide,
   pausarJogo, continuarJogo, abandonarJogo,
+  pedirConfirmacaoSaida, cancelarSaida, confirmarSaida,
   abrirTooltipIndicador, closeTooltip,
   toggleModoTreino,
   compartilharResultado,
   irParaAdmin,
+  gerarNomeAleatorio,
 };
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando

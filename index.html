@@ -380,7 +380,10 @@
     </div>
     <div class="sector-field">
       <span class="sector-label">Nome da empresa <span class="required-star">*</span></span>
-      <input type="text" id="companyName" class="input-field" placeholder="Obrigatório — ex: Nexora S.A." maxlength="30" autocomplete="off">
+      <div class="company-name-row">
+        <input type="text" id="companyName" class="input-field" placeholder="Obrigatório — ex: Nexora S.A." maxlength="30" autocomplete="off">
+        <button class="btn-random-name" onclick="BetaUI.gerarNomeAleatorio()" title="Gerar nome aleatório">🎲</button>
+      </div>
     </div>
     <div class="sector-mode-row">
       <div class="sector-mode-info">
@@ -757,7 +760,7 @@
 
 
   <!-- ══ OVERLAY: CONFIRMAÇÃO DE SAÍDA ══ -->
-  <div id="overlay-confirmar-saida" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:99993;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)">
+  <div id="overlay-confirmar-saida" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100001;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)">
     <div class="confirmar-saida-card">
       <div class="confirmar-saida-icon" id="confirmar-saida-icon"></div>
       <div class="confirmar-saida-titulo" id="confirmar-saida-titulo">Tem certeza?</div>
