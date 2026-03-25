@@ -99,6 +99,5 @@ const EmpresaIndustria = {
             alerta: { icone: "🚨", titulo: "Autuação Ambiental Ativa" },
             rodape: "Você tem {totalRounds} rodadas para regularizar a operação e reconstruir a confiança do mercado."
         }
-        }
     ]
 };

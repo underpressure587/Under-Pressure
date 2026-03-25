@@ -99,6 +99,5 @@ const EmpresaVarejo = {
             alerta: { icone: "🚨", titulo: "Expansão Desequilibrada" },
             rodape: "Você tem {totalRounds} rodadas para consolidar a operação e recuperar a rentabilidade da rede."
         }
-        }
     ]
 };

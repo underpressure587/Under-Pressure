@@ -99,6 +99,5 @@ const EmpresaLogistica = {
             alerta: { icone: "🚨", titulo: "Capacidade no Limite" },
             rodape: "Você tem {totalRounds} rodadas para estabilizar a operação e honrar os contratos."
         }
-        }
     ]
 };
