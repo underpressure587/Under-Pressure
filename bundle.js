@@ -1510,7 +1510,6 @@ const EmpresaVarejo = {
             alerta: { icone: "🚨", titulo: "Expansão Desequilibrada" },
             rodape: "Você tem {totalRounds} rodadas para consolidar a operação e recuperar a rentabilidade da rede."
         }
-        }
     ]
 };
 /* --empresas/logistica.js-- */
@@ -1615,7 +1614,6 @@ const EmpresaLogistica = {
             alerta: { icone: "🚨", titulo: "Capacidade no Limite" },
             rodape: "Você tem {totalRounds} rodadas para estabilizar a operação e honrar os contratos."
         }
-        }
     ]
 };
 /* --empresas/industria.js-- */
@@ -1719,7 +1717,6 @@ const EmpresaIndustria = {
             ],
             alerta: { icone: "🚨", titulo: "Autuação Ambiental Ativa" },
             rodape: "Você tem {totalRounds} rodadas para regularizar a operação e reconstruir a confiança do mercado."
-        }
         }
     ]
 };
