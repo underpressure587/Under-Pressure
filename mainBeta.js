@@ -880,7 +880,7 @@ function renderRodada(state) {
   const lista   = document.getElementById("choices-list");
   lista.innerHTML = choices.map((c, i) => {
     const letra = String.fromCharCode(65+i);
-    const risco = c.risco ? `<span class="choice-risk risk-${c.risco}">${c.risco.toUpperCase()}</span>` : "";
+    const risco = (c.risco && state.currentRound < 2) ? `<span class="choice-risk risk-${c.risco}">${c.risco.toUpperCase()}</span>` : "";
     return `<button class="choice-card" onclick="BetaUI.escolher(${i})" id="choice-btn-${i}">
       <span class="choice-letter">${letra}</span>
       <span class="choice-text">${c.text}</span>
