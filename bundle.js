@@ -2332,7 +2332,1259 @@ const TecnologiaRounds = [
   }
 
 ]
-/* Histórias 1-9 removidas para teste beta — apenas história [0] ativa */
+/* Histórias [1] e [2] adicionadas abaixo */
+
+
+/* ══════════════════════════════════════════════════════════════════
+   HISTÓRIA [1] · EdTech · Ensino Digital B2C
+   Contexto: plataforma de 94k assinantes (era 180k), R$22M ARR,
+   95 colaboradores, 8 meses de runway, CAC triplicou, LTV encolheu.
+   Pivô B2C→B2B em análise. Time de conteúdo sobrecarregado.
+
+   INDICADORES: financeiro:9, clima:4, satisfacao:7, qualidade:6,
+                produtividade:5, reputacao:8, inovacao:7, seguranca:6
+
+   ATENÇÃO: clima já começa em 4 (baixo). Qualquer decisão que ignore
+   o time de conteúdo pode desencadear a interdependência:
+   clima≤5 → produtividade-2 → qualidade-2 → satisfacao-2 → financeiro-2
+══════════════════════════════════════════════════════════════════ */
+[
+
+  /* ═══════════════════════════════════════════════════════
+     R1 · DIAGNÓSTICO · O Relatório dos 8 Meses
+     Contexto: primeiro dia focado nos números reais.
+     O CFO apresenta o runway e o cenário.
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Relatório dos 8 Meses",
+    description: "Carla, sua CFO, coloca os números na mesa: runway de 8 meses, CAC de R$187 por assinante (era R$62 há 18 meses), LTV médio caído de R$940 para R$410. A base saiu de 180k para 94k assinantes. 'Temos duas opções estruturais', ela diz. 'Cortar custos para chegar ao break-even no B2C — ou pivotar para B2B corporativo, onde o ticket é 12x maior mas o ciclo de venda é de 90 dias.' Por onde você começa?",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Fazer um diagnóstico cirúrgico: entrevistar os 20 maiores clientes que cancelaram e os 20 mais fiéis antes de qualquer decisão",
+        risco: "baixo",
+        effects: { satisfacao: +2, qualidade: +2, financeiro: -1, produtividade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Decisões estratégicas baseadas em dados de clientes reais são infinitamente mais seguras do que projeções internas. Os cancelamentos e as permanências carregam a resposta sobre o que o produto precisa ser."
+      },
+      {
+        text: "Anunciar imediatamente o pivô para B2B e iniciar prospecção de empresas ainda este mês",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: -1, esgotamento: +1 },
+        effects: { financeiro: -2, clima: -2, satisfacao: -2, inovacao: +2 },
+        avaliacao: "ruim",
+        ensinamento: "Pivôs anunciados antes de serem validados criam expectativa sem entrega. O mercado B2B exige produto, processo de vendas e cases — nenhum deles existe ainda. Pivotar sem preparação acelera a queima de caixa."
+      },
+      {
+        text: "Reduzir a equipe de conteúdo de 22 para 12 pessoas agora para estender o runway imediatamente",
+        risco: "alto",
+        gestorEffects: { reputacaoInterna: -2, capitalPolitico: +1 },
+        effects: { financeiro: +3, clima: -4, qualidade: -3, produtividade: -3, satisfacao: -2 },
+        avaliacao: "ruim",
+        ensinamento: "Cortar o time de conteúdo destrói o ativo central de uma EdTech. Conteúdo é o produto — demitir quem o produz é equivalente a uma fábrica desligar a linha de produção para economizar energia."
+      },
+      {
+        text: "Montar um grupo de trabalho com CFO, head de produto e head de conteúdo para apresentar um plano em 2 semanas",
+        risco: "baixo",
+        effects: { financeiro: -1, clima: +2, produtividade: +2, qualidade: +1 },
+        avaliacao: "boa",
+        ensinamento: "Incluir as lideranças-chave na análise estratégica aumenta a qualidade da decisão e o comprometimento de execução. Duas semanas para planejar é um custo mínimo diante de uma decisão que define o futuro da empresa."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R2 · DIAGNÓSTICO · O Time de Conteúdo no Limite
+     Contexto: clima em 4. O head de conteúdo pede reunião urgente.
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Time de Conteúdo no Limite",
+    description: "Rafael, head de conteúdo e um dos fundadores originais, pede reunião. 'O time está produzindo 4 cursos por mês com a estrutura de 1 curso por mês. Três pessoas estão de atestado por ansiedade. Se não contratar ou redistribuir, vou perder mais dois sêniors até o final do mês.' O clima já está em nível crítico. Qualquer nova queda vai arrastar produtividade e qualidade junto.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Contratar 4 produtores de conteúdo freelancers para aliviar a sobrecarga imediatamente",
+        risco: "medio",
+        effects: { clima: +3, produtividade: +3, qualidade: +2, financeiro: -3 },
+        avaliacao: "boa",
+        ensinamento: "Freelancers são a válvula de alívio mais rápida para um time sobrecarregado. O custo é real, mas perder dois sêniors custa muito mais — em tempo de reposição, curva de aprendizado e moral do restante da equipe."
+      },
+      {
+        text: "Reduzir o ritmo de produção de 4 para 2 cursos por mês para aliviar o time sem contratar",
+        risco: "baixo",
+        effects: { clima: +2, produtividade: +2, satisfacao: -2, inovacao: -2, financeiro: -1 },
+        avaliacao: "media",
+        ensinamento: "Reduzir o ritmo protege o time mas encolhe o portfólio — que é o principal argumento de renovação de assinatura. O trade-off precisa ser consciente e comunicado para o time."
+      },
+      {
+        text: "Implementar método de produção em blocos — gravar em lote para otimizar o tempo de cada especialista",
+        risco: "baixo",
+        effects: { clima: +1, produtividade: +4, qualidade: +1, financeiro: 0 },
+        avaliacao: "boa",
+        ensinamento: "Reorganização do fluxo de produção é a solução mais eficiente: não custa dinheiro e aumenta a capacidade. Produção em blocos é padrão em Netflix, Masterclass e os maiores players de conteúdo do mundo."
+      },
+      {
+        text: "Dizer ao Rafael que a empresa está em momento crítico e que todos precisam aguentar mais 3 meses",
+        risco: "alto",
+        gestorEffects: { reputacaoInterna: -2 },
+        effects: { clima: -3, produtividade: -2, qualidade: -2, satisfacao: -1 },
+        avaliacao: "ruim",
+        ensinamento: "Pedir aguardo a um time já no limite sem nenhuma ação concreta é a receita para perder exatamente as pessoas que você mais precisa. Líderes em crise não pedem paciência — oferecem soluções."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R3 · DIAGNÓSTICO · O Cliente que Cancela e Explica
+     Contexto: entrevistas de cancelamento revelam padrão claro.
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Cliente que Cancela e Explica",
+    description: "As entrevistas de cancelamento revelaram três padrões dominantes: 60% cancela por 'falta de tempo para estudar' (conteúdo muito longo), 25% por 'não consigo aplicar no trabalho' (teoria sem prática), 15% por preço frente a alternativas gratuitas. O head de produto propõe reformular os cursos em módulos de 8 minutos com projetos práticos. O time de conteúdo estima 4 meses de trabalho para reformular o catálogo atual.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Reformular os 20 cursos mais populares em módulos curtos com projetos práticos — priorizar impacto máximo",
+        risco: "medio",
+        effects: { qualidade: +4, satisfacao: +3, produtividade: -2, financeiro: -2, inovacao: +2 },
+        avaliacao: "boa",
+        ensinamento: "Reformular o produto com base em feedback real de cancelamento é a alocação mais eficiente de esforço de produto. Focar nos 20 cursos mais populares entrega 80% do impacto com 30% do trabalho."
+      },
+      {
+        text: "Criar uma nova trilha de microlearning sem mexer no catálogo existente — adicionar sem reformar",
+        risco: "medio",
+        effects: { inovacao: +3, satisfacao: +2, financeiro: -3, produtividade: -3, qualidade: 0 },
+        avaliacao: "media",
+        ensinamento: "Adicionar sem reformar fragmenta o portfólio e o foco do time. Os novos microconteúdos precisam competir por atenção com o catálogo antigo que tem os mesmos problemas apontados nos cancelamentos."
+      },
+      {
+        text: "Reformular o catálogo inteiro nos próximos 4 meses — fazer certo de uma vez",
+        risco: "alto",
+        gestorEffects: { esgotamento: +1 },
+        effects: { qualidade: -2, produtividade: -4, clima: -2, financeiro: -3, satisfacao: -1 },
+        avaliacao: "ruim",
+        ensinamento: "Reformular 100% do catálogo em paralelo com a operação normal sobrecarrega o time além do limite. Com o clima já crítico, essa decisão pode quebrar o time que está segurando a empresa."
+      },
+      {
+        text: "Criar uma feature de 'modo rápido' que corta os cursos existentes automaticamente em clips de 10 minutos",
+        risco: "baixo",
+        effects: { satisfacao: +2, inovacao: +2, qualidade: -1, financeiro: -1, produtividade: +1 },
+        avaliacao: "media",
+        ensinamento: "A solução tecnológica compensa o curto prazo, mas a edição automática não substitui a reformulação pedagógica. Clips gerados por IA de conteúdo longo raramente capturam os momentos mais relevantes."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R4 · DIAGNÓSTICO · A Plataforma Que Ficou Para Trás
+     Contexto: a tecnologia da plataforma tem 3 anos sem refactor.
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "A Plataforma Que Ficou Para Trás",
+    description: "O relatório técnico chega: a plataforma tem performance média de 4,8 segundos para carregar no mobile — o benchmark do setor é 1,8s. O app iOS tem nota 3,2 na App Store. O CTO Eduardo estima 3 meses de refatoração para atingir o padrão atual do mercado. 'É dívida técnica que acumulamos quando crescemos rápido durante a pandemia', ele explica. 'Cada semana que postergamos custa mais para resolver depois.'",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Alocar 40% da equipe de engenharia para refatoração e manter 60% em novas features — equilibrar débito e produto",
+        risco: "medio",
+        effects: { qualidade: +3, seguranca: +2, produtividade: -2, satisfacao: +2, inovacao: -1 },
+        avaliacao: "boa",
+        ensinamento: "Alocar parcialmente para tech debt enquanto mantém entregas de produto é a prática recomendada. Pagar 100% da dívida técnica de uma vez paralisa o produto; ignorar 100% cria um produto que o time não consegue mais evoluir."
+      },
+      {
+        text: "Pausar todas as novas features pelos 3 meses de refatoração total",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: -1 },
+        effects: { qualidade: +5, seguranca: +3, produtividade: -4, satisfacao: -3, inovacao: -3, financeiro: -2 },
+        avaliacao: "media",
+        ensinamento: "Refatoração total entrega a maior melhoria técnica, mas 3 meses sem novas features em uma empresa com 8 meses de runway e assinantes cancelando é um risco real de mercado."
+      },
+      {
+        text: "Focar apenas nas melhorias de performance do mobile — o problema mais visível para o assinante",
+        risco: "baixo",
+        effects: { satisfacao: +3, qualidade: +2, financeiro: -1, produtividade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Priorizar pelo impacto no cliente é a escolha certa quando os recursos são escassos. Performance mobile afeta diretamente a experiência de 68% dos usuários que acessam pelo celular."
+      },
+      {
+        text: "Adiar a refatoração — com o runway de 8 meses, sobrevivência financeira precede qualidade técnica",
+        risco: "medio",
+        effects: { financeiro: +1, qualidade: -2, seguranca: -2, satisfacao: -2, produtividade: -1 },
+        avaliacao: "ruim",
+        ensinamento: "Ignorar débito técnico é emprestar dinheiro com juros compostos. Cada mês sem refatoração aumenta o custo de correção futura e deteriora a experiência do usuário — acelerando exatamente o churn que drena o caixa."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R5 · DIAGNÓSTICO · O Fundo de Corporate Venture
+     Contexto: oportunidade de capital surge com exigências.
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Fundo de Corporate Venture",
+    description: "O fundo de corporate venture de um grande grupo educacional quer investir R$8M por 25% da empresa. A condição: a empresa precisa pivotar para B2B e atender prioritariamente o grupo controlador por 3 anos. O cheque resolve o runway, mas o pivô forçado pode desalinhar o time e limitar o mercado endereçável no futuro. Seu investidor-anjo atual aconselha cautela.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Negociar as condições: aceitar os R$8M mas reduzir a exclusividade para 18 meses e o stake para 18%",
+        risco: "medio",
+        gestorEffects: { capitalPolitico: +1 },
+        effects: { financeiro: +6, inovacao: -1, satisfacao: -1, clima: +2 },
+        avaliacao: "boa",
+        ensinamento: "Negociar os termos de um cheque grande é a responsabilidade do CEO. Reduzir a exclusividade e a diluição preserva a flexibilidade estratégica sem recusar capital que resolve o problema de sobrevivência."
+      },
+      {
+        text: "Aceitar as condições integralmente — R$8M agora vale mais do que qualquer flexibilidade futura",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +2, esgotamento: +1 },
+        effects: { financeiro: +8, inovacao: -3, satisfacao: -2, clima: -2, reputacao: -1 },
+        avaliacao: "media",
+        ensinamento: "Capital resolve o runway, mas 3 anos de exclusividade com um único cliente pode engessar completamente a estratégia. Fundos corporate geralmente querem muito mais do que o dinheiro inicial sugere."
+      },
+      {
+        text: "Recusar e buscar investidores sem condicionantes de pivô nos próximos 60 dias",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: -1, esgotamento: +2 },
+        effects: { financeiro: -3, inovacao: +2, clima: -1, reputacao: +1 },
+        avaliacao: "media",
+        ensinamento: "Recusar capital ruim pode ser a decisão certa — mas exige que a alternativa exista. Com 8 meses de runway, 60 dias buscando investidor sem garantia de cheque é um risco calculado que precisa de plano B."
+      },
+      {
+        text: "Aceitar metade do valor (R$4M) em troca de condições mais brandas — meio a meio",
+        risco: "baixo",
+        effects: { financeiro: +4, inovacao: 0, satisfacao: 0, clima: +1, produtividade: +1 },
+        avaliacao: "boa",
+        ensinamento: "Cheque menor com menos restrições muitas vezes é melhor negócio do que cheque maior com cláusulas que limitam o futuro. R$4M estende o runway em 4 meses — tempo suficiente para validar o B2B sem se prender a ele."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R6 · PRESSÃO · O Head de Produto Quer Sair
+     Contexto: pressão externa começa. Liderança ameaçada.
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Head de Produto Quer Sair",
+    description: "Tatiana, sua head de produto, pede uma conversa difícil: 'Recebi uma oferta de uma startup financiada para ser CPO. Salário 40% acima. Posso ficar se houver um caminho claro para o produto daqui — mas não consigo trabalhar com a incerteza atual.' Tatiana tem 4 anos de empresa e domina toda a visão de produto. Reposicioná-la levaria meses.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Apresentar o roadmap estratégico dos próximos 12 meses e oferecer participação societária como retenção",
+        risco: "medio",
+        gestorEffects: { reputacaoInterna: +2 },
+        effects: { financeiro: -2, clima: +3, produtividade: +2, inovacao: +2, qualidade: +1 },
+        avaliacao: "boa",
+        ensinamento: "Equity como instrumento de retenção alinha o interesse da liderança ao futuro da empresa. Além do dinheiro, a Tatiana quer pertencer ao projeto — e um roadmap claro é o que ela está pedindo."
+      },
+      {
+        text: "Aumentar o salário em 25% e criar o cargo de CPO formalmente",
+        risco: "medio",
+        effects: { financeiro: -3, clima: +2, produtividade: +2, qualidade: +1, inovacao: +1 },
+        avaliacao: "media",
+        ensinamento: "Contraproposta salarial resolve o imediato mas não o problema real: a incerteza estratégica. Se o caminho do produto continuar nebuloso, a retenção financeira é temporária."
+      },
+      {
+        text: "Desejar boa sorte e iniciar a busca imediata por um novo head de produto no mercado",
+        risco: "alto",
+        gestorEffects: { reputacaoInterna: -1 },
+        effects: { clima: -3, produtividade: -4, qualidade: -3, inovacao: -2, satisfacao: -1 },
+        avaliacao: "ruim",
+        ensinamento: "Perder o head de produto com 4 anos de empresa em um momento de incerteza estratégica é um dos eventos mais custosos para uma startup. O custo de reposição é alto — mas o custo de conhecimento perdido é incalculável."
+      },
+      {
+        text: "Propor que ela lidere a decisão de pivô como projeto estratégico principal — dar protagonismo à incerteza",
+        risco: "baixo",
+        effects: { clima: +4, produtividade: +3, inovacao: +3, financeiro: -1, qualidade: +2 },
+        avaliacao: "boa",
+        ensinamento: "Transformar o problema em missão é uma das ferramentas mais poderosas de retenção de talento. Líderes de produto engajam quando sentem que têm impacto real na direção da empresa."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R7 · PRESSÃO · Coursera Anuncia Expansão no Brasil
+     Contexto: competidor internacional entra com força.
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "Coursera Anuncia Expansão no Brasil",
+    description: "O Coursera anunciou parceria com 8 universidades brasileiras e planos de localizar todo o catálogo em português até o próximo semestre. A precificação será de R$59/mês — R$40 abaixo da sua assinatura atual. A imprensa especializada já faz comparações diretas. Três investidores-anjos que você está prospectando enviaram o artigo com a pergunta: 'Como vocês respondem a isso?'",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Posicionar publicamente o diferencial: instrutores brasileiros, contexto local e projetos aplicados ao mercado nacional",
+        risco: "baixo",
+        effects: { reputacao: +4, satisfacao: +2, inovacao: +1, financeiro: -1 },
+        avaliacao: "boa",
+        ensinamento: "Diferenciação clara é a única resposta sustentável à entrada de um player global capitalizado. Instrutores e casos locais são um moat que plataformas internacionais demoram anos para construir."
+      },
+      {
+        text: "Reduzir o preço para R$69/mês para competir mais diretamente com o Coursera",
+        risco: "alto",
+        effects: { satisfacao: +2, clientes: +1, financeiro: -5, margem: -3 },
+        avaliacao: "ruim",
+        ensinamento: "Guerra de preços com empresa capitalizada é batalha perdida antes de começar. Reduzir preço comprime margem sem garantir diferencial — e abre um precedente que é difícil de reverter."
+      },
+      {
+        text: "Acelerar o desenvolvimento de features que o Coursera não tem: certificações reconhecidas por empresas brasileiras",
+        risco: "medio",
+        effects: { inovacao: +4, reputacao: +3, financeiro: -3, produtividade: -2 },
+        avaliacao: "boa",
+        ensinamento: "Criar features que um global não consegue replicar rapidamente é a estratégia correta para startups locais contra gigantes. Certificações reconhecidas por RHs brasileiros exigem anos de parcerias locais."
+      },
+      {
+        text: "Ignorar o anúncio — o Coursera ainda não está operando e o mercado reage a fatos, não a anúncios",
+        risco: "medio",
+        effects: { reputacao: -3, satisfacao: -1, financeiro: 0 },
+        avaliacao: "ruim",
+        ensinamento: "Silêncio frente a um anúncio competitivo é lido pelo mercado como ausência de estratégia. Investidores, talentos e clientes observam como a empresa reage à pressão — e o silêncio é uma resposta."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R8 · PRESSÃO · O Resultado do Piloto B2B
+     Contexto: 3 empresas testaram a plataforma para treinamento.
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Resultado do Piloto B2B",
+    description: "O piloto B2B com 3 empresas terminou. Os resultados são mistos: a empresa A vai contratar (R$180k/ano, 200 licenças), a empresa B quer mais customização antes de decidir, a empresa C achou 'caro para o que entrega'. O ticket médio do B2B seria 11x o do B2C, mas o ciclo de venda foi de 4 meses. Com o runway atual, quantos ciclos de 4 meses você consegue financiar?",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Assinar o contrato com a empresa A, usar como caso de referência e montar equipe de 2 vendedores B2B especializados",
+        risco: "medio",
+        effects: { financeiro: +4, reputacao: +3, satisfacao: +2, inovacao: +1, produtividade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Primeiro cliente B2B convertido é o ativo mais valioso da transição de modelo. Um case real com resultado mensurável é a ferramenta de vendas mais eficiente para os próximos contratos."
+      },
+      {
+        text: "Investir na customização exigida pela empresa B — um contrato maior vale o investimento",
+        risco: "medio",
+        effects: { financeiro: -4, qualidade: +2, inovacao: +2, produtividade: -2, satisfacao: +1 },
+        avaliacao: "media",
+        ensinamento: "Customização para fechar um contrato B2B pode criar um produto melhor — ou um produto engessado em torno de uma necessidade específica que não escala. A decisão precisa avaliar se a customização tem valor para outros clientes."
+      },
+      {
+        text: "Desistir do B2B — o ciclo de 4 meses é incompatível com o runway e os resultados foram decepcionantes",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: -2 },
+        effects: { financeiro: -1, inovacao: -3, reputacao: -2, satisfacao: -1 },
+        avaliacao: "ruim",
+        ensinamento: "Abandonar o B2B depois de 1 ciclo com 33% de conversão (empresa A) é prematura. Vendas B2B têm curva de aprendizado e os primeiros ciclos raramente são representativos da maturidade do canal."
+      },
+      {
+        text: "Pivotar completamente para B2B: desligar o plano B2C e migrar o time inteiro para atendimento corporativo",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +1, esgotamento: +2 },
+        effects: { financeiro: +2, satisfacao: -4, clima: -3, reputacao: -2, inovacao: +2 },
+        avaliacao: "ruim",
+        ensinamento: "Pivô completo sem validação suficiente é o erro clássico de startups em crise. Desligar 94k assinantes B2C antes de garantir receita B2B suficiente pode zerar o caixa mais rápido do que a queima atual."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R9 · PRESSÃO · A Crise de Retenção Chega ao Pico
+     Contexto: churn mensal subindo. Dados de coorte preocupam.
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "A Crise de Retenção Chega ao Pico",
+    description: "Os dados de coorte mostram que o churn no 3º mês de assinatura está em 41% — era 18% há dois anos. O head de CS Marcos propõe uma iniciativa de 'sucesso do aluno': check-ins semanais automatizados, trilhas personalizadas e gamificação de progresso. Custo de implementação: R$340k em tecnologia e 3 meses de trabalho. Impacto estimado: redução de 12% no churn mensal.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Aprovar o projeto de sucesso do aluno — reduzir o churn é a prioridade mais urgente",
+        risco: "medio",
+        effects: { satisfacao: +4, inovacao: +3, financeiro: -4, produtividade: -2, reputacao: +2 },
+        avaliacao: "boa",
+        ensinamento: "Em modelo de assinatura, reduzir churn tem ROI garantido — cada ponto percentual de retenção a mais vale meses de crescimento de CAC. Investir em sucesso do cliente é investir no LTV."
+      },
+      {
+        text: "Implementar apenas a gamificação — a parte mais barata e com impacto mais visível para o assinante",
+        risco: "baixo",
+        effects: { satisfacao: +2, inovacao: +2, financeiro: -1, produtividade: 0 },
+        avaliacao: "media",
+        ensinamento: "Gamificação cria engajamento de curto prazo, mas não resolve as causas estruturais do churn identificadas nas entrevistas: falta de tempo e conteúdo pouco aplicável. É um analgésico, não um tratamento."
+      },
+      {
+        text: "Criar uma equipe de CS humano — 4 pessoas que entram em contato com assinantes no 2º mês",
+        risco: "medio",
+        effects: { satisfacao: +3, qualidade: +1, financeiro: -3, clima: +1, reputacao: +2 },
+        avaliacao: "boa",
+        ensinamento: "CS humano em modelo de assinatura cria uma camada de relacionamento que a tecnologia não replica. Contato no 2º mês — antes do pico de churn no 3º — intercepta o abandono no momento certo."
+      },
+      {
+        text: "Aguardar os resultados das reformulações de conteúdo antes de investir em CS — resolver a causa antes do sintoma",
+        risco: "baixo",
+        effects: { satisfacao: -2, financeiro: +1, produtividade: +1, inovacao: 0 },
+        avaliacao: "media",
+        ensinamento: "Sequenciar as iniciativas pode fazer sentido — mas cada mês de churn alto queima assinantes que não voltam. O ideal é endereçar causa e sintoma em paralelo, mesmo que com recursos menores para cada frente."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R10 · PRESSÃO · O Investidor Anjo Cobra Uma Posição
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Investidor Anjo Cobra Uma Posição",
+    description: "Seu principal investidor-anjo, Henrique, que aportou R$1,2M na fundação, pede uma reunião. Ele é direto: 'Você tem 5 meses de runway. Eu posso participar de um bridge de R$3M se você me apresentar uma estratégia clara — B2C reformulado com métricas de retenção, ou B2B com pipeline documentado. Não posso apostar em 'ainda estamos descobrindo'.' Você tem 7 dias para responder.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Apresentar uma estratégia dual clara: B2C enxuto com foco em retenção + B2B como canal secundário crescente",
+        risco: "medio",
+        gestorEffects: { capitalPolitico: +2 },
+        effects: { financeiro: +4, satisfacao: +1, reputacao: +2, inovacao: +1 },
+        avaliacao: "boa",
+        ensinamento: "Estratégia dual bem documentada com métricas claras é o que investidores experientes querem ver. A honestidade sobre ter dois caminhos em exploração — com dados — é mais confiante do que um pivô forçado."
+      },
+      {
+        text: "Apresentar o B2B como estratégia única — é o que ele quer ouvir e tem o maior potencial de ticket",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +1, esgotamento: +1 },
+        effects: { financeiro: +3, satisfacao: -2, reputacao: -1, inovacao: +1 },
+        avaliacao: "ruim",
+        ensinamento: "Apresentar uma estratégia que você não está 100% comprometido para agradar o investidor é uma armadilha. O desalinhamento aparece em 60 dias — e a confiança que se perde é muito mais cara do que o cheque."
+      },
+      {
+        text: "Recusar o bridge e focar nos próximos 5 meses em chegar ao break-even no B2C com cortes cirúrgicos",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: -1, esgotamento: +2 },
+        effects: { financeiro: +2, satisfacao: -2, clima: -2, produtividade: -1 },
+        avaliacao: "media",
+        ensinamento: "Break-even sem capital externo exige cortes que podem matar o produto que você está tentando salvar. É viável — mas precisa de um plano de corte muito preciso para não destruir as métricas de retenção que o B2B vai exigir."
+      },
+      {
+        text: "Aceitar o bridge imediatamente e apresentar a estratégia depois — o dinheiro é mais urgente do que o plano",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: -2 },
+        effects: { financeiro: +5, reputacao: -3, satisfacao: 0, inovacao: -1 },
+        avaliacao: "ruim",
+        ensinamento: "Receber investimento sem apresentar a estratégia é trair a confiança do investidor antes mesmo de começar. Investidores experientes reconhecem quando estão sendo usados como fonte de caixa, não como parceiros."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R11 · DECISÃO CRÍTICA · O Momento do Pivô
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Momento do Pivô",
+    description: "Com o bridge aprovado e 9 meses de runway restantes, você precisa definir a alocação dos recursos. O board tem duas posições: metade quer 80% do time focado no B2B para chegar a R$500k MRR em 8 meses. A outra metade quer reformar o produto B2C e recuperar a base. O head de produto alerta: 'Não temos gente para os dois com excelência. Qualquer que seja a escolha, precisamos de 100% de comprometimento.'",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "B2B como prioridade: realocar 70% do time para construir o canal corporativo com o pipeline atual",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +1, esgotamento: +1 },
+        effects: { financeiro: +3, inovacao: +3, satisfacao: -3, clima: -1, reputacao: +2 },
+        avaliacao: "boa",
+        ensinamento: "Quando os recursos são escassos, clareza de prioridade é mais valiosa do que equilíbrio. B2B com ticket 11x maior e receita previsível é a transformação que cria uma empresa sustentável — desde que executado com foco."
+      },
+      {
+        text: "B2C reformulado: investir os recursos na correção de churn e reativação de ex-assinantes",
+        risco: "medio",
+        effects: { satisfacao: +4, reputacao: +2, inovacao: +2, financeiro: -2, clima: +2 },
+        avaliacao: "boa",
+        ensinamento: "Recuperar uma base existente custa menos do que construir um novo canal do zero. Se o churn foi por problemas de produto — e não por falta de interesse — a reformulação pode reativar uma base que já confiou na empresa."
+      },
+      {
+        text: "Modelo híbrido: 50% B2B, 50% B2C — não descartar nenhuma aposta enquanto os dados não são conclusivos",
+        risco: "medio",
+        effects: { financeiro: -1, inovacao: +1, produtividade: -2, qualidade: -2, satisfacao: 0 },
+        avaliacao: "ruim",
+        ensinamento: "Dividir o time ao meio entre dois modelos opostos garante que nenhum dos dois seja executado com a excelência necessária. Em um momento de decisão estratégica, 'metade de tudo' é o caminho mais seguro para o fracasso em ambas as frentes."
+      },
+      {
+        text: "Vender a base de 94k assinantes para um player maior e usar o caixa para construir o B2B sem pressão de runway",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +2, esgotamento: +2 },
+        requisitos: { indicadorMinimo: { financeiro: 7 } },
+        effects: { financeiro: +6, satisfacao: -5, reputacao: -3, clima: -2, inovacao: +2 },
+        avaliacao: "media",
+        ensinamento: "Vender um ativo para financiar uma transição é uma opção legítima — mas sinaliza ao mercado que a empresa desistiu do B2C. O impacto na marca e no time é real e precisa ser gerenciado ativamente."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R12 · DECISÃO CRÍTICA · A Plataforma ou o Conteúdo?
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "A Plataforma ou o Conteúdo?",
+    description: "O orçamento de produto para o próximo semestre precisa ser alocado. O CTO quer R$1,2M para refatorar a plataforma e lançar um app nativo. O head de conteúdo quer R$1M para produzir 40 novos cursos com instrutores de referência. O CFO diz que há R$1,5M disponível para produto no total — não para os dois. Cada área garante que o sucesso da empresa depende da sua prioridade.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Investir R$1M na plataforma — sem produto técnico confiável, o conteúdo não chega ao usuário",
+        risco: "medio",
+        effects: { qualidade: +5, seguranca: +3, produtividade: +2, satisfacao: +2, inovacao: -1, financeiro: -3 },
+        avaliacao: "boa",
+        ensinamento: "Em uma plataforma digital, a experiência técnica é o produto. Conteúdo excelente em uma plataforma com 4,8s de carregamento perde para conteúdo mediano em uma plataforma rápida e confiável."
+      },
+      {
+        text: "Investir R$900k no conteúdo — os 40 novos cursos ampliam o catálogo e reduzem churn por obsolescência",
+        risco: "medio",
+        effects: { qualidade: +2, inovacao: +4, satisfacao: +3, reputacao: +2, produtividade: -1, financeiro: -3 },
+        avaliacao: "boa",
+        ensinamento: "Catálogo relevante e atualizado é o principal driver de retenção em EdTech. Um usuário que encontra cursos novos toda vez que acessa tem razão para continuar pagando."
+      },
+      {
+        text: "Dividir: R$750k para plataforma e R$750k para conteúdo — cobrir os dois com menos",
+        risco: "medio",
+        effects: { qualidade: +2, inovacao: +2, satisfacao: +1, produtividade: -1, financeiro: -3 },
+        avaliacao: "media",
+        ensinamento: "Divisão pode ser o caminho quando os dois investimentos são estratégicos e nenhum precisa de resultado imediato. O risco é que R$750k para plataforma e R$750k para conteúdo podem ser insuficientes para gerar o impacto que o negócio precisa."
+      },
+      {
+        text: "Terceirizar o desenvolvimento de plataforma para uma agência e usar o time interno 100% em conteúdo",
+        risco: "alto",
+        gestorEffects: { esgotamento: +1 },
+        effects: { qualidade: -2, inovacao: +3, satisfacao: +2, financeiro: -2, produtividade: -3 },
+        avaliacao: "ruim",
+        ensinamento: "Terceirizar a plataforma core de uma empresa de tecnologia é ceder o controle do principal ativo técnico. Agências entregam o que você especifica — e especificar bem exige o time técnico que você desviou para conteúdo."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R13 · DECISÃO CRÍTICA · O Acordo com Empresa de RH
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Acordo com Empresa de RH",
+    description: "A maior empresa de consultoria de RH do Brasil quer fazer uma parceria de distribuição: eles incluem sua plataforma nos pacotes de benefícios de 80 clientes corporativos. Em troca, desconto de 40% no valor da licença e split de receita de 30% para eles. O volume potencial é de 12.000 usuários novos — mas a margem por usuário cai para 42% do atual.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Aceitar a parceria com limite de volume: máximo de 4.000 usuários para testar o canal antes de escalar",
+        risco: "medio",
+        gestorEffects: { capitalPolitico: +1 },
+        effects: { financeiro: +3, satisfacao: +3, reputacao: +2, inovacao: +1 },
+        avaliacao: "boa",
+        ensinamento: "Pilotar uma parceria de distribuição com volume limitado é a abordagem correta. Validar o canal antes de se comprometer com 12.000 usuários protege contra surpresas de comportamento de uso e de custo de suporte."
+      },
+      {
+        text: "Aceitar a parceria integralmente — 12.000 usuários novos resolve o problema de base de uma vez",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +2, esgotamento: +1 },
+        effects: { financeiro: +5, satisfacao: +4, reputacao: +3, qualidade: -3, produtividade: -3, clima: -2 },
+        avaliacao: "media",
+        ensinamento: "12.000 usuários novos em um produto ainda com problemas de plataforma e churn alto é um risco operacional real. Suporte para essa base pode colapsar um time já sobrecarregado."
+      },
+      {
+        text: "Recusar — 40% de desconto e 30% de split destroem a margem por usuário",
+        risco: "medio",
+        effects: { financeiro: 0, reputacao: -1, satisfacao: -1, inovacao: +1 },
+        avaliacao: "media",
+        ensinamento: "Recusar uma parceria de distribuição por margem pode ser correto se a empresa tiver canais alternativos com custo de aquisição menor. Com CAC triplicado no B2C, a parceria pode ser mais eficiente mesmo com a margem reduzida."
+      },
+      {
+        text: "Negociar: aceitar com split de 20% (não 30%) e desconto de 30% (não 40%)",
+        risco: "baixo",
+        effects: { financeiro: +4, satisfacao: +3, reputacao: +2, inovacao: +1, produtividade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Toda proposta inicial de parceria tem gordura para negociar. 10 pontos percentuais de split e 10 de desconto a menos podem representar R$200k adicionais de receita por ano — vale a negociação."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R14 · DECISÃO CRÍTICA · A Reestruturação do Time
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "A Reestruturação do Time",
+    description: "Com a direção estratégica definida, é hora de alinhar o time ao novo modelo. O CEO de RH sugere reestruturação: desligar 18 pessoas que não fazem parte do caminho escolhido e contratar 12 perfis específicos para B2B. O CFO aponta que o custo da reestruturação (indenizações + seleção) é de R$820k — mas a economia anual é de R$600k.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Fazer a reestruturação com cuidado: comunicação clara, indenizações generosas e suporte de recolocação",
+        risco: "medio",
+        gestorEffects: { reputacaoInterna: +1, esgotamento: +2 },
+        effects: { financeiro: -2, clima: -2, produtividade: +3, qualidade: +2, inovacao: +2 },
+        avaliacao: "boa",
+        ensinamento: "Reestruturação bem conduzida — com humanidade e transparência — é percebida pelo time que fica como sinal de liderança responsável. O contrário cria trauma cultural que persiste por anos."
+      },
+      {
+        text: "Adiar a reestruturação e realocar internamente as pessoas que não têm perfil B2B",
+        risco: "medio",
+        effects: { financeiro: -1, clima: +2, produtividade: -2, qualidade: -1, inovacao: -1 },
+        avaliacao: "media",
+        ensinamento: "Realocação interna preserva as pessoas mas pode colocar profissionais em funções que não são seu ponto forte. O custo humano é menor, mas o custo de performance pode ser maior no longo prazo."
+      },
+      {
+        text: "Fazer a reestruturação rapidamente para minimizar a incerteza — comunicar e executar em 48 horas",
+        risco: "alto",
+        gestorEffects: { reputacaoInterna: -3, capitalPolitico: -1 },
+        effects: { financeiro: +1, clima: -5, produtividade: -3, qualidade: -2, satisfacao: -2 },
+        avaliacao: "ruim",
+        ensinamento: "Reestruturação executada em 48 horas é percebida como frieza e descaso. O time que fica processa a saída dos colegas — e a forma como foi feita — como sinal de como eles mesmos serão tratados no futuro."
+      },
+      {
+        text: "Contratar os 12 novos perfis antes de desligar os 18 — garantir continuidade antes da transição",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +1, esgotamento: +2 },
+        effects: { financeiro: -4, clima: -1, produtividade: +2, inovacao: +3, qualidade: +2 },
+        avaliacao: "media",
+        ensinamento: "Contratar antes de desligar garante continuidade mas aumenta temporariamente o custo de folha. Com runway apertado, 3 meses de time duplo pode comprometer o plano financeiro."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R15 · DECISÃO FINAL · O Futuro da EdTech
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Futuro da EdTech",
+    description: "Você chegou ao final do ciclo estratégico. A empresa sobreviveu à crise de runway, tomou decisões difíceis e precisa agora definir como crescer de forma sustentável. Os dados do último trimestre mostram sinais de estabilização. O board pede uma visão para os próximos 3 anos.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Empresa de aprendizagem corporativa: B2B como motor principal, B2C como funil de entrada para empresas",
+        effects: { financeiro: +5, reputacao: +4, inovacao: +3, satisfacao: +3, qualidade: +2, clima: +2 },
+        avaliacao: "boa",
+        ensinamento: "B2B com B2C como funil é o modelo mais eficiente em EdTech: a marca de consumo alimenta a credibilidade corporativa, e o ticket B2B financia a qualidade que retém o B2C. É assim que Coursera e LinkedIn Learning cresceram."
+      },
+      {
+        text: "Plataforma de conteúdo premium: aumentar o preço para R$149/mês e focar em uma base menor e mais engajada",
+        effects: { reputacao: +3, satisfacao: +2, inovacao: +4, financeiro: +3, qualidade: +3, clima: +2 },
+        avaliacao: "boa",
+        ensinamento: "Modelos premium com base menor funcionam quando o produto justifica o preço. Assinantes que pagam mais cancelam menos — a seleção por preço garante uma base com comprometimento real com o aprendizado."
+      },
+      {
+        text: "Marketplace de instrutores: abrir a plataforma para qualquer instrutor brasileiro, focando no volume e na comissão",
+        effects: { financeiro: +2, inovacao: +5, satisfacao: -2, qualidade: -4, reputacao: -2 },
+        avaliacao: "ruim",
+        ensinamento: "Marketplace aberto sem curadoria destrói a consistência de qualidade que é o principal diferencial frente ao Coursera. O modelo Udemy — com mais de 200k cursos de qualidade variável — é difícil de competir no Brasil sem escala massiva."
+      },
+      {
+        text: "Venda estratégica: buscar um acquirer que valorize a base, a tecnologia e o time",
+        requisitos: { indicadorMinimo: { reputacao: 10, financeiro: 9 } },
+        effects: { financeiro: +7, inovacao: +2, reputacao: +3, satisfacao: +2, clima: +1 },
+        avaliacao: "boa",
+        ensinamento: "A venda estratégica é uma decisão legítima quando a empresa construiu ativos reais — base de usuários, tecnologia e marca — que têm valor para um acquirer com mais escala. Não é fracasso; é realização de valor construído."
+      }
+    ]
+  }
+
+],
+
+/* ══════════════════════════════════════════════════════════════════
+   HISTÓRIA [2] · Scale-up de IA · Automação Corporativa
+   Contexto: 40 clientes, R$6,8M ARR, 58 funcionários (maioria
+   cientistas de dados), pipeline travado — 60% em "avaliação técnica"
+   há mais de 90 dias, 4 vendedores sem experiência enterprise.
+
+   INDICADORES: financeiro:9, clima:4, satisfacao:7, qualidade:6,
+                produtividade:5, reputacao:8, inovacao:7, seguranca:6
+
+   ATENÇÃO: inovacao alta (7) é o principal ativo.
+   Clima baixo (4) é o principal risco.
+   O maior perigo é deixar o produto técnico sobrecarregar as vendas.
+══════════════════════════════════════════════════════════════════ */
+[
+
+  /* ═══════════════════════════════════════════════════════
+     R1 · DIAGNÓSTICO · O Pipeline Travado
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Pipeline Travado",
+    description: "Marcos, seu head de vendas, apresenta o mapa do pipeline: 24 oportunidades em negociação, R$4,2M em valor potencial. Mas 60% está em 'avaliação técnica' há mais de 90 dias sem avançar. Ele explica: 'As demos são boas tecnicamente, mas os decisores de negócio — CFOs e CHROs — saem sem entender o ROI concreto. Eles precisam de números, não de arquitetura de IA.' Qual é o diagnóstico e o plano?",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Criar um framework de ROI personalizado para cada oportunidade — calcular o retorno específico para cada cliente antes da próxima reunião",
+        risco: "baixo",
+        effects: { satisfacao: +3, reputacao: +3, produtividade: -2, financeiro: +1 },
+        avaliacao: "boa",
+        ensinamento: "Em vendas B2B enterprise, o comprador precisa justificar internamente a decisão. ROI documentado com os números do próprio cliente é o argumento mais poderoso — e diferencia empresas que vendem tecnologia de empresas que vendem resultado."
+      },
+      {
+        text: "Contratar um diretor de vendas enterprise com experiência em SAP ou Oracle para liderar o pipeline",
+        risco: "medio",
+        gestorEffects: { capitalPolitico: +1 },
+        effects: { financeiro: -3, satisfacao: +2, reputacao: +2, produtividade: +2 },
+        avaliacao: "boa",
+        ensinamento: "Vendas enterprise exige um perfil específico que raramente é desenvolvido internamente em startups de produto técnico. Um diretor com rolodex enterprise pode desbloquear o pipeline em semanas."
+      },
+      {
+        text: "Colocar os cientistas de dados nas reuniões de vendas para explicar melhor a tecnologia",
+        risco: "medio",
+        effects: { qualidade: +2, satisfacao: -2, produtividade: -3, inovacao: -1 },
+        avaliacao: "ruim",
+        ensinamento: "CFOs e CHROs não tomam decisões baseadas em explicações técnicas mais detalhadas — eles precisam de ROI e cases de sucesso similares. Cientistas de dados em reuniões de negócio geralmente aprofundam o problema que você está tentando resolver."
+      },
+      {
+        text: "Desqualificar as 14 oportunidades mais antigas e focar os recursos nas 10 mais aquecidas",
+        risco: "baixo",
+        effects: { financeiro: +1, produtividade: +2, satisfacao: 0, reputacao: -1 },
+        avaliacao: "media",
+        ensinamento: "Foco no pipeline quente é uma tática válida, mas desqualificar sem tentar desbloquear descarta R$2,4M em potencial. O problema não é o prospect — é a abordagem de vendas."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R2 · DIAGNÓSTICO · A Demo que Afasta
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "A Demo que Afasta",
+    description: "Você assiste a uma gravação de demo. O que vê: 45 minutos de arquitetura de IA, gráficos de acurácia de modelos e terminologia técnica que o CHRO da empresa claramente não acompanhou. No final, ele pergunta: 'Isso funciona com o nosso sistema de RH?' A resposta do cientista de dados foi uma explicação de 10 minutos sobre APIs de integração. O CHRO agradeceu e nunca mais respondeu.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Reformular a demo completamente: começar pelo problema do cliente, mostrar o antes e o depois em 15 minutos",
+        risco: "baixo",
+        effects: { satisfacao: +4, reputacao: +3, produtividade: -1, inovacao: +1 },
+        avaliacao: "boa",
+        ensinamento: "A melhor demo começa pelo dor do cliente, não pelo produto. Em 15 minutos mostrando o problema que o cliente reconhece e a solução que ele pode explicar para o board, você fecha mais do que em 45 minutos de arquitetura técnica."
+      },
+      {
+        text: "Criar um deck de casos de uso com ROI por indústria — entregar antes da demo para preparar o decisor",
+        risco: "baixo",
+        effects: { satisfacao: +3, reputacao: +2, inovacao: +1, produtividade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Material de preparação posiciona a conversa antes de acontecer. Um CFO que chega à demo sabendo que empresas similares reduziram custo de processo em 32% já está em modo de avaliação — não de ceticismo."
+      },
+      {
+        text: "Treinar os cientistas de dados em técnicas de storytelling de vendas",
+        risco: "medio",
+        effects: { produtividade: -2, satisfacao: +1, inovacao: -1, qualidade: -1 },
+        avaliacao: "ruim",
+        ensinamento: "Treinar técnicos para vender é possível, mas leva meses e raramente atinge a naturalidade de um vendedor experiente. O tempo de treinamento é tempo que o pipeline fica parado."
+      },
+      {
+        text: "Contratar um SE (Sales Engineer) que faz a ponte entre a tecnologia e o negócio nas demos",
+        risco: "medio",
+        effects: { satisfacao: +3, financeiro: -3, reputacao: +2, produtividade: +1 },
+        avaliacao: "boa",
+        ensinamento: "O Sales Engineer é o papel mais subestimado em startups de IA. Ele traduz a complexidade técnica em valor de negócio — e é o que estava faltando no seu processo."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R3 · DIAGNÓSTICO · O Concorrente Enterprise Chega
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Concorrente Enterprise Chega",
+    description: "Um prospect que estava em negociação avançada informa que vai assinar com a Workday, que acaba de lançar um módulo de automação de RH com IA generativa integrado ao ERP deles. 'É mais caro, mas elimina o risco de integração,' explica o CPO da empresa prospect. Dois outros prospects enviaram mensagens similares na semana. O mercado está observando como você posiciona a empresa diante dos grandes players.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Posicionar a empresa como especialista vertical — o produto mais profundo para automação de RH do que qualquer ERP generalista",
+        risco: "baixo",
+        effects: { reputacao: +4, inovacao: +3, satisfacao: +2, financeiro: +1 },
+        avaliacao: "boa",
+        ensinamento: "ERPs generalistas com IA adicionada são profundos no ERP e rasos na IA. Um especialista vertical tem 10x mais profundidade no problema específico — e essa diferença é defensável e mensurável."
+      },
+      {
+        text: "Oferecer integração nativa com Workday e SAP como feature de diferenciação — 'trabalha com o que você já tem'",
+        risco: "medio",
+        effects: { satisfacao: +4, inovacao: +2, qualidade: +2, financeiro: -3, produtividade: -3 },
+        avaliacao: "boa",
+        ensinamento: "Integração com os ERPs do mercado elimina o principal objeção de risco técnico. Empresas que conseguem dizer 'funciona com o seu SAP atual' removem o argumento mais frequente de não-decisão."
+      },
+      {
+        text: "Reduzir o preço para competir com os módulos dos ERPs — ser mais barato é o único diferencial restante",
+        risco: "alto",
+        effects: { financeiro: -4, reputacao: -3, satisfacao: -1, inovacao: -2 },
+        avaliacao: "ruim",
+        ensinamento: "Competir com ERP por preço é uma batalha impossível. A Workday tem margem para precificar abaixo do custo por anos para ganhar participação de mercado. Startups que entram em guerra de preço com enterprise geralmente saem de caixa, não de market share."
+      },
+      {
+        text: "Focar em empresas que não usam os ERPs grandes — mid-market sem SAP ou Workday é o segmento mais defensável",
+        risco: "medio",
+        effects: { satisfacao: +3, reputacao: +2, inovacao: +2, financeiro: +1, produtividade: +1 },
+        avaliacao: "boa",
+        ensinamento: "Segmentação defensável é o maior ativo de uma startup em mercado dominado por grandes players. Mid-market sem ERP é um mercado enorme, menos competitivo e com ciclo de venda mais curto."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R4 · DIAGNÓSTICO · O Cientista de Dados que Quer Mudar
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Cientista de Dados que Quer Mudar",
+    description: "Felipe, seu melhor cientista de dados, pede uma conversa: 'Passamos 3 anos construindo modelos que funcionam — e a empresa não consegue vender. Estou recebendo proposta do Mercado Livre para trabalhar em escala real. Aqui sinto que o meu trabalho não chega ao cliente.' Dois outros cientistas demonstram frustração similar em reuniões. O clima está em nível crítico e a produtividade do time técnico ameaça cair.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Criar um programa interno de 'cientista de dados no cliente' — visitas mensais aos clientes para ver o produto em uso",
+        risco: "baixo",
+        gestorEffects: { reputacaoInterna: +2 },
+        effects: { clima: +4, produtividade: +3, qualidade: +2, inovacao: +2 },
+        avaliacao: "boa",
+        ensinamento: "Conectar o time técnico com o impacto real do trabalho deles é a forma mais eficaz de retenção para cientistas de dados. Ver o modelo rodando no cliente e conversando com o usuário final transforma abstração em propósito."
+      },
+      {
+        text: "Criar trilha de carreira técnica com títulos e salários progressivos independentes de gestão de pessoas",
+        risco: "medio",
+        effects: { clima: +3, financeiro: -2, produtividade: +2, qualidade: +1 },
+        avaliacao: "boa",
+        ensinamento: "Cientistas de dados não querem ser gerentes — querem reconhecimento técnico. Trilha dual de carreira (técnica e de gestão) resolve o teto de crescimento sem forçar a migração para funções que não são sua vocação."
+      },
+      {
+        text: "Oferecer equity para os 5 técnicos mais sêniors como retenção de curto prazo",
+        risco: "medio",
+        effects: { clima: +2, financeiro: -1, produtividade: +1, inovacao: +1 },
+        avaliacao: "media",
+        ensinamento: "Equity retém no curto prazo mas não resolve a causa: falta de impacto percebido. Se o trabalho continuar parecendo sem resultado, o vesting vira apenas um motivo para adiar a saída — não para ficar."
+      },
+      {
+        text: "Criar um time de skunkworks: Felipe lidera um projeto de IA generativa como lado B — mais liberdade técnica",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: -1 },
+        effects: { clima: +3, inovacao: +5, produtividade: -3, financeiro: -2, qualidade: -1 },
+        avaliacao: "media",
+        ensinamento: "Skunkworks pode ser a válvula que mantém o talento — mas tira capacidade do produto principal no pior momento. A inovação dentro de uma empresa em crise precisa de governança para não se tornar distração."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R5 · DIAGNÓSTICO · O Cliente que Cancelou com Dados
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Cliente que Cancelou com Dados",
+    description: "A empresa Lógica RH, uma das primeiras clientes, notificou cancelamento após 18 meses. O motivo surpreende: 'A acurácia dos modelos é ótima. O problema é que não conseguimos usar o produto no dia a dia — a interface é complexa demais para os nossos analistas de RH.' O relatório interno revela que 60% das features do produto nunca foram usadas pelos clientes existentes.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Reformular a interface priorizando os 40% de features mais usadas — produto mais simples, adoção maior",
+        risco: "medio",
+        effects: { satisfacao: +4, qualidade: +3, inovacao: -1, produtividade: -2, financeiro: -2 },
+        avaliacao: "boa",
+        ensinamento: "Produto complexo que ninguém usa é tecnologia sem valor entregue. Simplificar a interface — com base em dados de uso real — aumenta a adoção que é o único indicador de sucesso do cliente que importa."
+      },
+      {
+        text: "Criar um programa de onboarding estruturado: 4 semanas de treinamento presencial para cada novo cliente",
+        risco: "medio",
+        effects: { satisfacao: +3, qualidade: +2, financeiro: -3, reputacao: +1, produtividade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Onboarding estruturado compensa a complexidade no curto prazo — mas não a elimina. A melhor solução é um produto que não precise de 4 semanas de treinamento para ser usado."
+      },
+      {
+        text: "Manter o produto como está e focar em clientes com time técnico de RH mais avançado",
+        risco: "medio",
+        effects: { satisfacao: -2, reputacao: -1, inovacao: +2, financeiro: 0 },
+        avaliacao: "ruim",
+        ensinamento: "Segmentar para clientes que toleram complexidade é uma estratégia — mas limita severamente o mercado endereçável. RH é uma função que na maioria das empresas não tem time técnico dedicado."
+      },
+      {
+        text: "Contratar um time de UX especializado em produto enterprise para liderar a reformulação de interface",
+        risco: "medio",
+        effects: { satisfacao: +3, qualidade: +3, financeiro: -4, produtividade: -1, inovacao: +1 },
+        avaliacao: "boa",
+        ensinamento: "UX enterprise é uma disciplina específica — projetar para analistas de RH que usam o produto por obrigação é completamente diferente de projetar para early adopters entusiastas. A contratação especializada paga dividendos."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R6 · PRESSÃO · A Vertical Certa
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "A Vertical Certa",
+    description: "O board pede uma decisão sobre verticalização. O produto atual atende RH e compliance em qualquer setor — mas sem profundidade em nenhum. Três verticais emergem como candidatas: varejo (maior volume de clientes, ticket menor), financeiro (ticket maior, ciclo de venda mais longo, regulação complexa) e manufatura (cadeia de conformidade trabalhista intensa, menor concorrência de IA).",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Manufatura: menor concorrência, conformidade trabalhista é problema crítico e recorrente, menos sujeito ao hype de IA generativa",
+        risco: "baixo",
+        effects: { satisfacao: +3, reputacao: +3, inovacao: +2, financeiro: +2, produtividade: +1 },
+        avaliacao: "boa",
+        ensinamento: "Verticalizar em segmento com menos IA concorrente e problema estrutural crítico é construir um moat defensável. Conformidade trabalhista em manufatura tem consequências regulatórias que forçam a adoção — diferente de 'nice-to-have'."
+      },
+      {
+        text: "Financeiro: ticket maior e as empresas desse setor pagam mais por conformidade e automação",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +1, esgotamento: +2 },
+        effects: { financeiro: +3, reputacao: +2, inovacao: +3, satisfacao: -2, produtividade: -3 },
+        avaliacao: "media",
+        ensinamento: "Financeiro tem o maior ticket — mas também o ciclo de venda mais longo, os processos de compliance mais exigentes e o maior grau de ceticismo com startups de IA. O risco de burn sem converter é real."
+      },
+      {
+        text: "Varejo: volume maior compensa o ticket menor e o ciclo de vendas é mais curto",
+        risco: "medio",
+        effects: { satisfacao: +2, financeiro: +2, produtividade: +2, reputacao: +1, inovacao: -1 },
+        avaliacao: "media",
+        ensinamento: "Volume de contratos menores tem valor — mas exige estrutura de CS e suporte que não existe ainda. Varejo tem alta rotatividade de pessoal que cria demanda real, mas o ticket pequeno pode não cobrir o custo de atendimento."
+      },
+      {
+        text: "Não verticalizar — manter o produto horizontal e competir por breadth, não por depth",
+        risco: "medio",
+        effects: { inovacao: +2, satisfacao: -2, reputacao: -2, produtividade: +1, financeiro: -1 },
+        avaliacao: "ruim",
+        ensinamento: "Produto horizontal em IA é o espaço que os ERPs gigantes vão ocupar primeiro. Startups de IA que ganham são aquelas que fazem uma coisa melhor do que qualquer empresa grande consegue — e isso requer foco vertical."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R7 · PRESSÃO · SAP Anuncia Módulo Concorrente
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "SAP Anuncia Módulo Concorrente",
+    description: "A SAP anunciou o SAP SuccessFactors AI Automation — módulo que automatiza compliance trabalhista e processos de RH, integrado nativamente ao ERP. Preço: incluído nos contratos enterprise existentes. Seis dos seus 40 clientes usam SAP. Três já enviaram e-mail perguntando se faz sentido continuar com você. A imprensa especializada publicou: 'SAP torna startups de automação de RH obsoletas?'",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Responder com dados: publicar benchmark comparativo mostrando acurácia superior e funcionalidades exclusivas",
+        risco: "baixo",
+        effects: { reputacao: +4, satisfacao: +3, inovacao: +2, produtividade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Dados públicos comparativos são a resposta mais eficiente a anúncios de concorrentes grandes. Comparações objetivas e verificáveis estabelecem credibilidade técnica — e candidatos que pesquisam a categoria confiam mais em benchmarks do que em marketing."
+      },
+      {
+        text: "Ligar para os 6 clientes SAP proativamente antes que eles cancelem",
+        risco: "baixo",
+        gestorEffects: { reputacaoInterna: +1 },
+        effects: { satisfacao: +4, reputacao: +2, financeiro: +1, produtividade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Contato proativo antes da reclamação é o melhor sinal de parceria que uma empresa de software pode dar. A maioria dos clientes não cancela imediatamente — eles esperam ver se a empresa vai reagir."
+      },
+      {
+        text: "Buscar parceria com a SAP para complementar o módulo deles com a profundidade técnica do seu produto",
+        risco: "medio",
+        gestorEffects: { capitalPolitico: +2 },
+        effects: { reputacao: +3, inovacao: +2, financeiro: +2, satisfacao: +2, produtividade: -2 },
+        avaliacao: "boa",
+        ensinamento: "Parceria com o concorrente-anunciante pode parecer contraintuitivo — mas grandes plataformas precisam de parceiros especializados para preencher lacunas de profundidade. 'Built on SAP' é um posicionamento mais forte do que 'alternativa ao SAP'."
+      },
+      {
+        text: "Ignorar o anúncio — módulos de ERP demoram 2 anos para estar prontos de verdade, o hype é maior que a realidade",
+        risco: "alto",
+        effects: { satisfacao: -3, reputacao: -3, inovacao: 0, financeiro: -1 },
+        avaliacao: "ruim",
+        ensinamento: "Ignorar o anúncio da SAP é deixar clientes sem resposta quando eles precisam de uma. Mesmo que o produto da SAP leve 2 anos para madurecer, o silêncio da sua empresa hoje é interpretado como confirmação da ameaça."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R8 · PRESSÃO · O Cliente Âncora Quer Mais
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Cliente Âncora Quer Mais",
+    description: "A Construtora Andrade, seu maior cliente (R$780k/ano), quer expandir o uso para mais 3 plantas industriais — mas em troca pede desconto de 35% no contrato expandido e features exclusivas de compliance para o setor de construção civil. A expansão geraria R$1,4M adicionais por ano, mas as features exclusivas exigem 4 meses de desenvolvimento dedicado.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Aceitar a expansão com desconto de 20% (não 35%) e features que beneficiem todos os clientes de manufatura",
+        risco: "medio",
+        gestorEffects: { capitalPolitico: +1 },
+        effects: { financeiro: +5, satisfacao: +3, reputacao: +2, produtividade: -2, inovacao: +2 },
+        avaliacao: "boa",
+        ensinamento: "Negociar o desconto e condicionar o desenvolvimento ao benefício de múltiplos clientes é a resposta certa. Features exclusivas para um cliente criam dívida técnica que prejudica toda a plataforma — e você paga o custo sem o benefício de escala."
+      },
+      {
+        text: "Aceitar as condições integralmente — R$1,4M adicionais resolve problemas maiores do que o custo de features exclusivas",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +2, esgotamento: +1 },
+        effects: { financeiro: +6, satisfacao: +2, reputacao: +1, qualidade: -3, produtividade: -4, inovacao: -2 },
+        avaliacao: "ruim",
+        ensinamento: "Features exclusivas para o maior cliente é uma armadilha clássica em SaaS. Em 12 meses, o produto está fragmentado entre o que o cliente âncora precisa e o que o mercado precisa — e os dois raramente convergem."
+      },
+      {
+        text: "Recusar o desconto de 35% mas aceitar as features — manter a margem mesmo perdendo o deal",
+        risco: "medio",
+        effects: { financeiro: -1, reputacao: -1, inovacao: +2, produtividade: -2, qualidade: +1 },
+        avaliacao: "media",
+        ensinamento: "Manter disciplina de preço protege a margem e o posicionamento, mas perder R$1,4M em expansão de um cliente satisfeito é custoso. A negociação é o caminho — não a recusa."
+      },
+      {
+        text: "Propor uma joint venture para desenvolver as features: cliente financia, startup entrega e compartilha IP",
+        risco: "baixo",
+        effects: { financeiro: +3, inovacao: +3, satisfacao: +3, reputacao: +2, produtividade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Co-desenvolvimento financiado pelo cliente distribui o risco e cria um case de sucesso conjunto. O cliente se torna co-autor da solução — o que aumenta a adoção e reduz o risco de cancelamento futuro."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R9 · PRESSÃO · O Modelo de IA Generativa Entra em Cena
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Modelo de IA Generativa Entra em Cena",
+    description: "O mercado está em euforia com IA generativa e clientes potenciais estão perguntando se o produto usa 'ChatGPT' ou algo similar. Sua tecnologia usa modelos preditivos clássicos — mais confiáveis para compliance, mas menos 'sexy' no pitch. O CTO propõe integrar um modelo de linguagem para criar uma interface conversacional. Custo: R$520k e 3 meses. O risco: latência e alucinações do LLM em contexto de compliance.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Integrar IA generativa apenas na interface — o usuário conversa com o produto, mas as decisões são dos modelos preditivos confiáveis",
+        risco: "medio",
+        effects: { inovacao: +4, reputacao: +4, satisfacao: +3, financeiro: -3, seguranca: -1 },
+        avaliacao: "boa",
+        ensinamento: "Usar IA generativa como interface e modelos preditivos como motor é o design correto para casos de uso críticos. O usuário ganha a experiência conversacional sem os riscos de alucinação em contexto de compliance regulatório."
+      },
+      {
+        text: "Adotar IA generativa completa — é o que o mercado pede e a diferenciação que vai desbloquear o pipeline",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +1, esgotamento: +1 },
+        effects: { inovacao: +5, reputacao: +3, seguranca: -4, satisfacao: -2, financeiro: -4 },
+        avaliacao: "ruim",
+        ensinamento: "IA generativa em compliance trabalhista sem camadas de verificação é um risco regulatório grave. Um erro de LLM que resulta em descumprimento de NR ou não conformidade trabalhista pode destruir a reputação do produto com um único incidente."
+      },
+      {
+        text: "Não integrar — posicionar ativamente a confiabilidade dos modelos preditivos como diferencial frente à euforia do generativo",
+        risco: "baixo",
+        effects: { inovacao: -1, reputacao: +2, seguranca: +3, satisfacao: +1, financeiro: +1 },
+        avaliacao: "boa",
+        ensinamento: "Contracorrente inteligente: posicionar-se como 'IA confiável para compliance' em um mercado de hype é uma diferenciação real. Empresas que precisam de auditoria preferem previsibilidade à capacidade generativa."
+      },
+      {
+        text: "Criar um produto separado com IA generativa — manter o produto core intacto e testar o novo em paralelo",
+        risco: "medio",
+        effects: { inovacao: +3, financeiro: -4, produtividade: -3, qualidade: -1, reputacao: +2 },
+        avaliacao: "media",
+        ensinamento: "Produto paralelo distribui o risco mas fragmenta o foco e o time. Com os recursos limitados de uma scale-up, dois produtos raramente atingem a excelência que um produto focado consegue."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R10 · PRESSÃO · O Round de Investimento Bate à Porta
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Round de Investimento Bate à Porta",
+    description: "Um fundo de venture capital especializado em IA B2B quer liderar uma rodada Serie A de R$18M com valuation de R$60M. A due diligence vai começar em 2 semanas. Os pontos de atenção que o fundo levantou: pipeline com baixa taxa de conversão, clima do time em nível baixo e concentração de receita nos 5 maiores clientes (64% do ARR). Você tem 2 semanas para preparar as respostas.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Ser completamente transparente com o fundo — apresentar os problemas e o plano de solução",
+        risco: "baixo",
+        gestorEffects: { capitalPolitico: +2, reputacaoInterna: +1 },
+        effects: { reputacao: +4, satisfacao: +1, financeiro: +2 },
+        avaliacao: "boa",
+        ensinamento: "Fundos de venture experientes valorizam founders que conhecem seus problemas e têm plano claro mais do que founders que escondem as fraquezas. A due diligence vai encontrar tudo de qualquer forma — melhor liderar a narrativa."
+      },
+      {
+        text: "Acelerar 3 conversões de pipeline antes da due diligence para melhorar as métricas",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +1, esgotamento: +2 },
+        effects: { financeiro: +3, satisfacao: +2, reputacao: +1, produtividade: -3, qualidade: -2 },
+        avaliacao: "media",
+        ensinamento: "Converter pipeline acelerando o processo pode criar contratos com expectativas desalinhadas. Clientes que entram por pressão de timing geralmente têm churn mais alto — o que aparece nos próximos relatórios que o fundo vai pedir."
+      },
+      {
+        text: "Negociar com os 5 maiores clientes expansões de contrato para diluir a concentração de receita",
+        risco: "medio",
+        effects: { financeiro: +4, satisfacao: +3, produtividade: -1, reputacao: +2 },
+        avaliacao: "boa",
+        ensinamento: "Expansão de contratos existentes é a forma mais rápida e confiável de melhorar a concentração de receita. Clientes satisfeitos que expandem sinalizam retenção forte — o dado que fundos de SaaS mais valorizam."
+      },
+      {
+        text: "Pedir mais 4 semanas de due diligence para preparar melhor a empresa",
+        risco: "medio",
+        effects: { reputacao: -1, financeiro: 0, clima: +2, produtividade: +2 },
+        avaliacao: "media",
+        ensinamento: "Pedir mais tempo na due diligence raramente é visto negativamente por fundos sérios. O risco é que o fundo pode interpretar como falta de preparo — ou pode ter outros deals na fila."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R11 · DECISÃO CRÍTICA · O Partnership Estratégico
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Partnership Estratégico",
+    description: "A consultoria EY quer fazer um partnership de go-to-market: eles indicam a sua plataforma para os clientes deles em troca de 15% de comissão e exclusividade de integração com os projetos de transformação de RH deles. Volume potencial: 30 novos clientes por ano. A exclusividade, porém, impede parcerias com outras consultorias pelo prazo de 2 anos.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Aceitar sem exclusividade — 15% de comissão sim, exclusividade não",
+        risco: "medio",
+        gestorEffects: { capitalPolitico: +1 },
+        effects: { financeiro: +4, satisfacao: +3, reputacao: +3, inovacao: +1 },
+        avaliacao: "boa",
+        ensinamento: "Exclusividade de canal por 2 anos é uma das concessões mais perigosas para uma startup em crescimento. As melhores parcerias de distribuição não exigem exclusividade — elas ganham sua lealdade pelo volume."
+      },
+      {
+        text: "Aceitar com exclusividade — 30 clientes por ano resolve o problema de pipeline de uma vez",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +2, esgotamento: +1 },
+        effects: { financeiro: +5, satisfacao: +4, reputacao: +2, inovacao: -2, produtividade: -1 },
+        avaliacao: "media",
+        ensinamento: "EY como canal exclusivo é poderoso — até o dia em que eles lançarem seu próprio produto ou deixarem de priorizar o seu. 2 anos de exclusividade é tempo demais para ficar refém de um canal único."
+      },
+      {
+        text: "Recusar e investir em construção de canal próprio de parcerias — menos dependência de um único parceiro",
+        risco: "medio",
+        effects: { financeiro: -2, inovacao: +2, reputacao: +1, produtividade: -1, satisfacao: 0 },
+        avaliacao: "media",
+        ensinamento: "Canal próprio de parcerias demora mais para construir mas é mais resiliente. O risco é o tempo — em um mercado que está se consolidando, cada mês sem volume de vendas importa."
+      },
+      {
+        text: "Propor um modelo de parceiro preferencial: EY tem acesso antecipado a features e suporte dedicado sem exclusividade",
+        risco: "baixo",
+        effects: { financeiro: +3, satisfacao: +3, reputacao: +3, inovacao: +2, produtividade: 0 },
+        avaliacao: "boa",
+        ensinamento: "Parceiro preferencial dá os benefícios da exclusividade para quem recebe — sem as restrições para quem oferece. É um modelo que consultorias experientes reconhecem como justo e frequentemente aceitam."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R12 · DECISÃO CRÍTICA · A Simplificação do Produto
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "A Simplificação do Produto",
+    description: "O diagnóstico de UX confirmou: 60% das features nunca são usadas. O head de produto propõe uma reformulação radical — reduzir o produto para as 40% de features mais usadas e criar uma experiência completamente nova e intuitiva. O CTO alerta: 'A reformulação vai gerar breaking changes para 8 clientes que usam as features que vamos remover.' O head de produto responde: '8 clientes em 40 é o custo de evoluir.'",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Aprovar a reformulação e conversar com os 8 clientes afetados antes de executar",
+        risco: "medio",
+        gestorEffects: { reputacaoInterna: +1 },
+        effects: { qualidade: +5, satisfacao: +3, inovacao: +3, produtividade: -2, financeiro: -2 },
+        avaliacao: "boa",
+        ensinamento: "Produto mais simples e focado é quase sempre mais adotado do que produto com muitas features. Conversar com os 8 afetados antes — não depois — é a diferença entre um cliente que participa da mudança e um cliente que cancela por surpresa."
+      },
+      {
+        text: "Manter todas as features e criar uma camada de UX mais simples por cima — não remover, simplificar a descoberta",
+        risco: "medio",
+        effects: { qualidade: +2, satisfacao: +2, inovacao: +1, produtividade: -2, financeiro: -2 },
+        avaliacao: "media",
+        ensinamento: "UX sobre feature bloat é um compromisso que não resolve a causa. O produto continua complexo por baixo — e a dívida técnica de manter features não usadas continua crescendo."
+      },
+      {
+        text: "Fazer a reformulação apenas para novos clientes — manter a versão atual para os clientes existentes indefinidamente",
+        risco: "alto",
+        effects: { qualidade: -1, inovacao: +2, produtividade: -4, financeiro: -3, satisfacao: 0 },
+        avaliacao: "ruim",
+        ensinamento: "Manter duas versões do produto em paralelo é a decisão mais cara tecnicamente. O time vai gastar o dobro de esforço em cada mudança — e os clientes existentes nunca vão migrar por conta própria."
+      },
+      {
+        text: "Fazer um teste A/B: metade dos novos clientes usa a versão reformulada por 3 meses antes de decidir",
+        risco: "baixo",
+        effects: { qualidade: +2, inovacao: +2, satisfacao: +1, produtividade: -1, financeiro: -1 },
+        avaliacao: "boa",
+        ensinamento: "Teste controlado antes de breaking change é a abordagem científica correta. 3 meses de dados reais valem mais do que qualquer projeção interna de adoção."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R13 · DECISÃO CRÍTICA · A Equipe de Customer Success
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "A Equipe de Customer Success",
+    description: "O churn dos últimos 6 meses foi de 14% — muito acima dos 7% que o modelo financeiro suporta. O head de CS identifica a causa: clientes contratam animados mas ficam sem suporte depois do onboarding. 'Precisamos de 4 CSMs dedicados. Hoje atendo 40 clientes sozinho.' A contratação custa R$520k/ano. O CFO apresenta o contra-argumento: 'Cada cliente que sai tira R$170k do ARR. 14% de churn custa R$950k/ano.'",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Contratar os 4 CSMs e estruturar playbooks de sucesso do cliente para os primeiros 90 dias",
+        risco: "medio",
+        effects: { satisfacao: +5, reputacao: +3, financeiro: -3, clima: +2, produtividade: +1 },
+        avaliacao: "boa",
+        ensinamento: "O math é simples: R$520k em CS elimina R$950k de churn. Em SaaS B2B, CS não é um custo — é a função que protege a receita que a empresa já conquistou. Cada cliente retido financia a aquisição do próximo."
+      },
+      {
+        text: "Contratar 2 CSMs e um gerente de CS para estruturar o processo antes de escalar",
+        risco: "baixo",
+        effects: { satisfacao: +3, reputacao: +2, financeiro: -2, clima: +2, produtividade: +1 },
+        avaliacao: "boa",
+        ensinamento: "Escalar CS gradualmente com estrutura de gestão é a abordagem correta. Contratar 4 CSMs sem processo os transforma em bombeiros — apagando incêndios sem sistema para preveni-los."
+      },
+      {
+        text: "Criar programa de health score automatizado — identificar clientes em risco antes que cancelem",
+        risco: "baixo",
+        effects: { satisfacao: +2, inovacao: +3, qualidade: +2, financeiro: -1, produtividade: -1 },
+        avaliacao: "media",
+        ensinamento: "Health score é uma ferramenta poderosa — mas alertar sobre risco sem capacidade de agir não resolve o churn. Precisam das duas coisas: dados para identificar e CS para intervir."
+      },
+      {
+        text: "Não contratar CS — usar o produto para ser tão simples que não precise de suporte humano",
+        risco: "alto",
+        gestorEffects: { reputacaoInterna: -1 },
+        effects: { satisfacao: -3, financeiro: +1, qualidade: +1, inovacao: +1, reputacao: -2 },
+        avaliacao: "ruim",
+        ensinamento: "Produto self-service é um objetivo nobre — mas em SaaS B2B enterprise, humanos no sucesso do cliente são o padrão do mercado, não uma falha de produto. Clientes que pagam R$100k/ano por contrato esperam relacionamento."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R14 · DECISÃO CRÍTICA · A Aquisição Surge
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "A Aquisição Surge",
+    description: "A Totvs, maior empresa de software de gestão da América Latina, fez uma proposta de aquisição: R$42M por 80% da empresa, com earnout de R$12M se as metas dos próximos 2 anos forem atingidas. A oferta é 6,2x o ARR atual. Os fundadores originais têm posições diferentes: dois querem vender (o produto escala com a base de clientes da Totvs), um quer manter a independência.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Negociar contra-proposta: 70% de participação a R$50M com earnout maior — manter algum controle e upside",
+        risco: "medio",
+        gestorEffects: { capitalPolitico: +2 },
+        effects: { financeiro: +6, reputacao: +3, inovacao: +2, satisfacao: +2, clima: +1 },
+        avaliacao: "boa",
+        ensinamento: "Toda proposta de aquisição tem gordura. Negociar participação menor e earnout maior com métricas que você controla é preservar upside sem recusar um exit que pode não voltar."
+      },
+      {
+        text: "Recusar — a Totvs vai engessar o produto nas necessidades dos clientes de ERP deles",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: -1, esgotamento: +2 },
+        effects: { financeiro: -1, inovacao: +3, reputacao: +1, clima: -1, produtividade: +2 },
+        avaliacao: "media",
+        ensinamento: "Recusar aquisição estratégica por medo de perder independência é válido — se você tem um plano claro para criar mais valor sozinho. Sem o plano, a independência pode custar mais do que o controle que você está preservando."
+      },
+      {
+        text: "Aceitar as condições da Totvs integralmente — o acesso à base de 40k clientes deles acelera o crescimento em 10x",
+        risco: "alto",
+        gestorEffects: { capitalPolitico: +2, esgotamento: +1 },
+        effects: { financeiro: +8, satisfacao: +3, reputacao: +2, inovacao: -3, clima: -2 },
+        avaliacao: "media",
+        ensinamento: "A base de clientes da Totvs é o maior ativo estratégico dessa aquisição — mas 80% de uma empresa dentro de uma grande corporação muda radicalmente a cultura e a velocidade. Os 20% que ficam raramente têm a influência que imaginavam."
+      },
+      {
+        text: "Usar a oferta da Totvs como alavanca para reabrir negociações com o fundo de VC que propôs a Serie A",
+        risco: "medio",
+        effects: { financeiro: +4, reputacao: +3, inovacao: +2, satisfacao: +1, clima: +1 },
+        avaliacao: "boa",
+        ensinamento: "Uma oferta de aquisição é o melhor argumento de negociação para uma rodada de venture. Ela prova o valor de mercado da empresa e cria urgência real para o investidor — exatamente o que transforma uma conversa em cheque."
+      }
+    ]
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     R15 · DECISÃO FINAL · O Futuro da IA Corporativa
+  ═══════════════════════════════════════════════════════ */
+  {
+    title: "O Futuro da IA Corporativa",
+    description: "O pipeline desbloqueou, o time está mais engajado e o produto ganhou clareza. Você precisa agora definir a estratégia de longo prazo: onde quer estar em 3 anos e como chegar lá.",
+    tags: ["tecnologia"],
+    choices: [
+      {
+        text: "Plataforma vertical de IA para RH e compliance: líder técnico no segmento com os modelos mais precisos do mercado",
+        effects: { financeiro: +4, reputacao: +5, inovacao: +5, satisfacao: +3, qualidade: +3, clima: +2 },
+        avaliacao: "boa",
+        ensinamento: "Liderança técnica vertical é o caminho mais defensável para uma startup de IA. Ser o melhor em um problema específico cria barreiras de dados, de conhecimento de domínio e de relacionamento que os grandes players demoram anos para replicar."
+      },
+      {
+        text: "Marketplace de IA para RH: abrir a plataforma para outros modelos e criar ecossistema de parceiros",
+        effects: { inovacao: +5, reputacao: +4, financeiro: +3, satisfacao: +2, qualidade: +1, produtividade: +2 },
+        avaliacao: "boa",
+        ensinamento: "Plataforma de ecossistema multiplica o valor sem multiplicar o custo de desenvolvimento. Cada parceiro que integra no marketplace traz casos de uso que você não teria capacidade de construir sozinho."
+      },
+      {
+        text: "Expansão internacional: validar o produto no Chile e na Colômbia antes de entrar no México",
+        requisitos: { indicadorMinimo: { financeiro: 11, reputacao: 12 } },
+        effects: { financeiro: +3, reputacao: +4, inovacao: +3, produtividade: -2, qualidade: -1 },
+        avaliacao: "boa",
+        ensinamento: "Expansão gradual por mercados com regulação trabalhista similar ao Brasil é a rota correta. Chile e Colômbia têm compliance trabalhista menos complexo — ideal para validar o produto antes do México, que exige localização profunda."
+      },
+      {
+        text: "Infraestrutura de IA: transformar os modelos internos em APIs que qualquer empresa pode usar",
+        effects: { inovacao: +5, financeiro: +2, qualidade: +3, satisfacao: -2, reputacao: +2, produtividade: -3 },
+        avaliacao: "media",
+        ensinamento: "APIs de modelo é uma estratégia de infraestrutura que requer volume massivo para ser sustentável. Empresas que tentam ser 'AWS da IA' sem a escala necessária terminam com produto sem foco e sem cliente dominante."
+      }
+    ]
+  }
+
+]
 
 ]; // fim TecnologiaRounds
 /* --rounds/varejo-rounds.js-- */
@@ -2495,6 +3747,363 @@ const VarejoRounds = [
     ]
   }
 ]
+/* Histórias [1] e [2] adicionadas abaixo */
+,
+[
+
+  { title: "O Mapa da Nova Concorrência",
+    description: "O relatório de inteligência chega: Raia Drogasil e Pague Menos abriram 31 lojas na sua região em 18 meses. Das suas 24 lojas, 9 estão em raio de 800m de um concorrente nacional. O ticket médio caiu de R$98 para R$81. Mas o NPS da sua rede é 72 — o dos concorrentes na região é 61. Por onde começa?",
+    tags: ["varejo"],
+    choices: [
+      { text: "Mapear as 9 lojas em rota de colisão e calcular quais têm vantagem defensável de localização", risco: "baixo", effects: { financeiro: +1, processos: +3, margem: +1, clientes: +1 }, avaliacao: "boa", ensinamento: "Diagnóstico por loja evita decisões generalizadas que fecham unidades que poderiam sobreviver. Localização, base fiel e mix definem quais têm vantagem real." },
+      { text: "Reduzir preços dos 50 produtos mais vendidos para competir com as redes nacionais", risco: "alto", effects: { clientes: +2, margem: -4, financeiro: -3 }, avaliacao: "ruim", ensinamento: "Guerra de preços com Raia Drogasil é batalha perdida. As redes têm poder de compra centralizado com custo 15-20% menor — cada centavo de desconto é sangramento de margem sem retorno." },
+      { text: "Comunicar o diferencial de atendimento usando o NPS superior como argumento de posicionamento", risco: "baixo", effects: { marca: +3, clientes: +2, digital: +1 }, avaliacao: "boa", ensinamento: "NPS 72 vs 61 é um diferencial mensurável. Clientes que escolhem pelo atendimento têm fidelidade alta e menor sensibilidade a preço — o segmento que a farmácia regional precisa defender." },
+      { text: "Contratar consultoria de varejo farmacêutico para benchmarking de respostas a concorrentes nacionais", risco: "medio", effects: { financeiro: -2, processos: +3 }, avaliacao: "media", ensinamento: "Benchmarking é valioso — mas farmácias regionais que sobreviveram à entrada de grandes redes geralmente o fizeram com conhecimento interno e agilidade local, não com planos de consultoria." }
+    ]
+  },
+
+  { title: "O Farmacêutico Que Quer Sair",
+    description: "Cristiane, farmacêutica sênior com 11 anos de empresa, pede conversa. A Raia Drogasil ofereceu R$2.200 a mais por mês. 'Não é só o dinheiro — é que aqui parece que a farmácia não tem futuro.' Sete dos 24 postos de farmacêutico têm defasagem salarial acima de 20%. Perder farmacêuticos experientes afeta diretamente o diferencial de atendimento.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Reajustar o salário de todos os farmacêuticos defasados para o nível de mercado", risco: "medio", effects: { rh: +5, margem: -3, financeiro: -3, clientes: +2, marca: +2 }, avaliacao: "boa", ensinamento: "Farmacêutico experiente é o principal ativo diferencial de uma farmácia regional. O custo do reajuste é real — mas o custo de perder 7 farmacêuticos e substituir por perfis inexperientes é muito maior." },
+      { text: "Contra-oferta apenas para a Cristiane — reter quem ameaça sair, não todos", risco: "medio", gestorEffects: { reputacaoInterna: -1 }, effects: { rh: +1, margem: -1, financeiro: -1 }, avaliacao: "ruim", ensinamento: "Contra-oferta seletiva vira informação interna em dias. Os outros 6 farmacêuticos vão aprender que precisam ameaçar sair para receber reajuste." },
+      { text: "Criar plano de carreira: farmacêutico clínico, farmacêutico gestor e especialista em manipulação", risco: "baixo", effects: { rh: +4, marca: +2, clientes: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "Plano de carreira cria perspectiva de futuro que dinheiro sozinho não garante. Farmacêuticos em trilhas especializadas têm retenção naturalmente maior." },
+      { text: "Aceitar a saída e contratar substituto recém-formado com salário menor", risco: "alto", gestorEffects: { reputacaoInterna: -2 }, effects: { rh: -4, clientes: -3, marca: -3, financeiro: +1 }, avaliacao: "ruim", ensinamento: "Substituir farmacêutico de 11 anos por recém-formado economiza R$2.200/mês mas perde anos de conhecimento de pacientes crônicos e relacionamento médico. O custo invisível é muito maior." }
+    ]
+  },
+
+  { title: "O Sistema de Estoque Quebrado",
+    description: "Ruptura de 14,3% — quase o dobro do benchmark de 8%. Em medicamentos crônicos, é 9,2%. Clientes com prescrição de uso contínuo que encontram ruptura frequentemente não voltam. O sistema tem 9 anos e não integra com fornecedores. Reposição feita por planilha em cada loja.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Implementar sistema de reposição automática com integração com as principais distribuidoras farmacêuticas", risco: "medio", effects: { processos: +5, estoque: +5, clientes: +3, financeiro: -4, margem: +1 }, avaliacao: "boa", ensinamento: "Ruptura zero em crônicos é a condição mínima para fidelização em farmácia. Integração elimina o erro humano da planilha e o custo de compra de emergência com preço spot." },
+      { text: "Focar apenas nos 200 SKUs crônicos mais críticos — resolver onde o impacto na fidelização é maior", risco: "baixo", effects: { estoque: +3, clientes: +3, processos: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "Priorizar os 200 SKUs de maior impacto na fidelização resolve 70% do problema com 30% do investimento. Pareto funciona em estoque farmacêutico." },
+      { text: "Criar time centralizado de supply chain para supervisionar o estoque das 24 lojas", risco: "medio", effects: { processos: +3, estoque: +3, financeiro: -2, rh: +1 }, avaliacao: "media", ensinamento: "Time centralizado melhora a supervisão — mas sem sistema adequado, o time gerencia planilhas com mais experiência. O gargalo é a ferramenta, não o número de pessoas." },
+      { text: "Treinar os gerentes de loja em métodos melhores de previsão de demanda manual", risco: "baixo", effects: { processos: +1, estoque: +1, rh: +1 }, avaliacao: "ruim", ensinamento: "Humanos fazendo previsão manual de 1.500+ SKUs farmacêuticos é sistematicamente inferior a qualquer sistema automatizado." }
+    ]
+  },
+
+  { title: "O App de Delivery Chega à Cidade",
+    description: "iFood Saúde e Rappi Farmácia chegaram com entrega em 60 minutos. As redes nacionais já estão integradas. Suas 24 lojas não têm presença digital além de um perfil no Google desatualizado. 23% dos clientes de 18-35 anos estão usando os apps.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Integrar com iFood Saúde e Rappi nas 24 lojas — usar o canal que já tem o cliente", risco: "medio", effects: { digital: +4, clientes: +3, marca: +1, financeiro: -2, margem: -1 }, avaliacao: "boa", ensinamento: "Marketplaces de delivery já têm o cliente. Entrar nos apps em 2 semanas é mais inteligente do que 12 meses construindo canal próprio com R$500k de investimento." },
+      { text: "Criar serviço de delivery próprio via WhatsApp Business — atendimento farmacêutico personalizado", risco: "baixo", effects: { digital: +2, clientes: +3, marca: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "WhatsApp para delivery regional é o canal mais eficiente para pacientes crônicos acima de 40 anos que preferem conversar com farmacêutico de confiança a navegar em apps." },
+      { text: "Desenvolver app próprio de delivery com fidelização integrada", risco: "alto", gestorEffects: { esgotamento: +2 }, effects: { digital: +3, financeiro: -5, processos: -2, clientes: +1 }, avaliacao: "ruim", ensinamento: "App próprio com escala de 24 lojas regionais não compete com iFood em downloads. O investimento resulta em app com base de usuários insuficiente para ser sustentável." },
+      { text: "Ignorar o digital por enquanto — o atendimento presencial representa 100% da receita", risco: "medio", effects: { digital: -2, clientes: -2, marca: -1 }, avaliacao: "ruim", ensinamento: "Ignorar o digital é perder os próximos 3 anos de captação de clientes mais jovens. Cada mês sem presença digital é participação cedida para quem já está presente." }
+    ]
+  },
+
+  { title: "A Loja com Pior Resultado",
+    description: "A loja do Centro tem resultado negativo há 8 meses. A Raia Drogasil abriu a 200m há 6 meses. Aluguel vence em 90 dias — R$18k/mês. A loja ainda tem 40 clientes crônicos fiéis. O gerente tem 14 anos de empresa.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Não renovar o aluguel e migrar os 40 clientes crônicos para a loja mais próxima com suporte do farmacêutico", risco: "medio", gestorEffects: { reputacaoInterna: -1 }, effects: { financeiro: +4, margem: +3, rh: -2, clientes: -2 }, avaliacao: "boa", ensinamento: "Manter loja cronicamente deficitária por lealdade ao gerente é R$216k/ano de prejuízo. Migração cuidadosa dos crônicos minimiza o churn." },
+      { text: "Renegociar o aluguel para R$10k e reformular a loja para especialização em manipulação", risco: "medio", effects: { financeiro: +2, margem: +2, clientes: +2, marca: +3 }, avaliacao: "boa", ensinamento: "Manipulação é o segmento que as redes nacionais não replicam competitivamente. Loja especializada cria moat real e atrai prescrições médicas com ticket muito superior." },
+      { text: "Dar mais 3 meses com meta de reversão — se não atingir breakeven, fechar", risco: "medio", effects: { financeiro: -2, processos: -1, margem: -2 }, avaliacao: "ruim", ensinamento: "Mais 3 meses sem mudança estrutural são mais 3 meses de prejuízo. A causa do déficit é a concorrência do Raia a 200m — nenhuma meta muda essa realidade geográfica." },
+      { text: "Converter a loja em ponto de retirada de pedidos online — custo menor, mantém o endereço", risco: "baixo", effects: { digital: +2, financeiro: +2, margem: +1, rh: -2 }, avaliacao: "media", ensinamento: "Dark store para delivery é viável — mas requer volume digital que ainda não existe. A conversão pode ser prematura sem a base digital construída." }
+    ]
+  },
+
+  { title: "O Programa de Fidelidade dos Grandes",
+    description: "A Raia lançou o Programa Fidelidade Sempre — 10% de desconto em crônicos por R$9,90/mês. Em 2 semanas, 800 clientes da sua base se cadastraram. Você não tem programa de fidelidade digital.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Lançar programa de fidelidade digital em 60 dias com benefícios focados em atendimento, não apenas desconto", risco: "medio", effects: { digital: +3, clientes: +4, marca: +3, financeiro: -3, margem: -1 }, avaliacao: "boa", ensinamento: "Fidelidade em farmácia regional vai além do desconto: consulta prioritária, lembretes de medicação, entrega para crônicos. Benefícios de serviço são mais difíceis de replicar do que pontos." },
+      { text: "Usar o WhatsApp como fidelidade manual — farmacêutico avisa quando o medicamento do paciente chega", risco: "baixo", effects: { clientes: +3, marca: +2, digital: +1, rh: -1, financeiro: -1 }, avaliacao: "boa", ensinamento: "Farmacêutico que avisa que o medicamento chegou é um programa de fidelidade mais eficiente do que qualquer app. Relacionamento personalizado é o que as redes não conseguem escalar." },
+      { text: "Criar desconto linear de 8% em crônicos para todos os clientes cadastrados", risco: "alto", effects: { clientes: +3, margem: -4, financeiro: -3 }, avaliacao: "ruim", ensinamento: "Desconto permanente em crônicos é o caminho mais rápido para destruir margem farmacêutica. Com custo de mercadoria similar ao da Raia, o desconto vai direto do lucro." },
+      { text: "Ignorar o programa dos concorrentes — quem paga por serviço não troca por desconto", risco: "medio", effects: { marca: +2, clientes: -2, digital: -1 }, avaliacao: "media", ensinamento: "Nem todos que se cadastraram vão migrar. Mas ignorar completamente cria percepção de que a empresa não está reagindo — e isso acelera a migração dos clientes indecisos." }
+    ]
+  },
+
+  { title: "A Parceria com Planos de Saúde",
+    description: "Uma operadora regional com 120 mil beneficiários quer parceria: suas farmácias entram na rede credenciada com desconto de 25% nos medicamentos do rol ANS. Pagamento em 45 dias, volume mínimo de R$400k/mês. A margem por transação cai 8 pontos.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Aceitar com limite: apenas as 12 lojas com melhor fluxo de caixa para suportar o prazo de 45 dias", risco: "medio", effects: { clientes: +4, margem: -2, financeiro: +2, processos: +2, marca: +2 }, avaliacao: "boa", ensinamento: "Entrar com as lojas mais saudáveis primeiro protege o caixa e permite aprender o processo antes de escalar. O volume de 120k beneficiários justifica o desconto." },
+      { text: "Negociar prazo de 30 dias e desconto de 20% antes de assinar", risco: "medio", effects: { clientes: +3, margem: -1, financeiro: +1, processos: +1, marca: +2 }, avaliacao: "boa", ensinamento: "Condições de parceria de plano sempre têm margem de negociação. 10 pontos de desconto a menos e 15 dias a menos fazem diferença enorme no fluxo de caixa." },
+      { text: "Aceitar para todas as 24 lojas — volume de R$400k/mês justifica qualquer pressão de caixa", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +1 }, effects: { clientes: +5, margem: -4, financeiro: -3, processos: -2 }, avaliacao: "ruim", ensinamento: "45 dias de prazo em 24 lojas com margem pressionada pode estrangular o fluxo antes do volume compensar. Parceria de plano precisa de capital de giro." },
+      { text: "Recusar — a margem de 8 pontos a menos torna a operação inviável", risco: "medio", effects: { clientes: -2, marca: -1 }, avaliacao: "media", ensinamento: "Rede sem credenciamento em planos perde sistematicamente pacientes com cobertura — um mercado crescente. Recusar pode ser correto se a margem está no limite absoluto." }
+    ]
+  },
+
+  { title: "A Rede Nacional Baixa o Preço nos Crônicos",
+    description: "A Raia anunciou campanha regional: genéricos e similares em crônicos com desconto de até 32% por 60 dias. Objetivo: capturar a base de pacientes crônicos. Sua gerente estima que 20% dos 94k clientes cadastrados podem migrar nos próximos 30 dias.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Campanha de contra-ataque: 'Aqui você tem farmacêutico de confiança, não só preço baixo' — eventos de orientação farmacêutica", risco: "baixo", effects: { marca: +4, clientes: +3, rh: +1, financeiro: -1 }, avaliacao: "boa", ensinamento: "Disputar por serviço onde você tem vantagem é melhor do que disputar por preço onde o concorrente tem escala. Pacientes crônicos com farmacêutico de confiança têm fidelidade alta." },
+      { text: "Igualar o desconto de 32% nos 20 medicamentos crônicos mais vendidos", risco: "alto", effects: { clientes: +3, margem: -5, financeiro: -4 }, avaliacao: "ruim", ensinamento: "A Raia pode manter o desconto por 60 dias e depois retirar — você pode ficar preso em guerra de preço que não pode ganhar." },
+      { text: "Oferecer desconto apenas para clientes cadastrados com mais de 12 meses — recompensar a fidelidade", risco: "medio", effects: { clientes: +3, margem: -2, financeiro: -1, marca: +3 }, avaliacao: "boa", ensinamento: "Desconto segmentado para fiéis é estratégia diferente de desconto universal. Você recompensa quem escolheu sua farmácia sem abrir para quem está mirando só o preço." },
+      { text: "Não reagir — campanha de 60 dias é temporária e crônicos voltam quando acabar", risco: "medio", effects: { clientes: -4, marca: -1 }, avaliacao: "ruim", ensinamento: "Paciente crônico que muda de farmácia durante promoção tem probabilidade baixa de retornar. O farmacêutico da nova farmácia aprende o histórico — cada migração em crônico é perda de longo prazo." }
+    ]
+  },
+
+  { title: "O Serviço de Farmacêutico Online",
+    description: "Uma startup de saúde digital propõe parceria: seus farmacêuticos atendem por videochamada na plataforma deles (20h-23h e fins de semana). A startup paga R$80/hora e envia as receitas para retirada ou delivery nas suas lojas. Volume estimado: 40 atendimentos/semana.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Aceitar com 4 farmacêuticos voluntários pagos por hora — canal de captação sem custo de marketing", risco: "baixo", gestorEffects: { reputacaoInterna: +1 }, effects: { digital: +3, clientes: +3, rh: +2, marca: +3, financeiro: +1 }, avaliacao: "boa", ensinamento: "Farmacêutico online que converte em receita para retirada ou delivery na sua loja é um canal de captação com custo zero de marketing. A startup faz o tráfego — você faz a conversão." },
+      { text: "Aceitar apenas como piloto de 90 dias com 2 farmacêuticos antes de expandir", risco: "baixo", effects: { digital: +2, clientes: +2, rh: +1, marca: +2 }, avaliacao: "boa", ensinamento: "Piloto de escala menor reduz o risco operacional e permite avaliar se os atendimentos online realmente convertem em vendas antes de comprometer mais farmacêuticos." },
+      { text: "Criar a própria plataforma de teleconsulta farmacêutica — controlar o canal", risco: "alto", gestorEffects: { esgotamento: +1 }, effects: { digital: +2, financeiro: -4, processos: -2 }, avaliacao: "ruim", ensinamento: "Plataforma própria exige desenvolvimento, regulação de tele-farmácia e aquisição de usuários. A startup já resolveu os três — competição interna desperdiça recursos escassos." },
+      { text: "Recusar — farmacêutico online pode canibalizar o atendimento presencial", risco: "medio", effects: { digital: -1, clientes: -1 }, avaliacao: "ruim", ensinamento: "Atendimento presencial e digital são complementares. Paciente que consulta online e retira na loja é cliente que você não teria alcançado de outra forma." }
+    ]
+  },
+
+  { title: "A Crise de Ruptura em Crônicos",
+    description: "Falha no sistema causou ruptura simultânea em 8 medicamentos crônicos nas lojas da região norte por 5 dias. 340 clientes afetados. 67 compraram no Raia, 43 no Pague Menos. Vinte e dois já sinalizaram que vão continuar no concorrente. Cada crônico representa R$1.100/ano.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Ligar para os 22 clientes que sinalizaram migração com o farmacêutico pessoalmente", risco: "baixo", gestorEffects: { reputacaoInterna: +1 }, effects: { clientes: +4, marca: +3, rh: +1, financeiro: -1 }, avaliacao: "boa", ensinamento: "22 ligações que podem recuperar R$24k/ano em receita recorrente é o melhor ROI possível. Paciente crônico que conhece o farmacêutico pelo nome responde diferente de qualquer campanha." },
+      { text: "Criar alerta automático de stock-out para farmacêuticos pedirem antes de zerar o estoque", risco: "baixo", effects: { processos: +4, estoque: +3, clientes: +1, financeiro: -1 }, avaliacao: "boa", ensinamento: "Alerta baseado na velocidade de venda elimina 80% das rupturas antes que aconteçam. Prevenção sempre é mais barata que remediação." },
+      { text: "Criar estoque de segurança de 30 dias para os 50 medicamentos crônicos mais vendidos", risco: "medio", effects: { estoque: +4, clientes: +2, financeiro: -3, processos: +2 }, avaliacao: "boa", ensinamento: "A ruptura em crônicos é tão cara em fidelização que o custo do estoque extra raramente supera o custo do cliente perdido." },
+      { text: "Oferecer desconto de 15% para os 340 afetados na próxima compra como compensação", risco: "medio", effects: { clientes: +3, margem: -2, financeiro: -2, marca: +1 }, avaliacao: "media", ensinamento: "Desconto de compensação funciona melhor para clientes que ainda não foram ao concorrente. Para quem já foi e gostou, o desconto pode não ser suficiente para reverter." }
+    ]
+  },
+
+  { title: "A Especialização que Define o Futuro",
+    description: "O board pede uma decisão estratégica: três caminhos possíveis — manipulação farmacêutica (ticket 3x maior, redes não atuam), farmácia clínica para crônicos (triagem e acompanhamento farmacoterapêutico) ou transformação digital completa com delivery prioritário.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Manipulação: converter 6 lojas estratégicas em farmácias de manipulação com laboratório próprio", risco: "medio", effects: { margem: +5, marca: +4, clientes: +3, financeiro: -4, processos: +2 }, avaliacao: "boa", ensinamento: "Farmácia de manipulação é o segmento mais protegido contra redes. Ticket médio de R$280 vs R$81 da rede convencional — e nenhuma grande rede opera competitivamente nesse espaço." },
+      { text: "Farmácia clínica: acompanhamento farmacoterapêutico para crônicos em parceria com médicos da região", risco: "medio", effects: { marca: +5, clientes: +4, rh: +3, financeiro: -3, margem: +2 }, avaliacao: "boa", ensinamento: "Farmacêutico clínico que acompanha o paciente cria vínculo de saúde sem preço. Pacientes que veem a farmácia como parceira de saúde têm fidelidade absoluta." },
+      { text: "Digital-first: transformar as 24 lojas em hubs de delivery com 1 hora de entrega e app próprio", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +2 }, effects: { digital: +5, clientes: +2, financeiro: -5, processos: -2 }, avaliacao: "media", ensinamento: "Delivery em 1 hora como diferencial exige operação logística que as 24 lojas não têm e app com base de usuários suficiente. As redes nacionais já estão mais avançadas nesse caminho." },
+      { text: "Manter o modelo atual com execução melhorada — fazer tudo mais bem feito sem especializar", risco: "medio", effects: { processos: +2, marca: +1 }, avaliacao: "ruim", ensinamento: "Em mercado com concorrentes de escala nacional, 'fazer mais bem feito' sem diferencial claro é perder participação em câmera lenta." }
+    ]
+  },
+
+  { title: "A Fusão com Rede Regional Menor",
+    description: "Uma rede concorrente com 11 farmácias em cidades onde você não atua propõe fusão. Resultado: 35 lojas, poder de negociação 12% melhor com distribuidoras. Problema: a rede menor tem dívida de R$3,2M e 3 lojas deficitárias que você precisaria assumir.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Propor compra apenas das 8 lojas lucrativas — não assumir a dívida nem as deficitárias", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { financeiro: -3, clientes: +3, margem: +3, processos: +2, marca: +2 }, avaliacao: "boa", ensinamento: "Aquisição seletiva de ativos sem a dívida do vendedor é a forma mais inteligente de crescer. As 8 lojas lucrativas adicionam escala sem os problemas que fizeram a outra rede vender." },
+      { text: "Propor aliança de compras conjunta sem fusão societária — capturar a escala sem o risco", risco: "baixo", effects: { financeiro: 0, margem: +2, processos: +2 }, avaliacao: "boa", ensinamento: "Consórcio de compras captura o benefício de escala na negociação com distribuidoras sem os riscos de integração de uma fusão." },
+      { text: "Aceitar a fusão completa — 35 lojas criam poder de barganha que nenhuma das duas tem separada", risco: "alto", gestorEffects: { capitalPolitico: +2, esgotamento: +2 }, effects: { financeiro: -5, clientes: +3, margem: +1, processos: -4, rh: -2 }, avaliacao: "ruim", ensinamento: "Assumir R$3,2M de dívida mais 3 lojas deficitárias em momento de margem pressionada é dobrar um problema. A integração de culturas pode demorar 3 anos." },
+      { text: "Comprar as 11 lojas integralmente e usar 12 meses para sanear as deficitárias", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +3 }, effects: { financeiro: -6, clientes: +3, margem: -2, processos: -4 }, avaliacao: "ruim", ensinamento: "Sanear 3 lojas deficitárias enquanto gere 8 novas e as 24 originais é sobrecarga operacional que raramente termina bem." }
+    ]
+  },
+
+  { title: "O Medicamento Manipulado Como Âncora",
+    description: "O diretor médico de uma clínica de endocrinologia com 1.800 pacientes quer parceria exclusiva de manipulação. Volume potencial: R$180k/mês. Em troca, quer 18% de desconto e uma salinha de atendimento farmacêutico dentro da clínica. Investimento: R$280k em laboratório.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Aceitar e abrir o laboratório — R$180k/mês com margem de 55% paga o investimento em 3 meses", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { margem: +5, clientes: +4, marca: +4, financeiro: -3, processos: +3 }, avaliacao: "boa", ensinamento: "Parceria com prescriptor de alto volume é o modelo de crescimento mais eficiente em manipulação. O barreira de entrada criada por prescrições exclusivas é real." },
+      { text: "Aceitar apenas a salinha — sem o laboratório, terceirize a manipulação com farmácia parceira", risco: "baixo", effects: { clientes: +3, marca: +3, margem: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "Terceirizar enquanto controla o relacionamento é estratégia de baixo risco. Quando o volume justificar, você abre o laboratório com demanda garantida." },
+      { text: "Negociar para reduzir o desconto para 12% — a margem de manipulação não suporta 18%", risco: "medio", effects: { clientes: +2, marca: +2, margem: +3, financeiro: -2 }, avaliacao: "boa", ensinamento: "Desconto de 18% em manipulação comprime a margem que é o principal argumento do negócio. Negociar é correto — o médico quer o relacionamento tanto quanto o desconto." },
+      { text: "Recusar — concentrar 1.800 pacientes em um único médico cria dependência perigosa", risco: "medio", effects: { clientes: -1, marca: -1 }, avaliacao: "ruim", ensinamento: "1.800 pacientes crônicos de manipulação é base que você não construiria em 3 anos organicamente. A dependência pode ser mitigada desenvolvendo outros canais de prescrição em paralelo." }
+    ]
+  },
+
+  { title: "O Investimento no Digital",
+    description: "Um fundo regional quer aportar R$4M para digitalização — mas exige 40% das vendas por canal digital em 18 meses (hoje é 0%) em troca de 15% da empresa. O conselho está dividido sobre a meta e sobre ceder participação.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Aceitar com meta renegociada: 20% das vendas online em 18 meses, não 40%", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { digital: +5, financeiro: +4, processos: +2, clientes: +2, marca: +2 }, avaliacao: "boa", ensinamento: "Capital para digitalização com meta negociada é melhor do que com meta inatingível. 40% digital em 18 meses para rede sem presença digital é irreal — metas assim criam conflito com investidores." },
+      { text: "Aceitar apenas R$2M em troca de 8% — menos capital, menos pressão, menos diluição", risco: "baixo", effects: { digital: +3, financeiro: +2, processos: +1, clientes: +1 }, avaliacao: "boa", ensinamento: "Capital menor com menos diluição e meta razoável pode ser o melhor deal. R$2M para delivery + fidelidade digital entrega impacto real sem comprometer a identidade farmacêutica." },
+      { text: "Recusar e digitalizar com recursos próprios — sem pressão de investidor", risco: "medio", effects: { digital: +2, financeiro: -2, processos: +1 }, avaliacao: "media", ensinamento: "Digitalização própria é mais lenta mas preserva o controle. Com margem pressionada, o custo de não ter capital externo pode ser maior do que ceder 15%." },
+      { text: "Aceitar as condições integralmente — 40% digital em 18 meses mobiliza o time", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +2 }, effects: { digital: +4, financeiro: +3, processos: -3, rh: -2 }, avaliacao: "ruim", ensinamento: "Meta de 40% digital em 18 meses partindo do zero distorce toda a operação. A urgência pode comprometer o atendimento presencial que é o principal diferencial da rede." }
+    ]
+  },
+
+  { title: "O Futuro da Farmácia Regional",
+    description: "Você atravessou um ciclo intenso de transformação. A rede está mais sólida, com posicionamento mais claro e novas alavancas de crescimento. O board pede a visão para os próximos 3 anos.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Farmácia de saúde integral: manipulação + farmácia clínica + digital em um modelo integrado único na região", effects: { margem: +5, marca: +5, clientes: +4, rh: +3, digital: +3, financeiro: +4 }, avaliacao: "boa", ensinamento: "O futuro das farmácias regionais não é competir com as redes em volume — é ser a referência de saúde da comunidade. Esse ecossistema não é replicável por nenhuma rede nacional localmente." },
+      { text: "Expansão regional focada: 12 lojas de excelência em vez de 24 com desempenho variado", effects: { margem: +4, financeiro: +5, processos: +4, marca: +3, rh: +2 }, avaliacao: "boa", ensinamento: "Menos lojas com mais qualidade é estratégia válida quando a dispersão dilui a capacidade de manter o padrão que diferencia a rede." },
+      { text: "Franquia regional: transformar o modelo em franquia para farmacêuticos independentes da região", requisitos: { indicadorMinimo: { processos: 8, marca: 12 } }, effects: { financeiro: +5, marca: +4, processos: +3, clientes: +3 }, avaliacao: "boa", ensinamento: "Franquear para farmacêuticos locais multiplica a presença sem custo de propriedade direta. O franchisee tem o incentivo de dono e o conhecimento da comunidade que as redes não replicam." },
+      { text: "Vender para rede nacional com cláusula de manutenção de marca regional por 3 anos", effects: { financeiro: +8, clientes: +2, rh: -3, marca: -4, margem: -2 }, avaliacao: "media", ensinamento: "Venda para rede nacional resolve o financeiro — mas 'manutenção de marca por 3 anos' raramente sobrevive à integração na cultura da compradora. É solução de curto prazo para o acionista." }
+    ]
+  }
+
+]
+,
+/* ══════════════════════════════════════════════════════════════════
+   HISTÓRIA [2] · Atacarejo Regional · Autosserviço
+   Contexto: 7 lojas (era 2), 980 funcionários, R$420M receita,
+   3 lojas abaixo do breakeven, dívida 2,8x EBITDA, gestão
+   sobrecarregada, perdas subindo de 1,4% para 2,9%.
+
+   INDICADORES: financeiro:6, rh:7, clientes:8, processos:5,
+                margem:5, estoque:7, marca:8, digital:4
+
+   ATENÇÃO: financeiro (6) e margem (5) sob pressão da dívida.
+   processos (5) baixo reflete gestão descentralizada.
+   margem<=4 drena financeiro automaticamente.
+══════════════════════════════════════════════════════════════════ */
+
+[
+
+  {
+    title: "O Peso da Expansão Rápida",
+    description: "O CFO apresenta o balanço: dívida de R$38M (2,8x EBITDA), três lojas consumindo R$420k/mês a mais do que geram, perdas por quebra e furto em R$12M/ano (2,9% da receita). Você foi rápido demais — e o crescimento cobrou a conta. Por onde começa o diagnóstico?",
+    tags: ["varejo"],
+    choices: [
+      { text: "Fazer auditoria completa das 3 lojas deficitárias — entender a causa antes de agir", risco: "baixo", effects: { processos: +3, financeiro: +1, margem: +1 }, avaliacao: "boa", ensinamento: "Diagnóstico granular por loja é o primeiro passo de qualquer turnaround. Sem entender se o déficit é estrutural (localização, concorrência) ou operacional (gestão, mix), qualquer decisão é arriscada." },
+      { text: "Fechar as 3 lojas deficitárias imediatamente para parar o sangramento", risco: "alto", gestorEffects: { reputacaoInterna: -2, capitalPolitico: +1 }, effects: { financeiro: +4, rh: -5, clientes: -3, marca: -2 }, avaliacao: "ruim", ensinamento: "Fechar sem diagnóstico pode eliminar lojas que teriam reversão viável com ajustes operacionais. Além disso, o custo humano e de imagem de fechar 3 lojas de uma vez é alto — e permanente." },
+      { text: "Contratar gerente de turnaround especializado em varejo alimentar para liderar o processo", risco: "medio", effects: { processos: +3, financeiro: -2, rh: +1 }, avaliacao: "boa", ensinamento: "Um especialista em turnaround de varejo traz metodologia e benchmarks que o time interno raramente tem. O custo da contratação é pequeno frente às perdas mensais das 3 lojas." },
+      { text: "Renegociar a dívida com o banco antes de qualquer outra decisão — o problema raiz é financeiro", risco: "medio", effects: { financeiro: +3, processos: -1, margem: +1 }, avaliacao: "media", ensinamento: "Renegociar dívida estende o runway mas não resolve as lojas deficitárias. Sem mudança operacional, o problema volta em 6 meses com a dívida renegociada." }
+    ]
+  },
+
+  {
+    title: "O Gerente Que Não Escala",
+    description: "Com 7 lojas, o modelo de gestão que funcionava com 2 está quebrando. Cada gerente de loja toma decisões de compra, precificação e promoção de forma independente. O resultado: mix de produtos diferente em cada loja, preços inconsistentes e negociações isoladas com fornecedores que custam R$3M/ano a mais em custo de mercadoria.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Centralizar as compras e precificação — criar uma estrutura de trade marketing para todas as lojas", risco: "medio", effects: { processos: +5, margem: +3, financeiro: +2, rh: -1 }, avaliacao: "boa", ensinamento: "Centralização de compras é o maior alavanca financeiro disponível. R$3M em custo de mercadoria recuperados é mais impactante do que qualquer promoção de vendas." },
+      { text: "Contratar 3 supervisores regionais para coordenar as lojas sem tirar a autonomia dos gerentes", risco: "medio", effects: { processos: +3, rh: +1, financeiro: -2 }, avaliacao: "media", ensinamento: "Supervisores regionais melhoram a coordenação mas não eliminam a ineficiência de negociações descentralizadas. É uma evolução parcial." },
+      { text: "Manter a autonomia dos gerentes — eles conhecem o cliente local melhor do que qualquer estrutura central", risco: "medio", effects: { processos: -2, margem: -2, financeiro: -1, rh: +2 }, avaliacao: "ruim", ensinamento: "Autonomia local tem valor no atendimento — não na negociação com fornecedores. Cada gerente comprando separado paga preço de pequeno varejista em um negócio que tem volume de rede." },
+      { text: "Implementar sistema ERP integrado para dar visibilidade sem retirar autonomia decisória local", risco: "baixo", effects: { processos: +4, estoque: +2, financeiro: -3, margem: +1 }, avaliacao: "boa", ensinamento: "ERP não centraliza decisões — centraliza informação. Gerentes com dados em tempo real tomam decisões melhores do que gerentes no escuro. Visibilidade é o primeiro passo para a coordenação." }
+    ]
+  },
+
+  {
+    title: "A Perda Que Sangra",
+    description: "O inventário das 7 lojas revelou R$12M em perdas anuais — 2,9% da receita. A média nacional do setor de atacarejo é 1,6%. A distribuição: 40% é furto externo, 35% é quebra operacional por manuseio, 25% é furto interno. Três lojas têm índice acima de 4%. A cultura do time é de tolerância implícita — 'sempre foi assim'.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Implementar câmeras, portais de detecção e auditoria de saídas nas 3 lojas com maior índice de perda", risco: "medio", effects: { processos: +4, seguranca: +3, financeiro: +3, margem: +2, rh: -1 }, avaliacao: "boa", ensinamento: "Tecnologia de prevenção de perdas tem ROI medido em semanas em atacarejo. Cada 0,5% de redução de perda em R$420M de receita representa R$2,1M — o custo das câmeras é recuperado no primeiro mês." },
+      { text: "Contratar empresa especializada em prevenção de perdas para auditoria e treinamento de toda a rede", risco: "medio", effects: { processos: +3, financeiro: -2, margem: +2, estoque: +1 }, avaliacao: "boa", ensinamento: "Especialistas em prevenção de perdas trazem metodologia de combate ao furto interno e externo que o time interno raramente desenvolve sozinho. O custo da consultoria é marginal frente ao problema." },
+      { text: "Demitir os gerentes das 3 lojas com maior índice e contratar novos com perfil mais rigoroso", risco: "alto", gestorEffects: { reputacaoInterna: -2, capitalPolitico: 0 }, effects: { rh: -4, processos: +1, margem: +1, financeiro: -1 }, avaliacao: "ruim", ensinamento: "Demitir gerentes por índice de perda sem investigar as causas pode punir quem está em localização de alto risco. Demissão sem processo gera clima de medo que normalmente aumenta o furto interno." },
+      { text: "Criar programa de bônus para lojas que reduzirem o índice de perda abaixo de 1,8% em 6 meses", risco: "baixo", effects: { processos: +3, margem: +2, rh: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "Incentivo financeiro alinhado à meta correta muda comportamento rapidamente. Gerente que ganha bônus por reduzir perda tem interesse pessoal em cada real recuperado." }
+    ]
+  },
+
+  {
+    title: "O Assaí Chegou na Cidade",
+    description: "O Assaí Atacadista abriu uma loja de 8.500m² a 3 km da sua unidade principal — a maior e mais rentável da rede. Nos primeiros 30 dias, o volume de clientes da sua loja principal caiu 18%. O Assaí tem escala nacional, 4.000m² a mais de área, e preços que você não consegue igualar com sua estrutura de custo atual.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Diferenciar pelo serviço ao pequeno comerciante: fracionamento, crédito e entrega que o Assaí não oferece", risco: "baixo", effects: { clientes: +4, marca: +3, processos: +2, margem: +1, financeiro: -1 }, avaliacao: "boa", ensinamento: "O pequeno comerciante precisa de mais do que preço baixo — precisa de crédito, fracionamento de embalagens e prazo de entrega. São serviços que o Assaí com modelo padronizado não consegue oferecer de forma competitiva." },
+      { text: "Reduzir preços nos 50 itens mais comparados para não perder a percepção de preço competitivo", risco: "alto", effects: { clientes: +2, margem: -4, financeiro: -3 }, avaliacao: "ruim", ensinamento: "Guerra de preços com Assaí em margem já pressionada é caminho para o prejuízo. O Assaí tem poder de compra nacional que garante custo de mercadoria 20% menor — cada centavo de desconto é tirado direto da margem restante." },
+      { text: "Analisar o mix de clientes da loja principal e focar em categorias onde o Assaí não compete", risco: "medio", effects: { margem: +2, processos: +2, clientes: +1, estoque: +2 }, avaliacao: "boa", ensinamento: "Especialização de mix em categorias subrepresentadas pelo concorrente é a estratégia correta para coexistência. O Assaí força você a descobrir onde você é verdadeiramente bom." },
+      { text: "Investir na localização: reformar e ampliar a loja principal para competir em estrutura física", risco: "alto", gestorEffects: { esgotamento: +2, capitalPolitico: -1 }, effects: { financeiro: -5, clientes: +2, marca: +2 }, avaliacao: "ruim", ensinamento: "Ampliar loja para competir com Assaí em tamanho com a dívida atual é acumular investimento de capital em uma batalha onde o adversário tem vantagem estrutural permanente de escala." }
+    ]
+  },
+
+  {
+    title: "A Dívida que Aperta o Caixa",
+    description: "O banco credor enviou carta: com o EBITDA em queda por 3 trimestres seguidos, o covenant financeiro (dívida/EBITDA máximo de 2,5x) foi violado. O banco pode exigir antecipação de R$15M em 90 dias se não houver renegociação. O custo financeiro atual consome R$560k/mês em juros. Você tem 30 dias para apresentar um plano.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Apresentar ao banco um plano de desinvestimento das 3 lojas deficitárias como garantia de geração de caixa", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { financeiro: +4, processos: +2, margem: +2, rh: -2, clientes: -1 }, avaliacao: "boa", ensinamento: "Bancos preferem devedores com plano claro a devedores em default. Apresentar um plano de desinvestimento com cronograma e geração de caixa projetada transforma a conversa de cobrança em parceria de reestruturação." },
+      { text: "Vender ativos imobilizados (terrenos próprios de 2 lojas) para quitar parte da dívida", risco: "medio", effects: { financeiro: +6, processos: -1, margem: +2, estoque: 0 }, avaliacao: "boa", ensinamento: "Sale-and-leaseback de imóveis é um instrumento clássico de gestão de crise financeira. Converte ativo imobilizado em caixa sem perder a operação — o aluguel substitui o custo de capital que está pesando no fluxo." },
+      { text: "Buscar novo investidor para capitalização e quitação parcial da dívida", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +2 }, effects: { financeiro: +5, processos: -1, rh: 0, clientes: 0 }, avaliacao: "media", ensinamento: "Capitalização resolve o problema imediato mas dilui o controle acionário em um momento de crise — quando o valuation é mais baixo. O custo do capital captado em crise é alto." },
+      { text: "Ignorar o covenant e continuar operando normalmente — bancos raramente executam a antecipação imediatamente", risco: "alto", gestorEffects: { capitalPolitico: -2, esgotamento: +1 }, effects: { financeiro: -4, processos: -2, clientes: -1, marca: -2 }, avaliacao: "ruim", ensinamento: "Ignorar covenant violado é apostar que o banco vai ser passivo. Bancos que notificam formalmente geralmente são sérios. O risco de antecipação forçada de R$15M pode quebrar a empresa." }
+    ]
+  },
+
+  {
+    title: "O Estoque de Perecíveis Fora de Controle",
+    description: "O relatório de perdas de perecíveis chega: R$2,1M em hortifrúti, carnes e laticínios descartados no último trimestre por vencimento e má conservação. A média do setor é R$600k para o mesmo volume. As 3 lojas novas — ainda sem volume suficiente — têm o pior índice. A central de compras compra o mesmo volume para todas as lojas independente do giro real.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Implementar sistema de compra por loja baseado no giro real dos últimos 30 dias para cada categoria de perecível", risco: "medio", effects: { estoque: +5, margem: +3, processos: +3, financeiro: +2 }, avaliacao: "boa", ensinamento: "Compra de perecível por giro real elimina o principal driver de perda. Loja nova com volume menor que a loja madura não pode receber o mesmo pedido semanal — a diferença vai para o lixo." },
+      { text: "Contratar gerentes de perecíveis especializados para as 3 lojas novas", risco: "medio", effects: { estoque: +3, financeiro: -2, rh: +1, margem: +1 }, avaliacao: "media", ensinamento: "Especialização em perecíveis melhora o gerenciamento — mas sem o sistema de compra ajustado, o gerente especializado ainda vai receber volume errado para gerenciar." },
+      { text: "Reduzir o mix de perecíveis nas lojas novas até que o volume justifique a variedade atual", risco: "baixo", effects: { estoque: +4, margem: +3, clientes: -2, processos: +2 }, avaliacao: "boa", ensinamento: "Mix reduzido de perecível em loja nova é prática correta de gestão de risco. Melhor ter 60 SKUs de perecível com ruptura zero do que 120 SKUs com 30% de descarte." },
+      { text: "Criar sistema de descontos progressivos para perecíveis próximos ao vencimento em todas as lojas", risco: "baixo", effects: { estoque: +2, clientes: +2, margem: -1, financeiro: +1 }, avaliacao: "media", ensinamento: "Desconto em perecível próximo ao vencimento é melhor do que descarte — mas é sintoma, não cura. O problema raiz é o volume de compra errado, não a falta de mecanismo de liquidação." }
+    ]
+  },
+
+  {
+    title: "A Loja Que Não Decola",
+    description: "A loja de Ribeirão Vermelho, inaugurada há 14 meses, ainda opera 28% abaixo do breakeven. O estudo de viabilidade previa breakeven em 8 meses. O problema identificado: a cidade tem 45k habitantes — metade do público mínimo que o modelo de atacarejo requer para ser viável. O aluguel de R$32k/mês e os R$8M de investimento em estrutura foram realizados.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Converter a loja para atacado de venda direta para pequenos comerciantes — mudar o modelo, não fechar", risco: "medio", effects: { clientes: +2, margem: +2, processos: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "Loja em cidade pequena pode ser viável com modelo B2B puro — venda para mercearias, restaurantes e bares locais que precisam de volume sem fazer 80km para o atacado mais próximo." },
+      { text: "Fechar a loja e negociar a saída do aluguel com indenização para o proprietário", risco: "alto", gestorEffects: { reputacaoInterna: -1, capitalPolitico: +1 }, effects: { financeiro: +3, rh: -3, clientes: -1, margem: +2 }, avaliacao: "boa", ensinamento: "Parar de sangrar R$420k/mês de prejuízo é uma decisão correta mesmo com o custo de saída. A alternativa é continuar queimando caixa em um mercado sem tamanho suficiente para o modelo." },
+      { text: "Dar mais 12 meses e dobrar o investimento em marketing local para acelerar o reconhecimento de marca", risco: "alto", effects: { financeiro: -4, clientes: +1, marca: +1, margem: -2 }, avaliacao: "ruim", ensinamento: "Marketing não cria clientes onde não existem. Uma cidade de 45k habitantes tem demanda física limitada — mais marketing não multiplica a população que pode sustentar um atacarejo." },
+      { text: "Subarrendar parte da loja para outros varejistas complementares — reduzir o custo de ocupação", risco: "baixo", effects: { financeiro: +2, margem: +2, processos: -1 }, avaliacao: "media", ensinamento: "Subarrendamento de espaço excedente é uma solução criativa de curto prazo que reduz o custo de ocupação sem fechar a loja. Funciona melhor quando há demanda local por espaço comercial." }
+    ]
+  },
+
+  {
+    title: "O Mix do Pequeno Comerciante",
+    description: "O estudo de clientes revela: 34% da receita vem de pequenos comerciantes (mercearias, bares, restaurantes). Esse segmento tem ticket médio 4x maior e frequência 2x menor que o consumidor final. Mas as lojas foram desenhadas para o consumidor final — o layout, o fracionamento e os serviços são todos voltados para quem compra para casa, não para revender.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Criar uma área exclusiva B2B em cada loja: embalagem fechada, preço de atacado, crédito e entrega para comerciantes", risco: "medio", effects: { clientes: +4, margem: +3, processos: +2, financeiro: -2 }, avaliacao: "boa", ensinamento: "Segregar o atendimento B2B do B2C é padrão em atacarejo bem gerido. O comerciante não quer esperar na fila do consumidor final e o consumidor final não quer ver o carrinho do restaurante ocupando espaço." },
+      { text: "Criar um horário exclusivo para comerciantes: das 7h às 9h sem concorrência com o consumidor final", risco: "baixo", effects: { clientes: +3, processos: +2, rh: -1, margem: +1 }, avaliacao: "boa", ensinamento: "Horário preferencial para B2B é a solução de menor investimento e maior impacto na experiência do comerciante. Resolve o atrito sem reformar o layout." },
+      { text: "Lançar um aplicativo de pedidos para comerciantes com entrega no dia seguinte", risco: "alto", gestorEffects: { esgotamento: +1 }, effects: { digital: +3, clientes: +3, financeiro: -4, processos: -2 }, avaliacao: "media", ensinamento: "Delivery B2B para pequenos comerciantes tem mercado real — mas exige logística, sistema de pedidos e carteira de crédito. Com os problemas operacionais atuais, adicionar um novo canal pode ser distração." },
+      { text: "Focar no consumidor final — o B2B de pequenos comerciantes tem margem melhor mas escala menor", risco: "medio", effects: { clientes: +1, margem: -1, processos: +1 }, avaliacao: "ruim", ensinamento: "Ignorar o segmento que representa 34% da receita com ticket 4x maior é uma escolha estratégica difícil de justificar. Pequenos comerciantes são a base mais resistente à entrada do Assaí." }
+    ]
+  },
+
+  {
+    title: "A Tecnologia de Prevenção de Perdas",
+    description: "O orçamento de tecnologia para o próximo semestre precisa ser decidido. Duas opções competem pelos mesmos recursos: sistema de câmeras inteligentes com IA para detecção de furto (R$1,8M para as 7 lojas, ROI estimado de 8 meses) ou sistema ERP integrado com compras, estoque e financeiro (R$2,2M, ROI de 14 meses). O CFO diz que só tem R$1,5M aprovado para tecnologia.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Priorizar câmeras de IA nas 3 lojas com maior índice de perda — ROI mais rápido, custo menor", risco: "baixo", effects: { processos: +3, financeiro: +3, margem: +2, estoque: +1 }, avaliacao: "boa", ensinamento: "ROI de 8 meses em prevenção de perdas é raramente igualado em qualquer outro investimento de varejo. Começar pelas 3 lojas críticas com R$800k entrega 65% do resultado com 44% do custo total." },
+      { text: "Priorizar o ERP — sem gestão integrada, qualquer outra solução é band-aid", risco: "medio", effects: { processos: +5, estoque: +3, financeiro: -2, margem: +1 }, avaliacao: "boa", ensinamento: "ERP integrado é a fundação de qualquer operação de varejo escalável. Sem dados centralizados de compra, estoque e venda por loja, cada decisão operacional é baseada em suposição." },
+      { text: "Buscar financiamento adicional de R$700k para implementar os dois sistemas simultaneamente", risco: "alto", gestorEffects: { capitalPolitico: -1, esgotamento: +1 }, effects: { processos: +5, financeiro: -3, margem: +2, estoque: +3 }, avaliacao: "media", ensinamento: "Mais dívida para tecnologia com o covenant já violado e o banco em alerta é uma decisão de risco alto. A tecnologia é necessária — o timing do financiamento precisa ser mais cuidadoso." },
+      { text: "Implementar controles manuais de prevenção de perdas e adiar o investimento em tecnologia para o próximo ano", risco: "medio", effects: { processos: -1, financeiro: -1, margem: -1, estoque: -1 }, avaliacao: "ruim", ensinamento: "Controles manuais em 7 lojas com 980 funcionários não são escaláveis. Cada mês sem tecnologia de prevenção de perdas custa em média R$1M — mais do que o investimento adiado." }
+    ]
+  },
+
+  {
+    title: "A Negociação com o Banco",
+    description: "O banco aceitou negociar. As opções na mesa: (A) Alongar o prazo da dívida de 5 para 9 anos com taxa 1,8% maior — parcela menor, custo total maior. (B) Carência de 12 meses no principal com pagamento de juros apenas — alivia o caixa agora. (C) Conversão de R$12M de dívida em participação acionária de 8% — banco vira sócio. O CFO recomenda a opção A.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Aceitar a opção A: prazo maior, custo maior, mas sem diluição e sem carência que cria falsa sensação de folga", risco: "baixo", gestorEffects: { capitalPolitico: +1 }, effects: { financeiro: +3, margem: +1, processos: +1 }, avaliacao: "boa", ensinamento: "Alongar o prazo é a opção mais conservadora e mais previsível. O custo financeiro total é maior, mas a previsibilidade do fluxo de caixa permite planejar melhor a operação." },
+      { text: "Aceitar a opção B: carência de 12 meses libera R$560k/mês para investir na recuperação operacional", risco: "medio", effects: { financeiro: +4, margem: +2, processos: +2, estoque: +1 }, avaliacao: "boa", ensinamento: "Carência no principal é a opção mais inteligente quando os recursos liberados são investidos na correção do problema que gerou a crise. R$560k/mês durante 12 meses é o capital necessário para implementar as mudanças operacionais." },
+      { text: "Aceitar a opção C: banco como sócio com 8% elimina R$12M de dívida sem custo de juros futuros", risco: "alto", gestorEffects: { capitalPolitico: +2, esgotamento: +1 }, effects: { financeiro: +5, processos: -1, rh: -1 }, avaliacao: "media", ensinamento: "Banco como sócio muda a dinâmica da empresa. Bancos não são sócios passivos — eles exigem reporting, têm critérios de saída e podem forçar decisões que conflitam com a visão operacional." },
+      { text: "Rejeitar todas as opções e buscar outro banco com condições melhores", risco: "alto", gestorEffects: { capitalPolitico: -2 }, effects: { financeiro: -3, processos: -1 }, avaliacao: "ruim", ensinamento: "Rejeitar a negociação com o banco credor sem ter alternativa concreta é arriscar a execução imediata do covenant. Buscar outro banco leva de 60 a 120 dias — tempo que você não tem." }
+    ]
+  },
+
+  {
+    title: "O Crescimento Suspenso",
+    description: "O board decidiu: nenhuma nova loja nos próximos 2 anos. O foco é consolidar as 7 existentes. O problema: a equipe que foi contratada para liderar a expansão — 3 gerentes de expansão e 2 consultores de ponto — agora não tem função. Manter custa R$680k/ano. A demissão custa R$420k em indenizações.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Realocar os gerentes de expansão para funções de turnaround nas lojas deficitárias — eles conhecem abertura de loja", risco: "baixo", effects: { processos: +3, rh: +2, financeiro: -1, margem: +1 }, avaliacao: "boa", ensinamento: "Gerentes de expansão que conhecem abertura de loja entendem de layout, mix, operação inicial e captação de clientes — habilidades diretamente transferíveis para turnaround de loja existente." },
+      { text: "Desligar os 5 profissionais de expansão — o projeto de crescimento foi encerrado", risco: "medio", gestorEffects: { reputacaoInterna: -1 }, effects: { financeiro: +2, rh: -3, processos: -1 }, avaliacao: "media", ensinamento: "Desligar quando a função desaparece é uma decisão difícil mas legítima. O custo da indenização é menor que o custo de manter profissionais sem função clara por 2 anos." },
+      { text: "Manter os gerentes de expansão explorando oportunidades de M&A — comprar lojas de terceiros em vez de abrir", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +1 }, effects: { financeiro: -2, processos: +1, clientes: +1 }, avaliacao: "ruim", ensinamento: "M&A com dívida de 2,8x EBITDA e 3 lojas no prejuízo é prioridade errada. A equipe de expansão sem fundo de aquisição é um custo sem resultado." },
+      { text: "Contratar apenas os 2 perfis mais estratégicos e desligar os outros 3 com pacote de recolocação", risco: "baixo", effects: { financeiro: +1, rh: -1, processos: +2 }, avaliacao: "boa", ensinamento: "Manutenção seletiva de talento estratégico é a solução de equilíbrio. Preservar os 2 melhores para a próxima fase de crescimento minimiza o custo humano sem manter capacidade ociosa." }
+    ]
+  },
+
+  {
+    title: "A Proposta do Atacadão",
+    description: "O Atacadão (Carrefour) quer adquirir suas 4 melhores lojas por R$85M — um múltiplo de 5,2x EBITDA dessas unidades. As 3 lojas deficitárias e os ativos imobilizados ficam com você. O dinheiro quita a dívida integralmente e sobram R$47M para recomeçar. Mas você perde o coração da rede — as 4 lojas que geram 76% do resultado.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Negociar: vender apenas 2 das 4 melhores lojas por R$42M — quitar metade da dívida e manter o controle operacional", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { financeiro: +5, clientes: -2, margem: +2, processos: +1 }, avaliacao: "boa", ensinamento: "Venda parcial que resolve o passivo sem sacrificar o negócio inteiro é o equilíbrio correto. Ficar com 5 lojas — 2 das melhores e 3 em recuperação — com dívida quitada cria condições para reconstrução." },
+      { text: "Aceitar a proposta integralmente — R$47M de sobra permite reconstruir sem o peso da dívida", risco: "alto", gestorEffects: { capitalPolitico: +2, esgotamento: +1 }, effects: { financeiro: +8, clientes: -5, rh: -4, marca: -4, processos: -3 }, avaliacao: "media", ensinamento: "Vender as 4 melhores lojas resolve a dívida mas deixa você com R$47M e 3 lojas deficitárias para recomeçar. A questão é se você consegue construir um novo negócio viável com esse capital partindo de 3 unidades problemáticas." },
+      { text: "Recusar e buscar um investidor de private equity para capitalização", risco: "alto", gestorEffects: { capitalPolitico: -1, esgotamento: +2 }, effects: { financeiro: +3, clientes: 0, processos: -1 }, avaliacao: "media", ensinamento: "PE como alternativa ao Atacadão pode funcionar se houver interesse real e timing compatível com a pressão do banco. O risco é que a negociação com PE dura 4-6 meses — tempo que o fluxo de caixa atual talvez não suporte." },
+      { text: "Aceitar mas incluir cláusula de recompra: direito de recomprar 2 lojas em 3 anos por múltiplo definido", risco: "medio", effects: { financeiro: +6, clientes: -3, margem: +2, processos: -1 }, avaliacao: "boa", ensinamento: "Cláusula de recompra preserva a opcionalidade de reconstruir o negócio depois de sanear o passivo. Se a recuperação funcionar, você recompra as melhores lojas com a empresa saudável." }
+    ]
+  },
+
+  {
+    title: "A Recuperação das Lojas Deficitárias",
+    description: "Com a dívida renegociada ou reduzida, você tem uma janela para recuperar as 3 lojas que ainda estão no prejuízo. O diretor de operações apresenta 3 estratégias distintas para as 3 lojas: fechar a de Ribeirão Vermelho (cidade pequena demais), converter a de Santo André para formato de atacado B2B puro, e reformular a de Campinas com foco em hortifrúti e perecíveis premium.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Executar o plano triplo: fechar Ribeirão, converter Santo André e reformular Campinas simultaneamente", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +3 }, effects: { financeiro: +3, processos: -3, rh: -3, margem: +3, clientes: -1 }, avaliacao: "media", ensinamento: "Três transformações simultâneas em lojas deficitárias sobrecarregam o time de gestão que já está no limite. O risco de execução parcial de todas é maior do que executar uma por vez com excelência." },
+      { text: "Priorizar a conversão de Santo André em B2B — menor investimento, maior margem, diferenciação real", risco: "baixo", effects: { margem: +3, clientes: +2, processos: +2, financeiro: +1 }, avaliacao: "boa", ensinamento: "Começar pela conversão mais clara (B2B em Santo André) entrega resultado mais rápido e libera o aprendizado para as próximas. Execução sequencial em turnaround é mais eficaz do que execução paralela com recursos limitados." },
+      { text: "Fechar as 3 lojas deficitárias de uma vez e realocar os 340 funcionários para as lojas saudáveis", risco: "alto", gestorEffects: { reputacaoInterna: -3, capitalPolitico: +2 }, effects: { financeiro: +5, rh: -5, clientes: -3, marca: -3, margem: +4 }, avaliacao: "ruim", ensinamento: "Fechar 3 lojas de uma vez com 340 demissões tem impacto humano e de marca que vai além dos números. A comunidade local e o restante do time lembram — e a reputação como empregador sofre por anos." },
+      { text: "Testar novos formatos em cada loja deficitária: uma como dark store, uma B2B e uma perecíveis premium — medir e decidir", risco: "medio", effects: { inovacao: +3, processos: -2, financeiro: -2, clientes: +1 }, avaliacao: "media", ensinamento: "Testar formatos diferentes em paralelo é a abordagem de maior aprendizado — mas de maior custo de execução. Com recursos ainda escassos, testar 3 formatos diferentes pode diluir o resultado de cada um." }
+    ]
+  },
+
+  {
+    title: "O Crescimento Responsável",
+    description: "As lojas estabilizadas, a dívida renegociada e os processos melhorados. É hora de definir a estratégia de crescimento para os próximos 3 anos — desta vez, com mais responsabilidade do que na expansão anterior.",
+    tags: ["varejo"],
+    choices: [
+      { text: "Crescimento orgânico disciplinado: máximo de 1 loja por ano, apenas em cidades acima de 80k habitantes com estudo de viabilidade detalhado", effects: { financeiro: +4, processos: +4, margem: +3, rh: +2, clientes: +3 }, avaliacao: "boa", ensinamento: "Crescimento disciplinado com critério de viabilidade claro é a lição aprendida na crise. Uma loja por ano — bem escolhida e bem executada — constrói uma rede saudável. Velocidade sem critério foi o erro que trouxe a crise." },
+      { text: "Consolidação total: sem novas lojas, foco 100% em rentabilidade e eficiência das 7 existentes por 3 anos", effects: { margem: +5, financeiro: +5, processos: +5, clientes: +2, rh: +2 }, avaliacao: "boa", ensinamento: "Consolidação total após uma crise de expansão é uma estratégia legítima e poderosa. Três anos de foco em eficiência com as lojas existentes podem dobrar a margem sem o risco de um novo ponto." },
+      { text: "Franquia para operadores regionais: crescer sem capital próprio, com o know-how como ativo", requisitos: { indicadorMinimo: { processos: 9, marca: 12 } }, effects: { financeiro: +4, marca: +3, clientes: +4, processos: +2, rh: -1 }, avaliacao: "boa", ensinamento: "Franquia de atacarejo regional permite crescimento de marca sem capital de abertura. O franchisee assume o risco de ponto — você fornece o modelo, o know-how e o poder de compra negociado." },
+      { text: "Pivô para B2B puro: transformar toda a rede em atacado exclusivo para pequenos comerciantes e fechar o varejo ao consumidor final", effects: { margem: +4, clientes: -4, financeiro: +2, processos: +3, marca: -3 }, avaliacao: "ruim", ensinamento: "Pivô total para B2B abandona a base de consumidores finais construída em anos e que representa 66% da receita atual. A especialização B2B pode ser um canal a mais — não a substituição do modelo inteiro." }
+    ]
+  }
+
+]
+
 ]; // fim VarejoRounds
 /* --rounds/logistica-rounds.js-- */
 /* ═══════════════════════════════════════════════════════
@@ -2656,6 +4265,350 @@ const LogisticaRounds = [
     ]
   }
 ]
+
+/* ══════════════════════════════════════════════════════════════════
+   HISTÓRIA [1] · Logística Refrigerada · Cadeia do Frio
+   Contexto: 190 colaboradores, 87 veículos refrigerados, 3 armazéns
+   R$38M receita. Sensor falhou → R$620k em medicamentos devolvidos.
+   18% da frota com monitoramento desatualizado. Auditoria iminente.
+
+   INDICADORES: financeiro:7, rh:6, clientes:7, processos:4,
+                sla:5, frota:7, seguranca:8, tecnologia:4
+
+   ATENÇÃO: tecnologia (4) é o indicador mais crítico.
+   tecnologia≤4 → sla-2 automaticamente. sla≤4 → clientes-2.
+   frota≤5 → seguranca-2 → rh-2.
+══════════════════════════════════════════════════════════════════ */
+,
+[
+  {
+    title: "A Falha que Expôs Tudo",
+    description: "Você assume a gestão 72 horas após o incidente. O cliente farmacêutico acionou a cláusula de auditoria. O relatório interno de diagnóstico revela: 18% da frota tem sensores desatualizados, 3 armazéns com registro de temperatura manual (não automatizado), e o último treinamento de cold chain foi há 2 anos. O auditor chega em 15 dias. Por onde você começa?",
+    tags: ["logistica"],
+    choices: [
+      { text: "Mapear os 87 veículos e classificar por criticidade de monitoramento — priorizar os que transportam medicamentos", risco: "baixo", effects: { processos: +4, tecnologia: +2, frota: +2, seguranca: +1 }, avaliacao: "boa", ensinamento: "Diagnóstico cirúrgico por prioridade é a primeira ação certa em qualquer crise operacional. Tratar todos os veículos igualmente desperdiça recursos que precisam ir para onde o risco é maior." },
+      { text: "Suspender imediatamente todos os veículos com sensores desatualizados — zero risco de novo incidente", risco: "alto", gestorEffects: { capitalPolitico: +1 }, effects: { sla: -3, clientes: -3, financeiro: -3, seguranca: +4, tecnologia: +1 }, avaliacao: "media", ensinamento: "Suspensão total elimina o risco mas paralisa a operação. Com 87 veículos e 18% afetados, suspender 16 veículos de uma vez pressiona o SLA. A solução equilibrada é substituição escalonada com prioridade nos medicamentos." },
+      { text: "Contratar empresa de monitoramento IoT para instalar sensores em toda a frota antes da auditoria", risco: "medio", effects: { tecnologia: +4, frota: +2, seguranca: +2, financeiro: -4, processos: +2 }, avaliacao: "boa", ensinamento: "Atualização completa de monitoramento é a solução estrutural. Investir antes da auditoria demonstra comprometimento real com a mudança — e sensores IoT têm custo marginal frente ao custo de um novo incidente." },
+      { text: "Focar na preparação para a auditoria — apresentar um plano de ação detalhado mesmo sem ter executado", risco: "alto", gestorEffects: { capitalPolitico: -2 }, effects: { clientes: -3, processos: +1, seguranca: -2 }, avaliacao: "ruim", ensinamento: "Auditores farmacêuticos são treinados para distinguir plano de ação de ação em andamento. Apresentar plano sem execução concreta em uma auditoria de causa é percebido como gestão de aparências." }
+    ]
+  },
+  {
+    title: "A Auditoria do Cliente Farmacêutico",
+    description: "O auditor passou 2 dias na operação. Relatório preliminar: 4 não-conformidades críticas — monitoramento de temperatura, rastreabilidade de lote, treinamento de operadores e documentação de desvios de temperatura. O cliente deu 30 dias para plano de ação com evidências de implementação. Se não aprovado, rescisão antecipada do contrato (R$9,2M/ano).",
+    tags: ["logistica"],
+    choices: [
+      { text: "Responder às 4 não-conformidades em paralelo com times dedicados a cada uma — entregar evidências em 25 dias", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { processos: +5, tecnologia: +3, seguranca: +3, financeiro: -3, rh: -1 }, avaliacao: "boa", ensinamento: "Resposta paralela às não-conformidades demonstra capacidade de gestão de crise e comprometimento real. Entregar antes do prazo com evidências concretas reverte a percepção de risco do cliente." },
+      { text: "Priorizar as 2 não-conformidades mais fáceis de resolver e pedir extensão de prazo para as outras 2", risco: "medio", effects: { processos: +2, seguranca: +2, clientes: -2, tecnologia: +1 }, avaliacao: "ruim", ensinamento: "Pedir extensão de prazo em auditoria de causa é sinal de gestão fraca. O cliente farmacêutico tem cronograma de conformidade de fornecedores — qualquer desvio vai para o relatório de risco de supply chain." },
+      { text: "Contratar consultoria especializada em boas práticas de armazenamento farmacêutico para liderar o plano", risco: "medio", effects: { processos: +4, tecnologia: +2, seguranca: +2, financeiro: -4 }, avaliacao: "boa", ensinamento: "Consultoria especializada em GDP (Good Distribution Practices) farmacêutico traz credibilidade com o auditor e acelera a implementação. O custo é marginal frente ao contrato de R$9,2M em risco." },
+      { text: "Reunir-se com o cliente para negociar a manutenção do contrato enquanto as não-conformidades são resolvidas", risco: "baixo", effects: { clientes: +3, processos: +2, financeiro: +1 }, avaliacao: "boa", ensinamento: "Comunicação proativa com o cliente durante o processo de correção transforma uma auditoria adversarial em uma parceria de melhoria. Clientes que veem comprometimento genuíno raramente exercem cláusulas de rescisão imediatamente." }
+    ]
+  },
+  {
+    title: "A Frota Que Envelhece",
+    description: "O relatório técnico da frota chega: dos 87 veículos refrigerados, 34 têm mais de 8 anos de uso — acima do recomendado para manutenção preventiva de sistemas de refrigeração. Renovar toda a frota custaria R$12M. Renovar apenas os 34 mais críticos custaria R$4,8M. Cada falha de temperatura não detectada pode resultar em descarte de carga e multa contratual.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Renovar os 12 veículos mais críticos (acima de 10 anos) e implementar manutenção preventiva reforçada para os outros 22", risco: "medio", effects: { frota: +5, seguranca: +3, financeiro: -3, sla: +2 }, avaliacao: "boa", ensinamento: "Renovação priorizada pelo risco real é a alocação mais eficiente. Veículos acima de 10 anos têm falha de compressor 4x mais frequente — substituí-los elimina a maior concentração de risco com metade do investimento." },
+      { text: "Fazer leasing de 20 veículos novos para substituir os mais velhos — custo mensal menor, frota mais nova", risco: "medio", effects: { frota: +4, financeiro: -2, seguranca: +3, sla: +2 }, avaliacao: "boa", ensinamento: "Leasing de frota distribui o custo de renovação sem comprometer o capital de giro. Para operações de cold chain com margem pressionada, lease é frequentemente superior à compra." },
+      { text: "Adiar a renovação e intensificar a manutenção preventiva de toda a frota", risco: "alto", effects: { frota: +2, financeiro: +1, seguranca: -2, sla: -1 }, avaliacao: "ruim", ensinamento: "Manutenção preventiva intensificada em veículo velho reduz a frequência de falha — mas não elimina o risco de colapso de sistema de refrigeração em rota. Para cold chain farmacêutico, 'reduzir risco' não é suficiente." },
+      { text: "Vender os 34 veículos mais velhos como sucata e usar o recurso para financiar a renovação", risco: "baixo", effects: { frota: +3, financeiro: +2, seguranca: +2, sla: -1 }, avaliacao: "media", ensinamento: "Venda de frota velha como parcial do financiamento da nova é razoável — mas o gap de tempo entre a venda e a chegada dos novos veículos pode pressionar o SLA se não for planejado." }
+    ]
+  },
+  {
+    title: "O Responsável Técnico que Sumiu",
+    description: "O responsável técnico de qualidade e rastreabilidade, que detinha todas as certificações ANVISA da operação, pediu demissão 3 dias após o incidente. Com ele foram: o conhecimento dos procedimentos de desvio, os contatos regulatórios e a memória dos processos de certificação. A renovação anual das licenças de operação farmacêutica vence em 4 meses.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Contratar imediatamente um consultor regulatório farmacêutico para cobrir o gap enquanto busca substituto permanente", risco: "medio", effects: { processos: +3, seguranca: +2, tecnologia: +1, financeiro: -2 }, avaliacao: "boa", ensinamento: "Consultor regulatório é a solução mais rápida para o gap de conhecimento. Um profissional com experiência em ANVISA pode cobrir as certificações em tempo menor que qualquer contratação CLT." },
+      { text: "Promover internamente o assistente de qualidade mais experiente e pagar a certificação dele urgentemente", risco: "baixo", effects: { rh: +3, processos: +2, seguranca: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "Promoção interna preserva o conhecimento institucional já existente. O assistente que trabalhava com o responsável técnico conhece os processos — falta apenas a certificação formal que pode ser obtida em semanas." },
+      { text: "Documentar todos os processos existentes em 2 semanas antes de contratar alguém novo", risco: "medio", effects: { processos: +4, tecnologia: +2, financeiro: -1, sla: -1 }, avaliacao: "media", ensinamento: "Documentação antes da contratação garante que o conhecimento não está concentrado numa única pessoa de novo. O risco é o tempo — 2 semanas de documentação em paralelo com a auditoria pode sobrecarregar o time." },
+      { text: "Contratar no mercado o perfil mais qualificado disponível com salário acima da média para fechar rápido", risco: "alto", gestorEffects: { capitalPolitico: +1 }, effects: { financeiro: -4, rh: +1, processos: +2, seguranca: +1 }, avaliacao: "media", ensinamento: "Pagar prêmio de urgência por profissional regulatório é justificável com licença ANVISA vencendo em 4 meses. O custo da contratação é marginal frente à multa e suspensão de licença." }
+    ]
+  },
+  {
+    title: "O Segundo Cliente Pede Auditoria",
+    description: "O cliente de alimentos perecíveis — que representa R$6,8M/ano — leu sobre o incidente farmacêutico no setor e também acionou cláusula de auditoria. 'Não é que a gente desconfie de vocês', diz o diretor de supply chain deles. 'É que temos obrigação com nossos próprios auditores de verificar todos os fornecedores de frio.' Você ainda está gerenciando a auditoria farmacêutica.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Agendar a auditoria de alimentos para 45 dias — depois que a farmacêutica for concluída — e comunicar proativamente o cronograma", risco: "baixo", gestorEffects: { reputacaoInterna: +1 }, effects: { clientes: +3, processos: +1, sla: +1 }, avaliacao: "boa", ensinamento: "Gerenciar o timing das duas auditorias evita a sobrecarga do time de qualidade. Comunicar proativamente o cronograma mostra organização e respeito ao cliente." },
+      { text: "Aceitar as duas auditorias em paralelo — mostrar que a empresa tem capacidade de gestão sob pressão", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +2 }, effects: { processos: -3, rh: -2, sla: -1, seguranca: +1 }, avaliacao: "ruim", ensinamento: "Duas auditorias simultâneas sobrecarregam o mesmo time de qualidade que está tentando corrigir os problemas. O risco de execução ruim nas duas é maior do que o benefício de demonstrar capacidade." },
+      { text: "Transformar a auditoria de alimentos em visita de parceria — mostrar as melhorias implementadas pós-incidente", risco: "baixo", effects: { clientes: +4, marca: +2, processos: +2, tecnologia: +1 }, avaliacao: "boa", ensinamento: "Converter uma auditoria defensiva em demonstração de melhoria muda a dinâmica do relacionamento. O cliente que vem para verificar e sai impressionado com as mudanças se torna um defensor da empresa." },
+      { text: "Oferecer ao cliente de alimentos acesso ao relatório e plano de ação da auditoria farmacêutica como transparência", risco: "medio", effects: { clientes: +4, processos: +1, sla: +1 }, avaliacao: "boa", ensinamento: "Transparência radical com clientes em crise constrói confiança que anos de relacionamento normal não criam. Compartilhar o relatório completo demonstra que você não tem nada a esconder." }
+    ]
+  },
+  {
+    title: "A Tecnologia de Rastreabilidade em Tempo Real",
+    description: "O CTO apresenta a proposta: R$1,1M para implementar rastreabilidade em tempo real com IoT em toda a frota e armazéns — temperatura, localização e umidade com alertas automáticos para desvios. O sistema integra diretamente com o dashboard dos clientes. O ROI projetado: redução de 90% nos incidentes de temperatura e eliminação de R$2M/ano em perdas de carga.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Aprovar o investimento completo — rastreabilidade em tempo real é o novo padrão do mercado farmacêutico", risco: "medio", effects: { tecnologia: +6, seguranca: +3, frota: +2, clientes: +3, financeiro: -4 }, avaliacao: "boa", ensinamento: "Tecnologia de rastreabilidade em cold chain farmacêutico migrou de diferencial para requisito de entrada. Empresas que não implementam em 24 meses perdem acesso a contratos de distribuição de medicamentos regulados." },
+      { text: "Implementar apenas nos veículos que atendem clientes farmacêuticos — R$380k em vez de R$1,1M", risco: "baixo", effects: { tecnologia: +3, seguranca: +2, frota: +1, clientes: +2, financeiro: -2 }, avaliacao: "boa", ensinamento: "Implementação faseada por criticidade do cliente entrega 80% do resultado com 35% do custo. Os veículos de alimentos podem ser integrados numa segunda fase quando o ROI da primeira fase for validado." },
+      { text: "Buscar financiamento de fornecedor de IoT via contrato de serviço mensal — sem capex inicial", risco: "baixo", effects: { tecnologia: +4, seguranca: +3, financeiro: -2, frota: +2, sla: +2 }, avaliacao: "boa", ensinamento: "Modelo SaaS de monitoramento IoT existe no mercado — você paga por dispositivo por mês sem capex. Para empresas com fluxo de caixa pressionado, opex é preferível a capex." },
+      { text: "Adiar — a prioridade agora é passar nas auditorias com o que temos, tecnologia é próximo passo", risco: "alto", effects: { tecnologia: -1, seguranca: -2, clientes: -2, sla: -1 }, avaliacao: "ruim", ensinamento: "Passar na auditoria sem implementar rastreabilidade em tempo real é uma contradição. O auditor vai perguntar exatamente o que você está fazendo para evitar o próximo incidente — 'plano para o próximo passo' não é uma resposta satisfatória." }
+    ]
+  },
+  {
+    title: "A Proposta do Concorrente ao Seu Cliente",
+    description: "Você soube por um contato no mercado que dois concorrentes estão prospectando ativamente o seu cliente farmacêutico, aproveitando o momento de vulnerabilidade. Um deles apresentou proposta com preço 12% abaixo do seu e frota 100% com rastreabilidade IoT. O contrato do cliente vence em 8 meses.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Antecipar a renovação: propor contrato de 3 anos com as melhorias implementadas como argumento principal", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { clientes: +4, financeiro: +3, sla: +2, tecnologia: +1 }, avaliacao: "boa", ensinamento: "Renovação antecipada com empresa em processo de melhoria visível é estratégia correta. O cliente que assina agora está apostando na trajetória — e você está demonstrando que a trajetória é positiva." },
+      { text: "Reduzir o preço em 10% para tornar a proposta do concorrente menos atraente", risco: "alto", effects: { clientes: +2, financeiro: -4, sla: 0 }, avaliacao: "ruim", ensinamento: "Redução de preço sem argumento de valor é mensagem de desespero. O cliente farmacêutico toma decisão de fornecedor de cold chain por confiabilidade, não por preço — especialmente após um incidente." },
+      { text: "Apresentar ao cliente o roadmap de tecnologia dos próximos 6 meses como demonstração de comprometimento", risco: "baixo", effects: { clientes: +3, tecnologia: +2, sla: +1, processos: +1 }, avaliacao: "boa", ensinamento: "Roadmap de investimento é o argumento mais poderoso para retenção de cliente em momento de crise. Ele demonstra que a empresa aprendeu com o incidente e está investindo — não apenas prometendo." },
+      { text: "Buscar informações sobre as propostas dos concorrentes antes de reagir", risco: "baixo", effects: { processos: +2, clientes: +1 }, avaliacao: "media", ensinamento: "Inteligência competitiva antes de reagir é prudente — mas com contrato vencendo em 8 meses e concorrentes ativos, o tempo de espera tem custo. Cada semana sem ação é semana que o concorrente usa para construir relacionamento." }
+    ]
+  },
+  {
+    title: "A Certificação ANVISA em Risco",
+    description: "O responsável técnico substituto identifica um problema grave: dois dos três armazéns frigorificados têm procedimentos de controle de temperatura que não atendem mais a RDC 430/2020 da ANVISA. A renovação da licença sanitária é em 3 meses. Sem ela, você não pode operar distribuição de medicamentos.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Contratar consultoria regulatória para adequação imediata dos dois armazéns — prioridade máxima", risco: "medio", effects: { seguranca: +4, processos: +4, tecnologia: +2, financeiro: -3, conformidade: +3 }, avaliacao: "boa", ensinamento: "Adequação regulatória com prazo fixo não tem alternativa: ou você implementa ou perde a licença. A consultoria especializada reduz o risco de interpretar incorretamente a regulação e reprovar na inspeção." },
+      { text: "Fazer as adequações internamente com a equipe atual para economizar o custo da consultoria", risco: "alto", effects: { processos: +2, seguranca: +2, financeiro: +1, tecnologia: -1 }, avaliacao: "ruim", ensinamento: "Adequação regulatória farmacêutica sem especialista é alto risco. A RDC 430 tem especificidades técnicas que exigem profissional habilitado — uma interpretação errada pode resultar em reprovação na inspeção sanitária." },
+      { text: "Contatar a ANVISA proativamente para apresentar o plano de adequação antes da inspeção", risco: "baixo", gestorEffects: { capitalPolitico: +2 }, effects: { processos: +3, seguranca: +3, clientes: +2 }, avaliacao: "boa", ensinamento: "Órgãos regulatórios respondem positivamente a empresas que buscam orientação antes de serem autuadas. Contato proativo transforma a relação de policiamento em parceria de conformidade." },
+      { text: "Migrar temporariamente as operações farmacêuticas para o armazém já adequado enquanto faz as reformas", risco: "medio", effects: { sla: -2, processos: +2, seguranca: +2, clientes: -1 }, avaliacao: "media", ensinamento: "Concentração temporária das operações farmacêuticas reduz a exposição regulatória — mas aumenta o volume no único armazém adequado, pressionando o SLA dos clientes farmacêuticos." }
+    ]
+  },
+  {
+    title: "O Treinamento que Nunca Aconteceu",
+    description: "A auditoria identificou que 67% dos motoristas e 82% dos operadores de armazém nunca fizeram treinamento em cadeia do frio. O último treinamento foi há 2 anos para um grupo de 12 pessoas. Com 190 colaboradores, o treinamento completo leva 3 semanas e custa R$85k. O auditor incluiu o treinamento como não-conformidade crítica.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Contratar empresa de treinamento especializada em GDP para capacitar toda a equipe em 3 semanas", risco: "medio", effects: { rh: +5, seguranca: +4, processos: +3, financeiro: -2 }, avaliacao: "boa", ensinamento: "Treinamento de GDP (Good Distribution Practices) não é custo — é a única forma de garantir que todos os colaboradores tomem as decisões corretas no momento certo. 190 pessoas treinadas são 190 barreiras contra o próximo incidente." },
+      { text: "Treinar primeiro os 40 colaboradores que operam os veículos e armazéns farmacêuticos", risco: "baixo", effects: { rh: +3, seguranca: +3, processos: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "Treinamento priorizado por exposição ao risco é a alocação correta. Os 40 que operam diretamente com medicamentos são os que mais precisam do treinamento — e são os que o auditor vai verificar." },
+      { text: "Criar um e-learning interno com o conteúdo básico de cold chain — mais rápido e mais barato", risco: "medio", effects: { rh: +2, seguranca: +1, processos: +1, financeiro: 0 }, avaliacao: "ruim", ensinamento: "E-learning genérico em cold chain não substitui treinamento presencial com simulações de desvio de temperatura. Auditores farmacêuticos sabem a diferença — e o e-learning sem aplicação prática raramente muda comportamento." },
+      { text: "Implementar sistema de multiplicadores internos — treinar 10 líderes que replicam para toda a equipe", risco: "baixo", effects: { rh: +4, seguranca: +2, processos: +3, financeiro: -1 }, avaliacao: "boa", ensinamento: "Multiplicadores internos criam capacidade de treinamento contínuo, não apenas pontual. Operação de cold chain muda com a equipe — multiplicadores garantem que os novos colaboradores sejam treinados no padrão." }
+    ]
+  },
+  {
+    title: "O Novo Cliente de Vacinas",
+    description: "O Ministério da Saúde abriu licitação para distribuição de vacinas em 4 estados — contrato de R$14M por 2 anos. Os requisitos são os mais rigorosos da cadeia do frio: temperatura entre 2°C e 8°C com desvio máximo de 0,5°C, rastreabilidade em tempo real obrigatória e certificação ANVISA específica para vacinas. Você ainda está em processo de adequação.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Não participar da licitação — as adequações atuais precisam ser concluídas antes de assumir um contrato mais exigente", risco: "baixo", gestorEffects: { capitalPolitico: -1 }, effects: { processos: +2, seguranca: +1, financeiro: -1 }, avaliacao: "boa", ensinamento: "Disciplina de não assumir contratos acima da capacidade atual é sinal de maturidade operacional. Um contrato de vacinas com falha é muito mais danoso do que não participar da licitação." },
+      { text: "Participar da licitação com proposta condicional: contrato inicia em 6 meses quando as adequações estiverem concluídas", risco: "medio", effects: { clientes: +2, financeiro: +1, processos: +1 }, avaliacao: "boa", ensinamento: "Proposta condicional com cronograma honesto é melhor do que proposta que você não pode cumprir. Alguns órgãos públicos aceitam prazos escalonados de implementação quando a justificativa é técnica e documentada." },
+      { text: "Participar da licitação em parceria com empresa já certificada para vacinas — dividir receita e risco", risco: "medio", effects: { clientes: +3, financeiro: +3, tecnologia: +2, sla: +1 }, avaliacao: "boa", ensinamento: "Parceria para capturar contrato que exige certificação que você ainda não tem é a forma mais inteligente de crescer no segmento. O parceiro certifica, você opera — e os dois aprendem juntos." },
+      { text: "Assumir o compromisso e acelerar as adequações para cumprir os requisitos até o início do contrato", risco: "alto", gestorEffects: { capitalPolitico: +2, esgotamento: +2 }, effects: { financeiro: -4, processos: -2, seguranca: +2, sla: -2 }, avaliacao: "ruim", ensinamento: "Assumir contrato de vacinas antes de estar pronto cria risco sanitário real. Uma falha na cadeia do frio de vacinas tem impacto de saúde pública — não apenas financeiro." }
+    ]
+  },
+  {
+    title: "O Motoboy que Filma a Operação",
+    description: "Um colaborador publicou um vídeo nas redes sociais mostrando um veículo refrigerado descarregando caixas de medicamentos ao sol por 8 minutos em frente a uma farmácia. O vídeo atingiu 340k visualizações em 12 horas. O cliente farmacêutico ligou na mesma hora. O colaborador estava correto no procedimento — a entrega em farmácias pequenas sem doca exige exposição breve ao ambiente.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Responder publicamente com explicação técnica do procedimento e demonstração das temperaturas registradas no momento", risco: "baixo", gestorEffects: { reputacaoInterna: +1 }, effects: { clientes: +3, rh: +1, tecnologia: +1, seguranca: +1 }, avaliacao: "boa", ensinamento: "Transparência com dados técnicos é a resposta correta a críticas de operação baseadas em aparência. Se o procedimento está correto e a temperatura foi mantida, os dados da rastreabilidade são a prova mais eficiente." },
+      { text: "Criar procedimento formal de entrega com cobertura térmica para todos os pontos sem doca", risco: "baixo", effects: { seguranca: +3, processos: +3, frota: +1, financeiro: -1 }, avaliacao: "boa", ensinamento: "Mesmo que o procedimento estivesse correto, criar um padrão mais rigoroso visível é a resposta proativa que demonstra liderança em qualidade. Coberturas térmicas para entrega custam R$180 por veículo." },
+      { text: "Acionar a equipe jurídica para avaliar a publicação do colaborador como falta grave", risco: "alto", gestorEffects: { reputacaoInterna: -3 }, effects: { rh: -5, clientes: -2, sla: -1 }, avaliacao: "ruim", ensinamento: "Punir colaborador por expor uma prática operacional real — mesmo que correta — cria clima de medo e silêncio que é muito mais perigoso do que o vídeo. Problemas reais que ninguém reporta são os mais caros." },
+      { text: "Contatar o colaborador para entender a motivação e resolver internamente antes de qualquer ação pública", risco: "baixo", effects: { rh: +2, clientes: +1 }, avaliacao: "media", ensinamento: "Entender o colaborador antes de agir é prudente — mas com 340k visualizações em 12h, o público externo já está formando opinião. A resposta interna precisa ser acompanhada de uma posição pública." }
+    ]
+  },
+  {
+    title: "A Proposta de Fusão com Operador de Frio",
+    description: "O maior operador de frio da região Sul quer fusão: eles têm 140 veículos refrigerados e 5 armazéns, mas estão com problemas financeiros por má gestão. A fusão criaria a maior operação de cold chain do Sul e Sudeste com R$92M de receita combinada. Mas eles têm R$8M em dívida e cultura operacional diferente da sua.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Recusar a fusão e propor aquisição apenas dos ativos físicos — comprar frota e armazéns sem a dívida", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { frota: +4, tecnologia: +2, financeiro: -3, sla: +2 }, avaliacao: "boa", ensinamento: "Comprar ativos sem a dívida é a forma mais inteligente de crescer em operações com problemas financeiros. Frota e armazéns têm valor sem o passivo do vendedor." },
+      { text: "Aceitar a fusão com due diligence completa e plano de integração de 12 meses", risco: "alto", gestorEffects: { capitalPolitico: +2, esgotamento: +2 }, effects: { financeiro: -4, frota: +5, clientes: +3, processos: -3, sla: -1 }, avaliacao: "media", ensinamento: "Fusão com empresa com problemas financeiros pode criar escala — ou dobrar os problemas. A due diligence precisa avaliar não apenas os números, mas a cultura operacional de cold chain." },
+      { text: "Propor aliança operacional sem fusão societária — compartilhar frota e CD em picos sem assumir dívida", risco: "baixo", effects: { frota: +2, sla: +2, clientes: +2, financeiro: +1 }, avaliacao: "boa", ensinamento: "Aliança operacional captura a escala nos momentos que importam sem os riscos de integração. É o caminho mais eficiente quando as culturas e as situações financeiras são muito diferentes." },
+      { text: "Recusar completamente — você está em processo de adequação e uma fusão agora compromete o foco", risco: "baixo", effects: { processos: +2, seguranca: +1, financeiro: +1 }, avaliacao: "media", ensinamento: "Recusar durante um processo de adequação ativa é razoável. Integrar outra empresa enquanto você está corrigindo problemas internos pode comprometer os dois processos." }
+    ]
+  },
+  {
+    title: "O Reconhecimento de Mercado",
+    description: "Depois de 12 meses de trabalho intenso, a operação está transformada. O cliente farmacêutico renovou o contrato por 3 anos. A ABRAFRIO (associação do setor) convidou você para apresentar o case de recuperação em evento nacional. Dois novos prospectos de clientes farmacêuticos entraram em contato espontaneamente. O time pergunta: 'O que vem a seguir?'",
+    tags: ["logistica"],
+    choices: [
+      { text: "Aceitar o convite da ABRAFRIO e publicar o case — posicionar a empresa como referência em recuperação de qualidade", risco: "baixo", gestorEffects: { capitalPolitico: +2 }, effects: { reputacao: +4, clientes: +3, rh: +2, tecnologia: +1 }, avaliacao: "boa", ensinamento: "Um case de recuperação bem documentado é ativo de marketing poderoso. Empresas que transformaram crise em excelência têm credibilidade superior às que nunca passaram por crises." },
+      { text: "Priorizar os dois novos prospectos antes do evento — converter em contratos enquanto o momentum é alto", risco: "medio", effects: { clientes: +4, financeiro: +3, sla: +1 }, avaliacao: "boa", ensinamento: "Converter prospectos inbound enquanto a reputação está em alta é a janela de menor custo de aquisição. Clientes que chegam até você por indicação ou reputação têm ciclo de venda 60% menor." },
+      { text: "Certificar a operação na ISO 13485 (dispositivos médicos) para ampliar o portfólio de segmentos atendíveis", risco: "medio", effects: { tecnologia: +3, seguranca: +3, financeiro: -3, processos: +3, clientes: +2 }, avaliacao: "boa", ensinamento: "ISO 13485 abre o mercado de dispositivos médicos e materiais hospitalares — segmento com margens mais altas e contratos mais longos do que medicamentos. A base de qualidade que você construiu é a fundação." },
+      { text: "Focar exclusivamente em consolidar a operação atual por mais 6 meses antes de qualquer expansão", risco: "baixo", effects: { processos: +2, sla: +2, rh: +1, seguranca: +1 }, avaliacao: "media", ensinamento: "Consolidação antes de expansão é prudente — mas com dois prospectos inbound e o contrato renovado, a janela de crescimento está aberta. Esperar 6 meses pode significar perder o timing de mercado." }
+    ]
+  },
+  {
+    title: "A Decisão de Precificação",
+    description: "Com a operação recuperada e certificada, você tem poder de precificação que não tinha antes. Dois novos clientes farmacêuticos propõem contratos — um aceita seu preço atual, outro pede 8% de desconto argumentando volume. A consultoria financeira indica que você poderia aumentar a tabela em 15% para novos contratos sem perder competitividade, dado o diferencial técnico construído.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Reajustar a tabela de preços em 12% para novos contratos — capturar o valor do diferencial construído", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { financeiro: +5, margem: +3, clientes: +1, sla: +1 }, avaliacao: "boa", ensinamento: "Pricing power é o resultado de diferenciação real. Uma operação com rastreabilidade IoT, equipe certificada e histórico de recuperação de crise vale mais do que uma operação genérica. Cobrar mais é legítimo e necessário para sustentar o investimento feito." },
+      { text: "Manter o preço atual e focar em volume — crescer a carteira antes de reajustar", risco: "baixo", effects: { clientes: +3, financeiro: +2, sla: +1, frota: +1 }, avaliacao: "media", ensinamento: "Volume antes de preço é uma estratégia válida para construir case de escala. O risco é que o custo de operação em cold chain farmacêutico de alta qualidade não se sustenta indefinidamente com preço pré-diferenciação." },
+      { text: "Aceitar o desconto de 8% do cliente de volume e compensar no ticket médio geral", risco: "medio", effects: { financeiro: +2, clientes: +4, sla: +1, frota: +2 }, avaliacao: "media", ensinamento: "Desconto por volume é aceitável quando o contrato tem escala suficiente para compensar na margem absoluta. O risco é criar precedente de que seu preço é negociável." },
+      { text: "Reajustar em 18% apenas para contratos de maior risco técnico — vacinas e medicamentos controlados", risco: "baixo", effects: { financeiro: +4, margem: +4, clientes: +1, seguranca: +1 }, avaliacao: "boa", ensinamento: "Precificação diferenciada por complexidade e risco técnico é o modelo correto para cold chain especializado. Quem exige mais paga mais — e o cliente que entende o risco aceita o prêmio de preço." }
+    ]
+  },
+  {
+    title: "O Futuro da Cadeia do Frio",
+    description: "Após um ciclo de transformação profunda, você precisa definir a direção estratégica dos próximos 3 anos. O setor de cold chain farmacêutico cresce 18% ao ano no Brasil. O board quer saber qual posicionamento vai sustentar o crescimento.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Especialista em cold chain farmacêutico e hospitalar: ser a referência técnica no segmento mais exigente do setor", effects: { financeiro: +5, clientes: +5, seguranca: +5, tecnologia: +4, rh: +3, sla: +3 }, avaliacao: "boa", ensinamento: "Especialização no segmento mais exigente cria barreiras de entrada que protegem a margem. Certificações, know-how e reputação construídos levam anos para um concorrente replicar." },
+      { text: "Expansão nacional: replicar o modelo de cold chain certificado para outras regiões do Brasil", requisitos: { indicadorMinimo: { tecnologia: 10, seguranca: 12 } }, effects: { financeiro: +4, clientes: +4, sla: +2, frota: +3, rh: +2 }, avaliacao: "boa", ensinamento: "Expansão com modelo certificado e comprovado é mais segura do que a maioria das expansões logísticas. A certificação ANVISA é federal — o que você construiu no Sudeste replica para outros estados com ajustes menores." },
+      { text: "Plataforma de cold chain as-a-service: abrir a infraestrutura para outros operadores menores como B2B", effects: { tecnologia: +5, financeiro: +3, processos: +3, clientes: +2, sla: +1 }, avaliacao: "boa", ensinamento: "Infraestrutura como serviço multiplica o retorno do investimento em tecnologia e armazéns. Outros operadores que não têm condições de certificar sozinhos pagam pelo acesso à sua infraestrutura." },
+      { text: "Diversificação para alimentos premium: ampliar o mix de clientes além do farmacêutico", effects: { clientes: +3, financeiro: +3, sla: +2, frota: +2, seguranca: -1 }, avaliacao: "media", ensinamento: "Alimentos premium têm requisitos de cold chain rigorosos mas diferentes dos farmacêuticos. A diversificação reduz a concentração de receita em um setor — ao custo de diluir um pouco a especialização que é o principal diferencial." }
+    ]
+  }
+],
+
+/* ══════════════════════════════════════════════════════════════════
+   HISTÓRIA [2] · Fulfillment E-commerce · Operação Omnichannel
+   Contexto: 310 funcionários, 2 CDs em Campinas, 18k pedidos/dia,
+   R$45M faturamento. Volume cresceu 62% com novo marketplace.
+   Índice de problema: 1,2% → 4,7% (limite contratual: 2%).
+   Marketplace emitiu alerta formal com cláusula de rescisão.
+
+   INDICADORES: financeiro:7, rh:6, clientes:7, processos:4,
+                sla:5, frota:7, seguranca:8, tecnologia:4
+
+   ATENÇÃO: processos (4) e tecnologia (4) já estão no limite.
+   A operação foi projetada para 11k pedidos — está em 18k.
+   tecnologia≤4 → sla-2. sla≤3 → financeiro-1.
+══════════════════════════════════════════════════════════════════ */
+,
+[
+  {
+    title: "O Volume que Ninguém Esperava",
+    description: "O contrato com o marketplace entrou em vigor há 45 dias. Em vez dos 6.500 pedidos/dia projetados, chegaram 10.800 no primeiro mês. O CD principal opera a 118% da capacidade. A taxa de erro está em 4,7% — 2,35x acima do limite contratual de 2%. Você tem 30 dias antes de o marketplace acionar a cláusula de rescisão. O que você faz primeiro?",
+    tags: ["logistica"],
+    choices: [
+      { text: "Implementar triplo turno de operação nos dois CDs — maximizar capacidade antes de qualquer outra solução", risco: "medio", effects: { sla: +3, rh: -3, financeiro: -2, processos: +2 }, avaliacao: "boa", ensinamento: "Triplo turno é a solução mais rápida para aumentar capacidade sem investimento de capital. O custo humano é real — adicional noturno e desgaste do time — mas a alternativa é perder R$14M de contrato." },
+      { text: "Alugar um terceiro CD de emergência para distribuir o volume excedente imediatamente", risco: "medio", effects: { sla: +2, processos: +2, financeiro: -4, clientes: +2 }, avaliacao: "boa", ensinamento: "CD adicional elimina o gargalo físico que é a causa raiz do problema de SLA. R$80-120k/mês de aluguel é custo marginal frente ao contrato do marketplace." },
+      { text: "Negociar com o marketplace uma rampa de crescimento mais gradual — limitar o volume nos próximos 60 dias", risco: "baixo", effects: { sla: +3, clientes: -2, financeiro: -1 }, avaliacao: "media", ensinamento: "Renegociar o volume com o marketplace pode ser possível se a comunicação for proativa e o plano de expansão de capacidade for crível. O risco é que o marketplace pode preferir rescindir a aceitar limitação de volume." },
+      { text: "Focar na redução do erro nos 18k pedidos atuais antes de pensar em capacidade — qualidade antes de volume", risco: "alto", effects: { processos: +2, sla: -2, clientes: -2, financeiro: -1 }, avaliacao: "ruim", ensinamento: "Focar em qualidade sem resolver o gargalo de capacidade é gerenciar o sintoma da doença. Com CD a 118%, o erro é estrutural — não operacional. Mais atenção com o mesmo gargalo não reduz o índice de 4,7%." }
+    ]
+  },
+  {
+    title: "Os Clientes Originais Reclamam",
+    description: "Os 37 clientes que operavam com você antes do contrato do marketplace estão reclamando que o SLA deles piorou. Três enviaram carta formal. Dois ameaçam migrar para outro operador. Eles representam R$31M em receita — 69% do faturamento total. O novo marketplace representa R$14M — mas a atenção operacional está toda nele.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Criar SLA dedicado para os clientes originais: time separado, área do CD reservada, não competem com o marketplace pelo recurso", risco: "medio", gestorEffects: { reputacaoInterna: +1 }, effects: { clientes: +4, processos: +2, financeiro: -2, sla: +2 }, avaliacao: "boa", ensinamento: "Segregação de operação por cliente é a solução estrutural para conflito de capacidade. Clientes que pagam mais não podem perder SLA por causa de um cliente maior em volume." },
+      { text: "Reunir-se pessoalmente com os 3 clientes que enviaram carta formal e apresentar plano de recuperação", risco: "baixo", gestorEffects: { capitalPolitico: +1 }, effects: { clientes: +3, sla: +1 }, avaliacao: "boa", ensinamento: "Clientes que se deram ao trabalho de escrever uma carta formal querem atenção, não apenas solução técnica. A presença do gestor na reunião comunica que o relacionamento importa." },
+      { text: "Oferecer desconto temporário de 10% para os clientes originais como compensação pelo período de queda de SLA", risco: "alto", effects: { clientes: +2, financeiro: -3, sla: 0 }, avaliacao: "ruim", ensinamento: "Desconto como compensação de SLA é a solução mais cara e menos eficiente. Você paga pela falha operacional sem corrigi-la — e cria precedente de que queda de SLA tem preço, não solução." },
+      { text: "Priorizar temporariamente o marketplace para estabilizar o SLA mais urgente e voltar aos clientes originais em 30 dias", risco: "alto", effects: { clientes: -3, sla: +1, financeiro: +1 }, avaliacao: "ruim", ensinamento: "Priorizar o novo cliente em detrimento dos clientes que construíram sua empresa é uma troca que raramente compensa. Os clientes originais têm memória longa — e as cartas formais indicam que a paciência já acabou." }
+    ]
+  },
+  {
+    title: "O Sistema WMS Sobrecarregado",
+    description: "O WMS (Warehouse Management System) foi dimensionado para 12k pedidos/dia. Com 18k, o sistema trava 3 a 5 vezes por turno, causando filas de triagem de até 90 minutos. O fornecedor do WMS diz que a atualização para suportar 25k pedidos/dia custa R$380k e leva 6 semanas de implementação. Nas 6 semanas, a operação continua no WMS atual.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Aprovar a atualização do WMS e implementar workarounds manuais para os próximos 6 weeks", risco: "medio", effects: { tecnologia: +5, processos: +4, sla: +2, financeiro: -4, rh: -2 }, avaliacao: "boa", ensinamento: "Atualização de WMS é investimento estrutural necessário. Os 6 weeks de implementação são inevitáveis — quanto mais você adia, mais a operação degrada. Os workarounds manuais são o custo da transição." },
+      { text: "Migrar para WMS SaaS de novo fornecedor — implementação mais rápida (3 semanas) mas R$520k/ano", risco: "alto", gestorEffects: { esgotamento: +1 }, effects: { tecnologia: +4, processos: +3, sla: +3, financeiro: -3, rh: -3 }, avaliacao: "media", ensinamento: "Troca de WMS em operação a 118% de capacidade é risco extremamente alto. Migrações de sistema em operação plena frequentemente resultam em perdas de dados e paralisação parcial." },
+      { text: "Implementar processamento em fila — o WMS processa em batches de 2h em vez de tempo real", risco: "baixo", effects: { tecnologia: +2, processos: +1, sla: -1, rh: +1 }, avaliacao: "media", ensinamento: "Processamento em batch reduz a sobrecarga do WMS sem custo de atualização — mas aumenta a latência de cada pedido. Para e-commerce com SLA de 4h para despacho, batches de 2h podem comprometer o timing de expedição." },
+      { text: "Dividir o volume entre os dois CDs manualmente para reduzir a pressão no WMS principal", risco: "medio", effects: { processos: +2, sla: +1, rh: -2, financeiro: -1 }, avaliacao: "media", ensinamento: "Distribuição manual de volume entre CDs alivia o WMS sem custo de sistema — mas cria outro gargalo: coordenação humana de volume em dois locais sem sistema integrado é fonte de erro." }
+    ]
+  },
+  {
+    title: "A Qualidade dos Entregadores Terceirizados",
+    description: "O relatório de incidentes revela: 73% dos erros de entrega (endereço errado, produto trocado, embalagem danificada) ocorrem nos 18 transportadores terceirizados que o marketplace exige usar. Você não tem controle sobre eles — são parceiros do marketplace. Os clientes reclamam na sua empresa, não no marketplace.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Documentar os incidentes por transportador e apresentar relatório formal ao marketplace solicitando substituição dos piores", risco: "baixo", gestorEffects: { capitalPolitico: +1 }, effects: { clientes: +3, sla: +2, processos: +2 }, avaliacao: "boa", ensinamento: "Dados concretos de performance por transportador são o argumento correto para forçar mudança. O marketplace não quer incidentes — ele vai agir se você provar com dados qual transportador está destruindo a experiência do cliente final." },
+      { text: "Adicionar uma etapa extra de verificação antes da saída do CD — double-check em 100% dos pedidos do marketplace", risco: "medio", effects: { sla: +2, processos: +3, rh: -3, financeiro: -1 }, avaliacao: "boa", ensinamento: "Double-check antes da expedição captura os erros de embalagem e produto antes de sair do seu controle. O custo em tempo de processamento é real — mas a taxa de erro cai para um nível que você pode defender." },
+      { text: "Tentar absorver os transportadores terceirizados como frota própria — assumir o controle da entrega", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +2 }, effects: { financeiro: -5, sla: +3, rh: -3, frota: +3, clientes: +2 }, avaliacao: "media", ensinamento: "Trazer para frota própria dá controle mas requer capital para compra de veículos e contratação em escala. Com a operação já sobrecarregada, absorver 18 transportadores pode ser uma sobrecarga operacional adicional." },
+      { text: "Negociar com o marketplace a possibilidade de usar transportadores próprios nos corredores com pior performance", risco: "medio", effects: { clientes: +3, sla: +2, financeiro: -2, processos: +1 }, avaliacao: "boa", ensinamento: "Substituição gradual em corredores específicos é a negociação mais razoável com o marketplace. Você demonstra capacidade onde o terceirizado falha — e o marketplace tem dados para justificar a mudança." }
+    ]
+  },
+  {
+    title: "O Pico de Black Friday se Aproxima",
+    description: "Black Friday em 60 dias. No ano passado, o volume triplicou em 24 horas. Com o volume base atual de 18k pedidos/dia, o pico pode chegar a 54k pedidos/dia. O marketplace exige que você mantenha o SLA durante o pico. O plano operacional precisa ser apresentado em 2 semanas. Você ainda está resolvendo os problemas do volume atual.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Apresentar plano realista ao marketplace: capacidade máxima de 32k pedidos/dia no pico — solicitar limite de volume acima disso", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { clientes: +2, processos: +3, sla: +2, financeiro: +1 }, avaliacao: "boa", ensinamento: "Honestidade sobre a capacidade máxima é melhor do que comprometer um SLA impossível. O marketplace prefere um operador que sabe seus limites a um que promete 54k e entrega 18k com 8% de erro." },
+      { text: "Contratar 80 operadores temporários e alugar um terceiro CD por 45 dias para o pico", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +2 }, effects: { sla: +3, financeiro: -5, rh: -2, processos: +2 }, avaliacao: "media", ensinamento: "Operação de pico com temporários e CD extra é viável — mas o tempo de treinamento para 80 pessoas é de 2 a 3 semanas. Com 60 dias, a janela é apertada e o risco de erro de temporário no pico é alto." },
+      { text: "Propor ao marketplace cobrança por pedido no pico (acima de 25k/dia) para financiar a capacidade adicional necessária", risco: "medio", effects: { financeiro: +3, clientes: +1, processos: +2 }, avaliacao: "boa", ensinamento: "Precificação por demanda em pico é prática normal em logística de e-commerce. O marketplace sabe que o custo operacional de Black Friday é diferente — a maioria aceita precificação diferenciada para volume acima da capacidade contratada." },
+      { text: "Terceirizar o excesso de volume acima de 25k pedidos/dia para outro operador de fulfillment parceiro", risco: "medio", effects: { sla: +2, financeiro: -2, clientes: +1, processos: -1 }, avaliacao: "media", ensinamento: "Overflow para parceiro de fulfillment é solução que os maiores players usam no pico. O risco é a inconsistência de padrão entre operadores — e o cliente final não vê a diferença entre o seu serviço e o do parceiro." }
+    ]
+  },
+  {
+    title: "A Automação que Transforma o CD",
+    description: "Uma empresa de automação propõe instalar esteiras automatizadas e sorters no CD principal: capacidade sobe de 12k para 28k pedidos/dia, taxa de erro cai de 4,7% para 0,8%, e o custo por pedido cai 38%. Investimento: R$3,2M. Prazo de implantação: 4 meses. Durante os 4 meses, a operação convive com obras e pode cair para 9k pedidos/dia.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Aprovar a automação e negociar com o marketplace uma redução temporária de volume pelos 4 meses de obras", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { tecnologia: +6, processos: +5, financeiro: -4, sla: -2, clientes: -1 }, avaliacao: "boa", ensinamento: "Automação com negociação proativa de impacto temporário é a decisão estrategicamente correta. A degradação de 4 meses é real — mas a plataforma automatizada entrega vantagem competitiva permanente." },
+      { text: "Automatizar primeiro o CD secundário como piloto antes de comprometer o CD principal", risco: "baixo", effects: { tecnologia: +3, processos: +3, financeiro: -2, sla: +1 }, avaliacao: "boa", ensinamento: "Pilotar no CD menor protege a operação principal durante a validação. Se a automação funcionar como prometido, o argumento para automatizar o CD principal é muito mais forte — com dados reais." },
+      { text: "Negociar com a empresa de automação uma implantação faseada por área do CD para manter a operação", risco: "medio", effects: { tecnologia: +4, processos: +4, financeiro: -3, rh: -1, sla: 0 }, avaliacao: "boa", ensinamento: "Implantação faseada por área é padrão em automação de CD em operação. Área por área, você mantém o volume total enquanto parte do CD vai para automação — sem o risco de queda para 9k pedidos." },
+      { text: "Adiar a automação para depois que a operação estiver estabilizada", risco: "alto", effects: { tecnologia: -1, processos: -1, sla: -1, financeiro: +1 }, avaliacao: "ruim", ensinamento: "Adiar automação que resolve o problema estrutural de capacidade e erro é postergar a solução definitiva. Com 4,7% de erro e SLA em risco, a operação não vai 'estabilizar' com o modelo manual atual." }
+    ]
+  },
+  {
+    title: "O Contrato do Marketplace em Renegociação",
+    description: "Após 6 meses difíceis, o marketplace quer renegociar o contrato. Eles pedem: redução de 15% no preço, SLA de 2h para despacho (hoje é 4h), e expansão para mais 3 estados. Em troca, garantem volume mínimo de R$18M/ano por 2 anos. O CFO calcula: a redução de 15% no preço com o volume garantido resulta em receita líquida 8% maior do que o contrato atual.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Aceitar com condicionante: o SLA de 2h entra em vigor em 6 meses após a automação do CD", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { clientes: +3, financeiro: +4, sla: +2, processos: +2 }, avaliacao: "boa", ensinamento: "Aceitar com prazo condicionado à automação é o equilíbrio correto. Você garante o volume e a receita sem comprometer um SLA que ainda não tem infraestrutura para suportar." },
+      { text: "Aceitar integralmente — volume mínimo garantido de R$18M é o que a empresa precisa para crescer", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +2 }, effects: { financeiro: +5, sla: -3, processos: -2, rh: -2, clientes: -1 }, avaliacao: "ruim", ensinamento: "Aceitar SLA de 2h sem ter a infraestrutura para cumprir é criar um novo ciclo de crise. O volume garantido não compensa a multa contratual de descumprimento de SLA — que agora você aceita sendo 2h." },
+      { text: "Recusar a expansão para 3 estados e aceitar o restante — crescimento que não temos capacidade de suportar", risco: "medio", effects: { financeiro: +3, processos: +1, sla: +1, clientes: +2 }, avaliacao: "boa", ensinamento: "Disciplina de não crescer além da capacidade real é a lição mais importante da crise que você acabou de passar. O marketplace vai respeitar um operador que conhece seus limites — especialmente depois de terem operado juntos sob pressão." },
+      { text: "Usar a proposta como alavanca para renegociar com os clientes originais — mostrar que tem opções", risco: "baixo", effects: { clientes: +2, financeiro: +2, processos: +1 }, avaliacao: "media", ensinamento: "Ter alternativas de receita melhora sua posição em todas as negociações simultâneas. Clientes originais que veem que você tem demanda suficiente para escolher têm incentivo de renovar em condições melhores." }
+    ]
+  },
+  {
+    title: "O Problema das Devoluções",
+    description: "Em e-commerce, devoluções são parte da operação. Mas a taxa de devolução do marketplace chegou a 12,3% — a média do setor é 8%. O custo de processamento de cada devolução é de R$18. Com 18k pedidos/dia, isso representa R$398k/mês em custo de devolução. O marketplace tem uma política de devolução sem custo para o comprador — você absorve tudo.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Criar área dedicada de reverse logistics com processo automatizado para reduzir o custo por devolução", risco: "medio", effects: { processos: +4, financeiro: +3, tecnologia: +2, rh: -1 }, avaliacao: "boa", ensinamento: "Reverse logistics eficiente transforma custo em processo. Área dedicada com fluxo automatizado reduz o custo por devolução de R$18 para R$9-11 e o tempo de reprocessamento de dias para horas." },
+      { text: "Negociar com o marketplace compartilhamento do custo de devolução acima de 9% de taxa", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { financeiro: +4, clientes: +1, processos: +1 }, avaliacao: "boa", ensinamento: "Custo de devolução acima da média do setor é um argumento legítimo de renegociação. O marketplace tem interesse em reduzir a taxa de devolução — compartilhar o custo cria incentivo mútuo." },
+      { text: "Analisar as causas das devoluções e apresentar ao marketplace relatório de produto com maior incidência", risco: "baixo", effects: { processos: +3, clientes: +2, tecnologia: +1 }, avaliacao: "boa", ensinamento: "Dados de devolução por produto são valiosos para o marketplace — eles revelam problemas na descrição, no packaging ou na qualidade do produto do vendedor. Você se posiciona como parceiro estratégico, não apenas operador." },
+      { text: "Absorver o custo e focar em outros problemas mais urgentes", risco: "medio", effects: { financeiro: -2, processos: -1 }, avaliacao: "ruim", ensinamento: "R$398k/mês de custo de devolução não é um problema que se pode ignorar com outros pendentes. Em margem de fulfillment, esse custo pode ser a diferença entre a operação lucrativa e deficitária." }
+    ]
+  },
+  {
+    title: "A Expansão para São Paulo Capital",
+    description: "Um grande varejista de moda quer que você opere o fulfillment das lojas físicas deles em São Paulo — ship-from-store. O modelo é diferente do fulfillment de CD: você opera dentro das 12 lojas deles, separando pedidos online diretamente do estoque de loja. Volume: 4.200 pedidos/dia adicionais. Receita: R$8,4M/ano. Requer contratar 48 operadores e abrir uma célula de gestão dedicada.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Aceitar com início em 3 meses — tempo para contratar e treinar antes de iniciar a operação", risco: "medio", effects: { clientes: +3, financeiro: +4, rh: -2, processos: +2, sla: +1 }, avaliacao: "boa", ensinamento: "Aceitar com prazo adequado de implementação é a diferença entre o crescimento sustentável e o que gerou a crise atual. 3 meses para contratar 48 pessoas e desenvolver o processo de ship-from-store é um prazo honesto." },
+      { text: "Recusar — ship-from-store é um modelo operacional diferente do fulfillment de CD que você domina", risco: "baixo", effects: { financeiro: -1, processos: +1 }, avaliacao: "media", ensinamento: "Recusar modelo novo quando você ainda está consolidando o atual é uma decisão conservadora mas defensável. Ship-from-store exige gestão de microestoque em 12 pontos diferentes — uma complexidade nova." },
+      { text: "Aceitar e adaptar o processo de CD para o ship-from-store com a equipe atual", risco: "alto", gestorEffects: { esgotamento: +2 }, effects: { financeiro: +3, rh: -4, processos: -3, sla: -2, clientes: -1 }, avaliacao: "ruim", ensinamento: "Adaptar equipe atual sobrecarregada para um modelo operacional diferente é a mesma decisão que criou a crise do marketplace. Crescimento sem capacidade adequada cria o próximo ciclo de problema." },
+      { text: "Aceitar como piloto em 3 lojas por 60 dias antes de comprometer as 12 lojas inteiras", risco: "baixo", effects: { financeiro: +2, processos: +3, clientes: +2, rh: -1 }, avaliacao: "boa", ensinamento: "Piloto em escala menor valida o modelo operacional antes de comprometer toda a capacidade. Se as 3 lojas funcionarem, você aceita as outras 9 com dados reais de custo e processo." }
+    ]
+  },
+  {
+    title: "A Liderança que Pediu Demissão",
+    description: "Bruno, seu gerente de operações — que coordenou a crise dos últimos meses com dedicação total — pediu demissão. 'Trabalhei 14 horas por dia por 6 meses. Preciso de um trabalho que me dê vida fora do trabalho.' Ele tem todo o conhecimento operacional do crescimento recente. Dois coordenadores de turno demonstraram interesse no cargo.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Tentar reter o Bruno com equilíbrio de vida melhor: redução de jornada, home office nas tarefas estratégicas e bônus", risco: "medio", gestorEffects: { reputacaoInterna: +2 }, effects: { rh: +3, processos: +2, financeiro: -2 }, avaliacao: "boa", ensinamento: "Reter talento que identificou o problema correto (desequilíbrio de vida) com a solução correspondente demonstra que a empresa aprendeu. Um gestor de operações que pediu demissão por sobrecarga precisa de menos carga, não apenas de mais dinheiro." },
+      { text: "Aceitar a demissão e promover o coordenador mais experiente com programa de mentoria acelerado", risco: "medio", effects: { rh: +2, processos: -1, financeiro: -1 }, avaliacao: "boa", ensinamento: "Sucessão interna preserva parte do conhecimento e envia mensagem de que há crescimento de carreira. O gap de experiência do coordenador é real mas recuperável com mentoria estruturada." },
+      { text: "Contratar um novo gerente de operações sênior no mercado — aproveitar a oportunidade de upgrading", risco: "alto", gestorEffects: { capitalPolitico: +1 }, effects: { rh: -2, processos: -2, financeiro: -3 }, avaliacao: "media", ensinamento: "Contratação externa em posição crítica de operação tem custo de adaptação alto. Um novo gerente leva 3-6 meses para dominar a operação — tempo em que você está vulnerável." },
+      { text: "Criar uma estrutura de gestão compartilhada com os dois coordenadores em vez de um único gerente", risco: "baixo", effects: { rh: +2, processos: +1, financeiro: 0 }, avaliacao: "media", ensinamento: "Co-gestão distribui a carga que quebrou o Bruno — mas pode criar conflito de decisão em operação que precisa de comando único nos momentos de crise." }
+    ]
+  },
+  {
+    title: "A Concorrência do Fulfillment dos Marketplaces",
+    description: "Dois grandes marketplaces anunciaram que vão oferecer fulfillment próprio para todos os vendedores da plataforma deles — concorrendo diretamente com operadores independentes como você. Eles têm CDs próprios em 12 estados e capacidade ilimitada de escala. O mercado pergunta: qual é o futuro dos fulfillments independentes?",
+    tags: ["logistica"],
+    choices: [
+      { text: "Especializar em clientes fora dos grandes marketplaces — varejistas próprios e D2C que não querem depender de marketplace", risco: "medio", effects: { clientes: +3, processos: +3, sla: +2, financeiro: +2 }, avaliacao: "boa", ensinamento: "O cliente D2C que não quer depender de marketplace é exatamente aquele que precisa de um operador de fulfillment independente de confiança. Esse segmento cresce à medida que os marketplaces avançam." },
+      { text: "Criar oferta de valor superior: personalização, relatórios avançados e integração com múltiplos canais que os marketplaces não oferecem", risco: "medio", effects: { tecnologia: +4, clientes: +3, processos: +3, financeiro: -2 }, avaliacao: "boa", ensinamento: "Fulfillment como plataforma de dados e personalização compete em dimensão diferente do fulfillment de commodity dos grandes marketplaces. Clientes que precisam de visibilidade e flexibilidade pagam prêmio por isso." },
+      { text: "Fazer parceria com os marketplaces — ser o operador regional de fulfillment para eles nos mercados que eles não chegam", risco: "baixo", effects: { clientes: +2, financeiro: +3, sla: +2, processos: +2 }, avaliacao: "boa", ensinamento: "Ser o fulfillment regional dos grandes marketplaces é uma estratégia de sobrevivência e crescimento. Você não compete com eles — você opera onde eles não querem construir CD próprio." },
+      { text: "Vender a operação enquanto o negócio ainda tem valor — antes que os marketplaces destruam a margem do setor", risco: "alto", gestorEffects: { capitalPolitico: +2, esgotamento: +1 }, requisitos: { indicadorMinimo: { financeiro: 10, clientes: 10 } }, effects: { financeiro: +8, rh: -3, clientes: -2 }, avaliacao: "media", ensinamento: "A janela de venda de operações de fulfillment independente pode estar se fechando com a verticalização dos grandes marketplaces. Se o timing é favorável e o valuation é justo, a saída pode ser a decisão mais inteligente." }
+    ]
+  },
+  {
+    title: "A Inteligência Artificial na Operação",
+    description: "O CTO apresenta um projeto de IA para otimização de rotas, previsão de volume e alocação de operadores: R$680k de investimento, 4 meses de implementação. Os resultados projetados: redução de 22% no custo por pedido, aumento de 15% na produtividade dos operadores e redução de 40% no tempo de resposta a picos de demanda.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Aprovar o projeto de IA como investimento estratégico para 2025 — a eficiência operacional é o próximo diferencial", risco: "medio", effects: { tecnologia: +5, processos: +4, financeiro: -3, sla: +3, rh: +1 }, avaliacao: "boa", ensinamento: "IA em operações de fulfillment já é realidade nos maiores players do setor. Previsão de volume e alocação dinâmica de operadores eliminam os dois maiores drivers de custo variável em e-commerce." },
+      { text: "Testar IA primeiro apenas na otimização de rotas — o impacto mais mensurável e de menor risco", risco: "baixo", effects: { tecnologia: +3, processos: +2, financeiro: -1, sla: +2 }, avaliacao: "boa", ensinamento: "Começar pela aplicação de IA com ROI mais previsível e risco menor é a abordagem científica correta. Rotas otimizadas têm resultado medido em 30 dias — não em 4 meses de implementação completa." },
+      { text: "Adiar para depois da automação do CD — não sobrecarregar o time com dois projetos tecnológicos simultâneos", risco: "baixo", effects: { tecnologia: -1, processos: +1, financeiro: +1 }, avaliacao: "media", ensinamento: "Sequenciar projetos tecnológicos grandes é razoável quando os dois projetos competem pela mesma equipe técnica e de operações. O risco é que o atraso na IA deixa espaço para concorrentes que já implementaram." },
+      { text: "Usar solução de IA SaaS em vez do desenvolvimento próprio — implementação em 6 semanas com R$8k/mês", risco: "baixo", effects: { tecnologia: +4, processos: +3, financeiro: -1, sla: +2 }, avaliacao: "boa", ensinamento: "SaaS de IA logística existe no mercado a preços acessíveis — você não precisa construir o que já existe. Soluções como Intelipost, Beepe ou LogGI têm APIs de IA para roteirização e previsão de demanda." }
+    ]
+  },
+  {
+    title: "O Futuro do Fulfillment",
+    description: "A operação foi estabilizada, os contratos estão renovados e o time está mais estruturado. O board quer a visão para os próximos 3 anos em um setor que está mudando rapidamente.",
+    tags: ["logistica"],
+    choices: [
+      { text: "Tech-enabled fulfillment: ser o operador mais tecnológico do mercado mid-market com IA, rastreabilidade total e dashboard em tempo real", effects: { tecnologia: +6, processos: +5, clientes: +4, sla: +4, financeiro: +3, rh: +2 }, avaliacao: "boa", ensinamento: "Differenciação por tecnologia em fulfillment cria vantagem defensável. O operador que oferece visibilidade em tempo real, previsão de demanda e integração omnichannel retém clientes que querem crescer — não apenas um serviço de caixa." },
+      { text: "Especialista em nicho premium: fashion, beleza e produtos delicados que exigem manuseio especializado e embalagem premium", effects: { clientes: +4, margem: +4, processos: +4, rh: +3, financeiro: +3 }, avaliacao: "boa", ensinamento: "Fulfillment especializado em nicho premium tem margem 30-50% superior ao fulfillment de commodity. Fashion e beleza têm embalagem, manuseio e devolução com especificidades que operadores generalistas não atendem bem." },
+      { text: "Plataforma de fulfillment: abrir a infraestrutura para outros pequenos varejistas se beneficiarem da sua escala", effects: { tecnologia: +4, financeiro: +3, processos: +3, clientes: +3, rh: +1 }, avaliacao: "boa", ensinamento: "Modelo de plataforma multiplica a receita da infraestrutura já construída. Pequenos varejistas que precisam de fulfillment profissional mas não têm volume para negociar sozinhos pagam pelo acesso à sua escala." },
+      { text: "Expansão geográfica: cobrir todos os estados com CDs próprios antes que os marketplaces fechem o mercado", requisitos: { indicadorMinimo: { financeiro: 11, processos: 9 } }, effects: { financeiro: +3, clientes: +4, sla: +2, rh: -2, processos: -2 }, avaliacao: "media", ensinamento: "Expansão geográfica com a operação estabilizada é muito diferente da expansão desordenada que criou a crise. Com modelo comprovado e processos documentados, a replicação tem chance real de sucesso." }
+    ]
+  }
+]
+
 ]; // fim LogisticaRounds
 /* --rounds/industria-rounds.js-- */
 /* ═══════════════════════════════════════════════════════
@@ -2817,6 +4770,340 @@ const IndustriaRounds = [
     ]
   }
 ]
+
+/* ══════════════════════════════════════════════════════════════════
+   HISTÓRIA [1] · Indústria de Embalagens · ESG Urgente
+   Contexto: 430 funcionários, 2 plantas, R$94M receita.
+   Clientes exigem 30% insumos reciclados até próximo ano.
+   Conversão de linha: R$8-12M, 6-10 meses. Cliente âncora
+   enviou carta formal com prazo.
+
+   INDICADORES: financeiro:8, rh:6, clientes:7, processos:5,
+                seguranca:4, manutencao:5, qualidade:7, conformidade:8
+
+   ATENÇÃO: segurança (4) já está crítica. qualidade≤5 → conformidade-2.
+   conformidade≤3 → clientes-2 e financeiro-1.
+   manutencao≤4 → seguranca-2 automaticamente.
+══════════════════════════════════════════════════════════════════ */
+,
+[
+  {
+    title: "A Carta Que Mudou Tudo",
+    description: "A carta do cliente âncora — responsável por 31% da receita — chegou com prazo formal de 8 meses para apresentar cronograma de adequação ESG: 30% de insumos reciclados nas embalagens fornecidas. O diretor de operações apresenta o dilema: converter a linha A (maior volume, R$8M, 7 meses) ou a linha B (menor volume mas cliente âncora usa, R$5,5M, 5 meses). Caixa disponível: R$6M.",
+    tags: ["industria"],
+    choices: [
+      { text: "Priorizar a linha B — menor custo, prazo menor e atende diretamente o cliente que enviou a carta", risco: "medio", effects: { clientes: +4, conformidade: +3, financeiro: -4, processos: +2 }, avaliacao: "boa", ensinamento: "Priorizar a conversão que atende o cliente mais urgente é a decisão estratégica correta. Proteger o contrato de 31% da receita vale o investimento focado — e R$5,5M cabe no caixa disponível." },
+      { text: "Buscar financiamento para converter as duas linhas simultaneamente nos próximos 12 meses", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +1 }, effects: { clientes: +3, conformidade: +4, financeiro: -3, processos: -2 }, avaliacao: "media", ensinamento: "Converter as duas simultaneamente maximiza o impacto ESG — mas exige capital que a empresa não tem e gestão de projeto que dois projetos paralelos de R$13-20M raramente entregam no prazo." },
+      { text: "Apresentar ao cliente âncora um cronograma em fases — 20% até 8 meses, 30% até 14 meses", risco: "medio", effects: { clientes: +2, conformidade: +2, financeiro: +1, processos: +1 }, avaliacao: "media", ensinamento: "Cronograma faseado transparente demonstra comprometimento sem overpromising. Clientes que exigem adequação ESG geralmente preferem um parceiro honesto sobre os prazos a um parceiro que promete o impossível." },
+      { text: "Terceirizar a compra de insumos reciclados de outro fornecedor enquanto prepara a conversão própria", risco: "baixo", effects: { clientes: +3, conformidade: +3, financeiro: -2, qualidade: -1, processos: +1 }, avaliacao: "boa", ensinamento: "Terceirizar insumos reciclados para cumprir o prazo imediato enquanto converte a linha própria é uma estratégia de ponte válida. O custo do material terceirizado é maior — mas protege o contrato." }
+    ]
+  },
+  {
+    title: "O Fornecedor de Insumo Reciclado",
+    description: "A busca por fornecedores de resina reciclada pós-consumo revelou um problema: no Brasil, há apenas 3 fornecedores certificados com volume suficiente. O maior deles, a Recicla Sul, exige contrato de 36 meses com volume mínimo. O preço da resina reciclada é 28% maior que a virgem. Seus concorrentes já assinaram com o Recicla Sul — e o fornecedor pode aceitar apenas mais um cliente grande.",
+    tags: ["industria"],
+    choices: [
+      { text: "Assinar com o Recicla Sul imediatamente para garantir o fornecimento antes dos concorrentes fecharem a capacidade", risco: "alto", gestorEffects: { capitalPolitico: +2 }, effects: { conformidade: +4, clientes: +3, financeiro: -3, margem: -2, processos: +2 }, avaliacao: "boa", ensinamento: "Garantir fornecimento de insumo crítico antes que a capacidade do mercado seja totalmente tomada é decisão de supply chain estratégica. Em mercado emergente de reciclados, quem chega primeiro garante o acesso." },
+      { text: "Negociar contrato de 18 meses em vez de 36 para reduzir o compromisso", risco: "medio", effects: { conformidade: +3, clientes: +2, financeiro: -2, processos: +1 }, avaliacao: "boa", ensinamento: "Contrato mais curto reduz o risco de prêmio de preço em mercado que tende a se equalizar com o aumento da oferta de reciclados. Se a resina reciclada cair de preço em 2 anos, você não está preso." },
+      { text: "Buscar fornecedores internacionais de resina reciclada como alternativa ao Recicla Sul", risco: "medio", effects: { conformidade: +2, financeiro: -4, processos: -2, clientes: +1 }, avaliacao: "ruim", ensinamento: "Importação de resina reciclada tem custo de frete, câmbio e lead time que tornam a operação mais cara e mais frágil do que o fornecedor nacional. Além disso, certificação de origem reciclada internacional pode não ser aceita pelos clientes." },
+      { text: "Desenvolver programa próprio de coleta de embalagens pós-consumo como fonte de insumo reciclado", risco: "alto", gestorEffects: { capitalPolitico: +1, esgotamento: +2 }, effects: { conformidade: +2, processos: -3, financeiro: -3, clientes: +2, inovacao: +3 }, avaliacao: "media", ensinamento: "Programa próprio de coleta é a solução mais sustentável de longo prazo — e cria um diferencial de storytelling ESG que nenhum concorrente que terceiriza tem. O prazo de 8 meses, porém, é incompatível com implantar um programa de logística reversa do zero." }
+    ]
+  },
+  {
+    title: "A Segurança que Cobra o Preço",
+    description: "Com segurança já em nível crítico (4), o engenheiro de segurança alerta: a linha de produção que vai receber a resina reciclada tem equipamentos de mistura sem o guarda-corpo exigido pela NR-12. A adequação custa R$180k e leva 3 semanas. A conversão não pode começar com a não-conformidade ativa — o risco de acidente com novo insumo e linha não-certificada é inaceitável.",
+    tags: ["industria"],
+    choices: [
+      { text: "Fazer a adequação de NR-12 antes de iniciar a conversão — segurança não é negociável", risco: "baixo", gestorEffects: { reputacaoInterna: +2 }, effects: { seguranca: +4, processos: +2, manutencao: +2, financeiro: -2 }, avaliacao: "boa", ensinamento: "Iniciar processo de conversão de linha sem adequação de segurança é expor os trabalhadores a risco real. Além do aspecto humano, um acidente durante a conversão paralisa o processo e expõe a empresa a multa do MTE." },
+      { text: "Realizar a adequação em paralelo com o início da conversão para ganhar tempo", risco: "alto", effects: { seguranca: +2, processos: -2, manutencao: +1, financeiro: -2, rh: -2 }, avaliacao: "ruim", ensinamento: "Adequação de segurança em paralelo com operação ativa em linha em conversão é o cenário de maior risco de acidente. O ganho de 3 semanas não justifica o risco de um acidente que pode paralisar a operação por meses." },
+      { text: "Contratar empresa especializada em NR-12 para fazer a adequação em 10 dias com equipe dedicada", risco: "medio", effects: { seguranca: +4, processos: +3, manutencao: +2, financeiro: -3 }, avaliacao: "boa", ensinamento: "Especialista em NR-12 com equipe dedicada comprime o prazo de 3 semanas para 10 dias. O custo adicional da equipe especializada é marginal frente ao tempo ganho no cronograma de conversão." },
+      { text: "Mapear todos os demais equipamentos da fábrica com não-conformidades de NR-12 enquanto faz a adequação desta linha", risco: "baixo", effects: { seguranca: +5, processos: +3, manutencao: +3, financeiro: -2 }, avaliacao: "boa", ensinamento: "Aproveitar a mobilização de segurança para mapear toda a fábrica é o uso mais inteligente do momento. Um diagnóstico completo de NR-12 previne autuações futuras e demonstra comprometimento genuíno com segurança." }
+    ]
+  },
+  {
+    title: "O Cliente Secundário Pergunta Sobre ESG",
+    description: "Dois dos seus 5 maiores clientes — que juntos representam 24% da receita — enviaram questionário ESG seguindo o padrão GRI: pegada de carbono, índice de acidentes, percentual de insumo reciclado e política de diversidade. O prazo de resposta é 30 dias. A empresa nunca mediu nenhum desses indicadores formalmente. Não responder pode resultar em desclassificação como fornecedor.",
+    tags: ["industria"],
+    choices: [
+      { text: "Contratar consultoria de ESG para medir e documentar os indicadores existentes e responder com dados reais", risco: "medio", effects: { conformidade: +4, clientes: +3, financeiro: -3, processos: +2 }, avaliacao: "boa", ensinamento: "Responder com dados reais, mesmo que os números não sejam ótimos, é sempre melhor do que não responder. Clientes que pedem questionário ESG sabem que fornecedores estão em processo — eles querem comprometimento, não perfeição." },
+      { text: "Responder o questionário com estimativas e dados parciais em vez de não responder", risco: "alto", gestorEffects: { capitalPolitico: -1 }, effects: { conformidade: +1, clientes: +1 }, avaliacao: "ruim", ensinamento: "Estimativas em questionário GRI que depois são auditadas criam risco de greenwashing. Se os dados forem contestados, a perda de credibilidade é muito maior do que não ter respondido." },
+      { text: "Implementar um sistema básico de coleta de indicadores ESG para responder com dados reais mesmo que parciais", risco: "baixo", effects: { conformidade: +3, processos: +3, financeiro: -2, clientes: +2 }, avaliacao: "boa", ensinamento: "Criar a capacidade de medição interna é investimento necessário. Empresas que implementam um sistema básico de coleta de ESG respondem ao questionário atual e a todos os próximos — que virão com certeza." },
+      { text: "Contatar os clientes e explicar que estão em processo de implementação ESG — pedir 90 dias adicionais", risco: "medio", effects: { clientes: +2, conformidade: +1, processos: +1 }, avaliacao: "media", ensinamento: "Transparência sobre o estágio de implementação é mais honesta do que inventar dados. O risco é que alguns clientes com política rígida de fornecedores não aceitam prazo — mas a maioria respeita honestidade." }
+    ]
+  },
+  {
+    title: "A Conversão em Andamento",
+    description: "A conversão da linha B está na semana 3 de 5 meses planejados. O engenheiro de processo revela um problema: a resina reciclada tem 12% mais umidade do que a virgem — o que aumenta o tempo de ciclo de moldagem em 18% e reduz a produtividade da linha em 1.100 peças/turno. O cliente âncora já perguntou sobre o cronograma de entrega do primeiro lote certificado.",
+    tags: ["industria"],
+    choices: [
+      { text: "Instalar secadores de resina adicionais para compensar a umidade antes da moldagem", risco: "medio", effects: { qualidade: +3, processos: +2, financeiro: -2, manutencao: +1 }, avaliacao: "boa", ensinamento: "Secagem adicional de resina reciclada é uma adaptação técnica padrão. O custo do equipamento é amortizado pelo volume de produção e pela manutenção do cronograma prometido ao cliente." },
+      { text: "Renegociar o prazo com o cliente âncora — apresentar o problema técnico com transparência", risco: "baixo", effects: { clientes: +2, processos: +1, conformidade: +1 }, avaliacao: "boa", ensinamento: "Transparência técnica com o cliente sobre um problema genuíno de processo é sempre preferível ao cumprimento de prazo com qualidade comprometida. Clientes que pedem ESG entendem que a transição tem curva de aprendizado." },
+      { text: "Aumentar o turno de trabalho para compensar a queda de produtividade e manter o cronograma", risco: "alto", gestorEffects: { reputacaoInterna: -1 }, effects: { processos: +1, rh: -4, seguranca: -2, financeiro: -2 }, avaliacao: "ruim", ensinamento: "Aumentar turno para compensar problema técnico com insumo novo é a solução mais arriscada. Operadores sobrecarregados com um processo novo que ainda está sendo calibrado têm índice de erro e acidente elevado." },
+      { text: "Ajustar o parâmetro de temperatura do molde para compensar a umidade da resina reciclada", risco: "baixo", effects: { qualidade: +2, processos: +3, financeiro: 0 }, avaliacao: "boa", ensinamento: "Ajuste de parâmetro de processo é a solução de menor custo e maior velocidade. A equipe técnica que domina o processo de moldagem geralmente consegue compensar as características do novo insumo com calibração adequada." }
+    ]
+  },
+  {
+    title: "O Auditor de Carbono",
+    description: "O maior cliente varejista do portfólio — 18% da receita — informou que a partir do próximo ano vai exigir LCA (Life Cycle Assessment) completa das embalagens. O custo de uma LCA certificada é R$85k. Se aprovada, sua embalagem reciclada pode ganhar um selo verde que o varejista usa para marketing. Se reprovada ou não apresentada, você perde acesso ao edital de fornecimento.",
+    tags: ["industria"],
+    choices: [
+      { text: "Contratar a LCA imediatamente — é investimento de R$85k para proteger um contrato de R$17M", risco: "baixo", effects: { conformidade: +4, clientes: +3, financeiro: -2 }, avaliacao: "boa", ensinamento: "ROI de R$85k para proteger R$17M de contrato é trivialmente positivo. A LCA além de proteger o contrato abre portas para outros clientes que exigem rastreabilidade de ciclo de vida." },
+      { text: "Negociar com o varejista aceitar uma declaração ambiental intermediária enquanto a LCA completa é preparada", risco: "medio", effects: { clientes: +2, conformidade: +2, financeiro: 0 }, avaliacao: "media", ensinamento: "Declaração ambiental intermediária (como EPD simplificado) pode ser aceita por varejistas com política ESG em desenvolvimento. O risco é que o edital já tenha critérios específicos que a declaração intermediária não atende." },
+      { text: "Formar consórcio com outros fornecedores para dividir o custo da LCA por categoria de embalagem", risco: "baixo", effects: { clientes: +2, conformidade: +3, financeiro: -1, processos: +1 }, avaliacao: "boa", ensinamento: "LCA compartilhada por categoria de produto é uma prática emergente que distribui o custo sem perder a validade certificada. Fornecedores que colaboram para atender exigência ESG de cliente comum criam uma rede de conformidade." },
+      { text: "Incluir a LCA no orçamento do próximo ano e comunicar ao varejista que estará pronta em 14 meses", risco: "alto", effects: { clientes: -3, conformidade: -1, financeiro: +1 }, avaliacao: "ruim", ensinamento: "Comunicar 14 meses de prazo para exigência do próximo edital é arriscar perder o contrato por falta de conformidade. O edital provavelmente vai ter prazo mais curto — e concorrentes que já têm a LCA vão ganhar o espaço." }
+    ]
+  },
+  {
+    title: "O Processo que Gera Resíduo",
+    description: "O diagnóstico ambiental revelou: as duas plantas geram 380 toneladas de resíduo plástico por mês — aparas e rejeitos de processo. Hoje, 60% vai para aterro (custo de R$45/ton), 30% é vendido como sucata de baixo valor, e 10% é reprocessado internamente. Uma empresa de reciclagem propõe comprar todo o resíduo por R$28/ton — mas exige exclusividade.",
+    tags: ["industria"],
+    choices: [
+      { text: "Aceitar a proposta sem exclusividade — vender apenas o resíduo que hoje vai para aterro", risco: "baixo", effects: { conformidade: +3, financeiro: +2, processos: +2 }, avaliacao: "boa", ensinamento: "Transformar custo de aterro em receita de venda de resíduo é uma melhoria imediata de margem e de credencial ESG. A exclusividade pode ser negociada — você não precisa dar o que não pediu." },
+      { text: "Aceitar com exclusividade — R$28/ton em todo o volume é melhor do que o modelo atual fragmentado", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { conformidade: +3, financeiro: +3, processos: +3 }, avaliacao: "boa", ensinamento: "Exclusividade em troca de preço garantido é um trade-off razoável. O comprador de resíduo com exclusividade tem incentivo de desenvolver processo para resíduos mais complexos que hoje vão para aterro." },
+      { text: "Investir para aumentar o reprocessamento interno de 10% para 40% — usar o próprio resíduo como insumo reciclado", risco: "medio", effects: { conformidade: +4, qualidade: +2, financeiro: -3, processos: +3, manutencao: +1 }, avaliacao: "boa", ensinamento: "Fechar o loop de resíduo internamente é a estratégia de maior valor ESG e de maior independência de fornecedor externo. Resíduo interno reprocessado tem custo de logística zero e rastreabilidade total de origem." },
+      { text: "Manter o modelo atual — não assinar exclusividade com nenhum comprador", risco: "baixo", effects: { conformidade: -1, financeiro: -1, processos: 0 }, avaliacao: "ruim", ensinamento: "Manter 60% do resíduo em aterro enquanto há demanda de compra é uma decisão que deteriora a credencial ESG sem benefício. O custo de aterro é real — e cada tonelada em aterro é uma tonelada no relatório de impacto ambiental." }
+    ]
+  },
+  {
+    title: "O Segundo Cliente Que Exige ESG",
+    description: "Uma multinacional de higiene pessoal — potencial cliente novo com R$8M/ano de volume — colocou a empresa no processo seletivo de fornecedores. A condição: aprovação na auditoria ESG deles em 60 dias. Os critérios: zero acidentes nos últimos 12 meses, 25% de insumo reciclado e política de diversidade de gênero documentada. Você tem 1 acidente nos últimos 12 meses e 15% de insumo reciclado até agora.",
+    tags: ["industria"],
+    choices: [
+      { text: "Ser transparente com a multinacional sobre os critérios que ainda não atende e apresentar o cronograma de adequação", risco: "baixo", effects: { clientes: +2, conformidade: +2, processos: +1 }, avaliacao: "boa", ensinamento: "Transparência no processo seletivo de ESG é a postura que multinacionais com departamento de sustainability valorizam. Quem mente nos critérios para ganhar o contrato enfrenta auditoria periódica que vai encontrar a realidade." },
+      { text: "Participar da auditoria com os dados atuais — 15% de reciclado e 1 acidente podem ser aceitos com plano", risco: "medio", effects: { clientes: +3, conformidade: +2, processos: +1, seguranca: +1 }, avaliacao: "boa", ensinamento: "Multinacionais experientes em ESG de fornecedores sabem que poucos fornecedores atendem 100% dos critérios. A auditoria avalia a trajetória — não apenas o snapshot atual." },
+      { text: "Recusar o processo seletivo por ora e candidatar-se quando atender todos os critérios", risco: "baixo", effects: { clientes: -1, conformidade: +1, processos: +2 }, avaliacao: "media", ensinamento: "Recusar para candidatar depois é uma opção conservadora — mas processos seletivos de fornecedores não ficam abertos indefinidamente. A multinacional pode fechar a seleção antes de você estar pronto." },
+      { text: "Contratar 30% do time operacional com diversidade de gênero rapidamente para atender o critério de política de diversidade", risco: "alto", gestorEffects: { reputacaoInterna: -2 }, effects: { rh: -2, conformidade: +1, clientes: +1 }, avaliacao: "ruim", ensinamento: "Contratar por cota para passar em auditoria ESG é a forma mais eficiente de criar uma política de diversidade inautêntica. Auditores de ESG verificam rotatividade e plano de desenvolvimento — não apenas o headcount." }
+    ]
+  },
+  {
+    title: "A Conversão da Segunda Linha",
+    description: "A linha B está convertida e funcionando com 28% de insumo reciclado — abaixo da meta de 30%, mas suficiente para satisfazer o cliente âncora que aceitou o cronograma. A diretoria discute agora a conversão da linha A (maior volume, R$8M de investimento): ela representa 60% da produção, mas os clientes dessa linha ainda não exigiram ESG formalmente.",
+    tags: ["industria"],
+    choices: [
+      { text: "Converter a linha A antecipadamente — posicionar-se como liderança ESG antes de ser exigido pelos clientes", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { conformidade: +4, clientes: +3, financeiro: -5, processos: +2, qualidade: +1 }, avaliacao: "boa", ensinamento: "Converter antes da exigência transforma o ESG de custo reativo em diferencial proativo. Clientes que ainda não exigiram formalmente estão recebendo pressão internamente — quem chega com a solução pronta ganha o contrato seguinte." },
+      { text: "Aguardar exigência formal dos clientes da linha A antes de investir — R$8M é capital escasso", risco: "medio", effects: { financeiro: +2, conformidade: -1, clientes: -1, processos: +1 }, avaliacao: "media", ensinamento: "Aguardar a exigência formal é conservador — mas o lead time de conversão é de 6-10 meses. Quando o cliente exigir, você vai estar 6 meses atrás do prazo. A decisão hoje determina se você entrega no prazo amanhã." },
+      { text: "Buscar financiamento verde (BNDES Mais Inovação ou banco de desenvolvimento) para conversão da linha A", risco: "baixo", effects: { financeiro: +1, conformidade: +3, processos: +2, clientes: +1 }, avaliacao: "boa", ensinamento: "Linhas de crédito para ESG têm custo 2-4% menor do que crédito convencional. BNDES tem programas específicos para modernização industrial com componente ambiental — e a conversão para insumo reciclado se enquadra." },
+      { text: "Converter gradualmente a linha A: 15% de reciclado primeiro, subindo 5% por trimestre para gerenciar o capex", risco: "baixo", effects: { conformidade: +2, financeiro: -3, processos: +2, qualidade: +1 }, avaliacao: "boa", ensinamento: "Conversão gradual distribui o investimento ao longo do tempo e permite calibrar o processo por etapas. Para linha de maior volume, a abordagem gradual reduz o risco de parada de produção por problema técnico em escala." }
+    ]
+  },
+  {
+    title: "O Prêmio ESG do Setor",
+    description: "A ABIPLAST (associação da indústria de plástico) lançou o Prêmio ESG Embalagem Sustentável. Candidatar-se exige documentação completa, auditoria externa e apresentação de case. O custo de participação é R$45k. O benefício: caso vença, o logotipo é usado pelo maior varejista do Brasil como endosso de fornecedor sustentável — acesso a uma audiência de 200 fornecedores potenciais.",
+    tags: ["industria"],
+    choices: [
+      { text: "Candidatar-se — o investimento de R$45k tem potencial de geração de leads de R$8M em novos contratos", risco: "baixo", effects: { clientes: +3, conformidade: +2, processos: +1, financeiro: -1 }, avaliacao: "boa", ensinamento: "Prêmio ESG setorial é uma das formas mais eficientes de marketing B2B para indústria. A credibilidade de um prêmio externo independente vale mais do que qualquer materiel de marketing próprio." },
+      { text: "Participar apenas da etapa documental para benchmark interno — sem a auditoria cara", risco: "baixo", effects: { processos: +2, conformidade: +1, financeiro: 0 }, avaliacao: "media", ensinamento: "Benchmark interno com os critérios do prêmio tem valor de diagnóstico — mas não gera a visibilidade que a candidatura completa oferece. É usar metade do potencial do investimento." },
+      { text: "Preparar a candidatura para o próximo ciclo — usar este ciclo para documentar melhor o case", risco: "baixo", effects: { processos: +2, conformidade: +1 }, avaliacao: "media", ensinamento: "Preparação cuidadosa para o próximo ciclo pode resultar em candidatura mais forte — mas perde a janela atual onde você tem o case fresco da conversão. Juízes de prêmios avaliam trajetória recente." },
+      { text: "Candidatar-se e convidar os principais clientes para participarem como referência na documentação do case", risco: "baixo", gestorEffects: { reputacaoInterna: +1 }, effects: { clientes: +4, conformidade: +3, processos: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "Incluir clientes no case do prêmio transforma a candidatura em uma parceria de visibilidade. O cliente âncora que forçou a adequação ESG agora é co-autor do sucesso — e isso fortalece o relacionamento." }
+    ]
+  },
+  {
+    title: "A Decisão de Pricing Verde",
+    description: "Com a conversão concluída e os custos de resina reciclada 28% mais caros, a embalagem sustentável custa R$0,08/unidade a mais para produzir. O mercado pergunta: repassar aos clientes, absorver na margem ou criar um diferencial de preço premium? Seus clientes mais exigentes (que forçaram a mudança) esperam absorção. Os demais clientes não sabem a diferença.",
+    tags: ["industria"],
+    choices: [
+      { text: "Criar duas linhas de preço: embalagem certificada com 5% de prêmio e embalagem padrão pelo preço atual", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { financeiro: +3, clientes: +2, conformidade: +2, margem: +2 }, avaliacao: "boa", ensinamento: "Segmentação por produto (certificado vs padrão) captura o prêmio de quem valoriza e não afasta quem ainda não exige. É a estratégia de precificação mais inteligente para mercados em transição ESG." },
+      { text: "Absorver o custo na margem — o ESG é o novo custo de fazer negócio neste mercado", risco: "medio", effects: { margem: -3, clientes: +3, conformidade: +2, financeiro: -2 }, avaliacao: "ruim", ensinamento: "Absorver indefinidamente 28% de custo adicional de insumo na margem não é sustentável. O ESG precisa ter valor percebido e preço correspondente — a indústria que subsidia a transição verde dos clientes eventualmente quebra." },
+      { text: "Repassar o custo integralmente a todos os clientes com documentação transparente da origem do aumento", risco: "alto", effects: { financeiro: +3, clientes: -3, conformidade: +1, margem: +1 }, avaliacao: "media", ensinamento: "Repasse transparente com documentação é mais honesto do que absorção — mas pode afastar clientes que ainda não veem valor no ESG. A comunicação precisa ser cuidadosa para não parecer punição." },
+      { text: "Negociar compartilhamento do custo: 50% absorvido pela empresa, 50% repassado aos clientes que exigiram", risco: "baixo", effects: { financeiro: +1, clientes: +2, conformidade: +2, margem: 0 }, avaliacao: "boa", ensinamento: "Divisão de custo com os clientes que exigiram a mudança é a postura mais justa e mais sustentável. Clientes que forçaram a adequação ESG geralmente aceitam dividir o custo quando apresentado com transparência." }
+    ]
+  },
+  {
+    title: "A Expansão da Linha de Embalagens Biodegradáveis",
+    description: "Uma empresa de cosméticos naturais quer comprar 2M de unidades/ano de embalagens biodegradáveis — mercado que você não atende hoje. O investimento para criar essa linha seria R$4,2M. O segmento cresce 34% ao ano e o ticket médio é 60% superior ao das embalagens convencionais. Seu atual banco de desenvolvimento sinalizou interesse em financiar até 70% com linha verde.",
+    tags: ["industria"],
+    choices: [
+      { text: "Desenvolver a linha biodegradável com financiamento verde — é a próxima fronteira do mercado ESG de embalagens", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { clientes: +4, conformidade: +4, financeiro: -2, inovacao: +4, qualidade: +2 }, avaliacao: "boa", ensinamento: "Biodegradável é onde o mercado de embalagens sustentáveis vai em 5 anos. Entrar agora com cliente âncora e financiamento favorável é o timing ideal — você lidera a transição em vez de segui-la." },
+      { text: "Fazer parceria com empresa especializada em materiais biodegradáveis em vez de desenvolver internamente", risco: "baixo", effects: { clientes: +3, conformidade: +3, financeiro: -1, inovacao: +2 }, avaliacao: "boa", ensinamento: "Parceria com especialista em materiais reduz o risco técnico e o tempo de desenvolvimento. Você traz o processo de fabricação e a capacidade produtiva — o parceiro traz o know-how de material." },
+      { text: "Recusar — consolidar a linha de reciclados antes de entrar num segundo mercado novo", risco: "baixo", effects: { conformidade: +1, financeiro: +1, processos: +2 }, avaliacao: "media", ensinamento: "Consolidação antes de expansão é prudente — mas rejeitar um cliente âncora e financiamento favorable para uma categoria de crescimento de 34% é difícil de justificar. A janela não fica aberta indefinidamente." },
+      { text: "Aceitar o pedido e terceirizar a produção de biodegradáveis com um fornecedor enquanto avalia o investimento", risco: "medio", effects: { clientes: +3, conformidade: +2, financeiro: -1, qualidade: -1 }, avaliacao: "media", ensinamento: "Terceirizar para não perder o cliente âncora é uma estratégia de bridge válida. O risco é a dependência de qualidade e prazo de um terceiro em um produto novo que ainda não foi validado com o cliente final." }
+    ]
+  },
+  {
+    title: "O Relatório ESG Anual",
+    description: "O CFO apresenta o primeiro relatório ESG da empresa. Os resultados são mistos: insumo reciclado chegou a 23% (meta: 30%), acidentes caíram 40% (mas ainda há 2 no ano), e o resíduo para aterro caiu de 60% para 38%. O cliente âncora quer o relatório publicado no site deles como prova de comprometimento. O time de comunicação alerta: publicar com metas não atingidas pode gerar crítica.",
+    tags: ["industria"],
+    choices: [
+      { text: "Publicar o relatório com os dados reais, incluindo as metas não atingidas e o cronograma revisado", risco: "baixo", gestorEffects: { capitalPolitico: +2 }, effects: { conformidade: +4, clientes: +3, processos: +2 }, avaliacao: "boa", ensinamento: "Transparência ESG com metas não atingidas é mais valorizada do que silêncio ou relatório editado. O GRI e a ISO 14001 exigem divulgação completa — empresas que relatam honestamente constroem reputação de sustentabilidade genuína." },
+      { text: "Aguardar mais 6 meses para publicar quando os indicadores estiverem mais próximos das metas", risco: "medio", effects: { conformidade: -1, clientes: -1 }, avaliacao: "ruim", ensinamento: "Atrasar o relatório ESG para esperar melhores números é a definição de greenwashing por omissão. O cliente âncora que pediu o relatório vai perguntar por que está atrasado — e a resposta real vai ser pior do que os números." },
+      { text: "Publicar o relatório com foco na trajetória de melhoria — os dados de 40% de redução de acidentes são impactantes", risco: "baixo", effects: { conformidade: +3, clientes: +3, processos: +2 }, avaliacao: "boa", ensinamento: "Enquadrar o relatório na trajetória de melhoria é comunicação legítima — desde que os dados absolutos também estejam presentes. Mostrar que você saiu de zero para 23% de reciclado em 18 meses é uma narrativa poderosa." },
+      { text: "Publicar apenas os indicadores que atingiram a meta e omitir os que ficaram abaixo", risco: "alto", gestorEffects: { capitalPolitico: -3 }, effects: { conformidade: -4, clientes: -3 }, avaliacao: "ruim", ensinamento: "Relatório ESG seletivo é greenwashing documentado. Se o cliente âncora ou qualquer stakeholder descobrir a seleção, o dano à reputação é irreversível — e crescentemente há ferramenta de verificação cruzada de dados ESG." }
+    ]
+  },
+  {
+    title: "O Futuro da Embalagem Sustentável",
+    description: "A empresa atravessou a maior transformação de sua história. O mercado reconhece o progresso. O board pede a visão para os próximos 3 anos.",
+    tags: ["industria"],
+    choices: [
+      { text: "Líder ESG do setor: 100% insumo reciclado até 2027, zero resíduo para aterro e emissão net-zero na operação", effects: { conformidade: +5, clientes: +5, financeiro: +3, qualidade: +3, processos: +4, seguranca: +3 }, avaliacao: "boa", ensinamento: "Liderança ESG total é um posicionamento defensável e crescentemente lucrativo. Empresas com embalagem net-zero têm acesso a editais de multinacionais que competidores com pegada maior não conseguem participar." },
+      { text: "Inovação em materiais: criar laboratório de P&D de embalagens biodegradáveis e compostáveis como próxima geração", effects: { inovacao: +5, clientes: +4, conformidade: +4, financeiro: -2, qualidade: +4 }, avaliacao: "boa", ensinamento: "P&D em materiais do futuro transforma uma empresa de manufatura em empresa de tecnologia de materiais. A propriedade intelectual de novos materiais de embalagem tem valor muito superior ao da capacidade produtiva." },
+      { text: "Expansão em mercados internacionais: Europa exige ESG mais rigoroso e paga 40% mais por embalagem certificada", requisitos: { indicadorMinimo: { conformidade: 12, qualidade: 10 } }, effects: { financeiro: +5, clientes: +4, conformidade: +4, processos: +3, qualidade: +2 }, avaliacao: "boa", ensinamento: "Exportação para Europa com embalagem certificada ESG é um caminho de margem significativamente superior. O mercado europeu já tem as exigências que o Brasil vai ter em 3-5 anos — você estaria à frente da curva." },
+      { text: "Plataforma circular: criar sistema de logística reversa próprio para coletar as embalagens pós-uso e reprocessar internamente", effects: { conformidade: +5, processos: +4, clientes: +3, financeiro: -3, inovacao: +3 }, avaliacao: "boa", ensinamento: "Economia circular completa — da resina reciclada à coleta pós-uso para reprocessar novamente — é o modelo de negócio mais defensável e mais alinhado com a regulação que vem. É o futuro da indústria de embalagens." }
+    ]
+  }
+],
+
+/* ══════════════════════════════════════════════════════════════════
+   HISTÓRIA [2] · Indústria Química · Crise Ambiental
+   Contexto: 280 funcionários, R$71M receita, ABC paulista.
+   IBAMA autuou: R$4,1M de multa, planta em regime parcial,
+   responsável técnico ambiental demitiu, imprensa noticiou,
+   2 clientes sinalizaram revisão de contrato.
+
+   INDICADORES: financeiro:8, rh:6, clientes:7, processos:5,
+                seguranca:4, manutencao:5, qualidade:7, conformidade:8
+
+   ATENÇÃO: segurança (4) e conformidade (8) são os indicadores
+   centrais desta história. conformidade≤3 → clientes-2 e financeiro-1.
+   A crise requer reconstrução de conformidade que demanda processos.
+══════════════════════════════════════════════════════════════════ */
+,
+[
+  {
+    title: "A Crise no Dia Seguinte",
+    description: "Você assume a gestão 48 horas após a autuação. O IBAMA está monitorando. A planta opera em 60% da capacidade. O responsável técnico ambiental que pediu demissão levou consigo a documentação dos processos de descarte. A imprensa regional publicou o caso. Dois clientes ligaram. Você tem 72 horas para apresentar ao IBAMA o Termo de Ajustamento de Conduta inicial. Por onde começa?",
+    tags: ["industria"],
+    choices: [
+      { text: "Contratar advogado ambiental especializado para liderar o TAC com o IBAMA — urgência máxima", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { conformidade: +4, processos: +2, financeiro: -3 }, avaliacao: "boa", ensinamento: "O TAC é um instrumento técnico-jurídico que define os compromissos da empresa com o órgão ambiental. Advogado especializado em direito ambiental é indispensável para negociar prazos e obrigações que a empresa consegue cumprir." },
+      { text: "Ligar para os dois clientes que sinalizaram revisão antes de qualquer comunicação pública", risco: "baixo", gestorEffects: { reputacaoInterna: +1 }, effects: { clientes: +3, conformidade: +1, processos: +1 }, avaliacao: "boa", ensinamento: "Clientes que sinalizaram revisão ainda não decidiram. Contato proativo antes da decisão deles — com compromisso claro de regularização — é a janela mais estreita e mais valiosa para preservar o relacionamento." },
+      { text: "Emitir nota pública reconhecendo o problema e anunciando o plano de regularização", risco: "medio", effects: { conformidade: +2, clientes: +2, processos: +1 }, avaliacao: "boa", ensinamento: "Nota pública proativa controla a narrativa antes que a imprensa construa uma por conta própria. Empresas que reconhecem e apresentam plano têm cobertura jornalística significativamente mais equilibrada." },
+      { text: "Paralisar completamente a planta por 30 dias para investigar e regularizar tudo antes de qualquer comunicação", risco: "alto", gestorEffects: { capitalPolitico: -2 }, effects: { financeiro: -5, conformidade: -1, rh: -2, clientes: -3 }, avaliacao: "ruim", ensinamento: "Paralisação total sem negociação prévia com o IBAMA cria mais problemas do que resolve. O TAC define as condições de operação durante a regularização — você não precisa parar para negociar." }
+    ]
+  },
+  {
+    title: "O Responsável Técnico que Sumiu",
+    description: "O ex-responsável técnico ambiental era o único que conhecia os procedimentos de descarte, o histórico de licenças e os contatos do IBAMA. Com ele foram os documentos físicos. O sindicato da categoria informou que ele está disposto a retornar como consultor por R$35k/mês por 3 meses para apoiar a regularização. Sem ele, a regularização pode levar o dobro do tempo.",
+    tags: ["industria"],
+    choices: [
+      { text: "Contratar o ex-responsável como consultor pelos 3 meses — o conhecimento dele é crítico para o TAC", risco: "medio", effects: { conformidade: +3, processos: +3, financeiro: -2 }, avaliacao: "boa", ensinamento: "R$105k em consultoria para um processo de regularização que pode custar R$4,1M de multa é uma decisão de ROI óbvio. O conhecimento específico do processo de licenciamento tem valor de mercado real." },
+      { text: "Recusar e contratar consultoria ambiental especializada que não tem o conflito de interesse do ex-funcionário", risco: "medio", effects: { conformidade: +2, processos: +2, financeiro: -3 }, avaliacao: "boa", ensinamento: "Consultoria ambiental independente traz metodologia padronizada e relacionamento com o IBAMA sem o histórico de conflito. O ex-funcionário pode ter motivação de lentidão — um consultor independente não." },
+      { text: "Nomear internamente um engenheiro químico como responsável técnico e contratar apoio jurídico para complementar", risco: "baixo", effects: { conformidade: +2, rh: +2, financeiro: -2, processos: +1 }, avaliacao: "boa", ensinamento: "Responsável técnico interno com apoio jurídico é a solução mais duradoura. A empresa não pode ficar dependente de um único profissional externo para o próximo ciclo de licenciamento também." },
+      { text: "Solicitar ao IBAMA extensão do prazo do TAC citando a saída do responsável técnico como circunstância atenuante", risco: "alto", effects: { conformidade: -2, clientes: -2, processos: +1 }, avaliacao: "ruim", ensinamento: "IBAMA raramente concede extensão de TAC por saída voluntária de funcionário. A autarquia pode interpretar a saída como possível destruição de evidências — o que agrava a situação em vez de atenuar." }
+    ]
+  },
+  {
+    title: "A Multa de R$4,1 Milhões",
+    description: "O advogado ambiental avaliou a multa: há dois caminhos. (A) Pagar a multa integral em 30 dias com desconto de 30% (R$2,87M). (B) Recorrer administrativamente — processo leva 18 a 36 meses, pode reduzir para R$1,8M ou manter em R$4,1M. Durante o recurso, a planta segue em operação parcial. O CFO alerta: pagar R$2,87M agora deixa o caixa em R$5,1M — suficiente para operar, mas sem margem.",
+    tags: ["industria"],
+    choices: [
+      { text: "Pagar com desconto de 30% e usar o TAC para negociar a retomada da operação plena rapidamente", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { conformidade: +3, financeiro: -4, processos: +2, clientes: +2 }, avaliacao: "boa", ensinamento: "Pagar com desconto elimina a incerteza e demonstra comprometimento com a regularização. O IBAMA tende a ser mais colaborativo na negociação do TAC com empresas que pagam a multa sem contestar." },
+      { text: "Recorrer administrativamente — 18 meses de processo pode resultar em multa 56% menor", risco: "alto", gestorEffects: { capitalPolitico: -1 }, effects: { conformidade: -2, clientes: -2, financeiro: +1, processos: -1 }, avaliacao: "ruim", ensinamento: "Recorrer enquanto a planta está em operação parcial prolonga a instabilidade por 18-36 meses. Clientes que sinalizaram revisão e imprensa que noticiou o caso não vão esperar o recurso — eles tomam decisões nos próximos 30 dias." },
+      { text: "Propor parcelamento da multa em 12 vezes com o IBAMA como parte do TAC", risco: "medio", effects: { conformidade: +2, financeiro: +2, processos: +1 }, avaliacao: "boa", ensinamento: "Parcelamento de multa ambiental é negociável no TAC. Preservar o caixa para as obras de regularização é estrategicamente mais importante do que quitar a multa de uma vez." },
+      { text: "Buscar financiamento bancário para pagar a multa com desconto sem comprometer o caixa operacional", risco: "medio", effects: { conformidade: +3, financeiro: -2, processos: +1 }, avaliacao: "boa", ensinamento: "Financiar o pagamento da multa com desconto é matematicamente vantajoso se a taxa de juros do crédito for menor que o desconto de 30%. Preserva o caixa e demonstra capacidade de crédito ao mercado." }
+    ]
+  },
+  {
+    title: "A Planta em Operação Parcial",
+    description: "Com a planta a 60% da capacidade, você não consegue atender o volume contratado de 4 clientes. O COO apresenta as opções: (A) Priorizar os 2 maiores por receita, deixando os 2 menores sem atendimento. (B) Reduzir o volume proporcionalmente para todos os 4. (C) Terceirizar a produção faltante com indústria parceira temporariamente.",
+    tags: ["industria"],
+    choices: [
+      { text: "Terceirizar a produção faltante com parceiro industrial — manter o compromisso com todos os clientes", risco: "medio", effects: { clientes: +4, qualidade: -1, financeiro: -3, processos: +1 }, avaliacao: "boa", ensinamento: "Terceirização preserva o relacionamento com todos os clientes ao custo de margem menor. A alternativa — deixar clientes sem produto — cria risco de rescisão contratual que é muito mais caro do que a terceirização." },
+      { text: "Ser transparente com todos os clientes sobre a situação e negociar redução proporcional temporária", risco: "baixo", effects: { clientes: +2, conformidade: +1, processos: +1, financeiro: -1 }, avaliacao: "boa", ensinamento: "Transparência com os clientes sobre a capacidade real evita surpresas e permite que eles se planejem. Clientes que recebem aviso antecipado têm maior tolerância do que clientes que descobrem o problema no dia da entrega." },
+      { text: "Priorizar os 2 maiores clientes e comunicar aos menores que o fornecimento está suspenso temporariamente", risco: "alto", gestorEffects: { reputacaoInterna: -1 }, effects: { clientes: -3, financeiro: +1, processos: -1 }, avaliacao: "ruim", ensinamento: "Priorizar por receita sem avisar os menores é garantir que eles busquem alternativa permanente. Em indústria química, onde a homologação de fornecedor leva meses, perder a homologação de um cliente pequeno tem custo real." },
+      { text: "Acelerar a regularização para retornar a 100% da capacidade o mais rápido possível — não terceirizar", risco: "medio", effects: { conformidade: +2, processos: +2, clientes: -2, financeiro: -2 }, avaliacao: "media", ensinamento: "Acelerar a regularização é a solução definitiva — mas enquanto a planta não está a 100%, os clientes continuam sem produto. A aceleração e a terceirização não são mutuamente exclusivas." }
+    ]
+  },
+  {
+    title: "A Imprensa Voltou",
+    description: "Um portal de notícias regional publicou uma matéria de acompanhamento 30 dias após a autuação. A jornalista ligou para pedir posicionamento. O texto provisório que ela compartilhou é equilibrado mas menciona que a empresa 'ainda não demonstrou ações concretas de regularização'. O advogado recomenda não comentar. O time de comunicação quer uma entrevista completa.",
+    tags: ["industria"],
+    choices: [
+      { text: "Dar a entrevista completa com os dados concretos de regularização já implementados", risco: "baixo", gestorEffects: { capitalPolitico: +2 }, effects: { conformidade: +3, clientes: +2, processos: +1 }, avaliacao: "boa", ensinamento: "Uma entrevista com dados concretos de ação — TAC assinado, obras iniciadas, responsável técnico contratado — muda a narrativa de 'empresa na crise' para 'empresa em recuperação'. Silêncio confirma a percepção negativa." },
+      { text: "Enviar nota escrita com os principais pontos de regularização em vez de entrevista presencial", risco: "baixo", effects: { conformidade: +2, clientes: +1 }, avaliacao: "boa", ensinamento: "Nota escrita controla a mensagem sem exposição a perguntas fora do escopo. É menos impactante do que entrevista — mas é melhor do que silêncio ou 'sem comentários'." },
+      { text: "Seguir o conselho do advogado e não comentar — a matéria vai sair de qualquer forma", risco: "alto", effects: { conformidade: -2, clientes: -2 }, avaliacao: "ruim", ensinamento: "Jornalistas que não recebem posicionamento publicam a matéria com 'empresa não se pronunciou' — que é percebido pelo leitor como confirmação da culpa. Em crise de reputação, silêncio raramente é neutro." },
+      { text: "Convidar a jornalista para uma visita à planta para ver as obras de regularização em andamento", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { conformidade: +4, clientes: +3, processos: +1 }, avaliacao: "boa", ensinamento: "Visita à planta transforma a matéria de apuração em reportagem de acompanhamento positivo. Ver as obras fisicamente é mais convincente do que qualquer nota — e jornalistas raramente recusam acesso exclusivo." }
+    ]
+  },
+  {
+    title: "O Programa de Gestão de Resíduos",
+    description: "O advogado ambiental identificou a causa raiz do descarte irregular: a empresa não tinha programa formal de gestão de resíduos — os descartes eram feitos por decisão ad-hoc dos supervisores de turno. Para o TAC, o IBAMA exige um PGRS (Programa de Gestão de Resíduos Sólidos) implementado e auditável. Você precisa implantar em 90 dias.",
+    tags: ["industria"],
+    choices: [
+      { text: "Contratar empresa especializada em PGRS para implementar o programa completo nos 90 dias", risco: "medio", effects: { conformidade: +5, processos: +4, seguranca: +2, financeiro: -3 }, avaliacao: "boa", ensinamento: "PGRS implementado por especialista tem documentação técnica que o IBAMA aceita e credibilidade de auditoria que equipe interna raramente tem. O custo da consultoria é a garantia de aprovação no prazo." },
+      { text: "Desenvolver o PGRS internamente com a equipe de engenharia química — eles conhecem o processo", risco: "alto", effects: { conformidade: +3, processos: +2, financeiro: -1, rh: -2 }, avaliacao: "media", ensinamento: "PGRS desenvolvido internamente tem o risco de não atender os requisitos formais do IBAMA. Regulação ambiental tem linguagem específica — um documento tecnicamente correto mas formalmente inadequado pode ser reprovado." },
+      { text: "Implementar o PGRS em parceria com a associação da indústria química local — dividir o custo e os recursos", risco: "baixo", effects: { conformidade: +3, processos: +3, financeiro: -1, clientes: +1 }, avaliacao: "boa", ensinamento: "Programa conjunto com a associação setorial distribui o custo e cria credibilidade adicional. O IBAMA tende a reconhecer positivamente programas de gestão que têm suporte setorial — indica mudança de cultura, não apenas reação individual." },
+      { text: "Terceirizar completamente o descarte de resíduos para empresa especializada e evitar gestão interna", risco: "medio", effects: { conformidade: +2, processos: +2, financeiro: -2 }, avaliacao: "media", ensinamento: "Terceirização do descarte é uma solução — mas o IBAMA exige que a empresa geradora tenha seu próprio PGRS mesmo terceirizando o descarte. Você ainda precisa do programa, mesmo com terceiro para a execução." }
+    ]
+  },
+  {
+    title: "Os Clientes que Ficaram",
+    description: "Um mês após a autuação, os dois clientes que sinalizaram revisão comunicaram: um manterá o contrato por mais 6 meses aguardando a regularização. O outro rescindiu. A perda do cliente rescindido representa R$6,8M/ano — 9,6% da receita. O diretor comercial alerta que há 3 outros clientes em 'observação passiva' — podem ou não revisar o contrato dependendo da evolução.",
+    tags: ["industria"],
+    choices: [
+      { text: "Visitar pessoalmente os 3 clientes em 'observação passiva' com o plano de regularização documentado", risco: "baixo", gestorEffects: { capitalPolitico: +2 }, effects: { clientes: +4, conformidade: +2, processos: +1 }, avaliacao: "boa", ensinamento: "Clientes em observação passiva estão esperando um sinal. A visita pessoal com documentação concreta transforma a dúvida em confiança — ou revela que a relação já estava frágil antes da crise ambiental." },
+      { text: "Prospectar 3 novos clientes para compensar a perda de receita do contrato rescindido", risco: "medio", effects: { clientes: +2, financeiro: +1, processos: -1 }, avaliacao: "media", ensinamento: "Prospecção durante crise de reputação é o momento mais difícil para vender. Novos clientes pesquisam o histórico do fornecedor — e a autuação do IBAMA vai aparecer. A proteção dos clientes existentes tem prioridade." },
+      { text: "Oferecer aos 3 clientes em observação um SLA estendido com garantia de qualidade como incentivo de permanência", risco: "medio", effects: { clientes: +3, qualidade: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "SLA estendido é um benefício tangível que transforma a permanência do cliente em decisão racional. A empresa demonstra que a crise ambiental não afetou a qualidade do produto — e assume uma posição de compromisso maior." },
+      { text: "Aceitar a perda do cliente rescindido e focar 100% na regularização para proteger o restante da carteira", risco: "baixo", effects: { clientes: +1, conformidade: +2, processos: +2, financeiro: -1 }, avaliacao: "media", ensinamento: "Foco na regularização é o que vai proteger os clientes restantes no longo prazo. A perda de R$6,8M é dolorosa — mas um segundo cliente rescindindo por falta de ação vai custar mais do que o primeiro." }
+    ]
+  },
+  {
+    title: "A Regularização da Área Contaminada",
+    description: "O laudo técnico do IBAMA identificou contaminação de solo na área de descarte. A remediação está incluída no TAC: descontaminação da área, análise de água subterrânea por 24 meses e revegetação da zona de proteção permanente. Custo estimado: R$1,9M nos próximos 36 meses. Uma empresa de remediação propõe fazer a obra por R$1,4M com garantia de resultado.",
+    tags: ["industria"],
+    choices: [
+      { text: "Contratar a empresa de remediação pela R$1,4M com garantia de resultado — transferir o risco técnico", risco: "medio", effects: { conformidade: +4, seguranca: +3, financeiro: -3, processos: +2 }, avaliacao: "boa", ensinamento: "Contratar remediação com garantia de resultado é a abordagem mais segura. Se o processo não atender os parâmetros do IBAMA, o contratado é responsável pela execução adicional — não você." },
+      { text: "Fazer a remediação com equipe própria para economizar R$500k e ter controle total do processo", risco: "alto", effects: { conformidade: +2, seguranca: +2, financeiro: -2, rh: -2, processos: -2 }, avaliacao: "ruim", ensinamento: "Remediação de solo contaminado por resíduo químico exige expertise técnica específica e equipamentos que uma indústria de embalagens não tem. A economia de R$500k pode virar R$2M+ se a remediação falhar na auditoria do IBAMA." },
+      { text: "Negociar com o IBAMA um plano de remediação mais longo (48 meses) para diluir o custo sem comprometer o caixa", risco: "medio", gestorEffects: { capitalPolitico: +1 }, effects: { conformidade: +2, financeiro: +2, processos: +1 }, avaliacao: "boa", ensinamento: "Prazo mais longo no TAC é negociável quando acompanhado de cronograma detalhado e garantias de monitoramento. O IBAMA aceita prazos de remediação realistas — o que ele não aceita é ausência de ação." },
+      { text: "Buscar seguro ambiental retroativo que cubra o custo de remediação", risco: "alto", effects: { conformidade: -1, financeiro: +1 }, avaliacao: "ruim", ensinamento: "Seguros ambientais não cobrem retroativamente eventos já ocorridos e já autuados. A contratação de seguro ambiental agora é para proteger eventos futuros — não o custo de remediação atual." }
+    ]
+  },
+  {
+    title: "O Engenheiro Ambiental Novo",
+    description: "O novo responsável técnico ambiental — Rodrigo, 32 anos, mestrado em engenharia ambiental — apresenta um diagnóstico completo após 30 dias na empresa. Sua conclusão: 'O problema não foi o descarte pontual que o IBAMA autuou. A empresa tem 7 pontos de não-conformidade ambiental que ainda não foram detectados pelo órgão. Se não corrigirmos, a chance de nova autuação em 12 meses é alta.'",
+    tags: ["industria"],
+    choices: [
+      { text: "Autorizar Rodrigo a corrigir todos os 7 pontos imediatamente — proatividade protege de futuras autuações", risco: "medio", effects: { conformidade: +5, seguranca: +3, processos: +3, financeiro: -3 }, avaliacao: "boa", ensinamento: "Corrigir proativamente 7 pontos de não-conformidade antes de nova autuação é a decisão de menor custo e maior proteção. Cada não-conformidade adicional autuada tem o mesmo potencial de dano que a primeira." },
+      { text: "Priorizar os 3 pontos com maior risco de autuação e planejar os outros 4 para o próximo ano", risco: "baixo", effects: { conformidade: +3, seguranca: +2, processos: +2, financeiro: -2 }, avaliacao: "boa", ensinamento: "Priorização por risco é a alocação correta de recursos limitados. Os 3 pontos de maior risco de autuação corrigidos primeiro protegem a empresa dos danos mais prováveis." },
+      { text: "Comunicar voluntariamente os 7 pontos ao IBAMA como ato de boa fé antes de corrigir", risco: "alto", gestorEffects: { capitalPolitico: +1 }, effects: { conformidade: +3, clientes: +2, financeiro: -1 }, avaliacao: "media", ensinamento: "Autodeclaração ao IBAMA demonstra boa fé e pode ser tratada como atenuante em futuras autuações. O risco é que o IBAMA pode incluir os 7 pontos no TAC atual com prazos mais apertados." },
+      { text: "Não comunicar ao IBAMA e corrigir em silêncio para não chamar atenção para os outros pontos", risco: "medio", effects: { conformidade: +2, processos: +2, seguranca: +1 }, avaliacao: "media", ensinamento: "Corrigir sem comunicar é tecnicamente correto — você não é obrigado a autodeclarar. O risco é que se o IBAMA inspecionar e encontrar registros dos problemas antes da correção, a intenção de ocultação agrava a situação." }
+    ]
+  },
+  {
+    title: "A Pressão dos Colaboradores",
+    description: "O sindicato dos químicos convocou assembleia. Os trabalhadores estão preocupados com o futuro da empresa após a autuação e a operação parcial. O presidente do sindicato pede reunião urgente: 'Nossos associados precisam saber se a empresa vai fechar, cortar salários ou demitir.' O RH alerta que o absenteísmo subiu 22% nas últimas 3 semanas.",
+    tags: ["industria"],
+    choices: [
+      { text: "Realizar assembleia aberta com todos os colaboradores — transparência total sobre a situação e o plano", risco: "baixo", gestorEffects: { reputacaoInterna: +3 }, effects: { rh: +5, conformidade: +1, processos: +1 }, avaliacao: "boa", ensinamento: "Transparência com colaboradores em crise é a única forma de combater o rumor. Um colaborador que entende a situação real e acredita no plano é um aliado. Um colaborador com medo e desinformação é fonte de absenteísmo e pedido de demissão." },
+      { text: "Reunir-se apenas com as lideranças e os representantes sindicais — não fazer assembleia geral", risco: "medio", effects: { rh: +3, processos: +1 }, avaliacao: "media", ensinamento: "Reunião com lideranças e sindicato é o canal correto para informação oficial — mas as lideranças levam a mensagem para os trabalhadores com o filtro delas. Assembleia direta elimina o filtro." },
+      { text: "Comunicar por escrito que a empresa está em regularização e não há previsão de demissões", risco: "medio", effects: { rh: +2, conformidade: +1 }, avaliacao: "media", ensinamento: "Comunicado escrito é o mínimo — mas em contexto de crise, papel não substitui presença. Colaboradores querem olhar nos olhos de quem está gerindo a situação e sentir que alguém está no controle." },
+      { text: "Usar o absenteísmo elevado como argumento para demitir os colaboradores que mais faltaram", risco: "alto", gestorEffects: { reputacaoInterna: -4, capitalPolitico: -2 }, effects: { rh: -6, processos: -3, conformidade: -2 }, avaliacao: "ruim", ensinamento: "Demitir em crise por absenteísmo que tem origem na própria gestão da crise é o erro de liderança mais grave possível. O sindicato vai reagir, a imprensa vai noticiar, e o IBAMA pode interpretar como instabilidade da empresa." }
+    ]
+  },
+  {
+    title: "A Certificação ISO 14001",
+    description: "O responsável técnico Rodrigo recomenda buscar a certificação ISO 14001 (sistema de gestão ambiental) como demonstração de mudança estrutural. Dois clientes já perguntaram se a empresa vai buscar a certificação. O processo leva 12-18 meses e custa R$280k entre consultoria e auditoria. A certificação transforma a crise em caso de transformação.",
+    tags: ["industria"],
+    choices: [
+      { text: "Iniciar o processo de ISO 14001 imediatamente como parte da resposta à crise", risco: "medio", gestorEffects: { capitalPolitico: +2 }, effects: { conformidade: +5, clientes: +3, processos: +3, financeiro: -3 }, avaliacao: "boa", ensinamento: "ISO 14001 em resposta a uma autuação transforma a crise em catalisador de maturidade. A certificação demonstra que a empresa não apenas corrigiu o problema — mudou o sistema que permitiu o problema." },
+      { text: "Aguardar a conclusão da regularização do TAC antes de iniciar a ISO 14001", risco: "medio", effects: { conformidade: +2, processos: +2, financeiro: +1 }, avaliacao: "media", ensinamento: "Sequenciar TAC antes da ISO é razoável — mas os dois processos têm mais de 50% de sobreposição de atividades. Iniciar a ISO durante o TAC elimina trabalho duplicado e compressa o prazo total." },
+      { text: "Buscar ISO 14001 apenas depois de perguntar formalmente se os clientes valorizam a certificação", risco: "baixo", effects: { clientes: +2, conformidade: +1, processos: +1 }, avaliacao: "media", ensinamento: "Perguntar antes de investir é prudente — mas dois clientes já perguntaram sobre a certificação. O sinal está dado. Mais pesquisa pode parecer hesitação em vez de planejamento." },
+      { text: "Criar um sistema de gestão ambiental próprio sem buscar a certificação externa — resultado similar sem o custo de auditoria", risco: "medio", effects: { conformidade: +3, processos: +3, financeiro: -1, clientes: +1 }, avaliacao: "media", ensinamento: "Sistema interno sem certificação tem valor operacional real — mas não tem o valor de mercado da ISO 14001. Para clientes que exigem a certificação em edital, o sistema próprio não substitui o certificado externo." }
+    ]
+  },
+  {
+    title: "A Retomada Completa da Operação",
+    description: "O IBAMA aprovou as obras de remediação e o PGRS implementado. A planta pode retornar a 100% da capacidade em 30 dias. O diretor comercial quer anunciar ao mercado a retomada. O time de comunicação propõe uma campanha de relançamento da empresa com o tema 'Química com Responsabilidade'.",
+    tags: ["industria"],
+    choices: [
+      { text: "Fazer o relançamento com campanha, convite para visita de clientes e parceiros e publicação dos indicadores ambientais", risco: "baixo", gestorEffects: { capitalPolitico: +3 }, effects: { clientes: +4, conformidade: +3, rh: +2, financeiro: -2 }, avaliacao: "boa", ensinamento: "Relançamento com dados concretos e convite para validação in loco é a forma mais eficiente de restaurar a reputação. Ninguém vai acreditar na transformação por comunicado — vendo, acreditam." },
+      { text: "Retornar à operação sem anúncio público — deixar os resultados falarem ao longo do tempo", risco: "medio", effects: { conformidade: +2, processos: +2, financeiro: +1 }, avaliacao: "media", ensinamento: "Retorno silencioso é modesto — mas em mercados B2B onde a reputação importa, o silêncio pode ser interpretado como vergonha. Um anúncio estruturado com dados de regularização é mais profissional do que humilde demais." },
+      { text: "Contatar individualmente os 5 maiores clientes antes do anúncio público — dar a eles a primícia da retomada", risco: "baixo", effects: { clientes: +4, conformidade: +2, rh: +1 }, avaliacao: "boa", ensinamento: "Dar a primícia da retomada aos clientes mais importantes antes do anúncio geral demonstra que o relacionamento é prioritário. Clientes que souberam diretamente de você têm uma experiência diferente de quem soube pela imprensa." },
+      { text: "Convidar o IBAMA para uma visita de verificação antes do anúncio — obter endosso do órgão regulador", risco: "baixo", effects: { conformidade: +5, clientes: +3, processos: +2 }, avaliacao: "boa", ensinamento: "Visita do IBAMA antes do relançamento — e menção ao resultado positivo dela no comunicado — é o endosso mais valioso possível. O regulador que autuou e depois visita a planta regularizada é a prova mais crível de transformação." }
+    ]
+  },
+  {
+    title: "O Futuro da Indústria Química Responsável",
+    description: "A empresa superou a crise mais grave de sua história. O board pede a visão estratégica para os próximos 3 anos.",
+    tags: ["industria"],
+    choices: [
+      { text: "Química verde: migrar progressivamente para solventes e insumos com menor impacto ambiental, antecipando regulação futura", effects: { conformidade: +5, clientes: +4, qualidade: +4, financeiro: +3, processos: +3, seguranca: +3 }, avaliacao: "boa", ensinamento: "Química verde não é apenas ESG — é antecipação regulatória. A regulação europeia REACH e as tendências do mercado brasileiro sinalizam restrição progressiva de compostos. Migrar antes da obrigação garante vantagem de 3-5 anos." },
+      { text: "Centro de excelência ambiental: transformar o conhecimento de gestão ambiental em serviço para outras indústrias", effects: { inovacao: +4, financeiro: +3, conformidade: +4, clientes: +3, processos: +4 }, avaliacao: "boa", ensinamento: "A expertise ambiental construída na crise tem valor comercial. Outras indústrias químicas precisam de consultoria, PGRS e suporte regulatório — e quem já passou pela experiência e saiu do outro lado tem credibilidade única." },
+      { text: "Expansão para química de alta especialidade: produtos com margem 5x maior e regulação mais estrita", requisitos: { indicadorMinimo: { conformidade: 13, qualidade: 11 } }, effects: { financeiro: +5, qualidade: +4, conformidade: +4, clientes: +3, inovacao: +3 }, avaliacao: "boa", ensinamento: "Alta especialidade química requer conformidade ambiental exemplar — que você agora tem. Margens de 40-60% em produtos especializados versus 12-18% em commodities justificam o investimento em P&D e certificação." },
+      { text: "Parceria com startups de cleantech: ser a planta de referência para novos processos de química sustentável", effects: { inovacao: +5, conformidade: +4, processos: +3, clientes: +2, financeiro: -1 }, avaliacao: "boa", ensinamento: "Ser planta de referência para cleantech cria fluxo de inovação que uma empresa tradicional não consegue desenvolver internamente. A parceria traz tecnologia — você traz a escala industrial e o know-how de processo." }
+    ]
+  }
+]
+
 ]; // fim IndustriaRounds
 /* --core/engine.js-- */
 /* ═══════════════════════════════════════════════════════
