@@ -4,6 +4,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val keyPropertiesFile = rootProject.file("key.properties")
+val keyProperties = java.util.Properties()
+if (keyPropertiesFile.exists()) {
+    keyProperties.load(keyPropertiesFile.inputStream())
+}
+
 android {
     namespace = "com.example.under_pressure_admin"
     compileSdk = flutter.compileSdkVersion
@@ -27,10 +33,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("keystore.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
-            keyAlias = "upload"
-            keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            storeFile = file(keyProperties["storeFile"] as String)
+            storePassword = keyProperties["storePassword"] as String
+            keyAlias = keyProperties["keyAlias"] as String
+            keyPassword = keyProperties["keyPassword"] as String
         }
     }
 
