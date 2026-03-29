@@ -1,16 +1,7 @@
-import java.util.Properties
-import java.io.FileInputStream
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-}
-
-val keyPropertiesFile = rootProject.file("key.properties")
-val keyProperties = Properties()
-if (keyPropertiesFile.exists()) {
-    keyProperties.load(FileInputStream(keyPropertiesFile))
 }
 
 android {
@@ -36,22 +27,23 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keyProperties["keyAlias"] as String? ?: "upload"
-            keyPassword = keyProperties["keyPassword"] as String? ?: ""
-            storeFile = keyProperties["storeFile"]?.let { file("$it") }
-            storePassword = keyProperties["storePassword"] as String? ?: ""
+            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
         }
     }
 
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
         }
     }
+
+    ndkVersion = "27.0.12077973"
 }
 
 flutter {
     source = "../.."
 }
-
-android.ndkVersion = "27.0.12077973"
