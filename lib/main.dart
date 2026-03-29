@@ -8,11 +8,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: const FirebaseOptions(
-      apiKey: "COLOQUE_AQUI",
-      appId: "COLOQUE_AQUI",
-      messagingSenderId: "COLOQUE_AQUI",
+      apiKey: "AIzaSyA8R7vnuWAWWDfe2DHLhGJdZTsWiXC5u7g",
+      appId: "1:240438805750:android:90ab3118d158050b8f58d7",
+      messagingSenderId: "240438805750",
       projectId: "under-pressure-49320",
-      storageBucket: "under-pressure-49320.appspot.com",
+      storageBucket: "under-pressure-49320.firebasestorage.app",
     ),
   );
   runApp(const AdminApp());
