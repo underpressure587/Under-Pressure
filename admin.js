@@ -1038,9 +1038,7 @@ const ADMIN = (() => {
 
   async function _getToken() {
     try {
-      const user = window.GSPAuth?.currentUser?.();
-      if (!user) return null;
-      return user.getIdToken();
+      return await _token();
     } catch(e) { return null; }
   }
 
@@ -1428,12 +1426,11 @@ const ADMIN = (() => {
   ════════════════════════════════════════════════════ */
   async function _registrarAuditoria(acao) {
     try {
-      const uid = window.GSPAuth?.currentUser?.()?.uid || 'admin';
-      const ts  = Date.now().toString();
-      await _patch(`config/auditoria_${ts}`, {
-        acao:   _fsStr(acao),
-        uid:    _fsStr(uid),
-        ts:     _fsInt(Date.now()),
+      const ts = Date.now().toString();
+      await _patch(`auditoria/${ts}`, {
+        acao: _fsStr(acao),
+        uid:  _fsStr('admin'),
+        ts:   _fsInt(Date.now()),
       });
     } catch(e) { /* silencioso */ }
   }
@@ -1538,7 +1535,7 @@ const ADMIN = (() => {
     fecharModal,
     toggleDropdown, selecionarSetor,
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
-    abrirModalBan, fecharModalBan, confirmarBan, selecionarMotivo,
+    abrirModalBan, fecharModalBan, confirmarBan, selecionarMotivo, _atualizarContadorDetalhe,
     carregarVersao, salvarChangelog, forcarAtualizacaoGlobal,
     carregarDashboard, mudarPeriodoDash,
     carregarHistorias, toggleHistoria,
