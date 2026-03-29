@@ -26,14 +26,13 @@ jobs:
           flutter-version: '3.41.6'
 
       - name: Configurar keystore fixo
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
-          cat > android/key.properties << KEYEOF
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias=upload
-          storeFile=keystore.jks
-          KEYEOF
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/keystore.jks
+          printf "storePassword=%s\nkeyPassword=%s\nkeyAlias=upload\nstoreFile=keystore.jks\n" \
+            "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > android/key.properties
 
       - name: Get dependencies
         run: flutter pub get
