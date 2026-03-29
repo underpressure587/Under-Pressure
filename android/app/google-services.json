@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "240438805750",
+    "project_id": "under-pressure-49320",
+    "storage_bucket": "under-pressure-49320.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:240438805750:android:90ab3118d158050b8f58d7",
+        "android_client_info": {
+          "package_name": "com.example.under_pressure_admin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8R7vnuWAWWDfe2DHLhGJdZTsWiXC5u7g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
