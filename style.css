@@ -4156,3 +4156,296 @@ body::after{
   border: 1px solid rgba(231,76,60,.3);
   color: var(--err);
 }
+
+/* ════════════════════════════════════════════════════
+   ADMIN · VERSÃO
+════════════════════════════════════════════════════ */
+.admin-versao-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.admin-versao-card {
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--r2); padding: 14px 16px;
+}
+.admin-versao-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.admin-versao-badge {
+  background: var(--s-gradient); color: #fff;
+  font-size: .75rem; font-weight: 700; letter-spacing: .05em;
+  padding: 3px 10px; border-radius: 20px;
+}
+.admin-versao-deploy { font-size: .78rem; color: var(--t3); }
+.admin-versao-hash { font-size: .7rem; color: var(--t4); font-family: monospace; }
+
+.admin-versao-section-title {
+  font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--t3); margin-top: 4px;
+}
+
+.admin-versao-textarea {
+  width: 100%; min-height: 90px; background: var(--bg3);
+  border: 1px solid var(--line2); border-radius: var(--r2);
+  color: var(--t1); font-size: .84rem; padding: 10px 12px;
+  resize: vertical; font-family: inherit; line-height: 1.5;
+  box-sizing: border-box;
+}
+.admin-versao-textarea:focus { outline: none; border-color: var(--s-primary); }
+
+.admin-versao-flags { margin: 8px 0; }
+.admin-versao-flag-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .84rem; color: var(--t2); cursor: pointer;
+}
+.admin-versao-flag-label input { accent-color: var(--s-primary); width: 16px; height: 16px; }
+.admin-versao-flag-desc { font-size: .72rem; color: var(--t4); }
+
+.admin-versao-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.admin-versao-stat {
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--r2); padding: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.admin-versao-stat span { font-size: 1.4rem; font-weight: 700; color: var(--t1); }
+.admin-versao-stat small { font-size: .68rem; color: var(--t3); }
+.admin-versao-stat-warn { border-color: rgba(245,158,11,.3); }
+.admin-versao-stat-warn span { color: #f59e0b; }
+
+.admin-versao-hist-item {
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--r2); padding: 12px 14px; margin-bottom: 8px;
+}
+.admin-versao-hist-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.admin-versao-hist-badge {
+  font-size: .7rem; font-weight: 700; background: var(--bg4);
+  color: var(--t2); padding: 2px 8px; border-radius: 12px;
+}
+.admin-versao-hist-badge.critica {
+  background: rgba(231,76,60,.15); color: var(--err);
+  border: 1px solid rgba(231,76,60,.3);
+}
+.admin-versao-hist-date { font-size: .72rem; color: var(--t4); }
+.admin-versao-hist-log { font-size: .8rem; color: var(--t2); line-height: 1.5; }
+.admin-versao-hist-hash { font-size: .68rem; color: var(--t4); font-family: monospace; margin-top: 4px; }
+
+/* Toast de atualização disponível */
+.update-toast {
+  position: fixed; bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  left: 50%; transform: translateX(-50%);
+  background: var(--bg3); border: 1px solid var(--s-primary);
+  border-radius: 24px; padding: 10px 18px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: .84rem; color: var(--t1);
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  z-index: 99998; cursor: pointer;
+  animation: toastIn .3s cubic-bezier(.22,.68,0,1.2);
+  white-space: nowrap;
+}
+.update-toast-icon { font-size: 1rem; }
+.update-toast-btn {
+  background: var(--s-gradient); color: #fff;
+  border: none; border-radius: 12px;
+  font-size: .75rem; font-weight: 700;
+  padding: 4px 12px; cursor: pointer;
+}
+
+/* ════════════════════════════════════════════════════
+   ADMIN v7 — Novos componentes
+════════════════════════════════════════════════════ */
+
+/* Título de seção interno */
+.admin-sec-title {
+  font-size: .68rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--t3);
+  padding: 12px 16px 6px; border-top: 1px solid var(--line2);
+  margin-top: 8px;
+}
+
+/* CSV button */
+.admin-btn-csv {
+  background: var(--bg3); border: 1px solid var(--line2);
+  color: var(--t2); font-size: .75rem; font-weight: 600;
+  padding: 0 12px; height: 36px; border-radius: var(--r2);
+  cursor: pointer; white-space: nowrap;
+  display: flex; align-items: center; gap: 4px;
+}
+.admin-btn-csv:active { opacity: .7; }
+
+/* Filtros de aba (Todos/Ativos/Banidos) */
+.admin-filtros-row {
+  display: flex; gap: 6px; padding: 0 16px 10px;
+}
+.admin-filtro-btn {
+  background: var(--bg3); border: 1px solid var(--line2);
+  color: var(--t3); font-size: .75rem; font-weight: 600;
+  padding: 5px 14px; border-radius: 20px; cursor: pointer;
+  transition: all .15s;
+}
+.admin-filtro-btn.active {
+  background: var(--s-gradient); color: #fff; border-color: transparent;
+}
+
+/* Dashboard */
+.admin-dash-periodo {
+  display: flex; gap: 6px; padding: 12px 16px 8px;
+}
+.admin-periodo-btn {
+  background: var(--bg3); border: 1px solid var(--line2);
+  color: var(--t3); font-size: .75rem; font-weight: 600;
+  padding: 5px 16px; border-radius: 20px; cursor: pointer;
+}
+.admin-periodo-btn.active {
+  background: var(--s-gradient); color: #fff; border-color: transparent;
+}
+.admin-dash-cards {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px; padding: 0 16px 12px;
+}
+.admin-dash-card {
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--r2); padding: 12px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.admin-dash-val { font-size: 1.5rem; font-weight: 800; color: var(--t1); }
+.admin-dash-label { font-size: .65rem; color: var(--t3); text-transform: uppercase; letter-spacing: .05em; }
+
+.admin-dash-setor-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px;
+}
+.admin-dash-setor-nome { font-size: .82rem; color: var(--t1); min-width: 90px; }
+.admin-dash-bar-track {
+  flex: 1; height: 6px; background: var(--bg4);
+  border-radius: 3px; overflow: hidden;
+}
+.admin-dash-bar-fill {
+  height: 100%; border-radius: 3px;
+  background: var(--s-gradient); transition: width .4s ease;
+}
+.admin-dash-pct { font-size: .75rem; color: var(--t3); min-width: 32px; text-align: right; }
+
+.admin-dash-abandono-row {
+  display: flex; align-items: center; gap: 10px; padding: 6px 16px;
+}
+.admin-dash-rod { font-size: .78rem; color: var(--t3); min-width: 36px; }
+.admin-dash-abandono-pct { font-size: .82rem; font-weight: 700; color: var(--t1); min-width: 36px; }
+
+/* Histórias */
+.admin-historias-info {
+  font-size: .78rem; color: var(--t3); padding: 12px 16px 8px; line-height: 1.5;
+}
+.admin-historia-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--line2);
+}
+.admin-historia-info { flex: 1; }
+.admin-historia-nome { font-size: .84rem; font-weight: 600; color: var(--t1); }
+.admin-historia-sub  { font-size: .72rem; color: var(--t3); margin-top: 2px; }
+.admin-historia-badge {
+  font-size: .65rem; font-weight: 700; padding: 2px 8px;
+  border-radius: 10px; text-transform: uppercase; letter-spacing: .05em;
+}
+.admin-historia-badge.ativa    { background: rgba(34,197,94,.15); color: #22c55e; }
+.admin-historia-badge.inativa  { background: var(--bg4); color: var(--t3); }
+
+/* Feedback */
+.admin-feedback-media {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; padding: 20px 16px 12px;
+}
+.admin-feedback-nota { font-size: 2.5rem; font-weight: 800; color: var(--t1); }
+.admin-feedback-estrelas { font-size: 1.2rem; color: #f59e0b; }
+.admin-feedback-total { font-size: .75rem; color: var(--t3); }
+
+.admin-feedback-hist-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid var(--line2);
+}
+.admin-feedback-hist-nome { flex: 1; font-size: .82rem; color: var(--t1); }
+.admin-feedback-hist-nota { font-size: .82rem; font-weight: 700; color: #f59e0b; }
+.admin-feedback-hist-count { font-size: .72rem; color: var(--t3); }
+
+.admin-feedback-recente {
+  padding: 10px 16px; border-bottom: 1px solid var(--line2);
+}
+.admin-feedback-recente-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+}
+.admin-feedback-recente-nome { font-size: .8rem; font-weight: 600; color: var(--t1); }
+.admin-feedback-recente-estrelas { font-size: .85rem; color: #f59e0b; }
+.admin-feedback-recente-texto { font-size: .78rem; color: var(--t2); line-height: 1.4; }
+
+/* Sessões */
+.admin-sessoes-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+.admin-sessoes-badge {
+  background: rgba(34,197,94,.15); color: #22c55e;
+  font-size: .72rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 12px;
+}
+.admin-sessao-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid var(--line2);
+}
+.admin-sessao-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.admin-sessao-dot.ativa  { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+.admin-sessao-dot.inativa { background: var(--t4); }
+.admin-sessao-info { flex: 1; }
+.admin-sessao-nome { font-size: .82rem; font-weight: 600; color: var(--t1); }
+.admin-sessao-detalhe { font-size: .72rem; color: var(--t3); margin-top: 2px; }
+.admin-sessao-tempo { font-size: .72rem; color: var(--t4); font-family: monospace; }
+
+/* Logs */
+.admin-logs-filtros {
+  display: flex; gap: 6px; padding: 12px 16px 8px;
+}
+.admin-log-row {
+  padding: 10px 16px; border-bottom: 1px solid var(--line2);
+  cursor: pointer;
+}
+.admin-log-row:active { background: var(--bg3); }
+.admin-log-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 3px;
+}
+.admin-log-tipo {
+  font-size: .65rem; font-weight: 700; padding: 2px 7px;
+  border-radius: 8px; text-transform: uppercase;
+}
+.admin-log-tipo.erro  { background: rgba(231,76,60,.15); color: var(--err); }
+.admin-log-tipo.aviso { background: rgba(245,158,11,.15); color: #f59e0b; }
+.admin-log-tempo { font-size: .72rem; color: var(--t4); font-family: monospace; }
+.admin-log-msg   { font-size: .8rem; color: var(--t1); margin-bottom: 2px; }
+.admin-log-meta  { font-size: .7rem; color: var(--t3); }
+
+/* Config — Agendamento */
+.admin-agendamento-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 8px 0;
+}
+.admin-agendamento-field { display: flex; flex-direction: column; gap: 4px; }
+
+/* Log de auditoria */
+.admin-audit-row {
+  padding: 8px 0; border-bottom: 1px solid var(--line2);
+  font-size: .78rem; color: var(--t2); line-height: 1.4;
+}
+.admin-audit-row:last-child { border-bottom: none; }
+.admin-audit-quem { font-weight: 600; color: var(--t1); }
+.admin-audit-quando { color: var(--t4); font-size: .7rem; }
+
+/* Ao vivo (aba Geral) */
+.admin-aovivo-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid var(--line2);
+}
+
+/* Busca row com CSV */
+.admin-busca-row {
+  display: flex; gap: 8px; padding: 12px 16px 6px; align-items: center;
+}
+.admin-busca-row .admin-input { flex: 1; }

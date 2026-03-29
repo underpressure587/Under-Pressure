@@ -18,9 +18,9 @@
   <!-- Fontes sem bloquear renderizacao -->
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="./style.css?v=5367c40">
+  <link rel="stylesheet" href="./style.css?v=bb11891">
   <!-- Firebase -->
-  <script type="module" src="./firebase-config.js?v=5367c40"></script>
+  <script type="module" src="./firebase-config.js?v=bb11891"></script>
 
 </head>
 <body>
@@ -593,16 +593,21 @@
 
     <!-- Nav -->
     <div class="admin-nav">
-      <button class="admin-nav-btn active" data-sec="visao-geral" onclick="ADMIN.irParaSecao('visao-geral')">📊 Geral</button>
-      <button class="admin-nav-btn" data-sec="jogadores" onclick="ADMIN.irParaSecao('jogadores')">👥 Jogadores</button>
-      <button class="admin-nav-btn" data-sec="podio" onclick="ADMIN.irParaSecao('podio')" style="display:flex;align-items:center;gap:5px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg> Pódio</button>
-      <button class="admin-nav-btn" data-sec="conteudo" onclick="ADMIN.irParaSecao('conteudo')">🎮 Conteúdo</button>
-      <button class="admin-nav-btn" data-sec="config" onclick="ADMIN.irParaSecao('config')">⚙️ Config</button>
+      <button class="admin-nav-btn active" data-sec="visao-geral"  onclick="ADMIN.irParaSecao('visao-geral')">📊 Geral</button>
+      <button class="admin-nav-btn"        data-sec="jogadores"    onclick="ADMIN.irParaSecao('jogadores')">👥 Jogadores</button>
+      <button class="admin-nav-btn"        data-sec="podio"        onclick="ADMIN.irParaSecao('podio')">🏆 Pódio</button>
+      <button class="admin-nav-btn"        data-sec="dashboard"    onclick="ADMIN.irParaSecao('dashboard')">📈 Dashboard</button>
+      <button class="admin-nav-btn"        data-sec="historias"    onclick="ADMIN.irParaSecao('historias')">🎮 Histórias</button>
+      <button class="admin-nav-btn"        data-sec="feedback"     onclick="ADMIN.irParaSecao('feedback')">💬 Feedback</button>
+      <button class="admin-nav-btn"        data-sec="sessoes"      onclick="ADMIN.irParaSecao('sessoes')">🖥️ Sessões</button>
+      <button class="admin-nav-btn"        data-sec="versao"       onclick="ADMIN.irParaSecao('versao')">🔖 Versão</button>
+      <button class="admin-nav-btn"        data-sec="logs"         onclick="ADMIN.irParaSecao('logs')">🐛 Logs</button>
+      <button class="admin-nav-btn"        data-sec="config"       onclick="ADMIN.irParaSecao('config')">⚙️ Config</button>
     </div>
 
     <div class="admin-body">
 
-      <!-- VISÃO GERAL -->
+      <!-- ══ GERAL ══ -->
       <div id="admin-sec-visao-geral" class="admin-section">
         <div class="admin-cards">
           <div class="admin-card"><div class="admin-card-val" id="admin-total-jogadores">—</div><div class="admin-card-label">Jogadores</div></div>
@@ -611,20 +616,27 @@
           <div class="admin-card"><div class="admin-card-val" id="admin-partidas-semana">—</div><div class="admin-card-label">Última semana</div></div>
           <div class="admin-card"><div class="admin-card-val" id="admin-score-medio">—</div><div class="admin-card-label">Score médio</div></div>
         </div>
+        <div class="admin-sec-title">🟢 Ao Vivo</div>
+        <div id="admin-aovivo-lista"><div class="admin-empty">Sem sessões ativas.</div></div>
       </div>
 
-      <!-- JOGADORES -->
+      <!-- ══ JOGADORES ══ -->
       <div id="admin-sec-jogadores" class="admin-section" style="display:none">
         <div class="admin-busca-row">
           <input id="admin-busca" class="admin-input" placeholder="Buscar por nome ou e-mail..." oninput="ADMIN.carregarJogadores(this.value)">
+          <button class="admin-btn admin-btn-csv" onclick="ADMIN.exportarCSVJogadores()" title="Exportar CSV">⬇ CSV</button>
+        </div>
+        <div class="admin-filtros-row">
+          <button class="admin-filtro-btn active" data-filtro="todos"   onclick="ADMIN.filtrarJogadores('todos')">Todos</button>
+          <button class="admin-filtro-btn"        data-filtro="ativos"  onclick="ADMIN.filtrarJogadores('ativos')">Ativos</button>
+          <button class="admin-filtro-btn"        data-filtro="banidos" onclick="ADMIN.filtrarJogadores('banidos')">Banidos</button>
         </div>
         <div id="admin-jogadores-lista"></div>
       </div>
 
-      <!-- PÓDIO -->
+      <!-- ══ PÓDIO ══ -->
       <div id="admin-sec-podio" class="admin-section" style="display:none">
         <div class="admin-reset-row">
-          <!-- Dropdown customizado — sem UI nativa do navegador -->
           <div class="admin-dropdown" id="admin-setor-dropdown">
             <button class="admin-dropdown-trigger" onclick="ADMIN.toggleDropdown()" type="button">
               <span id="admin-setor-label">Selecionar setor...</span>
@@ -638,37 +650,117 @@
               <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('industria', '🏭 Indústria')">🏭 Indústria</button>
             </div>
           </div>
+          <button class="admin-btn admin-btn-csv" onclick="ADMIN.exportarCSVPodio()" title="Exportar CSV">⬇ CSV</button>
           <button class="admin-btn admin-btn-danger" onclick="ADMIN.resetarPodioPorSetor()" style="display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg> Resetar</button>
         </div>
         <div id="admin-podio-lista"></div>
       </div>
 
-      <!-- CONTEÚDO -->
-      <div id="admin-sec-conteudo" class="admin-section" style="display:none">
-        <div id="admin-conteudo-body"></div>
+      <!-- ══ DASHBOARD ══ -->
+      <div id="admin-sec-dashboard" class="admin-section" style="display:none">
+        <div class="admin-dash-periodo">
+          <button class="admin-periodo-btn active" data-periodo="hoje"   onclick="ADMIN.mudarPeriodoDash('hoje')">Hoje</button>
+          <button class="admin-periodo-btn"        data-periodo="semana" onclick="ADMIN.mudarPeriodoDash('semana')">Semana</button>
+          <button class="admin-periodo-btn"        data-periodo="mes"    onclick="ADMIN.mudarPeriodoDash('mes')">Mês</button>
+        </div>
+        <div class="admin-dash-cards">
+          <div class="admin-dash-card"><div class="admin-dash-val" id="dash-partidas">—</div><div class="admin-dash-label">Partidas</div></div>
+          <div class="admin-dash-card"><div class="admin-dash-val" id="dash-setores">—</div><div class="admin-dash-label">Setores</div></div>
+          <div class="admin-dash-card"><div class="admin-dash-val" id="dash-abandono">—</div><div class="admin-dash-label">Abandono</div></div>
+        </div>
+        <div class="admin-sec-title">🎮 Setores mais jogados</div>
+        <div id="dash-setores-lista"></div>
+        <div class="admin-sec-title" style="margin-top:16px">📉 Abandono por Rodada</div>
+        <div id="dash-abandono-lista"></div>
       </div>
 
-      <!-- CONFIG -->
-      <div id="admin-sec-config" class="admin-section" style="display:none">
-        <div class="admin-config-form">
-          <!-- Mensagem global agora é gerenciada pelo modal dedicado -->
-          <button class="admin-btn admin-btn-ok" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t1)" onclick="ADMIN.abrirModalMsg()" style="display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Mensagem Global</button>
+      <!-- ══ HISTÓRIAS ══ -->
+      <div id="admin-sec-historias" class="admin-section" style="display:none">
+        <div class="admin-historias-info">Ative ou desative histórias em tempo real — sem precisar de deploy.</div>
+        <div id="admin-historias-lista"></div>
+      </div>
 
-          <!-- Banner de alerta quando manutenção está ativa -->
-          <div id="admin-manutencao-banner" class="admin-manutencao-banner" style="display:none">
-            ⚠ MANUTENÇÃO ATIVA — todos os jogadores estão bloqueados
+      <!-- ══ FEEDBACK ══ -->
+      <div id="admin-sec-feedback" class="admin-section" style="display:none">
+        <div class="admin-feedback-media">
+          <span class="admin-feedback-nota" id="feedback-nota-media">—</span>
+          <span class="admin-feedback-estrelas" id="feedback-estrelas-media"></span>
+          <span class="admin-feedback-total" id="feedback-total">0 avaliações</span>
+        </div>
+        <div class="admin-sec-title">Por história</div>
+        <div id="feedback-por-historia"></div>
+        <div class="admin-sec-title" style="margin-top:16px">Recentes</div>
+        <div id="feedback-recentes"></div>
+      </div>
+
+      <!-- ══ SESSÕES ══ -->
+      <div id="admin-sec-sessoes" class="admin-section" style="display:none">
+        <div class="admin-sessoes-header">
+          <span id="sessoes-contador" class="admin-sessoes-badge">0 ativas</span>
+          <button class="admin-btn-sm" onclick="ADMIN.carregarSessoes()">↻ Atualizar</button>
+        </div>
+        <div id="admin-sessoes-lista"><div class="admin-empty">Sem sessões ativas.</div></div>
+      </div>
+
+      <!-- ══ VERSÃO ══ -->
+      <div id="admin-sec-versao" class="admin-section" style="display:none">
+        <div class="admin-versao-body">
+          <div class="admin-versao-card">
+            <div class="admin-versao-header">
+              <span class="admin-versao-badge" id="versao-badge-atual">v—</span>
+              <span class="admin-versao-deploy" id="versao-deploy-atual">Carregando...</span>
+            </div>
+            <div class="admin-versao-hash" id="versao-hash-atual"></div>
           </div>
-          <div class="admin-toggle-row">
-            <label class="admin-label">Modo manutenção (bloqueia acesso ao jogo)</label>
-            <label class="admin-switch">
-              <input type="checkbox" id="admin-manutencao">
-              <span class="admin-switch-track"></span>
+          <div class="admin-versao-section-title">📝 Changelog desta versão</div>
+          <textarea id="versao-changelog-input" class="admin-versao-textarea" placeholder="Descreva o que foi alterado nesta versão..."></textarea>
+          <div class="admin-versao-flags">
+            <label class="admin-versao-flag-label">
+              <input type="checkbox" id="versao-critica-check">
+              <span>⚠️ Versão crítica</span>
+              <span class="admin-versao-flag-desc">Força atualização imediata em todos os usuários</span>
             </label>
           </div>
+          <button class="admin-btn admin-btn-ok" onclick="ADMIN.salvarChangelog()" style="width:100%;justify-content:center">💾 Salvar Changelog</button>
+          <div class="admin-versao-section-title" style="margin-top:20px">🔄 Controle de Atualização</div>
+          <div class="admin-versao-stats" id="versao-stats">
+            <div class="admin-versao-stat"><span id="versao-usuarios-atuais">—</span><small>na versão atual</small></div>
+            <div class="admin-versao-stat admin-versao-stat-warn"><span id="versao-usuarios-antigos">—</span><small>em versão antiga</small></div>
+          </div>
+          <button class="admin-btn admin-btn-danger" onclick="ADMIN.forcarAtualizacaoGlobal()" style="width:100%;justify-content:center;margin-top:10px">📢 Forçar Atualização Global</button>
+          <div class="admin-versao-section-title" style="margin-top:20px">📋 Histórico de Versões</div>
+          <div id="versao-historico-lista"></div>
+        </div>
+      </div>
 
+      <!-- ══ LOGS ══ -->
+      <div id="admin-sec-logs" class="admin-section" style="display:none">
+        <div class="admin-logs-filtros">
+          <button class="admin-filtro-btn active" data-filtro="todos"  onclick="ADMIN.filtrarLogs('todos')">Todos</button>
+          <button class="admin-filtro-btn"        data-filtro="erro"   onclick="ADMIN.filtrarLogs('erro')">Erros</button>
+          <button class="admin-filtro-btn"        data-filtro="aviso"  onclick="ADMIN.filtrarLogs('aviso')">Avisos</button>
+        </div>
+        <div id="admin-logs-lista"><div class="admin-empty">Sem logs registrados.</div></div>
+      </div>
+
+      <!-- ══ CONFIG ══ -->
+      <div id="admin-sec-config" class="admin-section" style="display:none">
+        <div class="admin-config-form">
+          <button class="admin-btn admin-btn-ok" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t1)" onclick="ADMIN.abrirModalMsg()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Mensagem Global</button>
+          <div id="admin-manutencao-banner" class="admin-manutencao-banner" style="display:none">⚠ MANUTENÇÃO ATIVA — todos os jogadores estão bloqueados</div>
+          <div class="admin-toggle-row">
+            <label class="admin-label">Modo manutenção</label>
+            <label class="admin-switch"><input type="checkbox" id="admin-manutencao"><span class="admin-switch-track"></span></label>
+          </div>
+          <div class="admin-sec-title" style="margin-top:12px">⏰ Agendamento de Manutenção</div>
+          <div class="admin-agendamento-row">
+            <div class="admin-agendamento-field"><label class="admin-label">Início</label><input type="time" id="admin-manut-inicio" class="admin-input"></div>
+            <div class="admin-agendamento-field"><label class="admin-label">Fim</label><input type="time" id="admin-manut-fim" class="admin-input"></div>
+          </div>
           <button id="btn-salvar-config" class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()" style="display:flex;align-items:center;gap:6px;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar</button>
-          <!-- Gerenciamento de Admins -->
-          <div class="admin-label" style="margin-top:8px;border-top:1px solid var(--line);padding-top:14px">UIDs com acesso admin</div>
+          <div class="admin-sec-title" style="margin-top:16px">📋 Log de Auditoria</div>
+          <div id="admin-audit-log"><div class="admin-empty">Sem registros.</div></div>
+          <div class="admin-label" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">UIDs com acesso admin</div>
           <div id="admin-admins-lista"></div>
           <div class="admin-uid-add-row">
             <input id="admin-novo-uid" class="admin-input" placeholder="Colar UID do Firebase..." style="flex:1">
@@ -677,7 +769,6 @@
         </div>
       </div>
 
-    </div><!-- /admin-body -->
 
     <!-- Modal histórico -->
     <div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
@@ -881,7 +972,7 @@
 </div>
 
 
-<script src="./admin.js?v=5367c40"></script>
-<script src="./bundle.js?v=5367c40"></script>
+<script src="./admin.js?v=bb11891"></script>
+<script src="./bundle.js?v=bb11891"></script>
 </body>
 </html>

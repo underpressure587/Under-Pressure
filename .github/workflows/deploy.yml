@@ -48,11 +48,28 @@ jobs:
       - name: Gerar bundle.js
         run: node build.js
 
-      # 4. Faz o deploy no Firebase Hosting + Firestore Rules
+      # 4. Cache busting no index.html — mesmo esquema do deploy.sh
+      #    Usa o hash do commit como versão (ex: ?v=a3f8c21)
+      - name: Cache busting no index.html
+        run: |
+          VERSION=$(git rev-parse --short HEAD)
+          echo "Versão: $VERSION"
+          sed -i "s/\?v=[A-Za-z0-9_-]*/\?v=$VERSION/g" index.html
+
+      # 5. Gera o version.json com hash e timestamp do deploy
+      - name: Gerar version.json
+        run: |
+          HASH=$(git rev-parse HEAD)
+          SHORT=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "{\"hash\":\"$HASH\",\"versao\":\"v$SHORT\",\"deployedAt\":\"$TIMESTAMP\"}" > version.json
+          echo "version.json gerado: v$SHORT"
+
+      # 6. Deploy no Firebase — sem precisar de Cloud Shell ou Termux
       - name: Deploy no Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
-          channelId: live  # deploy direto no canal de produção
+          channelId: live

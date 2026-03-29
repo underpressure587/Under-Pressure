@@ -122,6 +122,8 @@ function _fecharOverlay(id) {
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
+  _carregarVersaoAtual(); // carrega versão atual em background
+  _iniciarLoggerErros();  // captura erros críticos do jogo
 
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
@@ -647,6 +649,44 @@ function comecaJogo() {
 // Roda sempre que o usuário está logado (home, jogo, perfil, etc.)
 // Verifica: ban + manutenção + mensagem global — a cada 20 segundos
 
+let _versaoAtual = null;
+let _updateToastVisible = false;
+
+// Carrega a versão atual do bundle ao iniciar
+async function _carregarVersaoAtual() {
+  try {
+    const r = await fetch('/version.json?t=' + Date.now());
+    if (!r.ok) return;
+    const v = await r.json();
+    _versaoAtual = v.hash || null;
+  } catch(e) {}
+}
+
+function _mostrarToastAtualizacao(forcado) {
+  if (_updateToastVisible && !forcado) return;
+  _updateToastVisible = true;
+  // Remove toast anterior se existir
+  document.getElementById('update-toast')?.remove();
+  const toast = document.createElement('div');
+  toast.id = 'update-toast';
+  toast.className = 'update-toast';
+  toast.innerHTML = `
+    <span class="update-toast-icon">🔄</span>
+    <span>${forcado ? 'Atualização obrigatória disponível' : 'Nova versão disponível'}</span>
+    <button class="update-toast-btn" onclick="location.reload()">Atualizar</button>
+  `;
+  if (!forcado) {
+    // Toast discreto — fecha ao clicar fora
+    toast.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('update-toast-btn')) {
+        toast.remove();
+        _updateToastVisible = false;
+      }
+    });
+  }
+  document.body.appendChild(toast);
+}
+
 function _iniciarPollingGlobal(uid) {
   _pararPollingGlobal(); // limpa qualquer poll anterior
   if (!window.ADMIN || !uid) return;
@@ -675,11 +715,62 @@ function _iniciarPollingGlobal(uid) {
         _ultimaMensagemGlobal = cfg.mensagem;
         mostrarSucesso(cfg.mensagem);
       }
+
+      // 4. Verifica forçar atualização global (admin acionou)
+      if (cfg.forcarAtualizacao && cfg.forcarAtualizacao !== _versaoAtual) {
+        _mostrarToastAtualizacao(true);
+        return;
+      }
+
+      // 5. Verifica nova versão via version.json
+      if (_versaoAtual) {
+        const r = await fetch('/version.json?t=' + Date.now());
+        if (r.ok) {
+          const v = await r.json();
+          if (v.hash && v.hash !== _versaoAtual) {
+            _mostrarToastAtualizacao(false);
+          }
+        }
+      }
+
     } catch(e) { /* ignora erros de rede temporários */ }
   };
 
   _tick(); // executa imediatamente no login
   _globalPollInterval = setInterval(_tick, 20000);
+}
+
+/* ════════════════════════════════════════════════════
+   LOGGER DE ERROS CRÍTICOS
+════════════════════════════════════════════════════ */
+function _iniciarLoggerErros() {
+  window.addEventListener('error', (e) => {
+    // Só loga erros que acontecem dentro do fluxo do jogo
+    const state = BetaState.get();
+    if (!state || !_player?.uid) return;
+    try {
+      const FS = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents`;
+      const id = Date.now();
+      const fields = {
+        msg:         { stringValue: e.message || 'Erro desconhecido' },
+        tipo:        { stringValue: 'erro' },
+        setor:       { stringValue: state.sector || '' },
+        rodada:      { integerValue: String(state.currentRound || 0) },
+        versao:      { stringValue: _versaoAtual || '' },
+        nomeJogador: { stringValue: _player.nome || 'Jogador' },
+        ts:          { integerValue: String(id) },
+      };
+      const mask = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
+      window.GSPAuth?.getToken().then(tok => {
+        if (!tok) return;
+        fetch(`${FS}/logs/${id}?${mask}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields }),
+        }).catch(() => {});
+      }).catch(() => {});
+    } catch(err) { /* silencioso */ }
+  });
 }
 
 function _pararPollingGlobal() {
@@ -996,8 +1087,37 @@ function escolher(idx) {
     setTimeout(() => bar.classList.remove("deciding"), 600);
   });
 
+  // Atualiza sessão ativa no Firestore (Option B — por evento, não heartbeat)
+  _atualizarSessaoAtiva();
+
   // Pequena pausa para a animação ser vista antes de processar
   setTimeout(() => processarEscolha(idx), 180);
+}
+
+// Atualiza a sessão ativa no Firestore a cada escolha do jogador
+async function _atualizarSessaoAtiva() {
+  try {
+    if (!_player?.uid || !window.GSPAuth) return;
+    const state = BetaState.get();
+    if (!state) return;
+    const tok = await window.GSPAuth.getToken();
+    if (!tok) return;
+    const FS = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents`;
+    const fields = {
+      nome:        { stringValue: _player.nome || 'Jogador' },
+      setor:       { stringValue: state.sector || '' },
+      rodada:      { integerValue: String(state.currentRound || 0) },
+      companyName: { stringValue: state.companyName || '' },
+      versao:      { stringValue: _versaoAtual || '' },
+      ts:          { integerValue: String(Date.now()) },
+    };
+    const mask = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
+    fetch(`${FS}/sessoes/${_player.uid}?${mask}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields }),
+    }).catch(() => {}); // silencioso
+  } catch(e) { /* silencioso */ }
 }
 
 function _iniciarTimer() {

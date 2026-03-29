@@ -161,7 +161,22 @@ const ADMIN = (() => {
           (j.email||'').toLowerCase().includes(b)
         );
       }
+
+      // Aplica filtro de status
+      if (_filtroJogadores === 'banidos') jogadores = jogadores.filter(j => j.banido);
+      if (_filtroJogadores === 'ativos')  jogadores = jogadores.filter(j => !j.banido);
+
       jogadores.sort((a,b) => (b.melhorScore||0) - (a.melhorScore||0));
+
+      // Atualiza contadores nas abas
+      const totalTodos   = res.filter(r => r.document).length;
+      const totalBanidos = res.filter(r => r.document && _val(r.document.fields?.banido)).length;
+      document.querySelectorAll('.admin-filtro-btn[data-filtro]').forEach(b => {
+        const f = b.dataset.filtro;
+        if (f === 'todos')   b.textContent = `Todos (${totalTodos})`;
+        if (f === 'ativos')  b.textContent = `Ativos (${totalTodos - totalBanidos})`;
+        if (f === 'banidos') b.textContent = `Banidos (${totalBanidos})`;
+      });
 
       const lista = document.getElementById('admin-jogadores-lista');
       if (!jogadores.length) {
@@ -170,14 +185,15 @@ const ADMIN = (() => {
       }
 
       lista.innerHTML = jogadores.map(j => `
-        <div class="admin-jogador-row ${j.banido ? 'banido' : ''}" data-uid="${j.uid}">
-          <div class="admin-jogador-info">
+        <div class="admin-jogador-row ${j.banido ? 'banido' : ''}" data-uid="${j.uid}" style="display:flex;align-items:flex-start;gap:10px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${j.banido ? '#ef4444' : '#22c55e'};flex-shrink:0;margin-top:6px"></div>
+          <div class="admin-jogador-info" style="flex:1">
             <div class="admin-jogador-nome">${j.nome || 'Sem nome'} ${j.banido ? '<span class="admin-ban-badge">BANIDO</span>' : ''}</div>
             <div class="admin-jogador-email">${j.email || 'Convidado'}</div>
             <div class="admin-jogador-stats">${j.mandatos || 0} mandatos · Melhor: ${j.melhorScore || 0} pts</div>
           </div>
           <div class="admin-jogador-acoes">
-            <button class="admin-btn-sm" onclick="ADMIN.verHistoricoJogador('${j.uid}', '${(j.nome||'').replace(/'/g,"\\'")}')">📋 Histórico</button>
+            <button class="admin-btn-sm" onclick="ADMIN.verHistoricoJogador('${j.uid}', '${(j.nome||'').replace(/'/g,"\'")}')">📋 Histórico</button>
             <button class="admin-btn-sm ${j.banido ? 'admin-btn-ok' : 'admin-btn-danger'}" onclick="ADMIN.abrirModalBan('${j.uid}', '${(j.nome||'').replace(/'/g,"\'")}', ${!!j.banido})">
               ${j.banido ? '✅ Desbanir' : '🚫 Banir'}
             </button>
@@ -376,85 +392,6 @@ const ADMIN = (() => {
   }
 
   /* ── CONFIGURAÇÕES GLOBAIS ──────────────────────── */
-  async function carregarConfigGlobal() {
-    try {
-      const doc = await _get('config/global');
-      const fields = _parseFields(doc.fields || {});
-      const msgEl = document.getElementById('admin-msg-global');
-      const mntEl = document.getElementById('admin-manutencao');
-      if (msgEl) msgEl.value = fields.mensagem || '';
-      if (mntEl) mntEl.checked = !!fields.manutencao;
-      _atualizarBannerManutencao(!!fields.manutencao);
-    } catch(e) { /* doc pode não existir */ }
-    carregarAdmins();
-  }
-
-  function _atualizarBannerManutencao(ativo) {
-    const banner = document.getElementById('admin-manutencao-banner');
-    if (banner) banner.style.display = ativo ? 'flex' : 'none';
-  }
-
-  async function salvarConfigGlobal() {
-    const msg = document.getElementById('admin-msg-global')?.value || '';
-    const manutencao = document.getElementById('admin-manutencao')?.checked || false;
-    const btnSalvar = document.getElementById('btn-salvar-config');
-    if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = '⏳ Salvando...'; }
-    try {
-      const tok = await _token();
-      // FIX: `r` em vez de `patchR` (bug original causava ReferenceError)
-      const r = await fetch(
-        `${FS}/config/global?updateMask.fieldPaths=mensagem&updateMask.fieldPaths=manutencao`,
-        {
-          method: 'PATCH',
-          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fields: {
-            mensagem:   _fsStr(msg),
-            manutencao: _fsBool(manutencao)
-          }})
-        }
-      );
-      if (!r.ok) {
-        const errBody = await r.text();
-        throw new Error(r.status === 403
-          ? 'Permissão negada — redeploy as regras do Firestore'
-          : `HTTP ${r.status}: ${errBody.slice(0,80)}`);
-      }
-      _atualizarBannerManutencao(manutencao);
-      const statusMsg = manutencao
-        ? '🔧 Manutenção ATIVADA — jogadores serão expulsos em até 5s'
-        : msg ? '📢 Mensagem global salva' : '✅ Configurações salvas';
-      _showAdminToast(statusMsg);
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    } finally {
-      if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = '💾 Salvar'; }
-    }
-  }
-
-  /* ── GERENCIAMENTO DE ADMINS ────────────────────── */
-  async function carregarAdmins() {
-    const container = document.getElementById('admin-admins-lista');
-    if (!container) return;
-    container.innerHTML = '<div class="admin-loading">Carregando...</div>';
-    try {
-      const doc = await _get('config/admins');
-      const uids = _val(doc.fields?.uids) || [];
-      _adminUids = uids;
-      if (!uids.length) {
-        container.innerHTML = '<div class="admin-empty">Nenhum admin cadastrado.</div>';
-        return;
-      }
-      container.innerHTML = uids.map(uid => `
-        <div class="admin-uid-row">
-          <span class="admin-uid-text">${uid}</span>
-          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${uid}')">✕</button>
-        </div>
-      `).join('');
-    } catch(e) {
-      container.innerHTML = '<div class="admin-empty">Sem admins cadastrados.</div>';
-    }
-  }
-
   async function adicionarAdmin() {
     const input = document.getElementById('admin-novo-uid');
     const uid = input?.value?.trim();
@@ -921,11 +858,16 @@ const ADMIN = (() => {
     const btn = document.querySelector(`.admin-nav-btn[data-sec="${id}"]`);
     if (sec) sec.style.display = 'block';
     if (btn) btn.classList.add('active');
-    if (id === 'visao-geral') carregarVisaoGeral();
-    if (id === 'jogadores')   carregarJogadores();
-    if (id === 'podio')       carregarPodioAdmin();
-    if (id === 'conteudo')    carregarSetores();
-    if (id === 'config')      carregarConfigGlobal();
+    if (id === 'visao-geral')  { carregarVisaoGeral(); carregarAoVivo(); }
+    if (id === 'jogadores')    carregarJogadores();
+    if (id === 'podio')        carregarPodioAdmin();
+    if (id === 'dashboard')    carregarDashboard();
+    if (id === 'historias')    carregarHistorias();
+    if (id === 'feedback')     carregarFeedback();
+    if (id === 'sessoes')      carregarSessoes();
+    if (id === 'versao')       carregarVersao();
+    if (id === 'logs')         carregarLogs();
+    if (id === 'config')       { carregarConfigGlobal(); carregarAuditLog(); }
   }
 
   function fecharModal() {
@@ -933,20 +875,677 @@ const ADMIN = (() => {
     if (modal) modal.style.display = 'none';
   }
 
+  /* ════════════════════════════════════════════════════
+     VERSÃO
+  ════════════════════════════════════════════════════ */
+  let _versaoAtual = null;
+
+  async function carregarVersao() {
+    try {
+      // Busca o version.json gerado pelo deploy
+      const r = await fetch('/version.json?t=' + Date.now());
+      if (!r.ok) { _renderVersaoSemDados(); return; }
+      const v = await r.json();
+      _versaoAtual = v;
+
+      document.getElementById('versao-badge-atual').textContent  = v.versao || ('v' + (v.hash || '—').slice(0,7));
+      document.getElementById('versao-hash-atual').textContent   = v.hash  || '';
+      document.getElementById('versao-deploy-atual').textContent = v.deployedAt ? _formatarData(v.deployedAt) : '—';
+
+      // Carrega changelog do Firestore
+      const snap = await _fsGet(`versoes/${v.hash}`);
+      if (snap?.fields) {
+        const cl = snap.fields.changelog?.stringValue || '';
+        const cr = snap.fields.critica?.booleanValue  || false;
+        document.getElementById('versao-changelog-input').value = cl;
+        document.getElementById('versao-critica-check').checked = cr;
+      }
+
+      // Estatísticas de usuários por versão
+      _carregarStatsVersao(v.hash);
+
+      // Histórico
+      _carregarHistoricoVersoes();
+
+    } catch(e) { _renderVersaoSemDados(); }
+  }
+
+  function _renderVersaoSemDados() {
+    const el = document.getElementById('versao-deploy-atual');
+    if (el) el.textContent = 'version.json não encontrado — faça um deploy via GitHub Actions';
+  }
+
+  async function salvarChangelog() {
+    if (!_versaoAtual?.hash) { _showAdminToast('Versão não carregada', true); return; }
+    const changelog = document.getElementById('versao-changelog-input').value.trim();
+    const critica   = document.getElementById('versao-critica-check').checked;
+    const btn       = document.querySelector('[onclick="ADMIN.salvarChangelog()"]');
+    if (btn) btn.textContent = 'Salvando...';
+    try {
+      await _fsPatch(`versoes/${_versaoAtual.hash}`, {
+        changelog:  { stringValue: changelog },
+        critica:    { booleanValue: critica },
+        versao:     { stringValue: _versaoAtual.versao || _versaoAtual.hash?.slice(0,7) },
+        hash:       { stringValue: _versaoAtual.hash },
+        deployedAt: { stringValue: _versaoAtual.deployedAt || '' },
+        savedAt:    { stringValue: new Date().toISOString() },
+      });
+      _showAdminToast('✅ Changelog salvo!');
+      _carregarHistoricoVersoes();
+    } catch(e) {
+      _showAdminToast('Erro ao salvar: ' + e.message, true);
+    } finally {
+      if (btn) btn.textContent = '💾 Salvar Changelog';
+    }
+  }
+
+  async function forcarAtualizacaoGlobal() {
+    if (!confirm('Forçar atualização em TODOS os usuários conectados?')) return;
+    try {
+      await _fsPatch('config/global', {
+        forcarAtualizacao: { stringValue: (_versaoAtual?.hash || Date.now().toString()) },
+        forcarAtualizacaoTs: { stringValue: new Date().toISOString() },
+      });
+      _showAdminToast('📢 Atualização forçada enviada!');
+    } catch(e) {
+      _showAdminToast('Erro: ' + e.message, true);
+    }
+  }
+
+  async function _carregarStatsVersao(hashAtual) {
+    try {
+      // Conta sessões ativas com versão registrada
+      const snap = await _fsList('sessoes_ativas');
+      const docs = snap?.documents || [];
+      let atuais = 0, antigos = 0;
+      docs.forEach(d => {
+        const h = d.fields?.versao?.stringValue;
+        if (!h) return;
+        if (h === hashAtual) atuais++; else antigos++;
+      });
+      const elA = document.getElementById('versao-usuarios-atuais');
+      const elV = document.getElementById('versao-usuarios-antigos');
+      if (elA) elA.textContent = atuais;
+      if (elV) elV.textContent = antigos;
+    } catch(e) {}
+  }
+
+  async function _carregarHistoricoVersoes() {
+    const lista = document.getElementById('versao-historico-lista');
+    if (!lista) return;
+    lista.innerHTML = '<span style="color:var(--t3);font-size:.78rem">Carregando...</span>';
+    try {
+      const snap = await _fsList('versoes');
+      const docs = (snap?.documents || []).sort((a, b) => {
+        const tA = a.fields?.savedAt?.stringValue || '';
+        const tB = b.fields?.savedAt?.stringValue || '';
+        return tB.localeCompare(tA);
+      });
+      if (!docs.length) { lista.innerHTML = '<span style="color:var(--t3);font-size:.78rem">Nenhuma versão registrada ainda.</span>'; return; }
+      lista.innerHTML = docs.map(d => {
+        const f        = d.fields || {};
+        const versao   = f.versao?.stringValue   || f.hash?.stringValue?.slice(0,7) || '—';
+        const hash     = f.hash?.stringValue     || '';
+        const critica  = f.critica?.booleanValue || false;
+        const log      = f.changelog?.stringValue || 'Sem changelog registrado.';
+        const data     = f.deployedAt?.stringValue ? _formatarData(f.deployedAt.stringValue) : '—';
+        return `
+          <div class="admin-versao-hist-item">
+            <div class="admin-versao-hist-header">
+              <span class="admin-versao-hist-badge ${critica ? 'critica' : ''}">${critica ? '⚠️ ' : ''}${versao}</span>
+              <span class="admin-versao-hist-date">${data}</span>
+            </div>
+            <div class="admin-versao-hist-log">${log.replace(/\n/g, '<br>')}</div>
+            ${hash ? `<div class="admin-versao-hist-hash">${hash}</div>` : ''}
+          </div>`;
+      }).join('');
+    } catch(e) {
+      lista.innerHTML = '<span style="color:var(--t3);font-size:.78rem">Erro ao carregar histórico.</span>';
+    }
+  }
+
+  // Helper: busca documento Firestore
+  async function _fsGet(path) {
+    const token = await _getToken();
+    if (!token) return null;
+    const r = await fetch(`${FS}/${path}`, { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) return null;
+    return r.json();
+  }
+
+  // Helper: lista coleção Firestore
+  async function _fsList(collection) {
+    const token = await _getToken();
+    if (!token) return null;
+    const r = await fetch(`${FS}/${collection}`, { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) return null;
+    return r.json();
+  }
+
+  // Helper: cria/atualiza documento Firestore (PATCH)
+  async function _fsPatch(path, fields) {
+    const token = await _getToken();
+    if (!token) throw new Error('Não autenticado');
+    const updateMask = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
+    const r = await fetch(`${FS}/${path}?${updateMask}`, {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields }),
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || r.status); }
+    return r.json();
+  }
+
+  async function _getToken() {
+    try {
+      const user = window.GSPAuth?.currentUser?.();
+      if (!user) return null;
+      return user.getIdToken();
+    } catch(e) { return null; }
+  }
+
+  function _formatarData(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    } catch(e) { return iso; }
+  }
+
+  /* ════════════════════════════════════════════════════
+     AO VIVO (Geral)
+  ════════════════════════════════════════════════════ */
+  async function carregarAoVivo() {
+    const lista = document.getElementById('admin-aovivo-lista');
+    if (!lista) return;
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'sessoes' }],
+          orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+          limit: 10
+        }
+      });
+      const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
+      const agora = Date.now();
+      const ativas = docs.filter(d => d.ts && (agora - d.ts) < 300000); // 5 min
+      if (!ativas.length) { lista.innerHTML = '<div class="admin-empty">Sem sessões ativas.</div>'; return; }
+      lista.innerHTML = ativas.map(d => `
+        <div class="admin-aovivo-row">
+          <div class="admin-sessao-dot ativa"></div>
+          <div class="admin-sessao-info">
+            <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
+            <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1}</div>
+          </div>
+        </div>`).join('');
+    } catch(e) { lista.innerHTML = '<div class="admin-empty">Erro ao carregar.</div>'; }
+  }
+
+  /* ════════════════════════════════════════════════════
+     FILTROS DE JOGADORES
+  ════════════════════════════════════════════════════ */
+  let _filtroJogadores = 'todos';
+  function filtrarJogadores(filtro) {
+    _filtroJogadores = filtro;
+    document.querySelectorAll('.admin-filtro-btn[data-filtro]').forEach(b => {
+      b.classList.toggle('active', b.dataset.filtro === filtro);
+    });
+    carregarJogadores(document.getElementById('admin-busca')?.value || '');
+  }
+
+  /* ════════════════════════════════════════════════════
+     EXPORT CSV — JOGADORES
+  ════════════════════════════════════════════════════ */
+  async function exportarCSVJogadores() {
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'usuarios' }],
+          select: { fields: [{ fieldPath: 'nome' }, { fieldPath: 'email' }, { fieldPath: 'mandatos' }, { fieldPath: 'melhorScore' }, { fieldPath: 'banido' }] }
+        }
+      });
+      const rows = res.filter(r => r.document).map(r => {
+        const d = _parseFields(r.document.fields);
+        return `"${d.nome||''}","${d.email||''}","${d.mandatos||0}","${d.melhorScore||0}","${d.banido?'Banido':'Ativo'}"`;
+      });
+      const csv = 'Nome,E-mail,Mandatos,Score,Status\n' + rows.join('\n');
+      _downloadCSV(csv, 'jogadores.csv');
+    } catch(e) { _showAdminToast('Erro ao exportar: ' + e.message, true); }
+  }
+
+  /* ════════════════════════════════════════════════════
+     EXPORT CSV — PÓDIO
+  ════════════════════════════════════════════════════ */
+  async function exportarCSVPodio() {
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'podio' }],
+          select: { fields: [{ fieldPath: 'player' }, { fieldPath: 'melhorScore' }, { fieldPath: 'sector' }, { fieldPath: 'totalJogos' }, { fieldPath: 'ultimaPartida' }] }
+        }
+      });
+      const items = res.filter(r => r.document)
+        .map(r => _parseFields(r.document.fields))
+        .sort((a,b) => (b.melhorScore||0) - (a.melhorScore||0));
+      const rows = items.map((p, i) =>
+        `"${i+1}","${p.player||''}","${p.melhorScore||0}","${p.sector||''}","${p.totalJogos||0}","${p.ultimaPartida ? new Date(p.ultimaPartida).toLocaleDateString('pt-BR') : ''}"`
+      );
+      const csv = '#,Jogador,Score,Setor,Jogos,Última partida\n' + rows.join('\n');
+      _downloadCSV(csv, 'podio.csv');
+    } catch(e) { _showAdminToast('Erro ao exportar: ' + e.message, true); }
+  }
+
+  function _downloadCSV(csv, nome) {
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = nome; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /* ════════════════════════════════════════════════════
+     DASHBOARD
+  ════════════════════════════════════════════════════ */
+  let _periodoAtual = 'hoje';
+
+  function mudarPeriodoDash(periodo) {
+    _periodoAtual = periodo;
+    document.querySelectorAll('.admin-periodo-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.periodo === periodo);
+    });
+    carregarDashboard();
+  }
+
+  async function carregarDashboard() {
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'podio' }],
+          select: { fields: [{ fieldPath: 'melhorPorSetor' }, { fieldPath: 'totalJogos' }, { fieldPath: 'ultimaPartida' }] }
+        }
+      });
+      const agora = Date.now();
+      const limite = _periodoAtual === 'hoje' ? 86400000 : _periodoAtual === 'semana' ? 604800000 : 2592000000;
+      const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
+      const recentes = docs.filter(d => d.ultimaPartida && (agora - d.ultimaPartida) < limite);
+
+      // Métricas gerais
+      const partidas = recentes.reduce((a, d) => a + (d.totalJogos || 0), 0);
+      const setoresCount = {};
+      docs.forEach(d => {
+        const mps = d.melhorPorSetor || {};
+        Object.keys(mps).forEach(s => { setoresCount[s] = (setoresCount[s] || 0) + 1; });
+      });
+      const totalSetores = Object.keys(setoresCount).length;
+
+      document.getElementById('dash-partidas').textContent = partidas || '—';
+      document.getElementById('dash-setores').textContent  = totalSetores || '—';
+      document.getElementById('dash-abandono').textContent = '—';
+
+      // Setores mais jogados
+      const setoresOrdenados = Object.entries(setoresCount).sort((a,b) => b[1]-a[1]);
+      const maxCount = setoresOrdenados[0]?.[1] || 1;
+      const setoresEl = document.getElementById('dash-setores-lista');
+      setoresEl.innerHTML = setoresOrdenados.map(([s, c]) => `
+        <div class="admin-dash-setor-row">
+          <span class="admin-dash-setor-nome">${_emojiSetor(s)} ${s.charAt(0).toUpperCase()+s.slice(1)}</span>
+          <div class="admin-dash-bar-track"><div class="admin-dash-bar-fill" style="width:${Math.round(c/maxCount*100)}%"></div></div>
+          <span class="admin-dash-pct">${c}</span>
+        </div>`).join('') || '<div class="admin-empty">Sem dados.</div>';
+
+      // Abandono por rodada (baseado em stats/diario)
+      try {
+        const stats = await _get('stats/diario');
+        const campos = _parseFields(stats.fields || {});
+        const hoje = new Date().toISOString().slice(0,10);
+        const dadosHoje = campos[hoje] || {};
+        const abandono = dadosHoje.abandonoPorRodada || {};
+        const abEl = document.getElementById('dash-abandono-lista');
+        const entradas = Object.entries(abandono).sort((a,b) => Number(a[0])-Number(b[0]));
+        abEl.innerHTML = entradas.map(([r, v]) => `
+          <div class="admin-dash-abandono-row">
+            <span class="admin-dash-rod">R.${Number(r)+1}</span>
+            <div class="admin-dash-bar-track"><div class="admin-dash-bar-fill" style="width:${Math.min(v,100)}%;background:#ef4444"></div></div>
+            <span class="admin-dash-abandono-pct">${v}%</span>
+          </div>`).join('') || '<div class="admin-empty" style="padding:8px 16px">Sem dados de abandono registrados.</div>';
+      } catch(e) {
+        document.getElementById('dash-abandono-lista').innerHTML = '<div class="admin-empty" style="padding:8px 16px">Sem dados.</div>';
+      }
+    } catch(e) {
+      _showAdminError('admin-sec-dashboard', 'Erro: ' + e.message);
+    }
+  }
+
+  /* ════════════════════════════════════════════════════
+     HISTÓRIAS
+  ════════════════════════════════════════════════════ */
+  const _HISTORIAS_CONFIG = {
+    tecnologia: [
+      { id: 0, nome: 'SaaS B2B', sub: 'Dívida técnica e rotatividade' },
+      { id: 1, nome: 'EdTech B2C', sub: 'Pós-pandemia e pivot' },
+      { id: 2, nome: 'Scale-up de IA', sub: 'Pipeline travado' },
+    ],
+    varejo: [
+      { id: 0, nome: 'Rede Omnichannel', sub: 'Margem em queda' },
+      { id: 1, nome: 'Rede de Farmácias', sub: 'Concorrência nacional' },
+      { id: 2, nome: 'Atacarejo Regional', sub: 'Expansão desequilibrada' },
+    ],
+    logistica: [
+      { id: 0, nome: 'Last-Mile Delivery', sub: 'SLA em descumprimento' },
+      { id: 1, nome: 'Cadeia do Frio', sub: 'Falha no monitoramento' },
+      { id: 2, nome: 'Fulfillment E-commerce', sub: 'Volume no limite' },
+    ],
+    industria: [
+      { id: 0, nome: 'Metalúrgica', sub: 'Segurança e ISO em risco' },
+      { id: 1, nome: 'Embalagens ESG', sub: 'Adequação urgente' },
+      { id: 2, nome: 'Química Ambiental', sub: 'Autuação do IBAMA' },
+    ],
+  };
+
+  async function carregarHistorias() {
+    const lista = document.getElementById('admin-historias-lista');
+    lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
+    let estadoAtual = {};
+    try {
+      const snap = await _get('config/historias');
+      estadoAtual = _parseFields(snap.fields || {});
+    } catch(e) { /* sem doc ainda — todas ativas por padrão */ }
+
+    let html = '';
+    for (const [setor, historias] of Object.entries(_HISTORIAS_CONFIG)) {
+      html += `<div class="admin-sec-title">${_emojiSetor(setor)} ${setor.charAt(0).toUpperCase()+setor.slice(1)}</div>`;
+      historias.forEach(h => {
+        const chave = `${setor}_${h.id}`;
+        const ativa = estadoAtual[chave] !== false; // padrão: ativa
+        html += `
+          <div class="admin-historia-row">
+            <div class="admin-historia-info">
+              <div class="admin-historia-nome">${h.nome}</div>
+              <div class="admin-historia-sub">${h.sub}</div>
+            </div>
+            <span class="admin-historia-badge ${ativa ? 'ativa' : 'inativa'}" id="hist-badge-${chave}">${ativa ? 'Ativa' : 'Inativa'}</span>
+            <label class="admin-switch" style="margin-left:8px">
+              <input type="checkbox" ${ativa ? 'checked' : ''} onchange="ADMIN.toggleHistoria('${chave}', this.checked)">
+              <span class="admin-switch-track"></span>
+            </label>
+          </div>`;
+      });
+    }
+    lista.innerHTML = html;
+  }
+
+  async function toggleHistoria(chave, ativa) {
+    try {
+      const campos = { [chave]: _fsBool(ativa) };
+      const keys = Object.keys(campos);
+      const mask = keys.map(k => `updateMask.fieldPaths=${k}`).join('&');
+      const tok = await _token();
+      await fetch(`${FS}/config/historias?${mask}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: campos })
+      });
+      const badge = document.getElementById(`hist-badge-${chave}`);
+      if (badge) {
+        badge.textContent = ativa ? 'Ativa' : 'Inativa';
+        badge.className = `admin-historia-badge ${ativa ? 'ativa' : 'inativa'}`;
+      }
+      _showAdminToast(ativa ? '✅ História ativada!' : '⏸ História desativada!');
+      _registrarAuditoria(ativa ? `História ${chave} ativada` : `História ${chave} desativada`);
+    } catch(e) { _showAdminToast('Erro: ' + e.message, true); }
+  }
+
+  /* ════════════════════════════════════════════════════
+     FEEDBACK
+  ════════════════════════════════════════════════════ */
+  async function carregarFeedback() {
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'feedbacks' }],
+          orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+          limit: 50
+        }
+      });
+      const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
+      if (!docs.length) {
+        document.getElementById('feedback-por-historia').innerHTML = '<div class="admin-empty">Sem feedbacks ainda.</div>';
+        document.getElementById('feedback-recentes').innerHTML = '';
+        return;
+      }
+
+      // Média geral
+      const notas = docs.filter(d => d.nota).map(d => d.nota);
+      const media = notas.length ? (notas.reduce((a,b) => a+b, 0) / notas.length).toFixed(1) : '—';
+      document.getElementById('feedback-nota-media').textContent = media;
+      document.getElementById('feedback-estrelas-media').textContent = '★'.repeat(Math.round(Number(media))) + '☆'.repeat(5 - Math.round(Number(media)));
+      document.getElementById('feedback-total').textContent = `${notas.length} avaliações`;
+
+      // Por história
+      const porHist = {};
+      docs.forEach(d => {
+        const k = d.historiaId || 'geral';
+        if (!porHist[k]) porHist[k] = { notas: [], nome: d.historiaId || 'Geral' };
+        if (d.nota) porHist[k].notas.push(d.nota);
+      });
+      document.getElementById('feedback-por-historia').innerHTML = Object.entries(porHist).map(([k, v]) => {
+        const m = v.notas.length ? (v.notas.reduce((a,b) => a+b, 0) / v.notas.length).toFixed(1) : '—';
+        return `<div class="admin-feedback-hist-row">
+          <span class="admin-feedback-hist-nome">${v.nome}</span>
+          <span class="admin-feedback-hist-nota">★ ${m}</span>
+          <span class="admin-feedback-hist-count">${v.notas.length} aval.</span>
+        </div>`;
+      }).join('');
+
+      // Recentes com texto
+      document.getElementById('feedback-recentes').innerHTML = docs.filter(d => d.texto).slice(0, 10).map(d => `
+        <div class="admin-feedback-recente">
+          <div class="admin-feedback-recente-header">
+            <span class="admin-feedback-recente-nome">${d.nomeJogador || 'Jogador'}</span>
+            <span class="admin-feedback-recente-estrelas">${'★'.repeat(d.nota||0)}</span>
+          </div>
+          <div class="admin-feedback-recente-texto">"${d.texto}"</div>
+        </div>`).join('') || '<div class="admin-empty">Sem avaliações com texto.</div>';
+
+    } catch(e) { _showAdminError('admin-sec-feedback', 'Erro: ' + e.message); }
+  }
+
+  /* ════════════════════════════════════════════════════
+     SESSÕES
+  ════════════════════════════════════════════════════ */
+  async function carregarSessoes() {
+    const lista = document.getElementById('admin-sessoes-lista');
+    const contador = document.getElementById('sessoes-contador');
+    lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'sessoes' }],
+          orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+          limit: 20
+        }
+      });
+      const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
+      const agora = Date.now();
+      const ativas = docs.filter(d => d.ts && (agora - d.ts) < 300000).length;
+      contador.textContent = `${ativas} ativa${ativas !== 1 ? 's' : ''}`;
+      if (!docs.length) { lista.innerHTML = '<div class="admin-empty">Sem sessões registradas.</div>'; return; }
+      lista.innerHTML = docs.map(d => {
+        const ativa = d.ts && (agora - d.ts) < 300000;
+        const tempo = d.ts ? _tempoRelativo(d.ts) : '—';
+        return `<div class="admin-sessao-row">
+          <div class="admin-sessao-dot ${ativa ? 'ativa' : 'inativa'}"></div>
+          <div class="admin-sessao-info">
+            <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
+            <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1} · ${d.companyName||''}</div>
+          </div>
+          <span class="admin-sessao-tempo">${tempo}</span>
+        </div>`;
+      }).join('');
+    } catch(e) { lista.innerHTML = '<div class="admin-empty">Erro ao carregar sessões.</div>'; }
+  }
+
+  /* ════════════════════════════════════════════════════
+     LOGS
+  ════════════════════════════════════════════════════ */
+  let _filtroLogs = 'todos';
+
+  function filtrarLogs(filtro) {
+    _filtroLogs = filtro;
+    document.querySelectorAll('#admin-sec-logs .admin-filtro-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.filtro === filtro);
+    });
+    carregarLogs();
+  }
+
+  async function carregarLogs() {
+    const lista = document.getElementById('admin-logs-lista');
+    lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'logs' }],
+          orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+          limit: 50
+        }
+      });
+      let docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
+      if (_filtroLogs !== 'todos') docs = docs.filter(d => d.tipo === _filtroLogs);
+      if (!docs.length) { lista.innerHTML = '<div class="admin-empty">Sem logs registrados.</div>'; return; }
+      lista.innerHTML = docs.map(d => `
+        <div class="admin-log-row">
+          <div class="admin-log-header">
+            <span class="admin-log-tipo ${d.tipo||'aviso'}">${(d.tipo||'aviso').toUpperCase()}</span>
+            <span class="admin-log-tempo">${d.ts ? _formatarDataHora(d.ts) : '—'}</span>
+          </div>
+          <div class="admin-log-msg">${d.msg || '—'}</div>
+          <div class="admin-log-meta">${d.nomeJogador||''} ${d.versao ? '· v'+d.versao.slice(0,7) : ''} ${d.setor ? '· '+d.setor : ''}</div>
+        </div>`).join('');
+    } catch(e) { lista.innerHTML = '<div class="admin-empty">Sem logs ou erro ao carregar.</div>'; }
+  }
+
+  /* ════════════════════════════════════════════════════
+     LOG DE AUDITORIA
+  ════════════════════════════════════════════════════ */
+  async function _registrarAuditoria(acao) {
+    try {
+      const uid = window.GSPAuth?.currentUser?.()?.uid || 'admin';
+      const ts  = Date.now().toString();
+      await _patch(`config/auditoria_${ts}`, {
+        acao:   _fsStr(acao),
+        uid:    _fsStr(uid),
+        ts:     _fsInt(Date.now()),
+      });
+    } catch(e) { /* silencioso */ }
+  }
+
+  async function carregarAuditLog() {
+    const el = document.getElementById('admin-audit-log');
+    if (!el) return;
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'auditoria' }],
+          orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+          limit: 20
+        }
+      });
+      const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
+      if (!docs.length) { el.innerHTML = '<div class="admin-empty">Sem registros.</div>'; return; }
+      el.innerHTML = docs.map(d => `
+        <div class="admin-audit-row">
+          <span class="admin-audit-quem">${d.uid?.slice(0,8)||'admin'}</span>
+          <span> — ${d.acao||''}</span>
+          <span class="admin-audit-quando"> · ${d.ts ? _formatarDataHora(d.ts) : ''}</span>
+        </div>`).join('');
+    } catch(e) { el.innerHTML = '<div class="admin-empty">Sem registros.</div>'; }
+  }
+
+  /* ════════════════════════════════════════════════════
+     AGENDAMENTO DE MANUTENÇÃO
+  ════════════════════════════════════════════════════ */
+  async function carregarConfigGlobal() {
+    try {
+      const doc = await _get('config/global');
+      const cfg = _parseFields(doc.fields || {});
+      const cb = document.getElementById('admin-manutencao');
+      if (cb) cb.checked = !!cfg.manutencao;
+      const banner = document.getElementById('admin-manutencao-banner');
+      if (banner) banner.style.display = cfg.manutencao ? 'block' : 'none';
+      const inicio = document.getElementById('admin-manut-inicio');
+      const fim    = document.getElementById('admin-manut-fim');
+      if (inicio) inicio.value = cfg.manutencaoInicio || '';
+      if (fim)    fim.value    = cfg.manutencaoFim    || '';
+    } catch(e) { console.warn('[ADMIN] Config:', e); }
+    // Admins
+    try {
+      const doc = await _get('config/admins');
+      const uids = _val(doc.fields?.uids) || [];
+      _adminUids = uids;
+      const lista = document.getElementById('admin-admins-lista');
+      if (lista) lista.innerHTML = uids.map(u => `
+        <div class="admin-uid-row">
+          <span class="admin-uid-text">${u}</span>
+          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${u}')">✕</button>
+        </div>`).join('') || '<div class="admin-empty">Nenhum admin cadastrado.</div>';
+    } catch(e) {}
+  }
+
+  async function salvarConfigGlobal() {
+    const btn = document.getElementById('btn-salvar-config');
+    if (btn) btn.textContent = 'Salvando...';
+    try {
+      const manut   = document.getElementById('admin-manutencao')?.checked || false;
+      const inicio  = document.getElementById('admin-manut-inicio')?.value || '';
+      const fim     = document.getElementById('admin-manut-fim')?.value    || '';
+      await _patch('config/global', {
+        manutencao:       _fsBool(manut),
+        manutencaoInicio: _fsStr(inicio),
+        manutencaoFim:    _fsStr(fim),
+      });
+      const banner = document.getElementById('admin-manutencao-banner');
+      if (banner) banner.style.display = manut ? 'block' : 'none';
+      _showAdminToast('✅ Configurações salvas!');
+      _registrarAuditoria(manut ? 'Manutenção ativada' : 'Manutenção desativada');
+    } catch(e) { _showAdminToast('Erro: ' + e.message, true); }
+    if (btn) btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar';
+  }
+
+  /* ════════════════════════════════════════════════════
+     HELPERS UTILITÁRIOS
+  ════════════════════════════════════════════════════ */
+  function _tempoRelativo(ts) {
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60)  return `${diff}s atrás`;
+    if (diff < 3600) return `${Math.floor(diff/60)}min atrás`;
+    return `${Math.floor(diff/3600)}h atrás`;
+  }
+
+  function _formatarDataHora(ts) {
+    try {
+      const d = new Date(typeof ts === 'string' ? ts : Number(ts));
+      return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    } catch(e) { return '—'; }
+  }
+
   return {
     verificarAdmin, verificarBan, _getBanInfo, verificarMensagemGlobal,
     irParaSecao,
     carregarJogadores, verHistoricoJogador, toggleBan,
+    filtrarJogadores, exportarCSVJogadores, exportarCSVPodio,
     removerDoPodio, resetarPodioPorSetor,
-    salvarConfigGlobal,
+    carregarConfigGlobal, salvarConfigGlobal,
     adicionarAdmin, removerAdmin,
     fecharModal,
-    // Dropdown
     toggleDropdown, selecionarSetor,
-    // Modal mensagem global
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
-    // Modal banimento
     abrirModalBan, fecharModalBan, confirmarBan, selecionarMotivo,
+    carregarVersao, salvarChangelog, forcarAtualizacaoGlobal,
+    carregarDashboard, mudarPeriodoDash,
+    carregarHistorias, toggleHistoria,
+    carregarFeedback,
+    carregarSessoes,
+    filtrarLogs,
+    carregarAuditLog, carregarAoVivo,
   };
 
 })();
