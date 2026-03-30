@@ -14,6 +14,7 @@ void main() async {
       messagingSenderId: "240438805750",
       projectId: "under-pressure-49320",
       storageBucket: "under-pressure-49320.firebasestorage.app",
+      databaseURL: "https://under-pressure-49320-default-rtdb.firebaseio.com",
     ),
   );
   runApp(const AdminApp());
@@ -104,7 +105,6 @@ class _AuthGateState extends State<AuthGate> {
           return const HomeScreen();
         }
 
-        // Mostra erro se o Firestore falhou após todos os retries
         if (_erroAdmin.isNotEmpty) {
           return Scaffold(
             body: Center(
@@ -123,12 +123,10 @@ class _AuthGateState extends State<AuthGate> {
                       textAlign: TextAlign.center),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _uidChecado = null;
-                          _erroAdmin = '';
-                        });
-                      },
+                      onPressed: () => setState(() {
+                        _uidChecado = null;
+                        _erroAdmin = '';
+                      }),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFE8A838),
                       ),
@@ -139,7 +137,8 @@ class _AuthGateState extends State<AuthGate> {
                       onPressed: () async {
                         await FirebaseAuth.instance.signOut();
                       },
-                      child: const Text('Sair', style: TextStyle(color: Colors.grey)),
+                      child: const Text('Sair',
+                        style: TextStyle(color: Colors.grey)),
                     ),
                   ],
                 ),

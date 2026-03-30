@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
           .timeout(const Duration(seconds: 15));
       final uid = cred.user!.uid;
       _log('5. Auth OK. UID: $uid');
-      _log('6. Verificando admin no Firestore...');
+      _log('6. Verificando admin no Realtime Database...');
       bool admin = false;
       try {
         admin = await FirestoreService().isAdmin(
@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onStatus: (msg) => _log('   → $msg'),
         );
       } catch (e) {
-        _log('ERRO Firestore: $e');
+        _log('ERRO ao verificar admin: $e');
         await FirebaseAuth.instance.signOut();
         await GoogleSignIn().signOut();
         setState(() => _loading = false);
@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!admin) {
         await FirebaseAuth.instance.signOut();
         await GoogleSignIn().signOut();
-        _log('Acesso negado — UID não está na lista de admins.');
+        _log('Acesso negado — UID não encontrado.');
         setState(() => _loading = false);
         return;
       }

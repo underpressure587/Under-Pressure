@@ -1,9 +1,29 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
 class FirestoreService {
   final _db = FirebaseFirestore.instance;
+  final _rtdb = FirebaseDatabase.instance;
 
+  // Verifica admin via Realtime Database (mais estável que Firestore)
+  Future<bool> isAdmin(String uid, {void Function(String)? onStatus}) async {
+    try {
+      onStatus?.call('Verificando acesso...');
+      debugPrint('[ADMIN] Verificando UID: $uid via Realtime Database');
+      final ref = _rtdb.ref('admins/$uid');
+      final snapshot = await ref.get().timeout(const Duration(seconds: 10));
+      debugPrint('[ADMIN] Valor: ${snapshot.value}');
+      final result = snapshot.exists && snapshot.value == true;
+      debugPrint('[ADMIN] É admin: $result');
+      return result;
+    } catch (e) {
+      debugPrint('[ADMIN] ERRO: $e');
+      rethrow;
+    }
+  }
+
+  // Retry automático para erros transientes do Firestore
   Future<T> _comRetry<T>(Future<T> Function() fn, {int tentativas = 4}) async {
     for (int i = 0; i < tentativas; i++) {
       try {
@@ -18,36 +38,6 @@ class FirestoreService {
       }
     }
     throw Exception('Firestore indisponível após $tentativas tentativas');
-  }
-
-  Future<bool> isAdmin(String uid, {void Function(String)? onStatus}) async {
-    try {
-      onStatus?.call('Verificando acesso (tentativa 1)...');
-      for (int i = 0; i < 4; i++) {
-        try {
-          final doc = await _db
-              .collection('config')
-              .doc('admins')
-              .get()
-              .timeout(const Duration(seconds: 10));
-          final uids = List<String>.from(doc.data()?['uids'] ?? []);
-          debugPrint('[ADMIN] UIDs: $uids | Meu UID: $uid | É admin: ${uids.contains(uid)}');
-          return uids.contains(uid);
-        } catch (e) {
-          final isUnavailable = e.toString().contains('unavailable') ||
-              e.toString().contains('UNAVAILABLE');
-          if (!isUnavailable || i == 3) rethrow;
-          final espera = (i + 1) * 2;
-          onStatus?.call('Firestore indisponível, tentando novamente em ${espera}s... (${i + 2}/4)');
-          debugPrint('[ADMIN] Tentativa ${i + 1} falhou: $e');
-          await Future.delayed(Duration(seconds: espera));
-        }
-      }
-      return false;
-    } catch (e) {
-      debugPrint('[ADMIN] ERRO final: $e');
-      rethrow;
-    }
   }
 
   Stream<QuerySnapshot> getJogadores() =>
