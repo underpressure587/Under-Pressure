@@ -47,12 +47,14 @@ class _AuthGateState extends State<AuthGate> {
   bool _checandoAdmin = false;
   bool _isAdmin = false;
   String? _uidChecado;
+  String _erroAdmin = '';
 
   Future<void> _verificarAdmin(String uid) async {
     if (_uidChecado == uid) return;
     setState(() {
       _checandoAdmin = true;
       _uidChecado = uid;
+      _erroAdmin = '';
     });
     try {
       final admin = await FirestoreService().isAdmin(uid);
@@ -68,6 +70,7 @@ class _AuthGateState extends State<AuthGate> {
           _isAdmin = false;
           _checandoAdmin = false;
           _uidChecado = null;
+          _erroAdmin = e.toString();
         });
       }
     }
@@ -89,6 +92,7 @@ class _AuthGateState extends State<AuthGate> {
         if (user == null) {
           _isAdmin = false;
           _uidChecado = null;
+          _erroAdmin = '';
           return const LoginScreen();
         }
 
@@ -98,6 +102,50 @@ class _AuthGateState extends State<AuthGate> {
 
         if (_isAdmin) {
           return const HomeScreen();
+        }
+
+        // Mostra erro se o Firestore falhou após todos os retries
+        if (_erroAdmin.isNotEmpty) {
+          return Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.cloud_off, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    const Text('Erro ao conectar ao servidor',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Text(_erroAdmin,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                      textAlign: TextAlign.center),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _uidChecado = null;
+                          _erroAdmin = '';
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE8A838),
+                      ),
+                      child: const Text('Tentar novamente',
+                        style: TextStyle(color: Colors.black)),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                      },
+                      child: const Text('Sair', style: TextStyle(color: Colors.grey)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
         }
 
         return const Scaffold(
