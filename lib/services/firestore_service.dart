@@ -1,14 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class FirestoreService {
   final _db = FirebaseFirestore.instance;
 
   Future<bool> isAdmin(String uid) async {
     try {
+      debugPrint('[ADMIN] Verificando UID: $uid');
       final doc = await _db.collection('config').doc('admins').get();
+      debugPrint('[ADMIN] Doc existe: ${doc.exists}');
+      debugPrint('[ADMIN] Data: ${doc.data()}');
       final uids = List<String>.from(doc.data()?['uids'] ?? []);
-      return uids.contains(uid);
+      debugPrint('[ADMIN] UIDs: $uids');
+      final result = uids.contains(uid);
+      debugPrint('[ADMIN] É admin: $result');
+      return result;
     } catch (e) {
+      debugPrint('[ADMIN] ERRO: $e');
       return false;
     }
   }
