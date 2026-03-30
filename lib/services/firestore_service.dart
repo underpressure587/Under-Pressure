@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 class FirestoreService {
   final _db = FirebaseFirestore.instance;
 
-  // Retry automático para erros transientes do Firestore
   Future<T> _comRetry<T>(Future<T> Function() fn, {int tentativas = 4}) async {
     for (int i = 0; i < tentativas; i++) {
       try {
@@ -12,29 +11,42 @@ class FirestoreService {
       } catch (e) {
         final isUnavailable = e.toString().contains('unavailable') ||
             e.toString().contains('UNAVAILABLE');
-        final isUltimaTentativa = i == tentativas - 1;
-        if (!isUnavailable || isUltimaTentativa) rethrow;
-        debugPrint('[FIRESTORE] Tentativa ${i + 1} falhou, tentando novamente em ${(i + 1) * 2}s...');
+        final isUltima = i == tentativas - 1;
+        if (!isUnavailable || isUltima) rethrow;
+        debugPrint('[FIRESTORE] Tentativa ${i + 1} falhou, aguardando ${(i + 1) * 2}s...');
         await Future.delayed(Duration(seconds: (i + 1) * 2));
       }
     }
     throw Exception('Firestore indisponível após $tentativas tentativas');
   }
 
-  Future<bool> isAdmin(String uid) async {
+  Future<bool> isAdmin(String uid, {void Function(String)? onStatus}) async {
     try {
-      debugPrint('[ADMIN] Verificando UID: $uid');
-      final doc = await _comRetry(() =>
-          _db.collection('config').doc('admins').get());
-      debugPrint('[ADMIN] Doc existe: ${doc.exists}');
-      final uids = List<String>.from(doc.data()?['uids'] ?? []);
-      debugPrint('[ADMIN] UIDs: $uids');
-      final result = uids.contains(uid);
-      debugPrint('[ADMIN] É admin: $result');
-      return result;
-    } catch (e) {
-      debugPrint('[ADMIN] ERRO após retries: $e');
+      onStatus?.call('Verificando acesso (tentativa 1)...');
+      for (int i = 0; i < 4; i++) {
+        try {
+          final doc = await _db
+              .collection('config')
+              .doc('admins')
+              .get()
+              .timeout(const Duration(seconds: 10));
+          final uids = List<String>.from(doc.data()?['uids'] ?? []);
+          debugPrint('[ADMIN] UIDs: $uids | Meu UID: $uid | É admin: ${uids.contains(uid)}');
+          return uids.contains(uid);
+        } catch (e) {
+          final isUnavailable = e.toString().contains('unavailable') ||
+              e.toString().contains('UNAVAILABLE');
+          if (!isUnavailable || i == 3) rethrow;
+          final espera = (i + 1) * 2;
+          onStatus?.call('Firestore indisponível, tentando novamente em ${espera}s... (${i + 2}/4)');
+          debugPrint('[ADMIN] Tentativa ${i + 1} falhou: $e');
+          await Future.delayed(Duration(seconds: espera));
+        }
+      }
       return false;
+    } catch (e) {
+      debugPrint('[ADMIN] ERRO final: $e');
+      rethrow;
     }
   }
 
