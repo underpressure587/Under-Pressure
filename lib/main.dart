@@ -55,7 +55,10 @@ class AuthGate extends StatelessWidget {
         }
         // Usuário logado — verifica se é admin
         return FutureBuilder<bool>(
-          future: FirestoreService().isAdmin(snap.data!.uid),
+          future: Future.delayed(
+  const Duration(milliseconds: 500),
+  () => FirestoreService().isAdmin(snap.data!.uid),
+),
           builder: (ctx, adminSnap) {
             if (adminSnap.connectionState == ConnectionState.waiting) {
               return const Scaffold(
