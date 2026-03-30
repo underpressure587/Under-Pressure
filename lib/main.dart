@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
+import 'services/firestore_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,16 +32,45 @@ class AdminApp extends StatelessWidget {
           primary: Color(0xFFE8A838),
         ),
       ),
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (ctx, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
-          }
-          if (snap.hasData) return const HomeScreen();
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (ctx, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (!snap.hasData || snap.data == null) {
           return const LoginScreen();
-        },
-      ),
+        }
+        // Usuário logado — verifica se é admin
+        return FutureBuilder<bool>(
+          future: FirestoreService().isAdmin(snap.data!.uid),
+          builder: (ctx, adminSnap) {
+            if (adminSnap.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (adminSnap.data == true) {
+              return const HomeScreen();
+            }
+            // Não é admin — desloga e volta para login
+            FirebaseAuth.instance.signOut();
+            return const LoginScreen();
+          },
+        );
+      },
     );
   }
 }
