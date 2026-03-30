@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/firestore_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,135 +10,93 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final List<String> _logs = [];
   bool _loading = false;
-
-  void _log(String msg) {
-    setState(() => _logs.add(msg));
-  }
+  String _erro = '';
+  String _status = '';
 
   Future<void> _loginComGoogle() async {
-    setState(() { _logs.clear(); _loading = true; });
-    _log('1. Iniciando Google Sign-In...');
-
+    setState(() { _loading = true; _erro = ''; _status = 'Conectando ao Google...'; });
     try {
       final googleUser = await GoogleSignIn(
         serverClientId: '240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com',
       ).signIn();
-
       if (googleUser == null) {
-        _log('PAROU: googleUser é null (cancelado)');
-        setState(() => _loading = false);
+        setState(() { _loading = false; _status = ''; });
         return;
       }
-      _log('2. Google OK: ${googleUser.email}');
-
+      setState(() => _status = 'Autenticando...');
       final googleAuth = await googleUser.authentication;
-      _log('3. Token obtido. idToken null: ${googleAuth.idToken == null}');
-
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+      final cred = await FirebaseAuth.instance
+          .signInWithCredential(credential)
+          .timeout(const Duration(seconds: 15));
+      final uid = cred.user!.uid;
 
-      _log('4. Fazendo signInWithCredential (timeout 10s)...');
-      try {
-        final cred = await FirebaseAuth.instance
-            .signInWithCredential(credential)
-            .timeout(const Duration(seconds: 10));
-        final uid = cred.user!.uid;
-        _log('5. Firebase Auth OK. UID: $uid');
-      } catch (e) {
-        _log('ERRO no signInWithCredential: $e');
-        setState(() => _loading = false);
+      setState(() => _status = 'Verificando acesso...');
+      final admin = await FirestoreService().isAdmin(uid);
+      if (!admin) {
+        await FirebaseAuth.instance.signOut();
+        await GoogleSignIn().signOut();
+        setState(() { _erro = 'Você não tem acesso admin.'; _status = ''; });
         return;
       }
-
-      _log('6. Lendo config/admins...');
-      try {
-        final uid = FirebaseAuth.instance.currentUser!.uid;
-        final doc = await FirebaseFirestore.instance
-            .collection('config')
-            .doc('admins')
-            .get()
-            .timeout(const Duration(seconds: 10));
-
-        _log('7. Doc existe: ${doc.exists}');
-        if (doc.exists) {
-          final uids = List<String>.from(doc.data()?['uids'] ?? []);
-          _log('8. UIDs no doc: $uids');
-          _log('9. Contém meu UID: ${uids.contains(uid)}');
-        }
-      } catch (e) {
-        _log('ERRO Firestore: $e');
-      }
-
-      _log('10. FIM do diagnóstico.');
+      // AuthGate redireciona automaticamente
     } catch (e) {
-      _log('ERRO GERAL: $e');
+      setState(() { _erro = 'Erro ao fazer login: $e'; _status = ''; });
     } finally {
-      setState(() => _loading = false);
+      setState(() { _loading = false; });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.admin_panel_settings, size: 48, color: Color(0xFFE8A838)),
-              const SizedBox(height: 8),
-              const Text('Under Pressure — Admin',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Icon(Icons.admin_panel_settings, size: 64, color: Color(0xFFE8A838)),
               const SizedBox(height: 16),
+              const Text('Under Pressure',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text('Painel Admin', style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 48),
+              if (_erro.isNotEmpty) ...[
+                Text(_erro, style: const TextStyle(color: Colors.red)),
+                const SizedBox(height: 16),
+              ],
+              if (_status.isNotEmpty) ...[
+                Text(_status, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                const SizedBox(height: 12),
+              ],
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: _loading ? null : _loginComGoogle,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE8A838),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: _loading
+                  icon: _loading
                     ? const SizedBox(
                         width: 20, height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                       )
-                    : const Text('Entrar com Google',
-                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: _logs.isEmpty
-                    ? const Text('Logs aparecerão aqui...',
-                        style: TextStyle(color: Colors.grey))
-                    : ListView.builder(
-                        itemCount: _logs.length,
-                        itemBuilder: (_, i) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: SelectableText(
-                            _logs[i],
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: _logs[i].startsWith('ERRO') || _logs[i].startsWith('PAROU')
-                                ? Colors.red
-                                : Colors.green,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ),
+                    : Image.network(
+                        'https://www.google.com/favicon.ico',
+                        width: 20, height: 20,
+                        errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.login, color: Colors.black),
                       ),
+                  label: const Text(
+                    'Entrar com Google',
+                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE8A838),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
                 ),
               ),
             ],
