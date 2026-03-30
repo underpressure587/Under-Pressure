@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/firestore_service.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,18 +32,22 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       _log('2. Google OK: ${googleUser.email}');
+
       final googleAuth = await googleUser.authentication;
       _log('3. Token OK. idToken null: ${googleAuth.idToken == null}');
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+
       _log('4. Autenticando no Firebase...');
       final cred = await FirebaseAuth.instance
           .signInWithCredential(credential)
           .timeout(const Duration(seconds: 15));
       final uid = cred.user!.uid;
       _log('5. Auth OK. UID: $uid');
+
       _log('6. Verificando admin no Realtime Database...');
       bool admin = false;
       try {
@@ -57,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _loading = false);
         return;
       }
+
       _log('7. É admin: $admin');
       if (!admin) {
         await FirebaseAuth.instance.signOut();
@@ -65,11 +71,16 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _loading = false);
         return;
       }
-      _log('8. Acesso liberado! Redirecionando...');
-      // AuthGate detecta e redireciona
+
+      _log('8. Acesso liberado! Abrindo painel...');
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      }
     } catch (e) {
       _log('ERRO GERAL: $e');
-    } finally {
       setState(() => _loading = false);
     }
   }
