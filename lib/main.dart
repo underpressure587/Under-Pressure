@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
-import 'services/firestore_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,8 +37,47 @@ class AdminApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _checandoAdmin = false;
+  bool _isAdmin = false;
+  String? _uidChecado;
+
+  Future<void> _verificarAdmin(String uid) async {
+    if (_uidChecado == uid) return;
+    setState(() {
+      _checandoAdmin = true;
+      _uidChecado = uid;
+    });
+    try {
+      await Future.delayed(const Duration(milliseconds: 500));
+      final doc = await FirebaseFirestore.instance
+          .collection('config')
+          .doc('admins')
+          .get();
+      final uids = List<String>.from(doc.data()?['uids'] ?? []);
+      final admin = uids.contains(uid);
+      if (mounted) {
+        setState(() {
+          _isAdmin = admin;
+          _checandoAdmin = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isAdmin = false;
+          _checandoAdmin = false;
+          _uidChecado = null;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,29 +89,25 @@ class AuthGate extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        if (!snap.hasData || snap.data == null) {
+
+        final user = snap.data;
+
+        if (user == null) {
+          _isAdmin = false;
+          _uidChecado = null;
           return const LoginScreen();
         }
-        // Usuário logado — verifica se é admin
-        return FutureBuilder<bool>(
-          future: Future.delayed(
-            const Duration(milliseconds: 500),
-            () => FirestoreService().isAdmin(snap.data!.uid),
-          ),
-          builder: (ctx, adminSnap) {
-            if (adminSnap.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-            if (adminSnap.data == true) {
-              return const HomeScreen();
-            }
-            // Mantém loading — LoginScreen já cuida do signOut
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          },
+
+        if (!_checandoAdmin && _uidChecado != user.uid) {
+          _verificarAdmin(user.uid);
+        }
+
+        if (_isAdmin) {
+          return const HomeScreen();
+        }
+
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
         );
       },
     );
