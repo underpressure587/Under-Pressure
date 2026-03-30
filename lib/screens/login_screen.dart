@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import '../services/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
         serverClientId: '240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com',
       ).signIn();
       if (googleUser == null) {
-        setState(() { _loading = false; });
+        setState(() { _loading = false; _erro = 'Login cancelado.'; });
         return;
       }
       final googleAuth = await googleUser.authentication;
@@ -30,16 +30,47 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       final cred = await FirebaseAuth.instance.signInWithCredential(credential);
       final uid = cred.user!.uid;
-      final admin = await FirestoreService().isAdmin(uid);
-      if (!admin) {
+
+      // Diagnóstico: lê o documento diretamente e mostra o resultado na tela
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('config')
+            .doc('admins')
+            .get();
+
+        if (!doc.exists) {
+          await FirebaseAuth.instance.signOut();
+          await GoogleSignIn().signOut();
+          setState(() { _erro = 'ERRO: Documento config/admins não existe.'; });
+          return;
+        }
+
+        final data = doc.data();
+        final uids = List<String>.from(data?['uids'] ?? []);
+        final contemUid = uids.contains(uid);
+
+        if (!contemUid) {
+          await FirebaseAuth.instance.signOut();
+          await GoogleSignIn().signOut();
+          setState(() {
+            _erro = 'ERRO: UID não encontrado.\n\n'
+                'Seu UID: $uid\n\n'
+                'UIDs no doc: ${uids.join(', ')}';
+          });
+          return;
+        }
+
+        // É admin — AuthGate vai redirecionar
+
+      } catch (e) {
         await FirebaseAuth.instance.signOut();
         await GoogleSignIn().signOut();
-        setState(() { _erro = 'Você não tem acesso admin.'; });
+        setState(() { _erro = 'ERRO Firestore: $e'; });
         return;
       }
-      // ✅ Não navega manualmente — o AuthGate detecta o login e redireciona sozinho
+
     } catch (e) {
-      setState(() { _erro = 'Erro ao fazer login: $e'; });
+      setState(() { _erro = 'ERRO login: $e'; });
     } finally {
       setState(() { _loading = false; });
     }
@@ -61,7 +92,18 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text('Painel Admin', style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 48),
               if (_erro.isNotEmpty) ...[
-                Text(_erro, style: const TextStyle(color: Colors.red)),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    border: Border.all(color: Colors.red),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SelectableText(
+                    _erro,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
                 const SizedBox(height: 16),
               ],
               SizedBox(
