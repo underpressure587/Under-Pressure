@@ -56,9 +56,9 @@ class AuthGate extends StatelessWidget {
         // Usuário logado — verifica se é admin
         return FutureBuilder<bool>(
           future: Future.delayed(
-  const Duration(milliseconds: 500),
-  () => FirestoreService().isAdmin(snap.data!.uid),
-),
+            const Duration(milliseconds: 500),
+            () => FirestoreService().isAdmin(snap.data!.uid),
+          ),
           builder: (ctx, adminSnap) {
             if (adminSnap.connectionState == ConnectionState.waiting) {
               return const Scaffold(
@@ -68,9 +68,10 @@ class AuthGate extends StatelessWidget {
             if (adminSnap.data == true) {
               return const HomeScreen();
             }
-            // Não é admin — desloga e volta para login
-            FirebaseAuth.instance.signOut();
-            return const LoginScreen();
+            // Mantém loading — LoginScreen já cuida do signOut
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
           },
         );
       },
