@@ -11,92 +11,129 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
-  String _erro = '';
-  String _status = '';
+  final List<String> _logs = [];
+
+  void _log(String msg) {
+    debugPrint('[LOGIN] $msg');
+    setState(() => _logs.add(msg));
+  }
 
   Future<void> _loginComGoogle() async {
-    setState(() { _loading = true; _erro = ''; _status = 'Conectando ao Google...'; });
+    setState(() { _loading = true; _logs.clear(); });
+    _log('1. Iniciando Google Sign-In...');
     try {
       final googleUser = await GoogleSignIn(
         serverClientId: '240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com',
       ).signIn();
       if (googleUser == null) {
-        setState(() { _loading = false; _status = ''; });
+        _log('Cancelado pelo usuário.');
+        setState(() => _loading = false);
         return;
       }
-      setState(() => _status = 'Autenticando...');
+      _log('2. Google OK: ${googleUser.email}');
       final googleAuth = await googleUser.authentication;
+      _log('3. Token OK. idToken null: ${googleAuth.idToken == null}');
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+      _log('4. Autenticando no Firebase...');
       final cred = await FirebaseAuth.instance
           .signInWithCredential(credential)
           .timeout(const Duration(seconds: 15));
       final uid = cred.user!.uid;
-
-      setState(() => _status = 'Verificando acesso...');
-      final admin = await FirestoreService().isAdmin(uid);
+      _log('5. Auth OK. UID: $uid');
+      _log('6. Verificando admin no Firestore...');
+      bool admin = false;
+      try {
+        admin = await FirestoreService().isAdmin(
+          uid,
+          onStatus: (msg) => _log('   → $msg'),
+        );
+      } catch (e) {
+        _log('ERRO Firestore: $e');
+        await FirebaseAuth.instance.signOut();
+        await GoogleSignIn().signOut();
+        setState(() => _loading = false);
+        return;
+      }
+      _log('7. É admin: $admin');
       if (!admin) {
         await FirebaseAuth.instance.signOut();
         await GoogleSignIn().signOut();
-        setState(() { _erro = 'Você não tem acesso admin.'; _status = ''; });
+        _log('Acesso negado — UID não está na lista de admins.');
+        setState(() => _loading = false);
         return;
       }
-      // AuthGate redireciona automaticamente
+      _log('8. Acesso liberado! Redirecionando...');
+      // AuthGate detecta e redireciona
     } catch (e) {
-      setState(() { _erro = 'Erro ao fazer login: $e'; _status = ''; });
+      _log('ERRO GERAL: $e');
     } finally {
-      setState(() { _loading = false; });
+      setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.admin_panel_settings, size: 64, color: Color(0xFFE8A838)),
+              const Icon(Icons.admin_panel_settings, size: 48, color: Color(0xFFE8A838)),
+              const SizedBox(height: 8),
+              const Text('Under Pressure — Admin',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              const Text('Under Pressure',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              const Text('Painel Admin', style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 48),
-              if (_erro.isNotEmpty) ...[
-                Text(_erro, style: const TextStyle(color: Colors.red)),
-                const SizedBox(height: 16),
-              ],
-              if (_status.isNotEmpty) ...[
-                Text(_status, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-                const SizedBox(height: 12),
-              ],
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
+                child: ElevatedButton(
                   onPressed: _loading ? null : _loginComGoogle,
-                  icon: _loading
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE8A838),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: _loading
                     ? const SizedBox(
                         width: 20, height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                       )
-                    : Image.network(
-                        'https://www.google.com/favicon.ico',
-                        width: 20, height: 20,
-                        errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.login, color: Colors.black),
+                    : const Text('Entrar com Google',
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1A1A),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: _logs.isEmpty
+                    ? const Text('Logs aparecerão aqui...',
+                        style: TextStyle(color: Colors.grey, fontSize: 12))
+                    : ListView.builder(
+                        itemCount: _logs.length,
+                        itemBuilder: (_, i) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: SelectableText(
+                            _logs[i],
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontFamily: 'monospace',
+                              color: _logs[i].startsWith('ERRO') || _logs[i].contains('negado')
+                                ? Colors.red
+                                : _logs[i].startsWith('8.')
+                                  ? Colors.greenAccent
+                                  : Colors.green,
+                            ),
+                          ),
+                        ),
                       ),
-                  label: const Text(
-                    'Entrar com Google',
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE8A838),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
                 ),
               ),
             ],
