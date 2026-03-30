@@ -11,13 +11,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final List<String> _logs = [];
+  bool _loading = false;
 
   void _log(String msg) {
     setState(() => _logs.add(msg));
   }
 
   Future<void> _loginComGoogle() async {
-    setState(() => _logs.clear());
+    setState(() { _logs.clear(); _loading = true; });
     _log('1. Iniciando Google Sign-In...');
 
     try {
@@ -27,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (googleUser == null) {
         _log('PAROU: googleUser é null (cancelado)');
+        setState(() => _loading = false);
         return;
       }
       _log('2. Google OK: ${googleUser.email}');
@@ -39,17 +41,27 @@ class _LoginScreenState extends State<LoginScreen> {
         idToken: googleAuth.idToken,
       );
 
-      _log('4. Fazendo signInWithCredential...');
-      final cred = await FirebaseAuth.instance.signInWithCredential(credential);
-      final uid = cred.user!.uid;
-      _log('5. Firebase Auth OK. UID: $uid');
-
-      _log('6. Lendo config/admins no Firestore...');
+      _log('4. Fazendo signInWithCredential (timeout 10s)...');
       try {
+        final cred = await FirebaseAuth.instance
+            .signInWithCredential(credential)
+            .timeout(const Duration(seconds: 10));
+        final uid = cred.user!.uid;
+        _log('5. Firebase Auth OK. UID: $uid');
+      } catch (e) {
+        _log('ERRO no signInWithCredential: $e');
+        setState(() => _loading = false);
+        return;
+      }
+
+      _log('6. Lendo config/admins...');
+      try {
+        final uid = FirebaseAuth.instance.currentUser!.uid;
         final doc = await FirebaseFirestore.instance
             .collection('config')
             .doc('admins')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 10));
 
         _log('7. Doc existe: ${doc.exists}');
         if (doc.exists) {
@@ -61,9 +73,11 @@ class _LoginScreenState extends State<LoginScreen> {
         _log('ERRO Firestore: $e');
       }
 
-      _log('10. FIM — aguardando AuthGate redirecionar...');
+      _log('10. FIM do diagnóstico.');
     } catch (e) {
       _log('ERRO GERAL: $e');
+    } finally {
+      setState(() => _loading = false);
     }
   }
 
@@ -83,13 +97,18 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _loginComGoogle,
+                  onPressed: _loading ? null : _loginComGoogle,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE8A838),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text('Entrar com Google',
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  child: _loading
+                    ? const SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      )
+                    : const Text('Entrar com Google',
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 16),
@@ -112,7 +131,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             _logs[i],
                             style: TextStyle(
                               fontSize: 11,
-                              color: _logs[i].startsWith('ERRO') ? Colors.red : Colors.green,
+                              color: _logs[i].startsWith('ERRO') || _logs[i].startsWith('PAROU')
+                                ? Colors.red
+                                : Colors.green,
                               fontFamily: 'monospace',
                             ),
                           ),
