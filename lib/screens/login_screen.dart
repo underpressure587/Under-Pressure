@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/firestore_service.dart';
-import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,8 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() { _loading = true; _erro = ''; });
     try {
       final googleUser = await GoogleSignIn(
-  serverClientId: '240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com',
-).signIn();
+        serverClientId: '240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com',
+      ).signIn();
       if (googleUser == null) {
         setState(() { _loading = false; });
         return;
@@ -38,10 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() { _erro = 'Você não tem acesso admin.'; });
         return;
       }
-      if (mounted) {
-        Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()));
-      }
+      // ✅ Não navega manualmente — o AuthGate detecta o login e redireciona sozinho
     } catch (e) {
       setState(() { _erro = 'Erro ao fazer login: $e'; });
     } finally {
