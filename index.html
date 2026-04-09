@@ -1001,6 +1001,8 @@
         <div id="sala-status" class="sala-status" style="display:none"></div>
       </div>
       <div class="modal-foot">
+        <button class="btn-ghost" onclick="BetaUI.fecharModalSala();BetaUI.abrirPainelAnfitriao()" id="btn-painel-anf" style="display:none;color:var(--purple)">⚙️ Painel</button>
+        <button class="btn-secondary" onclick="BetaUI.fecharModalSala();BetaUI.irParaGrupos()" id="btn-ver-grupos" style="display:none">Ver Grupos</button>
         <button id="btn-sala-entrar" class="btn-primary" onclick="BetaUI.entrarNaSala()">Entrar</button>
       </div>
     </div>
@@ -1021,6 +1023,130 @@
     <div class="podio-list" id="podio-sala-lista">
       <div class="podio-loading">Carregando...</div>
     </div>
+  </div>
+
+
+  <!-- ══ GRUPOS DA SALA ══ -->
+  <div id="screen-grupos" class="screen">
+    <div class="podio-header">
+      <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
+      <span class="podio-title">👥 <span id="grupos-sala-nome">Sala</span></span>
+    </div>
+    <div class="grupos-min-aviso" id="grupos-min-aviso"></div>
+    <div class="podio-list" id="grupos-lista">
+      <div class="podio-loading">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL CRIAR GRUPO ══ -->
+  <div id="modal-criar-grupo" class="modal-overlay" style="display:none"
+    onclick="if(event.target===this)BetaUI.fecharModalCriarGrupo()">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">＋ Criar Grupo</span>
+        <button class="modal-close" onclick="BetaUI.fecharModalCriarGrupo()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="sala-input-group">
+          <label class="sala-label">Nome do grupo</label>
+          <input id="grupo-nome-input" class="sala-input" type="text" maxlength="24"
+            placeholder="Ex: Equipe Alpha"
+            style="font-size:1rem;letter-spacing:0;text-transform:none"
+            onkeydown="if(event.key==='Enter')BetaUI.confirmarCriarGrupo()">
+        </div>
+        <div class="sala-input-group">
+          <label class="sala-label">Cor do grupo</label>
+          <div id="grupo-cor-options" class="grupo-cor-options"></div>
+        </div>
+        <div id="criar-grupo-status" class="sala-status" style="display:none"></div>
+      </div>
+      <div class="modal-foot">
+        <button id="btn-confirmar-grupo" class="btn-primary" onclick="BetaUI.confirmarCriarGrupo()">Criar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══ LOBBY ══ -->
+  <div id="screen-lobby" class="screen">
+    <div class="podio-header">
+      <button class="btn-back" onclick="BetaUI.voltar('screen-grupos')"></button>
+      <span class="podio-title">🎮 Lobby — <span id="lobby-grupo-nome">Grupo</span></span>
+    </div>
+    <div class="lobby-body">
+      <div class="lobby-sala-info">Sala: <strong id="lobby-sala-nome"></strong></div>
+      <!-- Setor (só no modo livre) -->
+      <div id="lobby-setor-wrap" class="sala-input-group" style="margin:12px 16px 0">
+        <label class="sala-label">Setor da partida</label>
+        <select id="lobby-setor-select" class="sala-input" style="font-size:.95rem">
+          <option value="tecnologia">🚀 Tecnologia</option>
+          <option value="industria">🏭 Indústria</option>
+          <option value="logistica">🚚 Logística</option>
+          <option value="varejo">🛒 Varejo</option>
+        </select>
+      </div>
+      <div class="lobby-section-label">Jogadores online</div>
+      <div id="lobby-jogadores" class="lobby-jogadores-lista"></div>
+      <button id="btn-lobby-iniciar" class="btn-primary lobby-btn-iniciar"
+        onclick="BetaUI.iniciarPartidaGrupo()" style="display:none">
+        ▶ Iniciar Partida
+      </button>
+      <div class="lobby-aguardo-msg" id="lobby-aguardo-msg">Aguardando o líder iniciar...</div>
+    </div>
+  </div>
+
+  <!-- ══ TELA DE VOTAÇÃO ══ -->
+  <div id="screen-votacao" class="screen">
+    <div class="votacao-header">
+      <div id="votacao-rodada" class="votacao-rodada-badge">Rodada 1/15</div>
+      <div id="votacao-timer" class="votacao-timer">60s</div>
+    </div>
+    <div class="votacao-body">
+      <!-- Indicadores resumidos -->
+      <div id="votacao-indicators" class="votacao-indicators"></div>
+      <!-- Situação -->
+      <div class="votacao-situacao">
+        <div id="votacao-titulo" class="votacao-situacao-titulo"></div>
+        <div id="votacao-desc" class="votacao-situacao-desc"></div>
+      </div>
+      <!-- Opções de voto -->
+      <div id="votacao-opcoes" class="votacao-opcoes"></div>
+      <!-- Barra de revelação (oculta até revelar) -->
+      <div id="votacao-barra" class="votacao-barra" style="display:none"></div>
+      <!-- Avatares -->
+      <div class="votacao-avatares-label">Votos</div>
+      <div id="votacao-avatares" class="votacao-avatares"></div>
+    </div>
+  </div>
+
+  <!-- ══ RESULTADO DO GRUPO ══ -->
+  <div id="screen-resultado-grupo" class="screen">
+    <div class="podio-header">
+      <span class="podio-title">🏁 Resultado</span>
+    </div>
+    <div class="resultado-grupo-body">
+      <div class="resultado-grupo-nome" id="resultado-grupo-nome"></div>
+      <div class="resultado-grupo-score-label">Score do grupo</div>
+      <div class="resultado-grupo-score" id="resultado-grupo-score">0</div>
+      <div class="resultado-grupo-aviso" id="resultado-grupo-aviso">⏳ Aguardando outros grupos...</div>
+      <button class="btn-primary" onclick="BetaUI.irParaPodioSala()" style="margin-top:20px">
+        Ver Pódio da Sala
+      </button>
+      <button class="btn-secondary" onclick="BetaUI.voltar('screen-home')" style="margin-top:10px">
+        Voltar ao Início
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ PAINEL ANFITRIÃO ══ -->
+  <div id="screen-painel-anfitriao" class="screen">
+    <div class="podio-header">
+      <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
+      <span class="podio-title">⚙️ Painel Anfitrião</span>
+    </div>
+    <div id="painel-anfitriao-body" class="painel-anf-body"></div>
   </div>
 
 </body>

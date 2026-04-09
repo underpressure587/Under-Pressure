@@ -307,6 +307,7 @@ function confirmarNome() {
   LS.set(SK.PLAYER, _player);
   if (input) input.value = "";
   _restaurarSala();
+  _restaurarGrupo();
   _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela("screen-home");
@@ -2500,6 +2501,7 @@ async function _loginOk(player) {
 
   // Entra no painel imediatamente — sem esperar Firestore
   _restaurarSala();
+  _restaurarGrupo();
   _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela("screen-home");
@@ -2651,7 +2653,9 @@ async function entrarNaSala() {
 /* ── Sair da sala ── */
 function sairDaSala() {
   _sala = null;
+  _grupoAtual = null;
   LS.remove(SK.SALA);
+  LS.remove('gsp_sala_grupo');
   _atualizarBadgeSala();
   fecharModalSala();
   mostrarSucesso('Você saiu da sala.');
@@ -2737,6 +2741,694 @@ function _restaurarSala() {
 }
 
 
+/* ════════════════════════════════════════════════════
+   GRUPOS — Sprint 2
+════════════════════════════════════════════════════ */
+
+let _grupoAtual = null; // { nomeGrupo, cor, lider, membros[] } | null
+
+function _atualizarBadgeGrupo() {
+  const badge = document.getElementById('home-sala-badge');
+  if (!badge) return;
+  if (_sala && _grupoAtual) {
+    badge.textContent = '🏟️ ' + (_sala.nome || _sala.codigo) + ' · 👥 ' + _grupoAtual.nomeGrupo;
+    badge.style.display = 'inline-flex';
+  } else if (_sala) {
+    badge.textContent = '🏟️ ' + (_sala.nome || _sala.codigo);
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* ── Tela de seleção de grupo ── */
+async function irParaGrupos() {
+  if (!_sala) { mostrarAviso('Você não está em nenhuma sala.'); return; }
+  mostrarTela('screen-grupos');
+  await _carregarListaGrupos();
+}
+
+async function _carregarListaGrupos() {
+  const lista  = document.getElementById('grupos-lista');
+  const titulo = document.getElementById('grupos-sala-nome');
+  const minEl  = document.getElementById('grupos-min-aviso');
+
+  if (titulo) titulo.textContent = _sala.nome || _sala.codigo;
+  if (lista)  lista.innerHTML = '<div class="podio-loading">Carregando grupos...</div>';
+
+  try {
+    const grupos = await window.GSPSalas.carregarGrupos(_sala.codigo);
+
+    // Aviso de mínimo de membros
+    if (minEl) {
+      minEl.textContent = _sala.minMembros > 1
+        ? `Mínimo de ${_sala.minMembros} membros por grupo para jogar.`
+        : '';
+    }
+
+    if (!lista) return;
+
+    // Botão criar grupo
+    const podeCriar = grupos.length < (_sala.limiteGrupos || 99);
+    let html = podeCriar
+      ? `<button class="btn-criar-grupo" onclick="abrirModalCriarGrupo()">＋ Criar novo grupo</button>`
+      : `<div class="grupos-limite-aviso">Limite de ${_sala.limiteGrupos} grupos atingido.</div>`;
+
+    if (grupos.length === 0) {
+      html += '<div class="podio-empty" style="margin-top:16px">Nenhum grupo ainda. Crie o primeiro!</div>';
+    } else {
+      html += grupos.map(g => {
+        const count   = g.membros?.length || 0;
+        const cheio   = count >= (_sala.maxMembros || 99);
+        const emJogo  = g.statusCiclo === 'jogando';
+        const euEstou = g.membros?.includes(_player?.uid);
+        const isLider = g.lider === _player?.uid;
+
+        const badge  = euEstou  ? `<span class="grupo-badge grupo-badge--eu">Você</span>` : '';
+        const lbadge = isLider  ? `<span class="grupo-badge grupo-badge--lider">👑</span>` : '';
+        const status = emJogo   ? `<span class="grupo-status grupo-status--jogo">Em jogo</span>`
+                     : cheio    ? `<span class="grupo-status grupo-status--cheio">Cheio</span>`
+                     :            `<span class="grupo-status">${count}/${_sala.maxMembros || '∞'}</span>`;
+
+        const btnEntrar = (!euEstou && !cheio && !emJogo)
+          ? `<button class="btn-entrar-grupo" onclick="entrarNoGrupo('${g.nomeGrupo}')">Entrar</button>`
+          : '';
+
+        return `
+          <div class="grupo-card" style="border-left:4px solid ${g.cor}">
+            <div class="grupo-card-info">
+              <div class="grupo-card-nome" style="color:${g.cor}">${lbadge} ${g.nomeGrupo} ${badge}</div>
+              <div class="grupo-card-lider">👑 ${g.liderNome || 'Líder'}</div>
+            </div>
+            <div class="grupo-card-right">
+              ${status}
+              ${btnEntrar}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    lista.innerHTML = html;
+  } catch(e) {
+    if (lista) lista.innerHTML = '<div class="podio-empty">Erro ao carregar grupos.</div>';
+  }
+}
+
+/* ── Modal criar grupo ── */
+function abrirModalCriarGrupo() {
+  const modal = document.getElementById('modal-criar-grupo');
+  if (modal) {
+    modal.style.display = 'flex';
+    const inp = document.getElementById('grupo-nome-input');
+    if (inp) inp.value = '';
+    _setSalaStatus2('', 'info');
+    _renderCorOptions();
+  }
+}
+
+function fecharModalCriarGrupo() {
+  const modal = document.getElementById('modal-criar-grupo');
+  if (modal) modal.style.display = 'none';
+}
+
+// Cores disponíveis para o grupo
+const _CORES_GRUPO = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63'];
+let _corSelecionada = _CORES_GRUPO[0];
+
+function _renderCorOptions() {
+  const wrap = document.getElementById('grupo-cor-options');
+  if (!wrap) return;
+  wrap.innerHTML = _CORES_GRUPO.map(c => `
+    <button class="cor-option ${c === _corSelecionada ? 'cor-option--ativa' : ''}"
+      style="background:${c}" onclick="_selecionarCor('${c}')"></button>
+  `).join('');
+}
+
+function _selecionarCor(cor) {
+  _corSelecionada = cor;
+  _renderCorOptions();
+}
+
+function _setSalaStatus2(msg, tipo) {
+  const el = document.getElementById('criar-grupo-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'sala-status sala-status--' + (tipo || 'info');
+  el.style.display = msg ? 'block' : 'none';
+}
+
+async function confirmarCriarGrupo() {
+  const inp = document.getElementById('grupo-nome-input');
+  const nome = (inp?.value || '').trim();
+  if (!nome) { _setSalaStatus2('Digite um nome para o grupo.', 'erro'); return; }
+  if (!_player?.uid) { _setSalaStatus2('Você precisa estar logado.', 'erro'); return; }
+
+  const btn = document.getElementById('btn-confirmar-grupo');
+  if (btn) { btn.disabled = true; btn.textContent = 'Criando...'; }
+
+  try {
+    const grupo = await window.GSPSalas.criarGrupo(_sala.codigo, {
+      uid:       _player.uid,
+      nome:      _player.nome,
+      nomeGrupo: nome,
+      cor:       _corSelecionada,
+    });
+    _grupoAtual = { ...grupo, membros: [_player.uid] };
+    LS.set('gsp_sala_grupo', _grupoAtual);
+    _atualizarBadgeGrupo();
+    fecharModalCriarGrupo();
+    await _carregarListaGrupos();
+    mostrarSucesso('✅ Grupo "' + nome + '" criado!');
+  } catch(e) {
+    const msgs = {
+      'limite_grupos':  'Limite de grupos atingido.',
+      'nome_invalido':  'Nome inválido.',
+      'nome_duplicado': 'Já existe um grupo com esse nome.',
+      'sala_fechada':   'A sala está fechada para novos grupos.',
+    };
+    _setSalaStatus2(msgs[e.message] || 'Erro: ' + e.message, 'erro');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Criar'; }
+  }
+}
+
+async function entrarNoGrupo(nomeGrupo) {
+  if (!_player?.uid || !_sala) return;
+
+  try {
+    await window.GSPSalas.entrarGrupo(_sala.codigo, {
+      uid:       _player.uid,
+      nome:      _player.nome,
+      nomeGrupo,
+    });
+
+    // Atualiza estado local
+    const grupos = await window.GSPSalas.carregarGrupos(_sala.codigo);
+    _grupoAtual = grupos.find(g => g.nomeGrupo === nomeGrupo) || null;
+    if (_grupoAtual) LS.set('gsp_sala_grupo', _grupoAtual);
+
+    _atualizarBadgeGrupo();
+    await _carregarListaGrupos();
+    mostrarSucesso('✅ Você entrou no grupo "' + nomeGrupo + '"!');
+  } catch(e) {
+    const msgs = {
+      'grupo_cheio':    'Este grupo está cheio.',
+      'partida_em_curso': 'Partida em andamento — não é possível entrar agora.',
+    };
+    mostrarAviso(msgs[e.message] || 'Erro ao entrar no grupo.');
+  }
+}
+
+/* ── Restaurar grupo do localStorage ── */
+function _restaurarGrupo() {
+  const salvo = LS.get('gsp_sala_grupo');
+  if (salvo?.nomeGrupo) {
+    _grupoAtual = salvo;
+    _atualizarBadgeGrupo();
+  }
+}
+
+
+/* ════════════════════════════════════════════════════
+   LOBBY + PARTIDA COLABORATIVA — Sprints 3-5
+════════════════════════════════════════════════════ */
+
+let _partidaId       = null;  // id da partida atual
+let _partidaInterval = null;  // polling da partida
+let _heartbeatInterval = null;
+let _timerPartidaInterval = null;
+let _partidaEstado   = null;  // último estado lido
+let _betaStateGrupo  = null;  // BetaState local para o grupo
+let _euSouProcessador = false; // flag: este cliente está processando
+
+/* ── Ir para lobby do grupo ── */
+async function irParaLobby() {
+  if (!_sala || !_grupoAtual) {
+    mostrarAviso('Entre em um grupo antes de iniciar.');
+    return;
+  }
+  mostrarTela('screen-lobby');
+  _renderLobby();
+  // Cria ou carrega partida do ciclo atual
+  const ciclo     = _sala.cicloAtual || 1;
+  _partidaId      = _grupoAtual.nomeGrupo + '_ciclo' + ciclo;
+  await _iniciarLobbyPolling();
+}
+
+function _renderLobby() {
+  const el = document.getElementById('lobby-grupo-nome');
+  if (el) el.textContent = _grupoAtual?.nomeGrupo || 'Grupo';
+  const el2 = document.getElementById('lobby-sala-nome');
+  if (el2) el2.textContent = _sala?.nome || _sala?.codigo || 'Sala';
+  const btnIniciar = document.getElementById('btn-lobby-iniciar');
+  if (btnIniciar) {
+    const isLider = _grupoAtual?.lider === _player?.uid;
+    btnIniciar.style.display = isLider ? 'block' : 'none';
+  }
+}
+
+async function _iniciarLobbyPolling() {
+  _pararPollingPartida();
+  _partidaInterval = setInterval(_tickPartida, 2000);
+  _heartbeatInterval = setInterval(() => {
+    if (_sala && _partidaId && _player?.uid) {
+      window.GSPSalas?.heartbeat(_sala.codigo, _partidaId, _player.uid);
+    }
+  }, 5000);
+  await _tickPartida();
+}
+
+async function _tickPartida() {
+  if (!_sala || !_partidaId) return;
+  try {
+    const estado = await window.GSPSalas.carregarEstadoPartida(_sala.codigo, _partidaId);
+    if (!estado) return;
+    _partidaEstado = estado;
+    _renderEstadoPartida(estado);
+  } catch(e) { /* ignora erro de rede */ }
+}
+
+function _renderEstadoPartida(estado) {
+  const tela = document.querySelector('.screen.active')?.id;
+
+  // Atualiza lista de jogadores online no lobby
+  if (tela === 'screen-lobby') {
+    _renderJogadoresLobby(estado);
+    // Transição para jogo quando status muda
+    if (estado.status === 'votando' || estado.status === 'em_jogo') {
+      _entrarNoJogoColaborativo(estado);
+    }
+  }
+
+  // Tela de votação
+  if (tela === 'screen-votacao') {
+    _renderVotacao(estado);
+    if (estado.status === 'revelando') {
+      _revelarVotos(estado);
+    }
+    if (estado.status === 'encerrada') {
+      _encerrarJogoColaborativo(estado);
+    }
+  }
+
+  // Tela de espera (aguardando outros grupos)
+  if (tela === 'screen-espera-grupos') {
+    _renderEsperaGrupos();
+  }
+}
+
+function _renderJogadoresLobby(estado) {
+  const lista = document.getElementById('lobby-jogadores');
+  if (!lista) return;
+  const agora   = Date.now();
+  const online  = estado.online || {};
+  const jogadores = estado.jogadores || {};
+  // Merge: todos os jogadores do grupo, com status online
+  const membros = _grupoAtual?.membros || [];
+  lista.innerHTML = membros.map(uid => {
+    const nome     = jogadores[uid] || uid;
+    const isOnline = online[uid] && (agora - online[uid]) < 15000;
+    const dot      = isOnline ? '🟢' : '⚫';
+    const isLider  = uid === _grupoAtual?.lider;
+    return `<div class="lobby-jogador">
+      <span>${dot} ${nome}</span>
+      ${isLider ? '<span class="grupo-badge grupo-badge--lider">👑</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ── Iniciar partida (líder) ── */
+async function iniciarPartidaGrupo() {
+  if (!_sala || !_grupoAtual || !_partidaId) return;
+  if (_grupoAtual.lider !== _player?.uid) { mostrarAviso('Só o líder pode iniciar.'); return; }
+
+  const btn = document.getElementById('btn-lobby-iniciar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Iniciando...'; }
+
+  try {
+    // Define setor
+    let sector = _sala.setorFixo || _grupoAtual.sector || '';
+    if (!sector) {
+      // Modo livre: usa setor selecionado na tela
+      const sel = document.getElementById('lobby-setor-select');
+      sector = sel?.value || 'tecnologia';
+    }
+
+    // Inicializa BetaState local
+    _betaStateGrupo = JSON.parse(JSON.stringify(
+      BetaState.init(sector, _grupoAtual.nomeGrupo, _grupoAtual.nomeGrupo)
+    ));
+
+    // Garante gameRounds carregados
+    await iniciar(sector, _grupoAtual.nomeGrupo, _grupoAtual.nomeGrupo, true);
+    const state = BetaState.get();
+
+    // Registra jogadores no doc da partida
+    const jogadores = {};
+    (_grupoAtual.membros || []).forEach(uid => {
+      jogadores[uid] = state.groupName || uid;
+    });
+
+    // Cria doc se não existe
+    await window.GSPSalas.criarPartida(_sala.codigo, {
+      grupo: _grupoAtual.nomeGrupo,
+      sector,
+      totalRodadas: state.totalRounds,
+      timerSegundos: 60,
+      ciclo: _sala.cicloAtual || 1,
+      jogadores,
+    }).catch(() => {}); // ignora se já existe
+
+    // Inicia no Firestore
+    await window.GSPSalas.iniciarPartida(_sala.codigo, _partidaId, {
+      sector,
+      indicators: state.indicators,
+      situacaoAtual: state.situacaoAtual || {},
+    });
+
+    _entrarNoJogoColaborativo(await window.GSPSalas.carregarEstadoPartida(_sala.codigo, _partidaId));
+  } catch(e) {
+    mostrarAviso('Erro ao iniciar: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Iniciar Partida'; }
+  }
+}
+
+/* ── Entrar no jogo colaborativo ── */
+function _entrarNoJogoColaborativo(estado) {
+  _pararPollingPartida();
+  mostrarTela('screen-votacao');
+  _renderVotacao(estado);
+  // Reinicia polling na tela de votação
+  _partidaInterval = setInterval(_tickPartida, 2000);
+  _heartbeatInterval = setInterval(() => {
+    if (_sala && _partidaId && _player?.uid)
+      window.GSPSalas?.heartbeat(_sala.codigo, _partidaId, _player.uid);
+  }, 5000);
+  _iniciarTimerPartida(estado);
+}
+
+/* ── Timer da rodada ── */
+function _iniciarTimerPartida(estado) {
+  _pararTimerPartida();
+  const timerEl = document.getElementById('votacao-timer');
+  if (!timerEl) return;
+
+  const inicio  = estado.timerInicio ? new Date(estado.timerInicio).getTime() : Date.now();
+  const duracao = (estado.timerSegundos || 60) * 1000;
+
+  _timerPartidaInterval = setInterval(() => {
+    const restante = Math.max(0, Math.ceil((inicio + duracao - Date.now()) / 1000));
+    timerEl.textContent = restante + 's';
+    timerEl.style.color = restante <= 10 ? 'var(--danger)' : 'var(--t1)';
+    if (restante <= 0) {
+      _pararTimerPartida();
+      // Timer esgotou — tenta processar com votos atuais
+      if (_sala && _partidaId) {
+        window.GSPSalas?._tentarProcessarRodada(_sala.codigo, _partidaId).catch(()=>{});
+      }
+    }
+  }, 1000);
+}
+
+function _pararTimerPartida() {
+  if (_timerPartidaInterval) { clearInterval(_timerPartidaInterval); _timerPartidaInterval = null; }
+}
+
+/* ── Render tela de votação ── */
+function _renderVotacao(estado) {
+  // Situação atual
+  const sit = estado.situacaoAtual || {};
+  const tituloEl = document.getElementById('votacao-titulo');
+  const descEl   = document.getElementById('votacao-desc');
+  if (tituloEl) tituloEl.textContent = sit.titulo || sit.title || 'Decisão';
+  if (descEl)   descEl.textContent   = sit.historia || sit.description || '';
+
+  // Indicadores
+  const indEl = document.getElementById('votacao-indicators');
+  if (indEl && estado.indicators) {
+    indEl.innerHTML = Object.entries(estado.indicators).map(([k, v]) => {
+      const cor = v <= 5 ? 'var(--danger)' : v <= 10 ? 'var(--warn)' : 'var(--good)';
+      const label = (BetaIndicadores?.LABELS?.[k] || k).split(' ').slice(1).join(' ') || k;
+      return `<div class="votacao-ind"><span>${label}</span><span style="color:${cor};font-weight:700">${v}</span></div>`;
+    }).join('');
+  }
+
+  // Opções de voto
+  const opcoesEl = document.getElementById('votacao-opcoes');
+  const choices  = sit.choices || sit.opcoes || [];
+  const meuVoto  = estado.votos?.[_player?.uid] || null;
+  if (opcoesEl) {
+    opcoesEl.innerHTML = choices.map((c, i) => {
+      const letra  = String.fromCharCode(65 + i);
+      const votado = meuVoto === letra;
+      return `<button class="votacao-btn ${votado ? 'votacao-btn--votado' : ''}"
+        onclick="votarOpcao('${letra}')"
+        ${estado.status === 'revelando' ? 'disabled' : ''}>
+        <span class="votacao-letra">${letra}</span>
+        <span>${c.text || c}</span>
+      </button>`;
+    }).join('');
+  }
+
+  // Avatares de quem votou
+  const avatarEl = document.getElementById('votacao-avatares');
+  const votos    = estado.votos || {};
+  const jogadores= estado.jogadores || {};
+  const online   = estado.online || {};
+  const agora    = Date.now();
+  if (avatarEl) {
+    avatarEl.innerHTML = Object.keys(jogadores).map(uid => {
+      const nome     = jogadores[uid] || uid;
+      const votou    = !!votos[uid];
+      const isOnline = online[uid] && (agora - online[uid]) < 15000;
+      const inicial  = nome.charAt(0).toUpperCase();
+      return `<div class="votacao-avatar ${votou ? 'votacao-avatar--votou' : ''} ${!isOnline ? 'votacao-avatar--offline' : ''}">
+        <div class="votacao-avatar-icon">${inicial}</div>
+        <div class="votacao-avatar-nome">${nome.split(' ')[0]}</div>
+        ${votou ? '<div class="votacao-avatar-check">✓</div>' : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // Rodada
+  const rodadaEl = document.getElementById('votacao-rodada');
+  if (rodadaEl) rodadaEl.textContent = `Rodada ${estado.rodadaAtual + 1} / ${estado.totalRodadas}`;
+
+  // Reinicia timer se timerInicio mudou
+  if (estado.timerInicio) _iniciarTimerPartida(estado);
+}
+
+/* ── Votar ── */
+async function votarOpcao(letra) {
+  if (!_sala || !_partidaId || !_player?.uid) return;
+  try {
+    await window.GSPSalas.registrarVoto(_sala.codigo, _partidaId, _player.uid, letra);
+  } catch(e) { mostrarAviso('Erro ao registrar voto.'); }
+}
+
+/* ── Revelar votos (animação) ── */
+function _revelarVotos(estado) {
+  const votos    = estado.votos || {};
+  const decisao  = estado.decisaoFinal;
+  const barraEl  = document.getElementById('votacao-barra');
+  if (!barraEl) return;
+
+  // Conta votos por opção
+  const contagem = {};
+  Object.values(votos).forEach(v => { contagem[v] = (contagem[v] || 0) + 1; });
+  const total = Math.max(1, Object.values(contagem).reduce((a, b) => a + b, 0));
+
+  const opcoes = ['A', 'B', 'C', 'D'];
+  barraEl.style.display = 'block';
+  barraEl.innerHTML = opcoes.filter(o => contagem[o] || o === decisao).map(o => {
+    const pct   = Math.round(((contagem[o] || 0) / total) * 100);
+    const isWin = o === decisao;
+    return `<div class="barra-opcao ${isWin ? 'barra-opcao--vence' : ''}">
+      <span class="barra-letra">${o}</span>
+      <div class="barra-track"><div class="barra-fill" style="width:${pct}%"></div></div>
+      <span class="barra-pct">${contagem[o] || 0} voto${(contagem[o] || 0) !== 1 ? 's' : ''}</span>
+      ${isWin ? '<span class="barra-win-badge">✓ Escolhida</span>' : ''}
+    </div>`;
+  }).join('');
+
+  // Após 3s: aplica efeitos e avança rodada (só um cliente processa — o líder)
+  if (_grupoAtual?.lider === _player?.uid) {
+    setTimeout(() => _aplicarEfeitosEAvancar(estado, decisao), 3000);
+  }
+}
+
+/* ── Aplica efeitos e avança rodada ── */
+async function _aplicarEfeitosEAvancar(estado, decisao) {
+  try {
+    const state  = BetaState.get();
+    if (!state) return;
+
+    // Índice da decisão (A=0, B=1, C=2, D=3)
+    const idx    = decisao.charCodeAt(0) - 65;
+    const round  = state.gameRounds?.[estado.rodadaAtual];
+    const choice = round?.choices?.[idx];
+    if (!choice) return;
+
+    // Aplica efeitos no BetaState local
+    BetaState.applyEffects(choice.effects || {});
+    BetaState.nextRound();
+
+    const novaRodada = estado.rodadaAtual + 1;
+    const encerrou   = novaRodada >= estado.totalRodadas;
+
+    if (encerrou) {
+      // Calcula score final
+      const scoreFinal = _calcularScoreColaborativo(BetaState.get());
+      await window.GSPSalas.encerrarPartida(_sala.codigo, _partidaId, {
+        grupo:   _grupoAtual.nomeGrupo,
+        cor:     _grupoAtual.cor,
+        membros: _grupoAtual.membros,
+        score:   scoreFinal,
+        sector:  estado.sector,
+        ciclo:   _sala.cicloAtual || 1,
+        resumo:  {},
+      });
+    } else {
+      const nextState = BetaState.get();
+      const nextRound = nextState.gameRounds?.[novaRodada];
+      await window.GSPSalas.avancarRodada(_sala.codigo, _partidaId, {
+        novaRodada,
+        indicators:    nextState.indicators,
+        score:         _calcularScoreColaborativo(nextState),
+        situacaoAtual: nextRound || {},
+        status:        'votando',
+      });
+    }
+  } catch(e) {
+    console.error('[Colaborativo] _aplicarEfeitosEAvancar:', e);
+  }
+}
+
+function _calcularScoreColaborativo(state) {
+  if (!state?.indicators) return 0;
+  const vals = Object.values(state.indicators);
+  const media = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return Math.round((media / 20) * 100);
+}
+
+/* ── Encerrar jogo colaborativo ── */
+function _encerrarJogoColaborativo(estado) {
+  _pararPollingPartida();
+  _pararTimerPartida();
+  const score = estado.score || 0;
+  mostrarTela('screen-resultado-grupo');
+  const scoreEl = document.getElementById('resultado-grupo-score');
+  const grupoEl = document.getElementById('resultado-grupo-nome');
+  const barraEl = document.getElementById('votacao-barra');
+  if (barraEl) barraEl.style.display = 'none';
+  if (scoreEl) { scoreEl.textContent = score; scoreEl.style.color = score >= 70 ? 'var(--good)' : score >= 45 ? 'var(--warn)' : 'var(--danger)'; }
+  if (grupoEl) grupoEl.textContent = _grupoAtual?.nomeGrupo || 'Grupo';
+  // Verifica se todos os grupos terminaram
+  if (_sala) _verificarEsperaGrupos();
+}
+
+async function _verificarEsperaGrupos() {
+  const todos = await window.GSPSalas.verificarTodosGruposConcluiram(_sala.codigo).catch(() => false);
+  const aviso = document.getElementById('resultado-grupo-aviso');
+  if (aviso) aviso.textContent = todos ? '✅ Todos os grupos terminaram! Aguarde o anfitrião revelar o pódio.' : '⏳ Aguardando outros grupos...';
+}
+
+/* ── Render tela de espera (entre grupos) ── */
+async function _renderEsperaGrupos() {
+  if (!_sala) return;
+  const grupos = await window.GSPSalas.carregarGrupos(_sala.codigo).catch(() => []);
+  const el = document.getElementById('espera-grupos-lista');
+  if (!el) return;
+  el.innerHTML = grupos.map(g => {
+    const icon = g.statusCiclo === 'concluido' ? '✅' : g.statusCiclo === 'jogando' ? '🎮' : '⏳';
+    return `<div class="espera-grupo-row" style="border-left:3px solid ${g.cor}">
+      <span>${icon} ${g.nomeGrupo}</span>
+      <span style="color:var(--t3);font-size:.8rem">${g.statusCiclo === 'concluido' ? 'Concluído' : g.statusCiclo === 'jogando' ? 'Jogando' : 'Aguardando'}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── Parar polling ── */
+function _pararPollingPartida() {
+  if (_partidaInterval)    { clearInterval(_partidaInterval);    _partidaInterval = null; }
+  if (_heartbeatInterval)  { clearInterval(_heartbeatInterval);  _heartbeatInterval = null; }
+}
+
+/* ── Painel anfitrião na sala ── */
+async function abrirPainelAnfitriao() {
+  if (!_sala || _sala.criadaPor !== _player?.uid) return;
+  mostrarTela('screen-painel-anfitriao');
+  await _renderPainelAnfitriao();
+}
+
+async function _renderPainelAnfitriao() {
+  const grupos = await window.GSPSalas.carregarGrupos(_sala.codigo).catch(() => []);
+  const sala   = await window.GSPSalas.carregarSala(_sala.codigo).catch(() => _sala);
+  const todos  = await window.GSPSalas.verificarTodosGruposConcluiram(_sala.codigo).catch(() => false);
+
+  const el = document.getElementById('painel-anfitriao-body');
+  if (!el) return;
+
+  const podioBtn = sala.podioVisivel
+    ? `<button class="btn-secondary" disabled>Pódio já revelado</button>`
+    : todos
+      ? `<button class="btn-primary" onclick="anfitriaoRevelarPodio()">🏆 Revelar Pódio</button>`
+      : `<button class="btn-secondary" disabled>Aguardando grupos (${grupos.filter(g=>g.statusCiclo==='concluido').length}/${grupos.length})</button>`;
+
+  el.innerHTML = `
+    <div class="painel-anf-section">
+      <div class="painel-anf-label">Sala: <strong>${sala.nome || sala.codigo}</strong> · Ciclo ${sala.cicloAtual || 1}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        ${podioBtn}
+        <button class="btn-secondary" onclick="anfitriaoNovoCiclo()">🔄 Novo Ciclo</button>
+        <button class="btn-danger" onclick="anfitriaoEncerrarSala()">❌ Encerrar Sala</button>
+      </div>
+    </div>
+    <div class="painel-anf-section">
+      <div class="painel-anf-label">Grupos (${grupos.length}/${sala.limiteGrupos || '∞'})</div>
+      ${grupos.map(g => `
+        <div class="painel-grupo-row" style="border-left:3px solid ${g.cor}">
+          <div>
+            <span style="color:${g.cor};font-weight:700">${g.nomeGrupo}</span>
+            <span style="color:var(--t3);font-size:.75rem"> · ${g.membros?.length||0} membros · ${g.statusCiclo}</span>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+async function anfitriaoRevelarPodio() {
+  if (!_sala || !_player?.uid) return;
+  try {
+    await window.GSPSalas.revelarPodio(_sala.codigo, _player.uid);
+    mostrarSucesso('✅ Pódio revelado!');
+    await _renderPainelAnfitriao();
+  } catch(e) { mostrarAviso('Erro: ' + e.message); }
+}
+
+async function anfitriaoNovoCiclo() {
+  if (!_sala || !_player?.uid) return;
+  if (!confirm('Liberar novo ciclo? Todos os grupos voltarão ao status "aguardando".')) return;
+  try {
+    await window.GSPSalas.liberarNovoCiclo(_sala.codigo, _player.uid);
+    _sala.cicloAtual = (_sala.cicloAtual || 1) + 1;
+    LS.set(SK.SALA, _sala);
+    mostrarSucesso('✅ Novo ciclo liberado!');
+    await _renderPainelAnfitriao();
+  } catch(e) { mostrarAviso('Erro: ' + e.message); }
+}
+
+async function anfitriaoEncerrarSala() {
+  if (!_sala || !_player?.uid) return;
+  if (!confirm('Encerrar a sala permanentemente?')) return;
+  try {
+    await window.GSPSalas.encerrarSala(_sala.codigo, _player.uid);
+    sairDaSala();
+    mostrarSucesso('Sala encerrada.');
+    mostrarTela('screen-home');
+  } catch(e) { mostrarAviso('Erro: ' + e.message); }
+}
+
+
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
@@ -2758,6 +3450,12 @@ window.BetaUI = {
   gerarNomeAleatorio,
   // Sala
   abrirModalSala, fecharModalSala, entrarNaSala, sairDaSala, irParaPodioSala,
+  // Grupos
+  irParaGrupos, abrirModalCriarGrupo, fecharModalCriarGrupo,
+  confirmarCriarGrupo, entrarNoGrupo, _selecionarCor,
+  // Colaborativo
+  irParaLobby, iniciarPartidaGrupo, votarOpcao,
+  abrirPainelAnfitriao, anfitriaoRevelarPodio, anfitriaoNovoCiclo, anfitriaoEncerrarSala,
 };
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando

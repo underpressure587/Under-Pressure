@@ -780,3 +780,610 @@ window.GSPSalas = {
     return true;
   },
 };
+
+/* ════════════════════════════════════════════════════
+   GSPSalas — Sprint 2: Grupos
+════════════════════════════════════════════════════ */
+Object.assign(window.GSPSalas, {
+
+  /* ── criarGrupo ─────────────────────────────────────
+     Jogador cria um grupo novo na sala.
+     Ele vira o líder automaticamente (primeiro a entrar).
+     Valida limite de grupos definido pelo anfitrião.
+  ──────────────────────────────────────────────────── */
+  async criarGrupo(codigo, { uid, nome, nomeGrupo, cor }) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+
+    const cod = (codigo || '').toUpperCase().trim();
+
+    // Carrega config da sala para verificar limite
+    const sala = await this.carregarSala(cod);
+    if (!sala.aberta && sala.aberta !== undefined) throw new Error('sala_fechada');
+
+    // Conta grupos existentes
+    const gruposExist = await this.carregarGrupos(cod);
+    if (gruposExist.length >= (sala.limiteGrupos || 99)) throw new Error('limite_grupos');
+
+    // Verifica se nome já existe
+    const nomeNorm = (nomeGrupo || '').trim();
+    if (!nomeNorm) throw new Error('nome_invalido');
+    if (gruposExist.some(g => g.nomeGrupo?.toLowerCase() === nomeNorm.toLowerCase())) {
+      throw new Error('nome_duplicado');
+    }
+
+    const docId = encodeURIComponent(nomeNorm);
+    const url   = this._url('salas/' + cod + '/grupos/' + docId);
+
+    const body = { fields: {
+      nomeGrupo:   { stringValue:  nomeNorm },
+      cor:         { stringValue:  cor || '#888' },
+      lider:       { stringValue:  uid },
+      liderNome:   { stringValue:  nome || '' },
+      membros:     { arrayValue:   { values: [{ stringValue: uid }] } },
+      statusCiclo: { stringValue:  'aguardando' },
+      criadoEm:    { timestampValue: new Date().toISOString() },
+    }};
+
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
+
+    // Registra membro no grupo
+    await this._registrarMembroGrupo(cod, nomeNorm, uid, nome);
+    return { nomeGrupo: nomeNorm, cor, lider: uid };
+  },
+
+  /* ── entrarGrupo ────────────────────────────────────
+     Jogador entra em grupo existente.
+     Valida maxMembros da sala.
+  ──────────────────────────────────────────────────── */
+  async entrarGrupo(codigo, { uid, nome, nomeGrupo }) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+
+    const cod     = (codigo || '').toUpperCase().trim();
+    const sala    = await this.carregarSala(cod);
+    const docId   = encodeURIComponent((nomeGrupo || '').trim());
+    const urlGrupo = this._url('salas/' + cod + '/grupos/' + docId);
+
+    // Lê grupo atual
+    const getRes = await fetch(urlGrupo, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!getRes.ok) throw new Error('grupo_nao_encontrado');
+    const data = await getRes.json();
+    const f    = data.fields || {};
+
+    // Checa limite de membros
+    const membrosAtuais = (f.membros?.arrayValue?.values || []).map(v => v.stringValue);
+    if (membrosAtuais.includes(uid)) return true; // já está no grupo
+    if (membrosAtuais.length >= (sala.maxMembros || 99)) throw new Error('grupo_cheio');
+
+    // Verifica se statusCiclo permite entrada
+    const status = f.statusCiclo?.stringValue || 'aguardando';
+    if (status === 'jogando') throw new Error('partida_em_curso');
+
+    // Adiciona uid ao array membros
+    membrosAtuais.push(uid);
+    const urlPatch = urlGrupo + '?updateMask.fieldPaths=membros';
+    const body = { fields: {
+      membros: { arrayValue: { values: membrosAtuais.map(m => ({ stringValue: m })) } }
+    }};
+
+    const res = await fetch(urlPatch, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
+
+    await this._registrarMembroGrupo(cod, nomeGrupo, uid, nome);
+    return true;
+  },
+
+  /* ── _registrarMembroGrupo ──────────────────────────
+     Salva em salas/{cod}/membros/{uid} o grupo do jogador.
+  ──────────────────────────────────────────────────── */
+  async _registrarMembroGrupo(cod, nomeGrupo, uid, nome) {
+    const token = await _getToken();
+    if (!token) return;
+    const url = this._url('salas/' + cod + '/membros/' + uid);
+    const body = { fields: this._toFields({ uid, nome: nome || '', grupo: nomeGrupo, entrou: Date.now() }) };
+    body.fields.entrou = { timestampValue: new Date().toISOString() };
+    await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).catch(() => {});
+  },
+
+  /* ── carregarGrupos ─────────────────────────────────
+     Lista todos os grupos da sala com contagem de membros.
+  ──────────────────────────────────────────────────── */
+  async carregarGrupos(codigo) {
+    const token = await _getToken();
+    if (!token) return [];
+
+    const cod    = (codigo || '').toUpperCase().trim();
+    const runUrl = 'https://firestore.googleapis.com/v1/projects/' + PROJECT_ID +
+                   '/databases/default/documents/salas/' + cod + ':runQuery';
+
+    const res = await fetch(runUrl, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'grupos' }],
+          orderBy: [{ field: { fieldPath: 'criadoEm' }, direction: 'ASCENDING' }],
+          limit: 50
+        }
+      })
+    });
+    if (!res.ok) return [];
+
+    const rows = await res.json();
+    return rows
+      .filter(r => r.document)
+      .map(r => {
+        const f = r.document.fields || {};
+        return {
+          nomeGrupo:   f.nomeGrupo?.stringValue   || '',
+          cor:         f.cor?.stringValue          || '#888',
+          lider:       f.lider?.stringValue        || '',
+          liderNome:   f.liderNome?.stringValue    || '',
+          statusCiclo: f.statusCiclo?.stringValue  || 'aguardando',
+          membros:     (f.membros?.arrayValue?.values || []).map(v => v.stringValue),
+        };
+      });
+  },
+
+  /* ── transferirLideranca ────────────────────────────
+     Líder atual ou anfitrião transfere liderança para outro membro.
+  ──────────────────────────────────────────────────── */
+  async transferirLideranca(codigo, nomeGrupo, { solicitanteUid, novoLiderUid, novoLiderNome }) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+
+    const cod    = (codigo || '').toUpperCase().trim();
+    const sala   = await this.carregarSala(cod);
+    const docId  = encodeURIComponent((nomeGrupo || '').trim());
+    const url    = this._url('salas/' + cod + '/grupos/' + docId);
+
+    // Lê grupo
+    const getRes = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!getRes.ok) throw new Error('grupo_nao_encontrado');
+    const data = await getRes.json();
+    const f    = data.fields || {};
+
+    const liderAtual = f.lider?.stringValue || '';
+    const isAnfitriao = sala.criadaPor === solicitanteUid;
+    const isLider    = liderAtual === solicitanteUid;
+    if (!isLider && !isAnfitriao) throw new Error('sem_permissao');
+
+    // Verifica se novo líder é membro
+    const membros = (f.membros?.arrayValue?.values || []).map(v => v.stringValue);
+    if (!membros.includes(novoLiderUid)) throw new Error('nao_e_membro');
+
+    const urlPatch = url + '?updateMask.fieldPaths=lider&updateMask.fieldPaths=liderNome';
+    const body = { fields: {
+      lider:     { stringValue: novoLiderUid },
+      liderNome: { stringValue: novoLiderNome || '' },
+    }};
+
+    const res = await fetch(urlPatch, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
+    return true;
+  },
+
+  /* ── moverMembro ────────────────────────────────────
+     Anfitrião move um jogador de grupo (remove do atual, entra no novo).
+  ──────────────────────────────────────────────────── */
+  async moverMembro(codigo, { uid, grupoAtual, grupoDestino }) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+
+    const cod = (codigo || '').toUpperCase().trim();
+
+    // Remove do grupo atual
+    if (grupoAtual) {
+      const urlAtual = this._url('salas/' + cod + '/grupos/' + encodeURIComponent(grupoAtual));
+      const getRes   = await fetch(urlAtual, { headers: { 'Authorization': 'Bearer ' + token } });
+      if (getRes.ok) {
+        const data    = await getRes.json();
+        const membros = (data.fields?.membros?.arrayValue?.values || [])
+          .map(v => v.stringValue).filter(m => m !== uid);
+        await fetch(urlAtual + '?updateMask.fieldPaths=membros', {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: {
+            membros: { arrayValue: { values: membros.map(m => ({ stringValue: m })) } }
+          }})
+        });
+      }
+    }
+
+    // Entra no grupo destino
+    if (grupoDestino) {
+      await this.entrarGrupo(cod, { uid, nomeGrupo: grupoDestino });
+    }
+    return true;
+  },
+});
+
+/* ════════════════════════════════════════════════════
+   GSPSalas — Sprints 3-6: Lobby, Votação, Ciclo, Admin
+════════════════════════════════════════════════════ */
+Object.assign(window.GSPSalas, {
+
+  /* ── criarPartida ───────────────────────────────────
+     Cria doc da partida colaborativa em salas/{cod}/partidas/{id}
+  ──────────────────────────────────────────────────── */
+  async criarPartida(codigo, { grupo, sector, totalRodadas, timerSegundos, ciclo, jogadores }) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+    const cod  = (codigo || '').toUpperCase().trim();
+    const id   = grupo + '_ciclo' + ciclo;
+    const url  = this._url('salas/' + cod + '/partidas/' + encodeURIComponent(id));
+    const body = { fields: {
+      grupo:        { stringValue:  grupo },
+      ciclo:        { integerValue: String(ciclo || 1) },
+      sector:       { stringValue:  sector || '' },
+      status:       { stringValue:  'lobby' },
+      rodadaAtual:  { integerValue: '0' },
+      totalRodadas: { integerValue: String(totalRodadas || 15) },
+      timerSegundos:{ integerValue: String(timerSegundos || 60) },
+      processando:  { booleanValue: false },
+      score:        { integerValue: '0' },
+      criadaEm:     { timestampValue: new Date().toISOString() },
+      jogadores:    { stringValue: JSON.stringify(jogadores || {}) },
+      votos:        { stringValue: '{}' },
+      online:       { stringValue: '{}' },
+      indicators:   { stringValue: '{}' },
+      situacaoAtual:{ stringValue: '{}' },
+      decisaoFinal: { stringValue: '' },
+    }};
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
+    return id;
+  },
+
+  /* ── carregarEstadoPartida ──────────────────────────
+     Lê estado atual da partida (polling).
+  ──────────────────────────────────────────────────── */
+  async carregarEstadoPartida(codigo, partidaId) {
+    const token = await _getToken();
+    if (!token) return null;
+    const cod = (codigo || '').toUpperCase().trim();
+    const url = this._url('salas/' + cod + '/partidas/' + encodeURIComponent(partidaId));
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.fields) return null;
+    const f = data.fields;
+    return {
+      grupo:        f.grupo?.stringValue        || '',
+      ciclo:        parseInt(f.ciclo?.integerValue || 1),
+      sector:       f.sector?.stringValue       || '',
+      status:       f.status?.stringValue       || 'lobby',
+      rodadaAtual:  parseInt(f.rodadaAtual?.integerValue  || 0),
+      totalRodadas: parseInt(f.totalRodadas?.integerValue || 15),
+      timerSegundos:parseInt(f.timerSegundos?.integerValue|| 60),
+      processando:  f.processando?.booleanValue ?? false,
+      score:        parseInt(f.score?.integerValue || 0),
+      jogadores:    JSON.parse(f.jogadores?.stringValue    || '{}'),
+      votos:        JSON.parse(f.votos?.stringValue        || '{}'),
+      online:       JSON.parse(f.online?.stringValue       || '{}'),
+      indicators:   JSON.parse(f.indicators?.stringValue   || '{}'),
+      situacaoAtual:JSON.parse(f.situacaoAtual?.stringValue|| '{}'),
+      decisaoFinal: f.decisaoFinal?.stringValue || '',
+      timerInicio:  f.timerInicio?.stringValue  || null,
+    };
+  },
+
+  /* ── patchPartida ───────────────────────────────────
+     Atualiza campos específicos da partida via PATCH.
+  ──────────────────────────────────────────────────── */
+  async patchPartida(codigo, partidaId, fields) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+    const cod   = (codigo || '').toUpperCase().trim();
+    const url   = this._url('salas/' + cod + '/partidas/' + encodeURIComponent(partidaId));
+    const mask  = Object.keys(fields).map(k => 'updateMask.fieldPaths=' + k).join('&');
+    const body  = { fields };
+    const res   = await fetch(url + '?' + mask, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
+    return true;
+  },
+
+  /* ── heartbeat ──────────────────────────────────────
+     Marca jogador como online. Chama a cada 5s.
+  ──────────────────────────────────────────────────── */
+  async heartbeat(codigo, partidaId, uid) {
+    try {
+      const estado = await this.carregarEstadoPartida(codigo, partidaId);
+      if (!estado) return;
+      const online = estado.online || {};
+      online[uid]  = Date.now();
+      // Remove jogadores offline (>15s sem heartbeat)
+      const agora  = Date.now();
+      Object.keys(online).forEach(k => { if (agora - online[k] > 15000) delete online[k]; });
+      await this.patchPartida(codigo, partidaId, {
+        online: { stringValue: JSON.stringify(online) }
+      });
+    } catch(e) { /* silencioso — heartbeat não pode travar a UI */ }
+  },
+
+  /* ── registrarVoto ──────────────────────────────────
+     Salva voto do jogador. Detecta se todos votaram → chama processarRodada.
+  ──────────────────────────────────────────────────── */
+  async registrarVoto(codigo, partidaId, uid, opcao) {
+    const estado = await this.carregarEstadoPartida(codigo, partidaId);
+    if (!estado || estado.status !== 'votando') return false;
+    if (estado.processando) return false;
+
+    const votos = estado.votos || {};
+    votos[uid]  = opcao;
+
+    await this.patchPartida(codigo, partidaId, {
+      votos: { stringValue: JSON.stringify(votos) }
+    });
+
+    // Verifica se todos os jogadores online votaram
+    const online   = estado.online || {};
+    const onlineIds= Object.keys(online).filter(k => Date.now() - online[k] < 15000);
+    const votaram  = onlineIds.filter(k => votos[k]);
+
+    if (votaram.length >= onlineIds.length && onlineIds.length > 0) {
+      await this._tentarProcessarRodada(codigo, partidaId);
+    }
+    return true;
+  },
+
+  /* ── _tentarProcessarRodada ─────────────────────────
+     Flag processando:true para evitar duplicação.
+     Calcula decisão majoritária e avança estado.
+  ──────────────────────────────────────────────────── */
+  async _tentarProcessarRodada(codigo, partidaId) {
+    try {
+      // Trava processamento
+      const estado = await this.carregarEstadoPartida(codigo, partidaId);
+      if (!estado || estado.processando) return;
+
+      await this.patchPartida(codigo, partidaId, {
+        processando: { booleanValue: true }
+      });
+
+      const votos   = estado.votos || {};
+      const jogadores = estado.jogadores || {};
+      const lider   = Object.keys(jogadores)[0]; // primeiro = líder
+
+      // Conta votos
+      const contagem = {};
+      Object.values(votos).forEach(v => { contagem[v] = (contagem[v] || 0) + 1; });
+
+      let decisao = null;
+      if (Object.keys(contagem).length === 0) {
+        // Ninguém votou — voto do líder ou A
+        decisao = votos[lider] || 'A';
+      } else {
+        // Maioria; empate → líder decide
+        const max = Math.max(...Object.values(contagem));
+        const empatados = Object.keys(contagem).filter(k => contagem[k] === max);
+        if (empatados.length === 1) {
+          decisao = empatados[0];
+        } else {
+          // Empate: prefere voto do líder se houver, senão primeira opção empatada
+          decisao = empatados.includes(votos[lider]) ? votos[lider] : empatados[0];
+        }
+      }
+
+      await this.patchPartida(codigo, partidaId, {
+        decisaoFinal: { stringValue: decisao },
+        status:       { stringValue: 'revelando' },
+        processando:  { booleanValue: false },
+      });
+    } catch(e) {
+      console.error('[GSPSalas] _tentarProcessarRodada:', e.message);
+      // Destravar em caso de erro
+      try {
+        await this.patchPartida(codigo, partidaId, { processando: { booleanValue: false } });
+      } catch(e2) {}
+    }
+  },
+
+  /* ── avancarRodada ──────────────────────────────────
+     Após revelar decisão, aplica efeitos e avança rodada.
+     Chamado pelo cliente após animação de revelação.
+  ──────────────────────────────────────────────────── */
+  async avancarRodada(codigo, partidaId, { novaRodada, indicators, score, situacaoAtual, status }) {
+    await this.patchPartida(codigo, partidaId, {
+      rodadaAtual:   { integerValue: String(novaRodada) },
+      indicators:    { stringValue: JSON.stringify(indicators) },
+      score:         { integerValue: String(score) },
+      situacaoAtual: { stringValue: JSON.stringify(situacaoAtual || {}) },
+      votos:         { stringValue: '{}' },
+      decisaoFinal:  { stringValue: '' },
+      status:        { stringValue: status || 'votando' },
+      timerInicio:   { stringValue: new Date().toISOString() },
+      processando:   { booleanValue: false },
+    });
+  },
+
+  /* ── iniciarPartida ─────────────────────────────────
+     Muda status para em_jogo + define timerInicio.
+  ──────────────────────────────────────────────────── */
+  async iniciarPartida(codigo, partidaId, { sector, indicators, situacaoAtual }) {
+    await this.patchPartida(codigo, partidaId, {
+      status:        { stringValue: 'votando' },
+      sector:        { stringValue: sector },
+      indicators:    { stringValue: JSON.stringify(indicators) },
+      situacaoAtual: { stringValue: JSON.stringify(situacaoAtual || {}) },
+      timerInicio:   { stringValue: new Date().toISOString() },
+      votos:         { stringValue: '{}' },
+    });
+  },
+
+  /* ── encerrarPartida ────────────────────────────────
+     Marca partida encerrada e salva no pódio.
+  ──────────────────────────────────────────────────── */
+  async encerrarPartida(codigo, partidaId, { grupo, cor, membros, score, sector, ciclo, resumo }) {
+    await this.patchPartida(codigo, partidaId, {
+      status: { stringValue: 'encerrada' },
+      score:  { integerValue: String(score) },
+    });
+    // Atualiza statusCiclo do grupo
+    const cod   = (codigo || '').toUpperCase().trim();
+    const docId = encodeURIComponent((grupo || '').trim());
+    await this.patchPartida(codigo, docId + '_status', {}).catch(() => {});
+    try {
+      const token = await _getToken();
+      if (token) {
+        await fetch(this._url('salas/' + cod + '/grupos/' + docId) + '?updateMask.fieldPaths=statusCiclo', {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { statusCiclo: { stringValue: 'concluido' } } })
+        });
+      }
+    } catch(e) {}
+    // Salva no pódio da sala
+    await this.salvarNoPodioSala(codigo, { grupo, cor, membros, score, sector, ciclo, resumo });
+  },
+
+  /* ── verificarTodosGruposConcluiram ─────────────────
+     Retorna true se todos os grupos têm statusCiclo=concluido.
+  ──────────────────────────────────────────────────── */
+  async verificarTodosGruposConcluiram(codigo) {
+    const grupos = await this.carregarGrupos(codigo);
+    if (!grupos.length) return false;
+    return grupos.every(g => g.statusCiclo === 'concluido');
+  },
+
+  /* ── revelarPodio ───────────────────────────────────
+     Anfitrião revela o pódio (podioVisivel: true).
+  ──────────────────────────────────────────────────── */
+  async revelarPodio(codigo, uid) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+    const cod  = (codigo || '').toUpperCase().trim();
+    const sala = await this.carregarSala(cod);
+    if (sala.criadaPor !== uid) throw new Error('sem_permissao');
+    const url  = this._url('salas/' + cod) + '?updateMask.fieldPaths=podioVisivel';
+    await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { podioVisivel: { booleanValue: true } } })
+    });
+  },
+
+  /* ── liberarNovoCiclo ───────────────────────────────
+     Anfitrião reseta statusCiclo de todos os grupos e incrementa cicloAtual.
+  ──────────────────────────────────────────────────── */
+  async liberarNovoCiclo(codigo, uid) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+    const cod  = (codigo || '').toUpperCase().trim();
+    const sala = await this.carregarSala(cod);
+    if (sala.criadaPor !== uid) throw new Error('sem_permissao');
+
+    const grupos = await this.carregarGrupos(cod);
+    await Promise.all(grupos.map(g => {
+      const docId = encodeURIComponent(g.nomeGrupo);
+      return fetch(this._url('salas/' + cod + '/grupos/' + docId) + '?updateMask.fieldPaths=statusCiclo', {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { statusCiclo: { stringValue: 'aguardando' } } })
+      });
+    }));
+
+    // Incrementa ciclo e oculta pódio
+    const novoCiclo = (sala.cicloAtual || 1) + 1;
+    const urlSala   = this._url('salas/' + cod) +
+      '?updateMask.fieldPaths=cicloAtual&updateMask.fieldPaths=podioVisivel';
+    await fetch(urlSala, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: {
+        cicloAtual:   { integerValue: String(novoCiclo) },
+        podioVisivel: { booleanValue: false },
+      }})
+    });
+  },
+
+  /* ── listarSalasAdmin ───────────────────────────────
+     Admin lista todas as salas ativas/arquivadas.
+  ──────────────────────────────────────────────────── */
+  async listarSalasAdmin() {
+    const token = await _getToken();
+    if (!token) return [];
+    const url = 'https://firestore.googleapis.com/v1/projects/' + PROJECT_ID +
+                '/databases/default/documents:runQuery';
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'salas' }],
+          orderBy: [{ field: { fieldPath: 'criadaEm' }, direction: 'DESCENDING' }],
+          limit: 100
+        }
+      })
+    });
+    if (!res.ok) return [];
+    const rows = await res.json();
+    return rows.filter(r => r.document).map(r => {
+      const f   = r.document.fields || {};
+      const cod = r.document.name.split('/').pop();
+      return {
+        codigo:     cod,
+        nome:       f.nome?.stringValue       || cod,
+        criadaPor:  f.criadaPor?.stringValue  || '',
+        ativa:      f.ativa?.booleanValue     ?? true,
+        arquivada:  f.arquivada?.booleanValue ?? false,
+        cicloAtual: parseInt(f.cicloAtual?.integerValue || 1),
+        criadaEm:   f.criadaEm?.timestampValue || null,
+      };
+    });
+  },
+
+  /* ── adminPausarPartida / adminEncerrarPartida ───── */
+  async adminPausarPartida(codigo, partidaId) {
+    await this.patchPartida(codigo, partidaId, {
+      status: { stringValue: 'pausada' }
+    });
+  },
+
+  async adminEncerrarPartida(codigo, partidaId) {
+    await this.patchPartida(codigo, partidaId, {
+      status: { stringValue: 'encerrada' }
+    });
+  },
+
+  async adminDeletarSala(codigo) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+    const cod = (codigo || '').toUpperCase().trim();
+    const url = this._url('salas/' + cod) + '?updateMask.fieldPaths=ativa&updateMask.fieldPaths=arquivada';
+    await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: {
+        ativa:     { booleanValue: false },
+        arquivada: { booleanValue: true },
+      }})
+    });
+  },
+});

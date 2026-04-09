@@ -4574,3 +4574,164 @@ body::after{
   text-align: center; color: var(--t3);
   font-size: .85rem; padding: 40px 0;
 }
+
+/* ════════════════════════════════════════════════════
+   GRUPOS — Sprint 2
+════════════════════════════════════════════════════ */
+
+.grupos-min-aviso {
+  font-size: .75rem; color: var(--t3);
+  text-align: center; padding: 8px 16px 0;
+}
+.grupos-limite-aviso {
+  font-size: .8rem; color: var(--warn);
+  text-align: center; padding: 10px 0;
+}
+
+/* Botão criar grupo */
+.btn-criar-grupo {
+  width: 100%; padding: 13px;
+  background: none;
+  border: 1.5px dashed var(--purple);
+  color: var(--purple);
+  border-radius: 12px;
+  font-size: .9rem; font-weight: 700;
+  cursor: pointer; margin-bottom: 12px;
+  transition: background .15s;
+}
+.btn-criar-grupo:active { background: rgba(155,89,182,.1); }
+
+/* Card de grupo */
+.grupo-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+.grupo-card-info { flex: 1; min-width: 0; }
+.grupo-card-nome {
+  font-weight: 700; font-size: .95rem;
+  display: flex; align-items: center; gap: 6px;
+}
+.grupo-card-lider { font-size: .75rem; color: var(--t3); margin-top: 3px; }
+.grupo-card-right {
+  display: flex; flex-direction: column;
+  align-items: flex-end; gap: 6px;
+}
+
+/* Badges */
+.grupo-badge {
+  font-size: .65rem; font-weight: 700; padding: 2px 7px;
+  border-radius: 20px; letter-spacing: .3px;
+}
+.grupo-badge--eu    { background: rgba(52,152,219,.15); color: #3498db; }
+.grupo-badge--lider { background: none; }
+
+/* Status do grupo */
+.grupo-status {
+  font-size: .75rem; color: var(--t3); font-weight: 600;
+}
+.grupo-status--cheio { color: var(--danger); }
+.grupo-status--jogo  { color: var(--warn); }
+
+/* Botão entrar no grupo */
+.btn-entrar-grupo {
+  background: var(--purple); color: #fff;
+  border: none; border-radius: 8px;
+  padding: 5px 12px; font-size: .78rem;
+  font-weight: 700; cursor: pointer;
+  transition: opacity .15s;
+}
+.btn-entrar-grupo:active { opacity: .75; }
+
+/* Seletor de cor */
+.grupo-cor-options {
+  display: flex; flex-wrap: wrap; gap: 10px; padding: 4px 0;
+}
+.cor-option {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer; transition: transform .15s, border-color .15s;
+}
+.cor-option--ativa {
+  border-color: var(--t1);
+  transform: scale(1.2);
+}
+
+/* ════════════════════════════════════════════════════
+   LOBBY — Sprint 3
+════════════════════════════════════════════════════ */
+.lobby-body { padding: 0 0 24px; }
+.lobby-sala-info { text-align:center; color:var(--t3); font-size:.82rem; padding:10px 16px 0; }
+.lobby-section-label { font-size:.72rem; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; padding:16px 16px 6px; }
+.lobby-jogadores-lista { display:flex; flex-direction:column; gap:8px; padding:0 16px; }
+.lobby-jogador { display:flex; align-items:center; justify-content:space-between; background:var(--card); border-radius:10px; padding:10px 14px; font-size:.88rem; }
+.lobby-btn-iniciar { display:block; margin:20px 16px 0; width:calc(100% - 32px); }
+.lobby-aguardo-msg { text-align:center; color:var(--t3); font-size:.8rem; padding:12px 0 0; }
+
+/* ════════════════════════════════════════════════════
+   VOTAÇÃO — Sprint 4
+════════════════════════════════════════════════════ */
+.votacao-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line2);
+  position:sticky; top:0; z-index:10;
+}
+.votacao-rodada-badge { font-size:.78rem; color:var(--t3); font-weight:600; }
+.votacao-timer { font-size:1.3rem; font-weight:800; color:var(--t1); min-width:44px; text-align:right; }
+.votacao-body { padding:12px 16px 80px; display:flex; flex-direction:column; gap:12px; }
+.votacao-indicators { display:flex; flex-wrap:wrap; gap:6px; }
+.votacao-ind { background:var(--card); border-radius:8px; padding:5px 10px; font-size:.75rem; display:flex; gap:6px; align-items:center; }
+.votacao-situacao { background:var(--card); border-radius:12px; padding:14px; }
+.votacao-situacao-titulo { font-weight:700; font-size:.95rem; margin-bottom:6px; }
+.votacao-situacao-desc { font-size:.82rem; color:var(--t2); line-height:1.5; }
+.votacao-opcoes { display:flex; flex-direction:column; gap:8px; }
+.votacao-btn {
+  display:flex; align-items:center; gap:12px;
+  background:var(--card); border:1.5px solid var(--line2);
+  border-radius:12px; padding:12px 14px;
+  text-align:left; font-size:.88rem; cursor:pointer; color:var(--t1);
+  transition:border-color .15s, background .15s;
+}
+.votacao-btn:active { background:var(--bg); }
+.votacao-btn--votado { border-color:var(--purple); background:rgba(155,89,182,.08); }
+.votacao-letra { font-weight:800; color:var(--purple); min-width:20px; }
+.votacao-avatares-label { font-size:.72rem; color:var(--t3); font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+.votacao-avatares { display:flex; flex-wrap:wrap; gap:10px; }
+.votacao-avatar { display:flex; flex-direction:column; align-items:center; gap:3px; opacity:.5; transition:opacity .2s; position:relative; }
+.votacao-avatar--votou { opacity:1; }
+.votacao-avatar--offline { opacity:.25; }
+.votacao-avatar-icon { width:36px; height:36px; border-radius:50%; background:var(--card); border:2px solid var(--line2); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; }
+.votacao-avatar--votou .votacao-avatar-icon { border-color:var(--purple); }
+.votacao-avatar-nome { font-size:.65rem; color:var(--t3); }
+.votacao-avatar-check { position:absolute; top:-4px; right:-4px; background:var(--purple); color:#fff; border-radius:50%; width:16px; height:16px; font-size:.6rem; display:flex; align-items:center; justify-content:center; }
+
+/* Barra de revelação */
+.votacao-barra { display:flex; flex-direction:column; gap:8px; }
+.barra-opcao { display:flex; align-items:center; gap:10px; }
+.barra-letra { font-weight:800; min-width:20px; color:var(--t2); }
+.barra-track { flex:1; height:10px; background:var(--bg); border-radius:20px; overflow:hidden; }
+.barra-fill { height:100%; background:var(--purple); border-radius:20px; transition:width .5s ease; }
+.barra-opcao--vence .barra-fill { background:var(--good); }
+.barra-pct { font-size:.75rem; color:var(--t3); min-width:50px; }
+.barra-win-badge { font-size:.7rem; background:rgba(46,204,113,.15); color:var(--good); padding:2px 7px; border-radius:20px; font-weight:700; }
+
+/* ════════════════════════════════════════════════════
+   RESULTADO GRUPO — Sprint 5
+════════════════════════════════════════════════════ */
+.resultado-grupo-body { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; gap:12px; text-align:center; min-height:60vh; }
+.resultado-grupo-nome { font-size:1.1rem; font-weight:700; color:var(--t1); }
+.resultado-grupo-score-label { font-size:.78rem; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; }
+.resultado-grupo-score { font-size:4rem; font-weight:900; line-height:1; }
+.resultado-grupo-aviso { font-size:.82rem; color:var(--t3); margin-top:8px; }
+
+/* ════════════════════════════════════════════════════
+   PAINEL ANFITRIÃO — Sprint 6
+════════════════════════════════════════════════════ */
+.painel-anf-body { padding:16px; display:flex; flex-direction:column; gap:16px; }
+.painel-anf-section { background:var(--card); border-radius:12px; padding:16px; }
+.painel-anf-label { font-size:.78rem; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
+.painel-grupo-row { display:flex; align-items:center; justify-content:space-between; padding:8px 10px; margin-top:8px; background:var(--bg); border-radius:8px; }
+.espera-grupo-row { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--card); border-radius:10px; margin-bottom:8px; font-size:.88rem; }
+.btn-danger { background:rgba(231,76,60,.12); color:var(--danger); border:1px solid var(--danger); border-radius:10px; padding:10px 16px; font-size:.88rem; font-weight:700; cursor:pointer; }
