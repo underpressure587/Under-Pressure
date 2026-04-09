@@ -285,10 +285,13 @@
         <span class="home-start-label">Iniciar<br>Mandato</span>
       </button>
     </div>
+    <!-- Badge sala ativa -->
+    <div id="home-sala-badge" class="home-sala-badge" onclick="BetaUI.irParaPodioSala()" style="display:none"></div>
     <div class="home-tab-bar">
       <button class="home-tab-btn" onclick="BetaUI.irParaPerfil()" style="display:flex;align-items:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Perfil</button>
       <button class="home-tab-btn" onclick="BetaUI.irParaPodio()" style="display:flex;align-items:center;gap:5px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg> Pódio</button>
       <button class="home-tab-btn" onclick="BetaUI.irParaHistoricoJogos()" style="display:flex;align-items:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Histórico</button>
+      <button class="home-tab-btn" onclick="BetaUI.abrirModalSala()" style="display:flex;align-items:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> Sala</button>
     </div>
   </div>
 
@@ -974,5 +977,51 @@
 
 <script src="./admin.js?v=bb11891"></script>
 <script src="./bundle.js?v=bb11891"></script>
+
+  <!-- ══ MODAL SALA ══ -->
+  <div id="modal-sala" class="modal-overlay" style="display:none" onclick="if(event.target===this)BetaUI.fecharModalSala()">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">🏟️ Entrar em Sala</span>
+        <button class="modal-close" onclick="BetaUI.fecharModalSala()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Sala atual -->
+        <div id="sala-atual-info" class="sala-atual-info" style="display:none"></div>
+        <!-- Input de código -->
+        <div class="sala-input-group">
+          <label class="sala-label">Código da sala</label>
+          <input id="sala-codigo-input" class="sala-input" type="text" maxlength="8"
+            placeholder="Ex: TURMA7"
+            style="text-transform:uppercase;letter-spacing:3px;font-weight:700;font-size:1.2rem"
+            onkeydown="if(event.key==='Enter')BetaUI.entrarNaSala()">
+        </div>
+        <div id="sala-status" class="sala-status" style="display:none"></div>
+      </div>
+      <div class="modal-foot">
+        <button id="btn-sala-entrar" class="btn-primary" onclick="BetaUI.entrarNaSala()">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PÓDIO DA SALA ══ -->
+  <div id="screen-podio-sala" class="screen">
+    <div class="podio-header">
+      <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
+      <span class="podio-title">🏟️ <span id="podio-sala-titulo">Sala</span></span>
+      <button class="btn-ghost btn-icon" onclick="BetaUI.sairDaSala()" title="Sair da sala" style="color:var(--danger)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+    <!-- Tela de espera (pódio oculto) -->
+    <div id="podio-sala-espera" class="podio-sala-espera" style="display:none"></div>
+    <!-- Lista do pódio -->
+    <div class="podio-list" id="podio-sala-lista">
+      <div class="podio-loading">Carregando...</div>
+    </div>
+  </div>
+
 </body>
 </html>

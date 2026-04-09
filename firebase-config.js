@@ -480,3 +480,303 @@ window.GSPSync = {
     } catch (e) { console.warn('[GSP] carregarPerfil:', e.message); return null; }
   },
 };
+
+
+/* ════════════════════════════════════════════════════
+   GSPSalas — Sprint 1: Sala básica
+════════════════════════════════════════════════════ */
+window.GSPSalas = {
+
+  /* ── Helpers internos ── */
+  _url(path) {
+    return "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/" + path;
+  },
+
+  _pi(v) { return parseInt(v?.integerValue ?? v?.doubleValue ?? 0); },
+
+  _toFields(obj) {
+    const f = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (v === null || v === undefined) f[k] = { nullValue: null };
+      else if (typeof v === 'boolean')   f[k] = { booleanValue: v };
+      else if (typeof v === 'number')    f[k] = { integerValue: String(v) };
+      else                               f[k] = { stringValue: String(v) };
+    }
+    return f;
+  },
+
+  _fromFields(fields = {}) {
+    const obj = {};
+    for (const [k, v] of Object.entries(fields)) {
+      if (v.integerValue  !== undefined) obj[k] = parseInt(v.integerValue);
+      else if (v.doubleValue   !== undefined) obj[k] = parseFloat(v.doubleValue);
+      else if (v.booleanValue  !== undefined) obj[k] = v.booleanValue;
+      else if (v.stringValue   !== undefined) obj[k] = v.stringValue;
+      else if (v.timestampValue !== undefined) obj[k] = new Date(v.timestampValue).getTime();
+      else if (v.nullValue     !== undefined) obj[k] = null;
+      else obj[k] = null;
+    }
+    return obj;
+  },
+
+  _gerarCodigo() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sem I,O,0,1 — evita confusão visual
+    let cod = '';
+    for (let i = 0; i < 6; i++) cod += chars[Math.floor(Math.random() * chars.length)];
+    return cod;
+  },
+
+  /* ── criarSala ──────────────────────────────────────
+     Só admins podem criar. Verifica /config/admins antes.
+     Retorna { codigo, ...dadosSala } ou lança erro.
+  ──────────────────────────────────────────────────── */
+  async criarSala({ uid, nomeSala, modoSetor, setorFixo, limiteGrupos, minMembros, maxMembros }) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+
+    // Verifica se é admin
+    const adminRes = await fetch(this._url('config/admins'), {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!adminRes.ok) throw new Error('sem_permissao');
+    const adminData = await adminRes.json();
+    const uids = adminData.fields?.uids?.arrayValue?.values?.map(v => v.stringValue) || [];
+    if (!uids.includes(uid)) throw new Error('sem_permissao');
+
+    // Gera código único (tenta até 5 vezes)
+    let codigo = null;
+    for (let i = 0; i < 5; i++) {
+      const tentativa = this._gerarCodigo();
+      const check = await fetch(this._url('salas/' + tentativa), {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!check.ok) { codigo = tentativa; break; } // 404 = livre
+    }
+    if (!codigo) throw new Error('codigo_indisponivel');
+
+    const body = { fields: this._toFields({
+      nome:        nomeSala || 'Sala sem nome',
+      criadaPor:   uid,
+      criadaEm:    Date.now(),
+      ativa:       true,
+      arquivada:   false,
+      modoSetor:   modoSetor   || 'livre',      // 'livre' | 'fixo'
+      setorFixo:   setorFixo   || '',
+      limiteGrupos: limiteGrupos || 4,
+      minMembros:   minMembros   || 2,
+      maxMembros:   maxMembros   || 6,
+      cicloAtual:   1,
+      podioVisivel: false,
+    })};
+
+    // Adiciona criadaEm como timestamp real
+    body.fields.criadaEm = { timestampValue: new Date().toISOString() };
+
+    const res = await fetch(this._url('salas/' + codigo), {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
+
+    return { codigo, nomeSala, modoSetor, setorFixo, limiteGrupos, minMembros, maxMembros };
+  },
+
+  /* ── carregarSala ───────────────────────────────────
+     Valida e retorna dados da sala pelo código.
+     Lança 'sala_nao_encontrada' ou 'sala_inativa'.
+  ──────────────────────────────────────────────────── */
+  async carregarSala(codigo) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+
+    const cod = (codigo || '').toUpperCase().trim();
+    if (!cod) throw new Error('codigo_invalido');
+
+    const res = await fetch(this._url('salas/' + cod), {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('sala_nao_encontrada');
+
+    const data = await res.json();
+    if (!data.fields) throw new Error('sala_nao_encontrada');
+
+    const sala = this._fromFields(data.fields);
+    if (!sala.ativa) throw new Error('sala_inativa');
+
+    return { codigo: cod, ...sala };
+  },
+
+  /* ── entrarSala ─────────────────────────────────────
+     Registra o jogador como membro da sala.
+     Salva em salas/{codigo}/membros/{uid}
+  ──────────────────────────────────────────────────── */
+  async entrarSala(codigo, { uid, nome }) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+
+    // Confirma que sala existe e está ativa
+    await this.carregarSala(codigo);
+
+    const cod = codigo.toUpperCase().trim();
+    const body = { fields: this._toFields({ uid, nome, entrou: Date.now() }) };
+    body.fields.entrou = { timestampValue: new Date().toISOString() };
+
+    const res = await fetch(this._url('salas/' + cod + '/membros/' + uid), {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
+    return true;
+  },
+
+  /* ── carregarMembrosSala ────────────────────────────
+     Retorna lista de membros da sala via runQuery.
+  ──────────────────────────────────────────────────── */
+  async carregarMembrosSala(codigo) {
+    const token = await _getToken();
+    if (!token) return [];
+
+    const cod = (codigo || '').toUpperCase().trim();
+    const url = this._url('salas/' + cod + '/membros:runQuery').replace('/membros:runQuery', ':runQuery');
+    // runQuery na subcoleção membros
+    const runUrl = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/salas/" + cod + ":runQuery";
+
+    const res = await fetch(runUrl, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'membros' }],
+          limit: 100
+        }
+      })
+    });
+    if (!res.ok) return [];
+
+    const rows = await res.json();
+    return rows
+      .filter(r => r.document)
+      .map(r => this._fromFields(r.document.fields || {}));
+  },
+
+  /* ── encerrarSala ───────────────────────────────────
+     Marca sala como inativa e arquivada.
+     Só o criadoPor ou admin pode encerrar.
+  ──────────────────────────────────────────────────── */
+  async encerrarSala(codigo, uid) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+
+    const cod = (codigo || '').toUpperCase().trim();
+    const sala = await this.carregarSala(cod);
+    if (sala.criadaPor !== uid) {
+      // Verifica se é admin
+      const adminRes = await fetch(this._url('config/admins'), {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (adminRes.ok) {
+        const adminData = await adminRes.json();
+        const uids = adminData.fields?.uids?.arrayValue?.values?.map(v => v.stringValue) || [];
+        if (!uids.includes(uid)) throw new Error('sem_permissao');
+      } else {
+        throw new Error('sem_permissao');
+      }
+    }
+
+    const url = this._url('salas/' + cod) + '?updateMask.fieldPaths=ativa&updateMask.fieldPaths=arquivada&updateMask.fieldPaths=encerradaEm';
+    const body = { fields: {
+      ativa:       { booleanValue: false },
+      arquivada:   { booleanValue: true },
+      encerradaEm: { timestampValue: new Date().toISOString() },
+    }};
+
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
+    return true;
+  },
+
+  /* ── carregarPodioSala ──────────────────────────────
+     Retorna pódio de grupos de um ciclo específico.
+  ──────────────────────────────────────────────────── */
+  async carregarPodioSala(codigo, ciclo = 1) {
+    const token = await _getToken();
+    if (!token) return [];
+
+    const cod = (codigo || '').toUpperCase().trim();
+    const runUrl = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/salas/" + cod + ":runQuery";
+
+    const res = await fetch(runUrl, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'podio' }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: 'ciclo' },
+              op: 'EQUAL',
+              value: { integerValue: String(ciclo) }
+            }
+          },
+          orderBy: [{ field: { fieldPath: 'score' }, direction: 'DESCENDING' }],
+          limit: 50
+        }
+      })
+    });
+    if (!res.ok) return [];
+
+    const rows = await res.json();
+    return rows
+      .filter(r => r.document)
+      .map(r => this._fromFields(r.document.fields || {}))
+      .sort((a, b) => b.score - a.score);
+  },
+
+  /* ── salvarNoPodioSala ──────────────────────────────
+     Salva resultado de uma partida colaborativa no pódio da sala.
+     docId = codigo_grupo para deduplicar por grupo+ciclo.
+  ──────────────────────────────────────────────────── */
+  async salvarNoPodioSala(codigo, { grupo, cor, membros, score, sector, ciclo, resumo }) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+
+    const cod     = (codigo || '').toUpperCase().trim();
+    const docId   = encodeURIComponent(grupo + '_ciclo' + ciclo);
+    const url     = this._url('salas/' + cod + '/podio/' + docId);
+
+    // Lê score atual para manter só o melhor
+    let melhorScore = score;
+    const getRes = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (getRes.ok) {
+      const atual = await getRes.json();
+      const scoreAtual = parseInt(atual.fields?.score?.integerValue || 0);
+      if (scoreAtual >= score) return true; // já tem score melhor, não sobrescreve
+      melhorScore = score;
+    }
+
+    const body = { fields: {
+      grupo:    { stringValue:  grupo   || '' },
+      cor:      { stringValue:  cor     || '#888' },
+      sector:   { stringValue:  sector  || '' },
+      ciclo:    { integerValue: String(ciclo || 1) },
+      score:    { integerValue: String(melhorScore) },
+      ts:       { timestampValue: new Date().toISOString() },
+      membros:  { arrayValue: { values: (membros || []).map(m => ({ stringValue: String(m) })) } },
+      resumo:   { stringValue: JSON.stringify(resumo || {}) },
+    }};
+
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
+    return true;
+  },
+};

@@ -4449,3 +4449,128 @@ body::after{
   display: flex; gap: 8px; padding: 12px 16px 6px; align-items: center;
 }
 .admin-busca-row .admin-input { flex: 1; }
+
+/* ════════════════════════════════════════════════════
+   SALA — Sprint 1
+════════════════════════════════════════════════════ */
+
+/* Badge sala ativa (acima da tab bar) */
+.home-sala-badge {
+  display: none;
+  margin: 0 16px 8px;
+  padding: 8px 14px;
+  background: var(--card);
+  border: 1px solid var(--purple);
+  border-radius: 10px;
+  color: var(--purple);
+  font-size: .8rem;
+  font-weight: 700;
+  cursor: pointer;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: .5px;
+  transition: opacity .2s;
+}
+.home-sala-badge:active { opacity: .7; }
+
+/* Modal sala */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-card {
+  background: var(--card);
+  border-radius: 16px;
+  width: 100%; max-width: 400px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line2);
+}
+.modal-title { font-weight: 700; font-size: 1rem; color: var(--t1); }
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--t3); padding: 4px; border-radius: 6px;
+  display: flex; align-items: center;
+}
+.modal-close:hover { color: var(--t1); }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.modal-foot {
+  padding: 16px 20px;
+  border-top: 1px solid var(--line2);
+  display: flex; justify-content: flex-end; gap: 10px;
+}
+
+/* Input de código */
+.sala-input-group { display: flex; flex-direction: column; gap: 6px; }
+.sala-label { font-size: .75rem; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; }
+.sala-input {
+  background: var(--bg);
+  border: 1.5px solid var(--line2);
+  border-radius: 10px;
+  color: var(--t1);
+  padding: 12px 16px;
+  font-size: 1.2rem;
+  font-family: inherit;
+  text-align: center;
+  width: 100%;
+  transition: border-color .2s;
+}
+.sala-input:focus { outline: none; border-color: var(--purple); }
+
+/* Status do modal */
+.sala-status {
+  font-size: .82rem; padding: 8px 12px;
+  border-radius: 8px; text-align: center;
+}
+.sala-status--erro { background: rgba(231,76,60,.12); color: var(--danger); }
+.sala-status--ok   { background: rgba(46,204,113,.12); color: var(--good); }
+.sala-status--info { background: var(--bg); color: var(--t2); }
+
+/* Sala atual info */
+.sala-atual-info {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg); border-radius: 10px; padding: 10px 14px;
+  font-size: .82rem; color: var(--t2); gap: 10px;
+}
+.btn-sala-sair {
+  background: none; border: 1px solid var(--danger);
+  color: var(--danger); border-radius: 8px;
+  padding: 4px 10px; font-size: .75rem; cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Screen pódio da sala */
+.podio-sala-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+.podio-sala-pos { font-size: 1.4rem; min-width: 32px; text-align: center; }
+.podio-sala-info { flex: 1; min-width: 0; }
+.podio-sala-nome { font-weight: 700; font-size: .95rem; }
+.podio-sala-sub  { font-size: .75rem; color: var(--t3); margin-top: 2px; }
+.podio-sala-score { font-size: 1.4rem; font-weight: 800; }
+
+/* Tela de espera */
+.podio-sala-espera {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; padding: 40px 24px; text-align: center;
+}
+.podio-espera-icon { font-size: 2.5rem; }
+.podio-espera-msg  { font-weight: 700; font-size: 1rem; color: var(--t1); }
+.podio-espera-sub  { font-size: .82rem; color: var(--t3); line-height: 1.5; }
+
+/* Loading state */
+.podio-loading {
+  text-align: center; color: var(--t3);
+  font-size: .85rem; padding: 40px 0;
+}

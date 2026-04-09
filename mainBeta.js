@@ -25,6 +25,7 @@ const SK = {
   PLAYER:"gsp_player", PODIO:"gsp_podio",
   HISTORICO:"gsp_historico", HIST_GUEST:"gsp_historico_guest",
   SESSION:"gsp_session", SETTINGS:"gsp_settings",
+  SALA:"gsp_sala",        // { codigo, nome, modoSetor, setorFixo, ... }
 };
 
 /* ════════════════════════════════════════════════════
@@ -43,6 +44,7 @@ let _ultimaMensagemGlobal = '';
 let _timerSegs        = 0;
 let _bloqueioAte      = 0; // timestamp — bloqueia escolher() durante transições
 let _prevIndicators   = {}; // track trends
+let _sala             = null; // sala ativa: { codigo, nome, ... } | null
 
 /* ════════════════════════════════════════════════════
    BOOT
@@ -304,6 +306,7 @@ function confirmarNome() {
   _player = { nome, tipo: "user" };
   LS.set(SK.PLAYER, _player);
   if (input) input.value = "";
+  _restaurarSala();
   _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela("screen-home");
@@ -2496,6 +2499,7 @@ async function _loginOk(player) {
   _iniciarPollingGlobal(player.uid);
 
   // Entra no painel imediatamente — sem esperar Firestore
+  _restaurarSala();
   _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela("screen-home");
@@ -2543,6 +2547,196 @@ async function irParaAdmin() {
   }
 }
 
+/* ════════════════════════════════════════════════════
+   SALA — Sprint 1
+   Funções de UI para entrar/sair de sala e pódio da sala
+════════════════════════════════════════════════════ */
+
+/* ── Helpers de UI ── */
+function _setSalaStatus(msg, tipo) {
+  // tipo: 'info' | 'erro' | 'ok'
+  const el = document.getElementById('sala-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'sala-status sala-status--' + (tipo || 'info');
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function _atualizarBadgeSala() {
+  const badge = document.getElementById('home-sala-badge');
+  if (!badge) return;
+  if (_sala) {
+    badge.textContent = '🏟️ ' + (_sala.nome || _sala.codigo);
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* ── Abrir modal de sala ── */
+function abrirModalSala() {
+  if (!_player?.uid || _player?.tipo === 'guest') {
+    mostrarAviso('⚠️ Você precisa estar logado para entrar em uma sala.');
+    return;
+  }
+  const modal = document.getElementById('modal-sala');
+  if (modal) {
+    modal.style.display = 'flex';
+    _setSalaStatus('', 'info');
+    const input = document.getElementById('sala-codigo-input');
+    if (input) { input.value = ''; input.focus(); }
+    // Mostra sala atual se já estiver em uma
+    const atual = document.getElementById('sala-atual-info');
+    if (atual) {
+      if (_sala) {
+        atual.innerHTML = `<span>Sala atual: <strong>${_sala.codigo}</strong> — ${_sala.nome || ''}</span>
+          <button onclick="sairDaSala()" class="btn-sala-sair">Sair da sala</button>`;
+        atual.style.display = 'flex';
+      } else {
+        atual.style.display = 'none';
+      }
+    }
+  }
+}
+
+function fecharModalSala() {
+  const modal = document.getElementById('modal-sala');
+  if (modal) modal.style.display = 'none';
+}
+
+/* ── Entrar em sala ── */
+async function entrarNaSala() {
+  const input = document.getElementById('sala-codigo-input');
+  const codigo = (input?.value || '').toUpperCase().trim();
+
+  if (!codigo || codigo.length < 4) {
+    _setSalaStatus('Digite o código da sala.', 'erro');
+    return;
+  }
+  if (!_player?.uid) {
+    _setSalaStatus('Você precisa estar logado.', 'erro');
+    return;
+  }
+
+  const btnEntrar = document.getElementById('btn-sala-entrar');
+  if (btnEntrar) { btnEntrar.disabled = true; btnEntrar.textContent = 'Verificando...'; }
+  _setSalaStatus('', 'info');
+
+  try {
+    if (!window.GSPSalas) throw new Error('Sistema de salas indisponível.');
+
+    const sala = await window.GSPSalas.carregarSala(codigo);
+    await window.GSPSalas.entrarSala(codigo, { uid: _player.uid, nome: _player.nome });
+
+    _sala = sala;
+    LS.set(SK.SALA, sala);
+
+    _atualizarBadgeSala();
+    fecharModalSala();
+    mostrarSucesso('✅ Você entrou na sala ' + sala.codigo + '!');
+
+  } catch(e) {
+    const msgs = {
+      'sem_auth':           'Você precisa estar logado.',
+      'sala_nao_encontrada':'Sala não encontrada. Verifique o código.',
+      'sala_inativa':       'Esta sala está encerrada.',
+      'codigo_invalido':    'Código inválido.',
+    };
+    _setSalaStatus(msgs[e.message] || ('Erro: ' + (e.message || 'desconhecido')), 'erro');
+  } finally {
+    if (btnEntrar) { btnEntrar.disabled = false; btnEntrar.textContent = 'Entrar'; }
+  }
+}
+
+/* ── Sair da sala ── */
+function sairDaSala() {
+  _sala = null;
+  LS.remove(SK.SALA);
+  _atualizarBadgeSala();
+  fecharModalSala();
+  mostrarSucesso('Você saiu da sala.');
+}
+
+/* ── Pódio da sala ── */
+async function irParaPodioSala() {
+  if (!_sala) {
+    mostrarAviso('Você não está em nenhuma sala.');
+    return;
+  }
+  mostrarTela('screen-podio-sala');
+  _carregarPodioSala();
+}
+
+async function _carregarPodioSala() {
+  const lista = document.getElementById('podio-sala-lista');
+  const titulo = document.getElementById('podio-sala-titulo');
+  const espera = document.getElementById('podio-sala-espera');
+
+  if (titulo) titulo.textContent = _sala.nome || _sala.codigo;
+  if (lista) lista.innerHTML = '<div class="podio-loading">Carregando...</div>';
+  if (espera) espera.style.display = 'none';
+
+  try {
+    if (!window.GSPSalas) throw new Error('indisponivel');
+
+    const sala = await window.GSPSalas.carregarSala(_sala.codigo);
+
+    // Pódio oculto — mostra tela de espera
+    if (!sala.podioVisivel) {
+      if (lista) lista.innerHTML = '';
+      if (espera) {
+        // Conta quantos grupos concluíram
+        const membros = await window.GSPSalas.carregarMembrosSala(_sala.codigo);
+        espera.innerHTML = `
+          <div class="podio-espera-icon">⏳</div>
+          <div class="podio-espera-msg">Aguardando todos os grupos terminarem...</div>
+          <div class="podio-espera-sub">O anfitrião revelará o pódio quando todos concluírem.</div>
+        `;
+        espera.style.display = 'flex';
+      }
+      return;
+    }
+
+    const podio = await window.GSPSalas.carregarPodioSala(_sala.codigo, sala.cicloAtual || 1);
+
+    if (!podio || podio.length === 0) {
+      if (lista) lista.innerHTML = '<div class="podio-empty">Nenhum grupo terminou ainda.</div>';
+      return;
+    }
+
+    const medalhas = ['🥇','🥈','🥉'];
+    if (lista) lista.innerHTML = podio.map((g, i) => {
+      const cor   = g.cor || '#888';
+      const medal = medalhas[i] || `#${i+1}`;
+      const membrosCount = Array.isArray(g.membros) ? g.membros.length : 0;
+      const cor_score = g.score >= 70 ? 'var(--good)' : g.score >= 45 ? 'var(--warn)' : 'var(--danger)';
+      return `
+        <div class="podio-sala-card" style="border-left: 4px solid ${cor}">
+          <div class="podio-sala-pos">${medal}</div>
+          <div class="podio-sala-info">
+            <div class="podio-sala-nome" style="color:${cor}">${g.grupo || 'Grupo'}</div>
+            <div class="podio-sala-sub">${membrosCount} membro${membrosCount !== 1 ? 's' : ''} · ${g.sector || ''}</div>
+          </div>
+          <div class="podio-sala-score" style="color:${cor_score}">${g.score}</div>
+        </div>
+      `;
+    }).join('');
+
+  } catch(e) {
+    if (lista) lista.innerHTML = '<div class="podio-empty">Erro ao carregar pódio.</div>';
+  }
+}
+
+/* ── Restaurar sala do localStorage no boot ── */
+function _restaurarSala() {
+  const salva = LS.get(SK.SALA);
+  if (salva?.codigo && salva?.ativa !== false) {
+    _sala = salva;
+    _atualizarBadgeSala();
+  }
+}
+
+
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
@@ -2562,6 +2756,8 @@ window.BetaUI = {
   compartilharResultado,
   irParaAdmin,
   gerarNomeAleatorio,
+  // Sala
+  abrirModalSala, fecharModalSala, entrarNaSala, sairDaSala, irParaPodioSala,
 };
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando
