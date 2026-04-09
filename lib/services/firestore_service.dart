@@ -213,6 +213,15 @@ class FirestoreService {
     return res.where((r) => r['document'] != null).map((r) => _parseFields((r['document']['fields'] as Map?)?.cast<String,dynamic>() ?? {})).toList();
   }
 
+  // VERSÕES
+  Future<List<Map<String, dynamic>>> getVersoes() async {
+    try {
+      final doc = await _get('versoes');
+      final documents = (doc['documents'] as List? ?? []).cast<Map<String, dynamic>>();
+      return documents.map((d) => _parseFields((d['fields'] as Map?)?.cast<String,dynamic>() ?? {})).toList();
+    } catch (_) { return []; }
+  }
+
   // DASHBOARD
   Future<List<Map<String, dynamic>>> getDashboard() async {
     final res = await _query({'structuredQuery': {'from': [{'collectionId': 'podio'}], 'select': {'fields': [{'fieldPath': 'melhorPorSetor'}, {'fieldPath': 'totalJogos'}, {'fieldPath': 'ultimaPartida'}]}}});
