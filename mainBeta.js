@@ -708,11 +708,14 @@ function _iniciarPollingGlobal(uid) {
 
       // 2. Verifica manutenção + mensagem global
       const cfg = await window.ADMIN.verificarMensagemGlobal();
+      _atualizarModoSala(cfg);
 
       if (cfg.manutencao && !_isAdmin) {
-        _forcarSaida('🔧 Jogo em manutenção. Você será desconectado.');
+        _mostrarOverlayManutencao(cfg.mensagem || '');
         return;
       }
+      // Manutenção desativada — esconde overlay se estava visível
+      _esconderOverlayManutencao();
 
       // 3. Mensagem global — mostra só se mudou desde a última vez
       if (cfg.mensagem && cfg.mensagem !== _ultimaMensagemGlobal) {
@@ -2486,9 +2489,10 @@ async function _loginOk(player) {
   // Verifica manutenção — admin bypassa, usuários comuns são bloqueados
   if (!_isAdmin && window.ADMIN) {
     const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
+    _atualizarModoSala(cfg);
     if (cfg?.manutencao) {
-      mostrarTela('screen-login');
-      setTimeout(() => mostrarAviso('🔧 Jogo em manutenção. Volte em breve!'), 500);
+      mostrarTela('screen-home');
+      setTimeout(() => _mostrarOverlayManutencao(cfg?.mensagem || ''), 500);
       return;
     }
     if (cfg?.mensagem) {
@@ -3429,6 +3433,117 @@ async function anfitriaoEncerrarSala() {
 }
 
 
+/* ════════════════════════════════════════════════════
+   MODO DE JOGO — Solo vs Em Grupo
+════════════════════════════════════════════════════ */
+
+let _modoSalaAtivo = false; // carregado do config/global
+
+/* ── Carrega flag modoSalaAtivo no polling global ── */
+// Já é retornado por verificarMensagemGlobal — apenas cacheia aqui
+function _atualizarModoSala(cfg) {
+  _modoSalaAtivo = !!cfg?.modoSalaAtivo;
+}
+
+/* ── Botão Iniciar Mandato ── */
+async function abrirModalModo() {
+  // Se modo sala desativado → vai direto para setores (comportamento atual)
+  if (!_modoSalaAtivo) {
+    irParaSetores();
+    return;
+  }
+
+  // Atualiza descrição do card "Em Grupo"
+  const descEl  = document.getElementById('modo-grupo-desc');
+  const avisoEl = document.getElementById('modo-grupo-aviso');
+  if (descEl) {
+    if (_sala && _grupoAtual) {
+      descEl.textContent = '🏟️ ' + (_sala.nome || _sala.codigo) + ' · 👥 ' + _grupoAtual.nomeGrupo;
+    } else if (_sala) {
+      descEl.textContent = '🏟️ ' + (_sala.nome || _sala.codigo) + ' — escolha um grupo';
+    } else {
+      descEl.textContent = 'Jogue colaborativamente com sua equipe';
+    }
+  }
+  if (avisoEl) avisoEl.style.display = 'none';
+
+  const modal = document.getElementById('modal-modo-jogo');
+  if (modal) modal.style.display = 'flex';
+}
+
+function fecharModalModo() {
+  const modal = document.getElementById('modal-modo-jogo');
+  if (modal) modal.style.display = 'none';
+}
+
+function escolherModoSolo() {
+  fecharModalModo();
+  irParaSetores();
+}
+
+async function escolherModoGrupo() {
+  const avisoEl = document.getElementById('modo-grupo-aviso');
+
+  // Não está em sala → abre modal de código
+  if (!_sala) {
+    fecharModalModo();
+    abrirModalSala();
+    return;
+  }
+
+  // Está em sala mas não escolheu grupo → vai para tela de grupos
+  if (!_grupoAtual) {
+    fecharModalModo();
+    await irParaGrupos();
+    return;
+  }
+
+  // Está em grupo → vai para lobby
+  fecharModalModo();
+  await irParaLobby();
+}
+
+
+/* ════════════════════════════════════════════════════
+   OVERLAY MANUTENÇÃO
+   Mostra overlay sem chutar o jogador da partida.
+   O jogador pode salvar e sair se quiser.
+════════════════════════════════════════════════════ */
+
+function _mostrarOverlayManutencao(msgExtra) {
+  const el = document.getElementById('overlay-manutencao');
+  if (!el) return;
+  // Mostra mensagem extra do admin se houver
+  const extra = document.getElementById('manut-msg-extra');
+  if (extra) {
+    if (msgExtra) {
+      extra.textContent = msgExtra;
+      extra.style.display = 'block';
+    } else {
+      extra.style.display = 'none';
+    }
+  }
+  // Esconde botão "Salvar e Sair" se não estiver em jogo
+  const btnSalvar = document.getElementById('manut-btn-salvar');
+  const emJogo = !!BetaState.get();
+  if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
+
+  el.style.display = 'flex';
+}
+
+function _esconderOverlayManutencao() {
+  const el = document.getElementById('overlay-manutencao');
+  if (el) el.style.display = 'none';
+}
+
+function manutencaoSalvarSair() {
+  // Se estava em jogo, salva sessão antes de sair
+  try { _salvarSessao(); } catch(e) {}
+  _esconderOverlayManutencao();
+  sair();
+}
+
+
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
@@ -3456,6 +3571,10 @@ window.BetaUI = {
   // Colaborativo
   irParaLobby, iniciarPartidaGrupo, votarOpcao,
   abrirPainelAnfitriao, anfitriaoRevelarPodio, anfitriaoNovoCiclo, anfitriaoEncerrarSala,
+  // Modo de jogo
+  abrirModalModo, fecharModalModo, escolherModoSolo, escolherModoGrupo,
+  // Manutenção
+  manutencaoSalvarSair,
 };
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando

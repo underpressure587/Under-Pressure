@@ -4735,3 +4735,24 @@ body::after{
 .painel-grupo-row { display:flex; align-items:center; justify-content:space-between; padding:8px 10px; margin-top:8px; background:var(--bg); border-radius:8px; }
 .espera-grupo-row { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--card); border-radius:10px; margin-bottom:8px; font-size:.88rem; }
 .btn-danger { background:rgba(231,76,60,.12); color:var(--danger); border:1px solid var(--danger); border-radius:10px; padding:10px 16px; font-size:.88rem; font-weight:700; cursor:pointer; }
+
+/* ════════════════════════════════════════════════════
+   MODAL MODO DE JOGO
+════════════════════════════════════════════════════ */
+.modo-card {
+  width: 100%;
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bg);
+  border: 1.5px solid var(--line2);
+  border-radius: 14px;
+  padding: 16px 14px;
+  cursor: pointer; text-align: left;
+  transition: border-color .15s, background .15s;
+  color: var(--t1);
+}
+.modo-card:active { background: var(--card); border-color: var(--purple); }
+.modo-card-icon { font-size: 1.6rem; min-width: 36px; text-align: center; }
+.modo-card-info { flex: 1; }
+.modo-card-titulo { font-weight: 700; font-size: .95rem; }
+.modo-card-desc { font-size: .78rem; color: var(--t3); margin-top: 3px; line-height: 1.4; }
+.modo-card-arrow { font-size: 1.4rem; color: var(--t3); }

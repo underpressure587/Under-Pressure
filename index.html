@@ -280,7 +280,7 @@
       </div>
     </div>
     <div class="home-center">
-      <button class="home-start-btn" onclick="BetaUI.irParaSetores()">
+      <button class="home-start-btn" onclick="BetaUI.abrirModalModo()">
         <span class="home-start-icon">▶</span>
         <span class="home-start-label">Iniciar<br>Mandato</span>
       </button>
@@ -755,6 +755,13 @@
             <label class="admin-label">Modo manutenção</label>
             <label class="admin-switch"><input type="checkbox" id="admin-manutencao"><span class="admin-switch-track"></span></label>
           </div>
+          <div class="admin-toggle-row">
+            <div>
+              <label class="admin-label">Modo Sala</label>
+              <div style="font-size:.72rem;color:var(--t3);margin-top:2px">Ativado: jogadores veem opção "Solo" ou "Em Grupo" ao iniciar</div>
+            </div>
+            <label class="admin-switch"><input type="checkbox" id="admin-modo-sala"><span class="admin-switch-track"></span></label>
+          </div>
           <div class="admin-sec-title" style="margin-top:12px">⏰ Agendamento de Manutenção</div>
           <div class="admin-agendamento-row">
             <div class="admin-agendamento-field"><label class="admin-label">Início</label><input type="time" id="admin-manut-inicio" class="admin-input"></div>
@@ -1147,6 +1154,38 @@
       <span class="podio-title">⚙️ Painel Anfitrião</span>
     </div>
     <div id="painel-anfitriao-body" class="painel-anf-body"></div>
+  </div>
+
+
+  <!-- ══ MODAL MODO DE JOGO ══ -->
+  <div id="modal-modo-jogo" class="modal-overlay" style="display:none"
+    onclick="if(event.target===this)fecharModalModo()">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">Como deseja jogar?</span>
+      </div>
+      <div class="modal-body" style="gap:10px">
+        <!-- Solo -->
+        <button class="modo-card" onclick="BetaUI.escolherModoSolo()">
+          <div class="modo-card-icon">👤</div>
+          <div class="modo-card-info">
+            <div class="modo-card-titulo">Solo</div>
+            <div class="modo-card-desc">Jogue por conta própria no seu ritmo</div>
+          </div>
+          <div class="modo-card-arrow">›</div>
+        </button>
+        <!-- Em Grupo -->
+        <button class="modo-card" onclick="BetaUI.escolherModoGrupo()">
+          <div class="modo-card-icon">👥</div>
+          <div class="modo-card-info">
+            <div class="modo-card-titulo">Em Grupo</div>
+            <div id="modo-grupo-desc" class="modo-card-desc">Jogue colaborativamente com sua equipe</div>
+          </div>
+          <div class="modo-card-arrow">›</div>
+        </button>
+        <div id="modo-grupo-aviso" class="sala-status sala-status--info" style="display:none"></div>
+      </div>
+    </div>
   </div>
 
 </body>

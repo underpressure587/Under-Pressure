@@ -823,7 +823,7 @@ const ADMIN = (() => {
     try {
       const doc = await _get('config/global');
       const fields = _parseFields(doc.fields || {});
-      return { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '' };
+      return { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '', modoSalaAtivo: !!fields.modoSalaAtivo };
     } catch(e) {
       return { manutencao: false, mensagem: '' };
     }
@@ -1468,6 +1468,8 @@ const ADMIN = (() => {
       if (cb) cb.checked = !!cfg.manutencao;
       const banner = document.getElementById('admin-manutencao-banner');
       if (banner) banner.style.display = cfg.manutencao ? 'block' : 'none';
+      const cbSala = document.getElementById('admin-modo-sala');
+      if (cbSala) cbSala.checked = !!cfg.modoSalaAtivo;
       const inicio = document.getElementById('admin-manut-inicio');
       const fim    = document.getElementById('admin-manut-fim');
       if (inicio) inicio.value = cfg.manutencaoInicio || '';
@@ -1491,18 +1493,21 @@ const ADMIN = (() => {
     const btn = document.getElementById('btn-salvar-config');
     if (btn) btn.textContent = 'Salvando...';
     try {
-      const manut   = document.getElementById('admin-manutencao')?.checked || false;
-      const inicio  = document.getElementById('admin-manut-inicio')?.value || '';
-      const fim     = document.getElementById('admin-manut-fim')?.value    || '';
+      const manut     = document.getElementById('admin-manutencao')?.checked || false;
+      const inicio    = document.getElementById('admin-manut-inicio')?.value || '';
+      const fim       = document.getElementById('admin-manut-fim')?.value    || '';
+      const modoSala  = document.getElementById('admin-modo-sala')?.checked  || false;
       await _patch('config/global', {
         manutencao:       _fsBool(manut),
         manutencaoInicio: _fsStr(inicio),
         manutencaoFim:    _fsStr(fim),
+        modoSalaAtivo:    _fsBool(modoSala),
       });
       const banner = document.getElementById('admin-manutencao-banner');
       if (banner) banner.style.display = manut ? 'block' : 'none';
       _showAdminToast('✅ Configurações salvas!');
       _registrarAuditoria(manut ? 'Manutenção ativada' : 'Manutenção desativada');
+      if (modoSala !== undefined) _registrarAuditoria(modoSala ? 'Modo Sala ativado' : 'Modo Sala desativado');
     } catch(e) { _showAdminToast('Erro: ' + e.message, true); }
     if (btn) btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar';
   }
