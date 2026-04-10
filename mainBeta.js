@@ -133,6 +133,10 @@ async function _boot() {
     _verificarSessaoSalva();
     _atualizarHome();
     await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
+    // Atualiza modoSalaAtivo no boot (sessão restaurada)
+    if (window.ADMIN) {
+      window.ADMIN.verificarMensagemGlobal().then(cfg => _atualizarModoSala(cfg)).catch(() => {});
+    }
     _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
@@ -1544,6 +1548,9 @@ function irParaSlide(step) {
    PERFIL DO JOGADOR
 ════════════════════════════════════════════════════ */
 async function irParaPerfil() {
+  // Limpa qualquer texto de loading residual
+  const loadMsg = document.getElementById('loading-msg');
+  if (loadMsg) loadMsg.textContent = '';
   // Configura hold 3s no avatar para admin
   setTimeout(() => {
     const av = document.getElementById('perfil-avatar');
@@ -2486,10 +2493,10 @@ async function _loginOk(player) {
   await _atualizarBotaoAdmin(player.uid);
 
   // Verifica manutenção — admin bypassa, usuários comuns são bloqueados
-  if (!_isAdmin && window.ADMIN) {
+  if (window.ADMIN) {
     const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
-    _atualizarModoSala(cfg);
-    if (cfg?.manutencao) {
+    _atualizarModoSala(cfg); // sempre atualiza — inclusive para admin
+    if (!_isAdmin && cfg?.manutencao) {
       mostrarTela('screen-home');
       setTimeout(() => _mostrarOverlayManutencao(cfg?.mensagem || ''), 500);
       return;
