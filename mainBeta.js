@@ -3467,6 +3467,7 @@ async function abrirModalModo() {
   }
   if (avisoEl) avisoEl.style.display = 'none';
 
+  _atualizarBotaoCriarSala();
   const modal = document.getElementById('modal-modo-jogo');
   if (modal) modal.style.display = 'flex';
 }
@@ -3544,6 +3545,122 @@ function manutencaoSalvarSair() {
 }
 
 
+/* ════════════════════════════════════════════════════
+   CRIAR SALA — só admin
+════════════════════════════════════════════════════ */
+
+let _codigoSalaCriada = null;
+
+/* Mostra/esconde botão "Criar Sala" no modal de modo */
+function _atualizarBotaoCriarSala() {
+  const wrap = document.getElementById('modo-criar-sala-wrap');
+  if (wrap) wrap.style.display = _isAdmin ? 'block' : 'none';
+}
+
+function abrirModalCriarSala() {
+  fecharModalModo();
+  const modal = document.getElementById('modal-criar-sala');
+  if (!modal) return;
+  // Reset form
+  const nomeEl = document.getElementById('criar-sala-nome');
+  if (nomeEl) nomeEl.value = '';
+  document.querySelector('input[name="criar-sala-setor"][value="livre"]').checked = true;
+  document.getElementById('criar-sala-setor-fixo-wrap').style.display = 'none';
+  document.getElementById('criar-sala-limite-grupos').value = '4';
+  document.getElementById('criar-sala-min-membros').value = '2';
+  document.getElementById('criar-sala-max-membros').value = '6';
+  const statusEl = document.getElementById('criar-sala-status');
+  if (statusEl) statusEl.style.display = 'none';
+  modal.style.display = 'flex';
+
+  // Toggle setor fixo/livre
+  document.querySelectorAll('input[name="criar-sala-setor"]').forEach(r => {
+    r.onchange = () => {
+      const wrap = document.getElementById('criar-sala-setor-fixo-wrap');
+      if (wrap) wrap.style.display = r.value === 'fixo' ? 'block' : 'none';
+    };
+  });
+}
+
+function fecharModalCriarSala() {
+  const modal = document.getElementById('modal-criar-sala');
+  if (modal) modal.style.display = 'none';
+}
+
+async function confirmarCriarSala() {
+  const nome         = document.getElementById('criar-sala-nome')?.value.trim();
+  const modoSetor    = document.querySelector('input[name="criar-sala-setor"]:checked')?.value || 'livre';
+  const setorFixo    = document.getElementById('criar-sala-setor-fixo')?.value || '';
+  const limiteGrupos = parseInt(document.getElementById('criar-sala-limite-grupos')?.value) || 4;
+  const minMembros   = parseInt(document.getElementById('criar-sala-min-membros')?.value)   || 2;
+  const maxMembros   = parseInt(document.getElementById('criar-sala-max-membros')?.value)   || 6;
+
+  const statusEl = document.getElementById('criar-sala-status');
+  const _setStatus = (msg, tipo) => {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.className = 'sala-status sala-status--' + (tipo || 'info');
+    statusEl.style.display = msg ? 'block' : 'none';
+  };
+
+  if (!nome) { _setStatus('Digite um nome para a sala.', 'erro'); return; }
+  if (!_player?.uid) { _setStatus('Você precisa estar logado.', 'erro'); return; }
+
+  const btn = document.getElementById('btn-confirmar-criar-sala');
+  if (btn) { btn.disabled = true; btn.textContent = 'Criando...'; }
+
+  try {
+    const result = await window.GSPSalas.criarSala({
+      uid: _player.uid,
+      nomeSala: nome,
+      modoSetor,
+      setorFixo: modoSetor === 'fixo' ? setorFixo : '',
+      limiteGrupos,
+      minMembros,
+      maxMembros,
+    });
+
+    _codigoSalaCriada = result.codigo;
+
+    // Entra automaticamente na sala criada
+    await window.GSPSalas.entrarSala(result.codigo, { uid: _player.uid, nome: _player.nome });
+    _sala = { ...result, ativa: true };
+    LS.set(SK.SALA, _sala);
+
+    fecharModalCriarSala();
+
+    // Mostra modal com código gerado
+    const modalCod = document.getElementById('modal-codigo-gerado');
+    const codEl    = document.getElementById('codigo-gerado-valor');
+    if (codEl) codEl.textContent = result.codigo;
+    if (modalCod) modalCod.style.display = 'flex';
+
+  } catch(e) {
+    const msgs = {
+      'sem_permissao':      'Apenas admins podem criar salas.',
+      'codigo_indisponivel':'Erro ao gerar código. Tente novamente.',
+      'sem_auth':           'Você precisa estar logado.',
+    };
+    _setStatus(msgs[e.message] || 'Erro: ' + e.message, 'erro');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Criar'; }
+  }
+}
+
+function copiarCodigoSala() {
+  if (!_codigoSalaCriada) return;
+  navigator.clipboard?.writeText(_codigoSalaCriada)
+    .then(() => mostrarSucesso('✅ Código copiado: ' + _codigoSalaCriada))
+    .catch(() => mostrarAviso('Código: ' + _codigoSalaCriada));
+}
+
+async function irParaSalaAposCriar() {
+  const modal = document.getElementById('modal-codigo-gerado');
+  if (modal) modal.style.display = 'none';
+  await irParaGrupos();
+}
+
+
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
@@ -3575,6 +3692,9 @@ window.BetaUI = {
   abrirModalModo, fecharModalModo, escolherModoSolo, escolherModoGrupo,
   // Manutenção
   manutencaoSalvarSair,
+  // Criar sala (admin)
+  abrirModalCriarSala, fecharModalCriarSala, confirmarCriarSala,
+  copiarCodigoSala, irParaSalaAposCriar,
 };
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando

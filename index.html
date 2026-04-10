@@ -1181,6 +1181,101 @@
           <div class="modo-card-arrow">›</div>
         </button>
         <div id="modo-grupo-aviso" class="sala-status sala-status--info" style="display:none"></div>
+        <!-- Criar Sala — só admin vê -->
+        <div id="modo-criar-sala-wrap" style="display:none">
+          <div class="modo-divisor">ou</div>
+          <button class="modo-card modo-card--criar" onclick="BetaUI.abrirModalCriarSala()">
+            <div class="modo-card-icon">🏟️</div>
+            <div class="modo-card-info">
+              <div class="modo-card-titulo">Criar Sala</div>
+              <div class="modo-card-desc">Crie uma nova sala e distribua o código</div>
+            </div>
+            <div class="modo-card-arrow">›</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL CRIAR SALA ══ -->
+  <div id="modal-criar-sala" class="modal-overlay" style="display:none"
+    onclick="if(event.target===this)BetaUI.fecharModalCriarSala()">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">🏟️ Criar Sala</span>
+        <button class="modal-close" onclick="BetaUI.fecharModalCriarSala()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="sala-input-group">
+          <label class="sala-label">Nome da sala</label>
+          <input id="criar-sala-nome" class="sala-input" type="text" maxlength="40"
+            placeholder="Ex: Turma MBA 2025"
+            style="font-size:.95rem;letter-spacing:0;text-transform:none">
+        </div>
+        <div class="sala-input-group">
+          <label class="sala-label">Modo de setor</label>
+          <div class="criar-sala-radio-group">
+            <label class="criar-sala-radio">
+              <input type="radio" name="criar-sala-setor" value="livre" checked>
+              <span>Livre — cada grupo escolhe</span>
+            </label>
+            <label class="criar-sala-radio">
+              <input type="radio" name="criar-sala-setor" value="fixo">
+              <span>Fixo — todos jogam o mesmo</span>
+            </label>
+          </div>
+        </div>
+        <div id="criar-sala-setor-fixo-wrap" class="sala-input-group" style="display:none">
+          <label class="sala-label">Setor fixo</label>
+          <select id="criar-sala-setor-fixo" class="sala-input" style="font-size:.9rem">
+            <option value="tecnologia">🚀 Tecnologia</option>
+            <option value="industria">🏭 Indústria</option>
+            <option value="logistica">🚚 Logística</option>
+            <option value="varejo">🛒 Varejo</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div class="sala-input-group" style="flex:1">
+            <label class="sala-label">Limite de grupos</label>
+            <input id="criar-sala-limite-grupos" class="sala-input" type="number"
+              min="2" max="20" value="4" style="font-size:.95rem;text-align:center">
+          </div>
+          <div class="sala-input-group" style="flex:1">
+            <label class="sala-label">Mín. membros/grupo</label>
+            <input id="criar-sala-min-membros" class="sala-input" type="number"
+              min="1" max="10" value="2" style="font-size:.95rem;text-align:center">
+          </div>
+          <div class="sala-input-group" style="flex:1">
+            <label class="sala-label">Máx. membros/grupo</label>
+            <input id="criar-sala-max-membros" class="sala-input" type="number"
+              min="2" max="20" value="6" style="font-size:.95rem;text-align:center">
+          </div>
+        </div>
+        <div id="criar-sala-status" class="sala-status" style="display:none"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost" onclick="BetaUI.fecharModalCriarSala()">Cancelar</button>
+        <button id="btn-confirmar-criar-sala" class="btn-primary" onclick="BetaUI.confirmarCriarSala()">Criar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL CÓDIGO GERADO ══ -->
+  <div id="modal-codigo-gerado" class="modal-overlay" style="display:none">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">✅ Sala Criada!</span>
+      </div>
+      <div class="modal-body" style="text-align:center;gap:16px">
+        <div class="codigo-gerado-label">Código da sala</div>
+        <div id="codigo-gerado-valor" class="codigo-gerado-valor"></div>
+        <div class="codigo-gerado-desc">Compartilhe este código com os participantes para que entrem na sala.</div>
+        <button class="btn-secondary" onclick="BetaUI.copiarCodigoSala()">📋 Copiar código</button>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-primary" onclick="BetaUI.irParaSalaAposCriar()">Entrar na sala →</button>
       </div>
     </div>
   </div>

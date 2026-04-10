@@ -4756,3 +4756,42 @@ body::after{
 .modo-card-titulo { font-weight: 700; font-size: .95rem; }
 .modo-card-desc { font-size: .78rem; color: var(--t3); margin-top: 3px; line-height: 1.4; }
 .modo-card-arrow { font-size: 1.4rem; color: var(--t3); }
+
+/* ════════════════════════════════════════════════════
+   CRIAR SALA — admin
+════════════════════════════════════════════════════ */
+.modo-divisor {
+  text-align: center; color: var(--t3);
+  font-size: .75rem; margin: 4px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.modo-divisor::before,
+.modo-divisor::after {
+  content: ''; flex: 1;
+  height: 1px; background: var(--line2);
+}
+.modo-card--criar {
+  border-color: var(--purple);
+  opacity: .9;
+}
+.modo-card--criar:active { background: rgba(155,89,182,.08); }
+
+/* Radio group setor */
+.criar-sala-radio-group { display: flex; flex-direction: column; gap: 8px; }
+.criar-sala-radio {
+  display: flex; align-items: center; gap: 10px;
+  font-size: .88rem; color: var(--t1); cursor: pointer;
+  background: var(--bg); border-radius: 8px; padding: 10px 12px;
+  border: 1.5px solid var(--line2); transition: border-color .15s;
+}
+.criar-sala-radio:has(input:checked) { border-color: var(--purple); }
+.criar-sala-radio input { accent-color: var(--purple); width: 16px; height: 16px; }
+
+/* Modal código gerado */
+.codigo-gerado-label { font-size: .75rem; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; }
+.codigo-gerado-valor {
+  font-size: 2.5rem; font-weight: 900; letter-spacing: 8px;
+  color: var(--purple); background: var(--bg);
+  border-radius: 12px; padding: 16px 24px;
+}
+.codigo-gerado-desc { font-size: .82rem; color: var(--t3); line-height: 1.5; }
