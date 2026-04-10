@@ -1087,6 +1087,12 @@ Object.assign(window.GSPSalas, {
       situacaoAtual:JSON.parse(f.situacaoAtual?.stringValue|| '{}'),
       decisaoFinal: f.decisaoFinal?.stringValue || '',
       timerInicio:  f.timerInicio?.stringValue  || null,
+      fase:         f.fase?.stringValue         || null,
+      faseInicio:   f.faseInicio?.integerValue  ? parseInt(f.faseInicio.integerValue) : null,
+      faseDuracao:  f.faseDuracao?.integerValue ? parseInt(f.faseDuracao.integerValue) : null,
+      papeis:       JSON.parse(f.papeis?.stringValue  || '{}'),
+      sinais:       JSON.parse(f.sinais?.stringValue  || '{}'),
+      placarGrupos: JSON.parse(f.placarGrupos?.stringValue || '[]'),
     };
   },
 
@@ -1371,6 +1377,74 @@ Object.assign(window.GSPSalas, {
       status: { stringValue: 'encerrada' }
     });
   },
+
+  /* ── avancarFase ────────────────────────────────────
+     Novo: atualiza fase da partida colaborativa (v2).
+     Usado pelo SalaMode para transições entre fases.
+  ──────────────────────────────────────────────────── */
+  async avancarFase(codigo, partidaId, dados) {
+    const fields = {};
+    for (const [k, v] of Object.entries(dados)) {
+      if (v === null || v === undefined) fields[k] = { nullValue: null };
+      else if (typeof v === 'boolean')   fields[k] = { booleanValue: v };
+      else if (typeof v === 'number')    fields[k] = { integerValue: String(v) };
+      else if (typeof v === 'object')    fields[k] = { stringValue: JSON.stringify(v) };
+      else                               fields[k] = { stringValue: String(v) };
+    }
+    await this.patchPartida(codigo, partidaId, fields);
+  },
+
+  /* ── registrarSinal ─────────────────────────────────
+     Novo: salva sinal de deliberação do jogador.
+  ──────────────────────────────────────────────────── */
+  async registrarSinal(codigo, partidaId, uid, sinal) {
+    const estado = await this.carregarEstadoPartida(codigo, partidaId);
+    if (!estado) return;
+    const sinais = estado.sinais || {};
+    sinais[uid] = sinal;
+    await this.patchPartida(codigo, partidaId, {
+      sinais: { stringValue: JSON.stringify(sinais) }
+    });
+  },
+
+  /* ── registrarVotoCompleto ──────────────────────────
+     Novo: voto com objeto { letra, confianca }.
+  ──────────────────────────────────────────────────── */
+  async registrarVotoCompleto(codigo, partidaId, uid, voto) {
+    const estado = await this.carregarEstadoPartida(codigo, partidaId);
+    if (!estado || estado.processando) return false;
+    const votos = estado.votos || {};
+    votos[uid] = voto; // { letra, confianca }
+    await this.patchPartida(codigo, partidaId, {
+      votos: { stringValue: JSON.stringify(votos) }
+    });
+    // Verifica se todos votaram
+    const online   = estado.online || {};
+    const onlineIds= Object.keys(online).filter(k => Date.now() - online[k] < 15000);
+    const votaram  = onlineIds.filter(k => votos[k]?.letra || votos[k]);
+    if (votaram.length >= onlineIds.length && onlineIds.length > 0) {
+      await this._tentarProcessarRodada(codigo, partidaId);
+    }
+    return true;
+  },
+
+  /* ── removerGrupo ───────────────────────────────────
+     Admin remove grupo da sala (usado pelo gerenciar).
+  ──────────────────────────────────────────────────── */
+  async removerGrupo(codigo, nomeGrupo) {
+    const token = await _getToken();
+    if (!token) throw new Error('sem_auth');
+    const cod   = (codigo || '').toUpperCase().trim();
+    const docId = encodeURIComponent((nomeGrupo || '').trim());
+    const url   = this._url('salas/' + cod + '/grupos/' + docId);
+    const res   = await fetch(url, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,80)); }
+    return true;
+  },
+
 
   async adminDeletarSala(codigo) {
     const token = await _getToken();

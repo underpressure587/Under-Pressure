@@ -983,238 +983,298 @@
 <script src="./bundle.js?v=bb11891"></script>
 
   <!-- ══ MODAL SALA ══ -->
-  <div id="modal-sala" class="modal-overlay" style="display:none" onclick="if(event.target===this)BetaUI.fecharModalSala()">
-    <div class="modal-card">
-      <div class="modal-head">
-        <span class="modal-title">🏟️ Entrar em Sala</span>
-        <button class="modal-close" onclick="BetaUI.fecharModalSala()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+  <div id="modal-sala" class="modal-overlay" style="display:none"
+  onclick="if(event.target===this)SalaMode.fecharModal()">
+  <div class="modal-card ns-modal-card">
+    <div class="modal-head">
+      <span class="modal-title">🏟️ Entrar em Sala</span>
+      <button class="modal-close" onclick="SalaMode.fecharModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body ns-modal-body">
+      <div id="ns-sala-atual" class="ns-sala-atual" style="display:none"></div>
+      <div class="ns-codigo-wrap">
+        <div class="ns-codigo-label">Código da Sala</div>
+        <input id="ns-sala-input" class="ns-codigo-input" type="text" maxlength="8"
+          placeholder="EX: TURMA7" autocapitalize="characters" autocomplete="off"
+          onkeydown="if(event.key==='Enter')SalaMode.entrar()"
+          oninput="this.value=this.value.toUpperCase()">
       </div>
-      <div class="modal-body">
-        <!-- Sala atual -->
-        <div id="sala-atual-info" class="sala-atual-info" style="display:none"></div>
-        <!-- Input de código -->
-        <div class="sala-input-group">
-          <label class="sala-label">Código da sala</label>
-          <input id="sala-codigo-input" class="sala-input" type="text" maxlength="8"
-            placeholder="Ex: TURMA7"
-            style="text-transform:uppercase;letter-spacing:3px;font-weight:700;font-size:1.2rem"
-            onkeydown="if(event.key==='Enter')BetaUI.entrarNaSala()">
-        </div>
-        <div id="sala-status" class="sala-status" style="display:none"></div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn-ghost" onclick="BetaUI.fecharModalSala();BetaUI.abrirPainelAnfitriao()" id="btn-painel-anf" style="display:none;color:var(--purple)">⚙️ Painel</button>
-        <button class="btn-secondary" onclick="BetaUI.fecharModalSala();BetaUI.irParaGrupos()" id="btn-ver-grupos" style="display:none">Ver Grupos</button>
-        <button id="btn-sala-entrar" class="btn-primary" onclick="BetaUI.entrarNaSala()">Entrar</button>
-      </div>
+      <div id="ns-sala-status" class="ns-status" style="display:none"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" id="ns-btn-painel" onclick="SalaMode.fecharModal();SalaMode.irPainelAnf()" style="display:none;color:var(--purple)">⚙️ Painel</button>
+      <button class="btn-secondary" id="ns-btn-grupos" onclick="SalaMode.fecharModal();SalaMode.irGrupos()" style="display:none">Ver Grupos</button>
+      <button id="ns-btn-entrar" class="btn-primary" onclick="SalaMode.entrar()">Entrar</button>
     </div>
   </div>
+</div>
 
   <!-- ══ PÓDIO DA SALA ══ -->
   <div id="screen-podio-sala" class="screen">
-    <div class="podio-header">
-      <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
-      <span class="podio-title">🏟️ <span id="podio-sala-titulo">Sala</span></span>
-      <button class="btn-ghost btn-icon" onclick="BetaUI.sairDaSala()" title="Sair da sala" style="color:var(--danger)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
-    </div>
-    <!-- Tela de espera (pódio oculto) -->
-    <div id="podio-sala-espera" class="podio-sala-espera" style="display:none"></div>
-    <!-- Lista do pódio -->
-    <div class="podio-list" id="podio-sala-lista">
-      <div class="podio-loading">Carregando...</div>
-    </div>
+  <div class="podio-header">
+    <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
+    <span class="podio-title">🏆 <span id="ns-podio-titulo">Sala</span></span>
+    <button class="btn-ghost btn-icon" onclick="SalaMode.sair()" title="Sair da sala" style="color:var(--danger)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
   </div>
+  <div id="ns-podio-espera" class="ns-podio-espera" style="display:none">
+    <div class="ns-podio-espera-icon">🔒</div>
+    <div class="ns-podio-espera-txt">O anfitrião ainda não revelou o pódio.</div>
+    <div class="ns-podio-espera-sub">Aguarde todos os grupos terminarem.</div>
+  </div>
+  <div class="ns-podio-lista" id="ns-podio-lista">
+    <div class="podio-loading">Carregando...</div>
+  </div>
+</div>
 
 
   <!-- ══ GRUPOS DA SALA ══ -->
   <div id="screen-grupos" class="screen">
-    <div class="podio-header">
-      <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
-      <span class="podio-title">👥 <span id="grupos-sala-nome">Sala</span></span>
-      <button class="btn-ghost btn-icon" onclick="BetaUI.recarregarGrupos()" title="Atualizar">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-      </button>
-    </div>
+  <div class="podio-header">
+    <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
+    <span class="podio-title">🏟️ <span id="ns-grupos-sala-nome">Sala</span></span>
+    <button class="btn-ghost btn-icon" onclick="SalaMode.recarregarGrupos()" title="Atualizar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+      </svg>
+    </button>
+  </div>
 
-    <!-- ══ PAINEL ANFITRIÃO (só admin/dono vê) ══ -->
-    <div id="painel-anf-inline" style="display:none">
-      <div class="anf-painel">
-        <div class="anf-painel-titulo">⚙️ Painel do Anfitrião</div>
-        <!-- Status geral -->
-        <div class="anf-status-row">
-          <div class="anf-status-item">
-            <span class="anf-status-label">Sala</span>
-            <span class="anf-status-val" id="anf-sala-codigo">—</span>
-          </div>
-          <div class="anf-status-item">
-            <span class="anf-status-label">Ciclo</span>
-            <span class="anf-status-val" id="anf-ciclo-atual">1</span>
-          </div>
-          <div class="anf-status-item">
-            <span class="anf-status-label">Grupos</span>
-            <span class="anf-status-val" id="anf-grupos-count">0</span>
-          </div>
-          <div class="anf-status-item">
-            <span class="anf-status-label">Concluídos</span>
-            <span class="anf-status-val" id="anf-concluidos-count">0</span>
-          </div>
-        </div>
-        <!-- Ações principais -->
-        <div class="anf-acoes">
-          <button class="anf-btn anf-btn--podio" id="anf-btn-revelar" onclick="BetaUI.anfitriaoRevelarPodio()">
-            <span>🏆</span><span>Revelar Pódio</span>
-          </button>
-          <button class="anf-btn anf-btn--ciclo" onclick="BetaUI.anfitriaoNovoCiclo()">
-            <span>🔄</span><span>Novo Ciclo</span>
-          </button>
-          <button class="anf-btn anf-btn--gerenciar" onclick="BetaUI.abrirGerenciarGrupos()">
-            <span>👥</span><span>Gerenciar Grupos</span>
-          </button>
-          <button class="anf-btn anf-btn--encerrar" onclick="BetaUI.anfitriaoEncerrarSala()">
-            <span>❌</span><span>Encerrar Sala</span>
-          </button>
-        </div>
-        <!-- Pódio oculto/visível -->
-        <div id="anf-podio-status" class="anf-podio-status"></div>
+  <!-- Painel Anfitrião (injetado por JS) -->
+  <div id="ns-painel-anf" style="display:none">
+    <div class="ns-anf-painel">
+      <div class="ns-anf-titulo">⚙️ Painel do Anfitrião</div>
+      <div class="ns-anf-stats">
+        <div class="ns-anf-stat"><div class="ns-anf-val" id="ns-anf-codigo">—</div><div class="ns-anf-lbl">Sala</div></div>
+        <div class="ns-anf-stat"><div class="ns-anf-val" id="ns-anf-ciclo">1</div><div class="ns-anf-lbl">Ciclo</div></div>
+        <div class="ns-anf-stat"><div class="ns-anf-val" id="ns-anf-grupos">0</div><div class="ns-anf-lbl">Grupos</div></div>
+        <div class="ns-anf-stat"><div class="ns-anf-val" id="ns-anf-concluidos">0</div><div class="ns-anf-lbl">Concluídos</div></div>
       </div>
-    </div>
-
-    <div class="grupos-min-aviso" id="grupos-min-aviso"></div>
-    <div class="podio-list" id="grupos-lista">
-      <div class="podio-loading">Carregando...</div>
+      <div class="ns-anf-acoes">
+        <button class="ns-anf-btn ns-anf-podio" id="ns-anf-btn-revelar" onclick="SalaMode.anfRevelar()">
+          <span>🏆</span><span>Revelar Pódio</span>
+        </button>
+        <button class="ns-anf-btn ns-anf-ciclo-btn" onclick="SalaMode.anfNovoCiclo()">
+          <span>🔄</span><span>Novo Ciclo</span>
+        </button>
+        <button class="ns-anf-btn" onclick="SalaMode.abrirGerenciar()">
+          <span>👥</span><span>Gerenciar</span>
+        </button>
+        <button class="ns-anf-btn ns-anf-danger" onclick="SalaMode.anfEncerrar()">
+          <span>❌</span><span>Encerrar</span>
+        </button>
+      </div>
+      <div id="ns-anf-podio-status" class="ns-anf-podio-status"></div>
     </div>
   </div>
+
+  <!-- Live players bar -->
+  <div class="ns-players-bar" id="ns-players-bar" style="display:none">
+    <div class="ns-players-label">Jogadores online</div>
+    <div class="ns-players-chips" id="ns-players-chips"></div>
+  </div>
+
+  <div class="ns-grupos-lista" id="ns-grupos-lista">
+    <div class="podio-loading">Carregando...</div>
+  </div>
+</div>
 
   <!-- ══ MODAL GERENCIAR GRUPOS (anfitrião) ══ -->
   <div id="modal-gerenciar-grupos" class="modal-overlay" style="display:none"
-    onclick="if(event.target===this)BetaUI.fecharGerenciarGrupos()">
-    <div class="modal-card" style="max-height:85vh;overflow-y:auto">
-      <div class="modal-head">
-        <span class="modal-title">👥 Gerenciar Grupos</span>
-        <button class="modal-close" onclick="BetaUI.fecharGerenciarGrupos()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="modal-body" id="gerenciar-grupos-body">
-        <div class="podio-loading">Carregando...</div>
-      </div>
+  onclick="if(event.target===this)SalaMode.fecharGerenciar()">
+  <div class="modal-card" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-head">
+      <span class="modal-title">👥 Gerenciar Grupos</span>
+      <button class="modal-close" onclick="SalaMode.fecharGerenciar()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body" id="ns-gerenciar-body">
+      <div class="podio-loading">Carregando...</div>
     </div>
   </div>
+</div>
 
   <!-- ══ MODAL CRIAR GRUPO ══ -->
   <div id="modal-criar-grupo" class="modal-overlay" style="display:none"
-    onclick="if(event.target===this)BetaUI.fecharModalCriarGrupo()">
-    <div class="modal-card">
-      <div class="modal-head">
-        <span class="modal-title">＋ Criar Grupo</span>
-        <button class="modal-close" onclick="BetaUI.fecharModalCriarGrupo()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+  onclick="if(event.target===this)SalaMode.fecharCriarGrupo()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span class="modal-title">＋ Criar Grupo</span>
+      <button class="modal-close" onclick="SalaMode.fecharCriarGrupo()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="sala-input-group">
+        <label class="sala-label">Nome do grupo</label>
+        <input id="ns-grupo-nome" class="sala-input" type="text" maxlength="24"
+          placeholder="Ex: Equipe Alpha"
+          onkeydown="if(event.key==='Enter')SalaMode.confirmarCriarGrupo()">
       </div>
-      <div class="modal-body">
-        <div class="sala-input-group">
-          <label class="sala-label">Nome do grupo</label>
-          <input id="grupo-nome-input" class="sala-input" type="text" maxlength="24"
-            placeholder="Ex: Equipe Alpha"
-            style="font-size:1rem;letter-spacing:0;text-transform:none"
-            onkeydown="if(event.key==='Enter')BetaUI.confirmarCriarGrupo()">
-        </div>
-        <div class="sala-input-group">
-          <label class="sala-label">Cor do grupo</label>
-          <div id="grupo-cor-options" class="grupo-cor-options"></div>
-        </div>
-        <div id="criar-grupo-status" class="sala-status" style="display:none"></div>
+      <div class="sala-input-group">
+        <label class="sala-label">Cor do grupo</label>
+        <div id="ns-grupo-cores" class="grupo-cor-options"></div>
       </div>
-      <div class="modal-foot">
-        <button id="btn-confirmar-grupo" class="btn-primary" onclick="BetaUI.confirmarCriarGrupo()">Criar</button>
-      </div>
+      <div id="ns-criar-status" class="sala-status" style="display:none"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="ns-btn-criar-grupo" class="btn-primary" onclick="SalaMode.confirmarCriarGrupo()">Criar Grupo</button>
     </div>
   </div>
+</div>
 
 
   <!-- ══ LOBBY ══ -->
   <div id="screen-lobby" class="screen">
-    <div class="podio-header">
-      <button class="btn-back" onclick="BetaUI.voltar('screen-grupos')"></button>
-      <span class="podio-title">🎮 Lobby — <span id="lobby-grupo-nome">Grupo</span></span>
+  <div class="ns-lobby-header">
+    <button class="btn-back" onclick="BetaUI.voltar('screen-grupos')"></button>
+    <div class="ns-lobby-titulo">
+      <span id="ns-lobby-grupo-cor" class="ns-lobby-grupo-cor-dot"></span>
+      <span id="ns-lobby-grupo-nome">Grupo</span>
     </div>
-    <div class="lobby-body">
-      <div class="lobby-sala-info">Sala: <strong id="lobby-sala-nome"></strong></div>
-      <!-- Setor (só no modo livre) -->
-      <div id="lobby-setor-wrap" class="sala-input-group" style="margin:12px 16px 0">
-        <label class="sala-label">Setor da partida</label>
-        <select id="lobby-setor-select" class="sala-input" style="font-size:.95rem">
-          <option value="tecnologia">🚀 Tecnologia</option>
-          <option value="industria">🏭 Indústria</option>
-          <option value="logistica">🚚 Logística</option>
-          <option value="varejo">🛒 Varejo</option>
-        </select>
+    <div class="ns-lobby-sala-badge" id="ns-lobby-sala-badge">—</div>
+  </div>
+
+  <div class="ns-lobby-body">
+    <!-- Papel do jogador (destaque) -->
+    <div class="ns-papel-card" id="ns-papel-card">
+      <div class="ns-papel-icon" id="ns-papel-icon">🎲</div>
+      <div class="ns-papel-info">
+        <div class="ns-papel-titulo" id="ns-papel-titulo">Aguardando...</div>
+        <div class="ns-papel-desc" id="ns-papel-desc">Os papéis serão atribuídos ao iniciar.</div>
       </div>
-      <div class="lobby-section-label">Jogadores online</div>
-      <div id="lobby-jogadores" class="lobby-jogadores-lista"></div>
-      <button id="btn-lobby-iniciar" class="btn-primary lobby-btn-iniciar"
-        onclick="BetaUI.iniciarPartidaGrupo()" style="display:none">
-        ▶ Iniciar Partida
-      </button>
-      <div class="lobby-aguardo-msg" id="lobby-aguardo-msg">Aguardando o líder iniciar...</div>
+    </div>
+
+    <!-- Setor (modo livre) -->
+    <div id="ns-lobby-setor-wrap" class="sala-input-group" style="margin:0 16px 8px">
+      <label class="sala-label">Setor da partida</label>
+      <select id="ns-lobby-setor" class="sala-input" style="font-size:.95rem">
+        <option value="tecnologia">🚀 Tecnologia</option>
+        <option value="industria">🏭 Indústria</option>
+        <option value="logistica">🚚 Logística</option>
+        <option value="varejo">🛒 Varejo</option>
+      </select>
+    </div>
+
+    <!-- Jogadores no lobby -->
+    <div class="ns-lobby-section">Jogadores no grupo</div>
+    <div id="ns-lobby-jogadores" class="ns-lobby-jogadores"></div>
+
+    <!-- Info de papéis -->
+    <div class="ns-papeis-info" id="ns-papeis-info">
+      <div class="ns-papeis-info-titulo">ℹ️ Papéis Executivos</div>
+      <div class="ns-papeis-grid" id="ns-papeis-grid"></div>
+    </div>
+
+    <div id="ns-lobby-msgs" class="ns-lobby-msgs"></div>
+  </div>
+
+  <div class="ns-lobby-footer">
+    <button id="ns-btn-iniciar" class="btn-primary ns-btn-iniciar"
+      onclick="SalaMode.iniciarPartida()" style="display:none">
+      ▶ Iniciar Partida
+    </button>
+    <div class="ns-lobby-aguardo" id="ns-lobby-aguardo">
+      ⏳ Aguardando o líder iniciar...
+    </div>
+  </div>
+</div>
+
+  <!-- ══ TELA DE VOTAÇÃO ══ -->
+  <div id="screen-jogo-grupo" class="screen">
+
+  <!-- HEADER: rodada + grupo + timer circular -->
+  <div class="jg-header">
+    <div class="jg-rodada-info">
+      <span class="jg-rod-label">Rodada</span>
+      <span class="jg-rod-num"><span id="jg-rod-atual">1</span>/<span id="jg-rod-total">15</span></span>
+    </div>
+    <div class="jg-grupo-tag" id="jg-grupo-tag">
+      <span id="jg-grupo-cor-dot" class="jg-grupo-cor-dot"></span>
+      <span id="jg-grupo-nome-hd">Grupo</span>
+    </div>
+    <div class="jg-timer-wrap" id="jg-timer-wrap">
+      <svg class="jg-timer-svg" viewBox="0 0 44 44">
+        <circle class="jg-timer-bg" cx="22" cy="22" r="18"/>
+        <circle class="jg-timer-ring" id="jg-timer-ring" cx="22" cy="22" r="18"
+          stroke-dasharray="113" stroke-dashoffset="0"/>
+      </svg>
+      <span class="jg-timer-num" id="jg-timer-num">—</span>
     </div>
   </div>
 
-  <!-- ══ TELA DE VOTAÇÃO ══ -->
-  <div id="screen-votacao" class="screen">
-    <div class="votacao-header">
-      <div id="votacao-rodada" class="votacao-rodada-badge">Rodada 1/15</div>
-      <div id="votacao-timer" class="votacao-timer">60s</div>
-    </div>
-    <div class="votacao-body">
-      <!-- Indicadores resumidos -->
-      <div id="votacao-indicators" class="votacao-indicators"></div>
-      <!-- Situação -->
-      <div class="votacao-situacao">
-        <div id="votacao-titulo" class="votacao-situacao-titulo"></div>
-        <div id="votacao-desc" class="votacao-situacao-desc"></div>
-      </div>
-      <!-- Opções de voto -->
-      <div id="votacao-opcoes" class="votacao-opcoes"></div>
-      <!-- Barra de revelação (oculta até revelar) -->
-      <div id="votacao-barra" class="votacao-barra" style="display:none"></div>
-      <!-- Avatares -->
-      <div class="votacao-avatares-label">Votos</div>
-      <div id="votacao-avatares" class="votacao-avatares"></div>
-    </div>
+  <!-- INDICADORES COMPACTOS -->
+  <div class="jg-inds" id="jg-inds"></div>
+
+  <!-- FASE: badge animado -->
+  <div class="jg-fase-badge" id="jg-fase-badge"></div>
+
+  <!-- CORPO DINÂMICO — renderizado por JS por fase -->
+  <div class="jg-corpo" id="jg-corpo">
+    <div class="jg-loading">Carregando...</div>
   </div>
+
+  <!-- AVATARES DOS JOGADORES (sempre visíveis) -->
+  <div class="jg-avatares-barra">
+    <div class="jg-avatares" id="jg-avatares"></div>
+  </div>
+
+</div>
 
   <!-- ══ RESULTADO DO GRUPO ══ -->
   <div id="screen-resultado-grupo" class="screen">
-    <div class="podio-header">
-      <span class="podio-title">🏁 Resultado</span>
+  <div class="podio-header">
+    <span class="podio-title">🏁 Resultado Final</span>
+  </div>
+  <div class="ns-resultado-body">
+    <!-- Score card principal -->
+    <div class="ns-resultado-card">
+      <div class="ns-resultado-grupo-nome" id="ns-res-grupo-nome"></div>
+      <div class="ns-resultado-score-label">Score do Grupo</div>
+      <div class="ns-resultado-score" id="ns-res-score">0</div>
+      <div class="ns-resultado-rank" id="ns-res-rank"></div>
     </div>
-    <div class="resultado-grupo-body">
-      <div class="resultado-grupo-nome" id="resultado-grupo-nome"></div>
-      <div class="resultado-grupo-score-label">Score do grupo</div>
-      <div class="resultado-grupo-score" id="resultado-grupo-score">0</div>
-      <div class="resultado-grupo-aviso" id="resultado-grupo-aviso">⏳ Aguardando outros grupos...</div>
-      <button class="btn-primary" onclick="BetaUI.irParaPodioSala()" style="margin-top:20px">
-        Ver Pódio da Sala
+
+    <!-- Breakdown por indicador -->
+    <div class="ns-resultado-inds" id="ns-res-inds"></div>
+
+    <!-- Conquistas da partida -->
+    <div class="ns-resultado-conquistas" id="ns-res-conquistas"></div>
+
+    <!-- Aviso de espera / ação -->
+    <div class="ns-resultado-aviso" id="ns-res-aviso">⏳ Aguardando outros grupos...</div>
+
+    <div style="display:flex;gap:10px;padding:16px;margin-top:4px">
+      <button class="btn-primary" style="flex:1" onclick="BetaUI.irParaPodioSala()">
+        🏆 Ver Pódio
       </button>
-      <button class="btn-secondary" onclick="BetaUI.voltar('screen-home')" style="margin-top:10px">
-        Voltar ao Início
+      <button class="btn-secondary" style="flex:1" onclick="BetaUI.voltar('screen-home')">
+        Início
       </button>
     </div>
   </div>
+</div>
 
   <!-- ══ PAINEL ANFITRIÃO ══ -->
   <div id="screen-painel-anfitriao" class="screen">
-    <div class="podio-header">
-      <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
-      <span class="podio-title">⚙️ Painel Anfitrião</span>
-    </div>
-    <div id="painel-anfitriao-body" class="painel-anf-body"></div>
+  <div class="podio-header">
+    <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
+    <span class="podio-title">⚙️ Painel Anfitrião</span>
   </div>
+  <div id="ns-painel-anf-body" class="ns-painel-anf-body"></div>
+</div>
 
 
   <!-- ══ MODAL MODO DE JOGO ══ -->
@@ -1343,5 +1403,6 @@
     </div>
   </div>
 
+<script src="sala-mode-new.js"></script>
 </body>
 </html>
