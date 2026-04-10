@@ -2770,6 +2770,66 @@ async function irParaGrupos() {
   if (!_sala) { mostrarAviso('Você não está em nenhuma sala.'); return; }
   mostrarTela('screen-grupos');
   await _carregarListaGrupos();
+  await _renderPainelAnfInline();
+}
+
+async function recarregarGrupos() {
+  await _carregarListaGrupos();
+  await _renderPainelAnfInline();
+}
+
+async function _renderPainelAnfInline() {
+  const isAnf = _sala && (_sala.criadaPor === _player?.uid || _isAdmin);
+  const painel = document.getElementById('painel-anf-inline');
+  if (!painel) return;
+  painel.style.display = isAnf ? 'block' : 'none';
+  if (!isAnf) return;
+
+  try {
+    const sala   = await window.GSPSalas.carregarSala(_sala.codigo);
+    const grupos = await window.GSPSalas.carregarGrupos(_sala.codigo);
+    const concluidos = grupos.filter(g => g.statusCiclo === 'concluido').length;
+    const todos      = concluidos >= grupos.length && grupos.length > 0;
+
+    // Atualiza status
+    const elCod  = document.getElementById('anf-sala-codigo');
+    const elCiclo= document.getElementById('anf-ciclo-atual');
+    const elGrp  = document.getElementById('anf-grupos-count');
+    const elConc = document.getElementById('anf-concluidos-count');
+    if (elCod)   elCod.textContent   = sala.codigo || _sala.codigo;
+    if (elCiclo) elCiclo.textContent = sala.cicloAtual || 1;
+    if (elGrp)   elGrp.textContent   = grupos.length + '/' + (sala.limiteGrupos || '∞');
+    if (elConc)  elConc.textContent  = concluidos + '/' + grupos.length;
+
+    // Botão revelar pódio
+    const btnRev = document.getElementById('anf-btn-revelar');
+    if (btnRev) {
+      if (sala.podioVisivel) {
+        btnRev.disabled = true;
+        btnRev.classList.add('anf-btn--disabled');
+        btnRev.innerHTML = '<span>✅</span><span>Pódio Revelado</span>';
+      } else if (todos) {
+        btnRev.disabled = false;
+        btnRev.classList.remove('anf-btn--disabled');
+        btnRev.innerHTML = '<span>🏆</span><span>Revelar Pódio</span>';
+      } else {
+        btnRev.disabled = true;
+        btnRev.classList.add('anf-btn--disabled');
+        btnRev.innerHTML = '<span>⏳</span><span>Aguardando grupos</span>';
+      }
+    }
+
+    // Status pódio
+    const podioStatus = document.getElementById('anf-podio-status');
+    if (podioStatus) {
+      podioStatus.textContent = sala.podioVisivel
+        ? '✅ Pódio visível para todos'
+        : todos
+          ? '🏆 Todos terminaram — você pode revelar o pódio'
+          : `⏳ ${concluidos} de ${grupos.length} grupos concluíram`;
+      podioStatus.className = 'anf-podio-status ' + (todos && !sala.podioVisivel ? 'anf-podio-status--pronto' : '');
+    }
+  } catch(e) { console.warn('[Anfitrião]', e.message); }
 }
 
 async function _carregarListaGrupos() {
@@ -3661,6 +3721,112 @@ async function irParaSalaAposCriar() {
 }
 
 
+/* ── Gerenciar grupos (anfitrião) ── */
+async function abrirGerenciarGrupos() {
+  const modal = document.getElementById('modal-gerenciar-grupos');
+  if (modal) modal.style.display = 'flex';
+  await _renderGerenciarGrupos();
+}
+
+function fecharGerenciarGrupos() {
+  const modal = document.getElementById('modal-gerenciar-grupos');
+  if (modal) modal.style.display = 'none';
+}
+
+async function _renderGerenciarGrupos() {
+  const body = document.getElementById('gerenciar-grupos-body');
+  if (!body) return;
+  body.innerHTML = '<div class="podio-loading">Carregando...</div>';
+
+  try {
+    const grupos  = await window.GSPSalas.carregarGrupos(_sala.codigo);
+    const membros = await window.GSPSalas.carregarMembrosSala(_sala.codigo);
+
+    // Mapa uid → grupo atual
+    const uidParaGrupo = {};
+    membros.forEach(m => { if (m.grupo) uidParaGrupo[m.uid] = m.grupo; });
+
+    if (!grupos.length) {
+      body.innerHTML = '<div class="podio-empty">Nenhum grupo criado ainda.</div>';
+      return;
+    }
+
+    body.innerHTML = grupos.map(g => {
+      const membrosDoGrupo = membros.filter(m => m.grupo === g.nomeGrupo);
+      const membrosHtml = membrosDoGrupo.length
+        ? membrosDoGrupo.map(m => {
+            const isLider = m.uid === g.lider;
+            const outrosGrupos = grupos.filter(og => og.nomeGrupo !== g.nomeGrupo);
+            const moverOpcoes = outrosGrupos.map(og =>
+              `<option value="${og.nomeGrupo}">${og.nomeGrupo}</option>`
+            ).join('');
+            return `<div class="gerenciar-membro-row">
+              <span class="gerenciar-membro-nome">${isLider ? '👑 ' : ''}${m.nome || m.uid}</span>
+              <div class="gerenciar-membro-acoes">
+                ${outrosGrupos.length ? `
+                  <select class="gerenciar-select" id="mover-select-${m.uid}">
+                    <option value="">Mover para...</option>
+                    ${moverOpcoes}
+                  </select>
+                  <button class="anf-btn-sm" onclick="BetaUI.moverMembroGrupo('${m.uid}','${g.nomeGrupo}')">Mover</button>
+                ` : ''}
+                <button class="anf-btn-sm anf-btn-sm--danger" onclick="BetaUI.removerMembroGrupo('${m.uid}','${g.nomeGrupo}')">✕</button>
+              </div>
+            </div>`;
+          }).join('')
+        : '<div style="color:var(--t3);font-size:.8rem;padding:6px 0">Nenhum membro</div>';
+
+      return `<div class="gerenciar-grupo-bloco" style="border-left:3px solid ${g.cor}">
+        <div class="gerenciar-grupo-header">
+          <span style="color:${g.cor};font-weight:700">${g.nomeGrupo}</span>
+          <span class="gerenciar-grupo-status">${g.statusCiclo}</span>
+        </div>
+        ${membrosHtml}
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    body.innerHTML = '<div class="podio-empty">Erro ao carregar.</div>';
+  }
+}
+
+async function moverMembroGrupo(uid, grupoAtual) {
+  const sel = document.getElementById('mover-select-' + uid);
+  const grupoDestino = sel?.value;
+  if (!grupoDestino) { mostrarAviso('Selecione o grupo de destino.'); return; }
+  try {
+    await window.GSPSalas.moverMembro(_sala.codigo, { uid, grupoAtual, grupoDestino });
+    mostrarSucesso('✅ Membro movido!');
+    await _renderGerenciarGrupos();
+    await _carregarListaGrupos();
+  } catch(e) { mostrarAviso('Erro: ' + e.message); }
+}
+
+async function removerMembroGrupo(uid, nomeGrupo) {
+  if (!confirm('Remover este membro do grupo?')) return;
+  try {
+    // Remove do array membros do grupo
+    const grupos = await window.GSPSalas.carregarGrupos(_sala.codigo);
+    const grupo  = grupos.find(g => g.nomeGrupo === nomeGrupo);
+    if (!grupo) return;
+    const novosMembros = (grupo.membros || []).filter(m => m !== uid);
+    const token = await window.GSPAuth.getToken();
+    const docId = encodeURIComponent(nomeGrupo);
+    const url   = window.GSPSalas._url('salas/' + _sala.codigo + '/grupos/' + docId) + '?updateMask.fieldPaths=membros';
+    await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: {
+        membros: { arrayValue: { values: novosMembros.map(m => ({ stringValue: m })) } }
+      }})
+    });
+    mostrarSucesso('✅ Membro removido.');
+    await _renderGerenciarGrupos();
+    await _carregarListaGrupos();
+  } catch(e) { mostrarAviso('Erro: ' + e.message); }
+}
+
+
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
@@ -3695,6 +3861,9 @@ window.BetaUI = {
   // Criar sala (admin)
   abrirModalCriarSala, fecharModalCriarSala, confirmarCriarSala,
   copiarCodigoSala, irParaSalaAposCriar,
+  // Anfitrião inline
+  recarregarGrupos, abrirGerenciarGrupos, fecharGerenciarGrupos,
+  moverMembroGrupo, removerMembroGrupo,
 };
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando

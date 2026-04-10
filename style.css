@@ -4795,3 +4795,92 @@ body::after{
   border-radius: 12px; padding: 16px 24px;
 }
 .codigo-gerado-desc { font-size: .82rem; color: var(--t3); line-height: 1.5; }
+
+/* ════════════════════════════════════════════════════
+   PAINEL ANFITRIÃO INLINE — tela de grupos
+════════════════════════════════════════════════════ */
+.anf-painel {
+  margin: 12px 16px;
+  background: var(--card);
+  border-radius: 14px;
+  border: 1px solid rgba(155,89,182,.25);
+  overflow: hidden;
+}
+.anf-painel-titulo {
+  font-size: .72rem; font-weight: 700;
+  color: var(--purple); text-transform: uppercase;
+  letter-spacing: .5px; padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--line2);
+}
+.anf-status-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 0; border-bottom: 1px solid var(--line2);
+}
+.anf-status-item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 10px 6px; gap: 2px;
+  border-right: 1px solid var(--line2);
+}
+.anf-status-item:last-child { border-right: none; }
+.anf-status-label { font-size: .62rem; color: var(--t3); text-transform: uppercase; letter-spacing: .3px; }
+.anf-status-val   { font-size: .95rem; font-weight: 800; color: var(--t1); }
+
+/* Grid de ações */
+.anf-acoes {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; padding: 12px;
+}
+.anf-btn {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 4px;
+  padding: 12px 8px; border-radius: 10px;
+  border: none; cursor: pointer;
+  font-size: .75rem; font-weight: 700;
+  transition: opacity .15s, transform .1s;
+}
+.anf-btn:active { opacity: .75; transform: scale(.97); }
+.anf-btn span:first-child { font-size: 1.3rem; }
+
+.anf-btn--podio    { background: rgba(241,196,15,.12);  color: #f1c40f; border: 1px solid rgba(241,196,15,.3); }
+.anf-btn--ciclo    { background: rgba(52,152,219,.12);  color: #3498db; border: 1px solid rgba(52,152,219,.3); }
+.anf-btn--gerenciar{ background: rgba(155,89,182,.12);  color: var(--purple); border: 1px solid rgba(155,89,182,.3); }
+.anf-btn--encerrar { background: rgba(231,76,60,.12);   color: var(--danger); border: 1px solid rgba(231,76,60,.3); }
+.anf-btn--disabled { opacity: .4; cursor: not-allowed; }
+
+/* Status pódio */
+.anf-podio-status {
+  font-size: .75rem; color: var(--t3);
+  padding: 0 12px 12px; text-align: center;
+}
+.anf-podio-status--pronto { color: var(--good); font-weight: 700; }
+
+/* Modal gerenciar grupos */
+.gerenciar-grupo-bloco {
+  background: var(--bg); border-radius: 10px;
+  padding: 12px; margin-bottom: 10px;
+}
+.gerenciar-grupo-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.gerenciar-grupo-status {
+  font-size: .68rem; color: var(--t3); background: var(--card);
+  padding: 2px 8px; border-radius: 20px;
+}
+.gerenciar-membro-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0; border-top: 1px solid var(--line2); gap: 8px;
+}
+.gerenciar-membro-nome { font-size: .82rem; color: var(--t1); flex: 1; }
+.gerenciar-membro-acoes { display: flex; align-items: center; gap: 6px; }
+.gerenciar-select {
+  font-size: .72rem; background: var(--card); color: var(--t1);
+  border: 1px solid var(--line2); border-radius: 6px; padding: 4px 6px;
+  max-width: 110px;
+}
+.anf-btn-sm {
+  font-size: .72rem; font-weight: 700; padding: 4px 10px;
+  border-radius: 6px; cursor: pointer; border: none;
+  background: rgba(52,152,219,.12); color: #3498db;
+}
+.anf-btn-sm--danger { background: rgba(231,76,60,.12); color: var(--danger); }

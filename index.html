@@ -1035,10 +1035,73 @@
     <div class="podio-header">
       <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
       <span class="podio-title">👥 <span id="grupos-sala-nome">Sala</span></span>
+      <button class="btn-ghost btn-icon" onclick="BetaUI.recarregarGrupos()" title="Atualizar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+      </button>
     </div>
+
+    <!-- ══ PAINEL ANFITRIÃO (só admin/dono vê) ══ -->
+    <div id="painel-anf-inline" style="display:none">
+      <div class="anf-painel">
+        <div class="anf-painel-titulo">⚙️ Painel do Anfitrião</div>
+        <!-- Status geral -->
+        <div class="anf-status-row">
+          <div class="anf-status-item">
+            <span class="anf-status-label">Sala</span>
+            <span class="anf-status-val" id="anf-sala-codigo">—</span>
+          </div>
+          <div class="anf-status-item">
+            <span class="anf-status-label">Ciclo</span>
+            <span class="anf-status-val" id="anf-ciclo-atual">1</span>
+          </div>
+          <div class="anf-status-item">
+            <span class="anf-status-label">Grupos</span>
+            <span class="anf-status-val" id="anf-grupos-count">0</span>
+          </div>
+          <div class="anf-status-item">
+            <span class="anf-status-label">Concluídos</span>
+            <span class="anf-status-val" id="anf-concluidos-count">0</span>
+          </div>
+        </div>
+        <!-- Ações principais -->
+        <div class="anf-acoes">
+          <button class="anf-btn anf-btn--podio" id="anf-btn-revelar" onclick="BetaUI.anfitriaoRevelarPodio()">
+            <span>🏆</span><span>Revelar Pódio</span>
+          </button>
+          <button class="anf-btn anf-btn--ciclo" onclick="BetaUI.anfitriaoNovoCiclo()">
+            <span>🔄</span><span>Novo Ciclo</span>
+          </button>
+          <button class="anf-btn anf-btn--gerenciar" onclick="BetaUI.abrirGerenciarGrupos()">
+            <span>👥</span><span>Gerenciar Grupos</span>
+          </button>
+          <button class="anf-btn anf-btn--encerrar" onclick="BetaUI.anfitriaoEncerrarSala()">
+            <span>❌</span><span>Encerrar Sala</span>
+          </button>
+        </div>
+        <!-- Pódio oculto/visível -->
+        <div id="anf-podio-status" class="anf-podio-status"></div>
+      </div>
+    </div>
+
     <div class="grupos-min-aviso" id="grupos-min-aviso"></div>
     <div class="podio-list" id="grupos-lista">
       <div class="podio-loading">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL GERENCIAR GRUPOS (anfitrião) ══ -->
+  <div id="modal-gerenciar-grupos" class="modal-overlay" style="display:none"
+    onclick="if(event.target===this)BetaUI.fecharGerenciarGrupos()">
+    <div class="modal-card" style="max-height:85vh;overflow-y:auto">
+      <div class="modal-head">
+        <span class="modal-title">👥 Gerenciar Grupos</span>
+        <button class="modal-close" onclick="BetaUI.fecharGerenciarGrupos()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="gerenciar-grupos-body">
+        <div class="podio-loading">Carregando...</div>
+      </div>
     </div>
   </div>
 
