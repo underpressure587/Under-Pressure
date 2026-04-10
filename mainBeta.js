@@ -2723,13 +2723,13 @@ async function escolherModoGrupo() {
   // Está em sala mas não escolheu grupo → vai para tela de grupos
   if (!_grupoAtual) {
     fecharModalModo();
-    await irParaGrupos();
+    await SalaMode.irGrupos();
     return;
   }
 
   // Está em grupo → vai para lobby
   fecharModalModo();
-  await irParaLobby();
+  await SalaMode.irLobby();
 }
 
 
@@ -2885,7 +2885,7 @@ function copiarCodigoSala() {
 async function irParaSalaAposCriar() {
   const modal = document.getElementById('modal-codigo-gerado');
   if (modal) modal.style.display = 'none';
-  await irParaGrupos();
+  await SalaMode.irGrupos();
 }
 
 
@@ -3041,8 +3041,11 @@ window.BetaUI = {
   abrirModalCriarSala, fecharModalCriarSala, confirmarCriarSala,
   copiarCodigoSala, irParaSalaAposCriar,
   // Anfitrião inline
-  recarregarGrupos, abrirGerenciarGrupos, fecharGerenciarGrupos,
-  moverMembroGrupo, removerMembroGrupo,
+  recarregarGrupos:      () => SalaMode.recarregarGrupos(),
+  abrirGerenciarGrupos:  () => SalaMode.abrirGerenciar(),
+  fecharGerenciarGrupos: () => SalaMode.fecharGerenciar(),
+  moverMembroGrupo:      (g,u) => SalaMode._removerGrupo && SalaMode._removerGrupo(g,u),
+  removerMembroGrupo:    (g,u) => SalaMode._removerGrupo && SalaMode._removerGrupo(g,u),
 };
 
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando
