@@ -302,7 +302,7 @@
     </div>
     <div class="perfil-body">
       <div class="perfil-avatar-block">
-        <div class="perfil-avatar" id="perfil-avatar">?</div>
+        <div class="perfil-avatar" id="perfil-avatar" id="perfil-avatar-hold">?</div>
         <div class="perfil-nome" id="perfil-nome">Jogador</div>
         <div class="perfil-subtitulo" id="perfil-subtitulo">0 mandatos concluídos</div>
         <div class="perfil-meta-row" id="perfil-meta-row"></div>
@@ -982,8 +982,17 @@
 <script src="./admin.js?v=bb11891"></script>
 <script src="./bundle.js?v=bb11891"></script>
 
-  <!-- ══ MODAL SALA ══ -->
-  <div id="modal-sala" class="modal-overlay" style="display:none"
+<!-- ══════════════════════════════════════════════════════════════
+   UNDER PRESSURE — NOVO MODO SALA v2.0
+   Substitua os blocos correspondentes em index.html
+   Busque por: id="modal-sala", id="screen-grupos", id="screen-lobby",
+               id="screen-votacao", id="screen-resultado-grupo"
+   e substitua pelos blocos abaixo.
+══════════════════════════════════════════════════════════════ -->
+
+
+<!-- ══ MODAL DE ENTRADA NA SALA (substitui #modal-sala) ══ -->
+<div id="modal-sala" class="modal-overlay" style="display:none"
   onclick="if(event.target===this)SalaMode.fecharModal()">
   <div class="modal-card ns-modal-card">
     <div class="modal-head">
@@ -1013,30 +1022,9 @@
   </div>
 </div>
 
-  <!-- ══ PÓDIO DA SALA ══ -->
-  <div id="screen-podio-sala" class="screen">
-  <div class="podio-header">
-    <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
-    <span class="podio-title">🏆 <span id="ns-podio-titulo">Sala</span></span>
-    <button class="btn-ghost btn-icon" onclick="SalaMode.sair()" title="Sair da sala" style="color:var(--danger)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
-    </button>
-  </div>
-  <div id="ns-podio-espera" class="ns-podio-espera" style="display:none">
-    <div class="ns-podio-espera-icon">🔒</div>
-    <div class="ns-podio-espera-txt">O anfitrião ainda não revelou o pódio.</div>
-    <div class="ns-podio-espera-sub">Aguarde todos os grupos terminarem.</div>
-  </div>
-  <div class="ns-podio-lista" id="ns-podio-lista">
-    <div class="podio-loading">Carregando...</div>
-  </div>
-</div>
 
-
-  <!-- ══ GRUPOS DA SALA ══ -->
-  <div id="screen-grupos" class="screen">
+<!-- ══ SCREEN: WAR ROOM — GRUPOS DA SALA (substitui #screen-grupos) ══ -->
+<div id="screen-grupos" class="screen">
   <div class="podio-header">
     <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
     <span class="podio-title">🏟️ <span id="ns-grupos-sala-nome">Sala</span></span>
@@ -1086,26 +1074,9 @@
   </div>
 </div>
 
-  <!-- ══ MODAL GERENCIAR GRUPOS (anfitrião) ══ -->
-  <div id="modal-gerenciar-grupos" class="modal-overlay" style="display:none"
-  onclick="if(event.target===this)SalaMode.fecharGerenciar()">
-  <div class="modal-card" style="max-height:85vh;overflow-y:auto">
-    <div class="modal-head">
-      <span class="modal-title">👥 Gerenciar Grupos</span>
-      <button class="modal-close" onclick="SalaMode.fecharGerenciar()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-    <div class="modal-body" id="ns-gerenciar-body">
-      <div class="podio-loading">Carregando...</div>
-    </div>
-  </div>
-</div>
 
-  <!-- ══ MODAL CRIAR GRUPO ══ -->
-  <div id="modal-criar-grupo" class="modal-overlay" style="display:none"
+<!-- ══ MODAL CRIAR GRUPO (substitui #modal-criar-grupo) ══ -->
+<div id="modal-criar-grupo" class="modal-overlay" style="display:none"
   onclick="if(event.target===this)SalaMode.fecharCriarGrupo()">
   <div class="modal-card">
     <div class="modal-head">
@@ -1136,8 +1107,8 @@
 </div>
 
 
-  <!-- ══ LOBBY ══ -->
-  <div id="screen-lobby" class="screen">
+<!-- ══ SCREEN: LOBBY DO GRUPO — NOVO (substitui #screen-lobby) ══ -->
+<div id="screen-lobby" class="screen">
   <div class="ns-lobby-header">
     <button class="btn-back" onclick="BetaUI.voltar('screen-grupos')"></button>
     <div class="ns-lobby-titulo">
@@ -1192,8 +1163,12 @@
   </div>
 </div>
 
-  <!-- ══ TELA DE VOTAÇÃO ══ -->
-  <div id="screen-jogo-grupo" class="screen">
+
+<!-- ══ SCREEN: JOGO COLABORATIVO — COMPLETAMENTE NOVO ══
+     (substitui #screen-votacao)
+     Todas as fases são renderizadas dentro de #jg-corpo por JS
+══ -->
+<div id="screen-jogo-grupo" class="screen">
 
   <!-- HEADER: rodada + grupo + timer circular -->
   <div class="jg-header">
@@ -1233,8 +1208,9 @@
 
 </div>
 
-  <!-- ══ RESULTADO DO GRUPO ══ -->
-  <div id="screen-resultado-grupo" class="screen">
+
+<!-- ══ SCREEN: RESULTADO DO GRUPO — REFORMULADO (substitui #screen-resultado-grupo) ══ -->
+<div id="screen-resultado-grupo" class="screen">
   <div class="podio-header">
     <span class="podio-title">🏁 Resultado Final</span>
   </div>
@@ -1267,8 +1243,31 @@
   </div>
 </div>
 
-  <!-- ══ PAINEL ANFITRIÃO ══ -->
-  <div id="screen-painel-anfitriao" class="screen">
+
+<!-- ══ SCREEN: PÓDIO DA SALA — REFORMULADO (substitui #screen-podio-sala) ══ -->
+<div id="screen-podio-sala" class="screen">
+  <div class="podio-header">
+    <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
+    <span class="podio-title">🏆 <span id="ns-podio-titulo">Sala</span></span>
+    <button class="btn-ghost btn-icon" onclick="SalaMode.sair()" title="Sair da sala" style="color:var(--danger)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+  </div>
+  <div id="ns-podio-espera" class="ns-podio-espera" style="display:none">
+    <div class="ns-podio-espera-icon">🔒</div>
+    <div class="ns-podio-espera-txt">O anfitrião ainda não revelou o pódio.</div>
+    <div class="ns-podio-espera-sub">Aguarde todos os grupos terminarem.</div>
+  </div>
+  <div class="ns-podio-lista" id="ns-podio-lista">
+    <div class="podio-loading">Carregando...</div>
+  </div>
+</div>
+
+
+<!-- ══ SCREEN: PAINEL ANFITRIÃO — REFORMULADO (substitui #screen-painel-anfitriao) ══ -->
+<div id="screen-painel-anfitriao" class="screen">
   <div class="podio-header">
     <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
     <span class="podio-title">⚙️ Painel Anfitrião</span>
@@ -1277,7 +1276,27 @@
 </div>
 
 
-  <!-- ══ MODAL MODO DE JOGO ══ -->
+<!-- ══ MODAL GERENCIAR GRUPOS (substitui #modal-gerenciar-grupos) ══ -->
+<div id="modal-gerenciar-grupos" class="modal-overlay" style="display:none"
+  onclick="if(event.target===this)SalaMode.fecharGerenciar()">
+  <div class="modal-card" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-head">
+      <span class="modal-title">👥 Gerenciar Grupos</span>
+      <button class="modal-close" onclick="SalaMode.fecharGerenciar()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body" id="ns-gerenciar-body">
+      <div class="podio-loading">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+
+
+  -- ══ MODAL MODO DE JOGO ══ -->
   <div id="modal-modo-jogo" class="modal-overlay" style="display:none"
     onclick="if(event.target===this)fecharModalModo()">
     <div class="modal-card">
@@ -1403,6 +1422,6 @@
     </div>
   </div>
 
-<script src="sala-mode-new.js"></script>
+<script src="./sala-mode-new.js"></script>
 </body>
 </html>
