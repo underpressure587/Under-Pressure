@@ -2685,6 +2685,14 @@ function _atualizarModoSala(cfg) {
 
 /* ── Botão Iniciar Mandato ── */
 async function abrirModalModo() {
+  // Garante que temos o valor mais recente do config — não depende do cache do polling
+  if (window.ADMIN) {
+    try {
+      const cfg = await window.ADMIN.verificarMensagemGlobal();
+      _atualizarModoSala(cfg);
+    } catch(e) { /* usa cache se falhar */ }
+  }
+
   // Se modo sala desativado → vai direto para setores (comportamento atual)
   if (!_modoSalaAtivo) {
     irParaSetores();
