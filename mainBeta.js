@@ -2686,11 +2686,14 @@ function _atualizarModoSala(cfg) {
 /* ── Botão Iniciar Mandato ── */
 async function abrirModalModo() {
   // Garante que temos o valor mais recente do config — não depende do cache do polling
+  // Usa timeout curto (2s) para não travar a UI em conexão lenta
   if (window.ADMIN) {
     try {
-      const cfg = await window.ADMIN.verificarMensagemGlobal();
+      const cfgPromise = window.ADMIN.verificarMensagemGlobal();
+      const timeout    = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000));
+      const cfg        = await Promise.race([cfgPromise, timeout]);
       _atualizarModoSala(cfg);
-    } catch(e) { /* usa cache se falhar */ }
+    } catch(e) { /* usa cache se falhar ou timeout */ }
   }
 
   // Se modo sala desativado → vai direto para setores (comportamento atual)
