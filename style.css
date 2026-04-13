@@ -3042,7 +3042,9 @@ body::after{
 #screen-lobby,
 #screen-resultado-grupo,
 #screen-podio-sala,
-#screen-painel-anfitriao {
+#screen-painel-anfitriao,
+#screen-votacao,
+#screen-admin {
   background: var(--bg);
 }
 
