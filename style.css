@@ -3034,6 +3034,18 @@ body::after{
   display: none !important;
 }
 
+/* Screens sem background explícito — transparentes no mobile deixam screen-loading vazar */
+#screen-perfil,
+#screen-podio,
+#screen-historico-jogos,
+#screen-grupos,
+#screen-lobby,
+#screen-resultado-grupo,
+#screen-podio-sala,
+#screen-painel-anfitriao {
+  background: var(--bg);
+}
+
 .loading-wrap {
   display: flex;
   flex-direction: column;
