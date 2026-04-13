@@ -2495,10 +2495,10 @@ async function _loginOk(player) {
   await _atualizarBotaoAdmin(player.uid);
 
   // Verifica manutenção — admin bypassa, usuários comuns são bloqueados
-  if (!_isAdmin && window.ADMIN) {
+  if (window.ADMIN) {
     const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
     _atualizarModoSala(cfg);
-    if (cfg?.manutencao) {
+    if (cfg?.manutencao && !_isAdmin) {
       mostrarTela('screen-home');
       setTimeout(() => _mostrarOverlayManutencao(cfg?.mensagem || ''), 500);
       return;
