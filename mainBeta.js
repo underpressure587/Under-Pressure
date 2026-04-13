@@ -131,6 +131,7 @@ async function _boot() {
   const saved = LS.get(SK.PLAYER);
   if (saved) {
     _player = saved;
+    window._player = _player;
     _verificarSessaoSalva();
     _atualizarHome();
     await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
@@ -295,6 +296,7 @@ function voltar(tela) {
 
 function irComoConvidado() {
   _player = { nome: "Convidado", tipo: "guest" };
+  window._player = _player;
   _atualizarHome();
   mostrarTela("screen-home");
 }
@@ -304,6 +306,7 @@ function confirmarNome() {
   const nome  = input?.value.trim();
   if (!nome) { mostrarErroCritico("Digite seu nome para continuar."); return; }
   _player = { nome, tipo: "user" };
+  window._player = _player;
   LS.set(SK.PLAYER, _player);
   if (input) input.value = "";
   _restaurarSala();
@@ -318,7 +321,9 @@ function sair() {
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
   _player = null;
+  window._player = null;
   _isAdmin = false;
+  window._isAdmin = false;
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
@@ -791,7 +796,9 @@ function _forcarSaida(msg) {
   LS.remove(SK.SESSION);
   LS.remove(SK.PLAYER);
   _player = null;
+  window._player = null;
   _isAdmin = false;
+  window._isAdmin = false;
   _aplicarTemaSetor(null);
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela('screen-login');
@@ -1559,7 +1566,7 @@ async function irParaPerfil() {
   }, 500);
   mostrarTela('screen-perfil');
   const playerSalvo = LS.get(SK.PLAYER);
-  if (playerSalvo) _player = playerSalvo;
+  if (playerSalvo) { _player = playerSalvo; window._player = _player; }
   const isGuest = _player?.tipo === "guest" || !_player?.uid;
 
   // Renderiza IMEDIATAMENTE com dados locais
@@ -2481,6 +2488,7 @@ async function authRecuperar() {
 
 async function _loginOk(player) {
   _player = player;
+  window._player = _player;
   LS.set(SK.PLAYER, _player);
 
   // Verifica se é admin antes de qualquer outra coisa
@@ -2523,8 +2531,10 @@ async function _atualizarBotaoAdmin(uid) {
   if (!uid) return;
   try {
     _isAdmin = await window.ADMIN?.verificarAdmin(uid) || false;
+    window._isAdmin = _isAdmin;
   } catch(e) {
     _isAdmin = false;
+    window._isAdmin = false;
   }
   _mostrarBotaoAdmin();
 }

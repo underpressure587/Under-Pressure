@@ -122,7 +122,7 @@ function registrarUI(callbacks) { _ui = callbacks; }
 /* ═══════════════════════════════════════════════════════
    INICIAR JOGO
 ═══════════════════════════════════════════════════════ */
-function iniciar(sectorId, groupName, companyName) {
+function iniciar(sectorId, groupName, companyName, modoSala) {
     const setorFinal = sectorId === "aleatorio"
         ? Object.keys(EMPRESAS)[Math.floor(Math.random() * 4)]
         : sectorId;
@@ -153,6 +153,13 @@ function iniciar(sectorId, groupName, companyName) {
     } else {
         state.gameRounds  = [];
         state.totalRounds = 0;
+    }
+
+    if (modoSala) {
+        // No modo sala o SalaMode controla a navegação — apenas inicializa o estado
+        state.phase = "playing";
+        _preparaRodada(state);
+        return state;
     }
 
     if (introSorteada) {

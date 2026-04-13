@@ -1043,10 +1043,16 @@ Object.assign(window.GSPSalas, {
       criadaEm:     { timestampValue: new Date().toISOString() },
       jogadores:    { stringValue: JSON.stringify(jogadores || {}) },
       votos:        { stringValue: '{}' },
+      sinais:       { stringValue: '{}' },
+      papeis:       { stringValue: '{}' },
       online:       { stringValue: '{}' },
       indicators:   { stringValue: '{}' },
       situacaoAtual:{ stringValue: '{}' },
       decisaoFinal: { stringValue: '' },
+      fase:         { stringValue: 'lobby' },
+      faseInicio:   { stringValue: new Date().toISOString() },
+      faseDuracao:  { integerValue: '4' },
+      placarGrupos: { stringValue: '[]' },
     }};
     const res = await fetch(url, {
       method: 'PATCH',
@@ -1087,6 +1093,12 @@ Object.assign(window.GSPSalas, {
       situacaoAtual:JSON.parse(f.situacaoAtual?.stringValue|| '{}'),
       decisaoFinal: f.decisaoFinal?.stringValue || '',
       timerInicio:  f.timerInicio?.stringValue  || null,
+      fase:         f.fase?.stringValue         || 'votacao',
+      faseInicio:   f.faseInicio?.stringValue   || null,
+      faseDuracao:  parseInt(f.faseDuracao?.integerValue || 30),
+      sinais:       JSON.parse(f.sinais?.stringValue      || '{}'),
+      papeis:       JSON.parse(f.papeis?.stringValue      || '{}'),
+      placarGrupos: JSON.parse(f.placarGrupos?.stringValue|| '[]'),
     };
   },
 
@@ -1171,23 +1183,24 @@ Object.assign(window.GSPSalas, {
       const jogadores = estado.jogadores || {};
       const lider   = Object.keys(jogadores)[0]; // primeiro = líder
 
-      // Conta votos
+      // Conta votos — suporta string ('A') e objeto ({letra:'A', confianca:'moderado'})
       const contagem = {};
-      Object.values(votos).forEach(v => { contagem[v] = (contagem[v] || 0) + 1; });
+      Object.values(votos).forEach(v => {
+        const letra = typeof v === 'object' ? v.letra : v;
+        if (letra) contagem[letra] = (contagem[letra] || 0) + 1;
+      });
 
+      const votoLider = typeof votos[lider] === 'object' ? votos[lider]?.letra : votos[lider];
       let decisao = null;
       if (Object.keys(contagem).length === 0) {
-        // Ninguém votou — voto do líder ou A
-        decisao = votos[lider] || 'A';
+        decisao = votoLider || 'A';
       } else {
-        // Maioria; empate → líder decide
         const max = Math.max(...Object.values(contagem));
         const empatados = Object.keys(contagem).filter(k => contagem[k] === max);
         if (empatados.length === 1) {
           decisao = empatados[0];
         } else {
-          // Empate: prefere voto do líder se houver, senão primeira opção empatada
-          decisao = empatados.includes(votos[lider]) ? votos[lider] : empatados[0];
+          decisao = empatados.includes(votoLider) ? votoLider : empatados[0];
         }
       }
 
@@ -1209,32 +1222,107 @@ Object.assign(window.GSPSalas, {
      Após revelar decisão, aplica efeitos e avança rodada.
      Chamado pelo cliente após animação de revelação.
   ──────────────────────────────────────────────────── */
-  async avancarRodada(codigo, partidaId, { novaRodada, indicators, score, situacaoAtual, status }) {
-    await this.patchPartida(codigo, partidaId, {
+  async avancarRodada(codigo, partidaId, { novaRodada, indicators, score, situacaoAtual, status, fase, faseInicio, faseDuracao, votos, sinais, decisaoFinal, papeis }) {
+    const fields = {
       rodadaAtual:   { integerValue: String(novaRodada) },
-      indicators:    { stringValue: JSON.stringify(indicators) },
-      score:         { integerValue: String(score) },
+      indicators:    { stringValue: JSON.stringify(indicators || {}) },
+      score:         { integerValue: String(score || 0) },
       situacaoAtual: { stringValue: JSON.stringify(situacaoAtual || {}) },
-      votos:         { stringValue: '{}' },
-      decisaoFinal:  { stringValue: '' },
+      votos:         { stringValue: JSON.stringify(votos || {}) },
+      sinais:        { stringValue: JSON.stringify(sinais || {}) },
+      decisaoFinal:  { stringValue: decisaoFinal || '' },
       status:        { stringValue: status || 'votando' },
       timerInicio:   { stringValue: new Date().toISOString() },
       processando:   { booleanValue: false },
-    });
+    };
+    if (fase         !== undefined) fields.fase        = { stringValue: fase };
+    if (faseInicio   !== undefined) fields.faseInicio  = { stringValue: new Date(faseInicio).toISOString() };
+    if (faseDuracao  !== undefined) fields.faseDuracao = { integerValue: String(faseDuracao) };
+    if (papeis       !== undefined) fields.papeis      = { stringValue: JSON.stringify(papeis) };
+    await this.patchPartida(codigo, partidaId, fields);
   },
 
   /* ── iniciarPartida ─────────────────────────────────
      Muda status para em_jogo + define timerInicio.
   ──────────────────────────────────────────────────── */
-  async iniciarPartida(codigo, partidaId, { sector, indicators, situacaoAtual }) {
+  async iniciarPartida(codigo, partidaId, { sector, indicators, situacaoAtual, fase, faseInicio, faseDuracao, papeis }) {
     await this.patchPartida(codigo, partidaId, {
       status:        { stringValue: 'votando' },
-      sector:        { stringValue: sector },
-      indicators:    { stringValue: JSON.stringify(indicators) },
+      sector:        { stringValue: sector || '' },
+      indicators:    { stringValue: JSON.stringify(indicators || {}) },
       situacaoAtual: { stringValue: JSON.stringify(situacaoAtual || {}) },
       timerInicio:   { stringValue: new Date().toISOString() },
       votos:         { stringValue: '{}' },
+      sinais:        { stringValue: '{}' },
+      fase:          { stringValue: fase || 'alerta' },
+      faseInicio:    { stringValue: faseInicio ? new Date(faseInicio).toISOString() : new Date().toISOString() },
+      faseDuracao:   { integerValue: String(faseDuracao || 4) },
+      papeis:        { stringValue: JSON.stringify(papeis || {}) },
     });
+  },
+
+  /* ── avancarFase ────────────────────────────────────
+     Avança a fase interna da rodada (alerta→deliberacao→votacao→revelacao→impacto→placar).
+     Chamado pelo líder após timer esgotar.
+  ──────────────────────────────────────────────────── */
+  async avancarFase(codigo, partidaId, { fase, faseInicio, faseDuracao, decisaoFinal, indicators, placarGrupos }) {
+    const fields = {
+      fase:       { stringValue: fase || 'votacao' },
+      faseInicio: { stringValue: faseInicio ? new Date(faseInicio).toISOString() : new Date().toISOString() },
+      faseDuracao:{ integerValue: String(faseDuracao || 30) },
+    };
+    if (decisaoFinal !== undefined) fields.decisaoFinal = { stringValue: decisaoFinal || '' };
+    if (indicators   !== undefined) fields.indicators   = { stringValue: JSON.stringify(indicators) };
+    if (placarGrupos !== undefined) fields.placarGrupos = { stringValue: JSON.stringify(placarGrupos) };
+    // Na transição para votacao: limpa votos e sinais
+    if (fase === 'votacao') {
+      fields.votos  = { stringValue: '{}' };
+      fields.sinais = { stringValue: '{}' };
+    }
+    await this.patchPartida(codigo, partidaId, fields);
+  },
+
+  /* ── registrarSinal ─────────────────────────────────
+     Salva sinal de comunicação do jogador (ex: 🔴 Risco alto).
+  ──────────────────────────────────────────────────── */
+  async registrarSinal(codigo, partidaId, uid, sinalId) {
+    if (!uid || !sinalId) return false;
+    try {
+      const estado = await this.carregarEstadoPartida(codigo, partidaId);
+      if (!estado) return false;
+      const sinais = estado.sinais || {};
+      sinais[uid]  = sinalId;
+      await this.patchPartida(codigo, partidaId, {
+        sinais: { stringValue: JSON.stringify(sinais) }
+      });
+      return true;
+    } catch(e) { return false; }
+  },
+
+  /* ── registrarVotoCompleto ──────────────────────────
+     Salva voto com objeto {letra, confianca}. Detecta todos votaram → processa.
+  ──────────────────────────────────────────────────── */
+  async registrarVotoCompleto(codigo, partidaId, uid, { letra, confianca }) {
+    const estado = await this.carregarEstadoPartida(codigo, partidaId);
+    if (!estado || estado.status !== 'votando') return false;
+    if (estado.processando) return false;
+
+    const votos = estado.votos || {};
+    votos[uid]  = { letra, confianca: confianca || 'moderado' };
+
+    await this.patchPartida(codigo, partidaId, {
+      votos: { stringValue: JSON.stringify(votos) }
+    });
+
+    // Verifica se todos os online votaram
+    const online    = estado.online || {};
+    const onlineIds = Object.keys(online).filter(k => Date.now() - online[k] < 15000);
+    const votaram   = onlineIds.filter(k => votos[k]?.letra);
+
+    if (votaram.length >= onlineIds.length && onlineIds.length > 0) {
+      await this._tentarProcessarRodada(codigo, partidaId);
+    }
+    return true;
   },
 
   /* ── encerrarPartida ────────────────────────────────

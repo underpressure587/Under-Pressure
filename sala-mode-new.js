@@ -87,10 +87,6 @@ let _scoreAnterior  = 0;    // para calcular tendência no placar
 /* ═══════════════════════════════════════════
    HELPERS GLOBAIS
 ═══════════════════════════════════════════ */
-function _player() {
-  // Pega _player do escopo global do mainBeta.js
-  return typeof _player !== 'undefined' ? window._player : (window._playerGlobal || null);
-}
 function _getPlayer() { return window._player || null; }
 function _GSP() { return window.GSPSalas || null; }
 function _mostrarAviso(m) { if (typeof mostrarAviso === 'function') mostrarAviso(m); else alert(m); }
