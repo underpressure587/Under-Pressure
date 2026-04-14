@@ -824,12 +824,10 @@ const ADMIN = (() => {
       const doc = await _get('config/global');
       const fields = _parseFields(doc.fields || {});
       return { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '', modoSalaAtivo: !!fields.modoSalaAtivo };
-} catch(e) {
-  console.error('[GSP] verificarMensagemGlobal erro:', e.message);
-  return { manutencao: false, mensagem: '', modoSalaAtivo: false };
-}
-}
-    
+    } catch(e) {
+      console.error('[GSP] verificarMensagemGlobal erro:', e.message);
+      return { manutencao: false, mensagem: '', modoSalaAtivo: false };
+    }
   }
 
   /* ── UI HELPERS ─────────────────────────────────── */
