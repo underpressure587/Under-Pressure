@@ -2685,16 +2685,41 @@ function _atualizarModoSala(cfg) {
 
 /* ── Botão Iniciar Mandato ── */
 async function abrirModalModo() {
-  // Garante que temos o valor mais recente do config — não depende do cache do polling
-  // Usa timeout curto (2s) para não travar a UI em conexão lenta
+  console.log('[MODO] abrirModalModo chamado');
+  console.log('[MODO] window.ADMIN:', !!window.ADMIN);
   if (window.ADMIN) {
     try {
       const cfgPromise = window.ADMIN.verificarMensagemGlobal();
       const timeout    = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000));
       const cfg        = await Promise.race([cfgPromise, timeout]);
+      console.log('[MODO] cfg recebido:', JSON.stringify(cfg));
       _atualizarModoSala(cfg);
-    } catch(e) { /* usa cache se falhar ou timeout */ }
+    } catch(e) {
+      console.error('[MODO] erro no fetch:', e.message);
+    }
   }
+  console.log('[MODO] _modoSalaAtivo:', _modoSalaAtivo);
+  if (!_modoSalaAtivo) {
+    irParaSetores();
+    return;
+  }
+  const descEl  = document.getElementById('modo-grupo-desc');
+  const avisoEl = document.getElementById('modo-grupo-aviso');
+  if (descEl) {
+    if (_sala && _grupoAtual) {
+      descEl.textContent = '🏟️ ' + (_sala.nome || _sala.codigo) + ' · 👥 ' + _grupoAtual.nomeGrupo;
+    } else if (_sala) {
+      descEl.textContent = '🏟️ ' + (_sala.nome || _sala.codigo) + ' — escolha um grupo';
+    } else {
+      descEl.textContent = 'Jogue colaborativamente com sua equipe';
+    }
+  }
+  if (avisoEl) avisoEl.style.display = 'none';
+  _atualizarBotaoCriarSala();
+  const modal = document.getElementById('modal-modo-jogo');
+  console.log('[MODO] modal encontrado:', !!modal);
+  if (modal) modal.style.display = 'flex';
+}
 
   // Se modo sala desativado → vai direto para setores (comportamento atual)
   if (!_modoSalaAtivo) {
