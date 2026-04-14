@@ -2712,7 +2712,7 @@ async function abrirModalModo() {
   //if (!_modoSalaAtivo) {
     //irParaSetores();
     //return;
-  }
+  //}
 
   // Atualiza descrição do card "Em Grupo"
   const descEl  = document.getElementById('modo-grupo-desc');
