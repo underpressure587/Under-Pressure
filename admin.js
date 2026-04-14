@@ -825,8 +825,9 @@ const ADMIN = (() => {
       const fields = _parseFields(doc.fields || {});
       return { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '', modoSalaAtivo: !!fields.modoSalaAtivo };
     } catch(e) {
-      return { manutencao: false, mensagem: '' };
-    }
+  return { manutencao: false, mensagem: '', modoSalaAtivo: false };
+}
+    
   }
 
   /* ── UI HELPERS ─────────────────────────────────── */
