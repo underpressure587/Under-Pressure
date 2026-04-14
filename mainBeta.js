@@ -734,6 +734,7 @@ function _iniciarPollingGlobal(uid) {
 
       // 2. Verifica manutenção + mensagem global
       const cfg = await window.ADMIN.verificarMensagemGlobal();
+      if (!cfg) return; // falha de rede — mantém estado anterior
       _atualizarModoSala(cfg);
 
       if (cfg.manutencao && !_isAdmin) {

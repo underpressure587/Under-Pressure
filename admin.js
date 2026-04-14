@@ -842,7 +842,7 @@ const ADMIN = (() => {
       return { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '', modoSalaAtivo: !!fields.modoSalaAtivo };
     } catch(e) {
       console.error('[GSP] verificarMensagemGlobal erro:', e.message);
-      return { manutencao: false, mensagem: '', modoSalaAtivo: false };
+      return null; // null = falha de rede, caller usa cache
     }
   }
 
