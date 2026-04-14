@@ -2708,62 +2708,34 @@ async function anfitriaoEncerrarSala() {
    MODO DE JOGO — Solo vs Em Grupo
 ════════════════════════════════════════════════════ */
 
-let _modoSalaAtivo = false; // carregado do config/global
+// Cache da flag. Atualizado pelo polling global a cada tick.
+let _modoSalaAtivo = false;
 
-/* ── Carrega flag modoSalaAtivo no polling global ── */
-// Já é retornado por verificarMensagemGlobal — apenas cacheia aqui
+// Chamado pelo polling global sempre que chega config do Firestore.
+// Fonte única de verdade: campo modoSalaAtivo (salvo pelo admin).
 function _atualizarModoSala(cfg) {
-  // Suporta tanto modoSala quanto modoSalaAtivo (compatibilidade Firestore)
-  _modoSalaAtivo = !!(cfg?.modoSalaAtivo || cfg?.modoSala);
-  const btn = document.getElementById('home-btn-sala');
-  if (btn) btn.style.display = _modoSalaAtivo ? 'block' : 'none';
+  _modoSalaAtivo = !!(cfg?.modoSalaAtivo);
 }
 
-/* ── Botão Iniciar Mandato ── */
+/* ── Botão "Iniciar Mandato" ── */
 async function abrirModalModo() {
-  // Fix: aguarda window.ADMIN estar disponível antes de consultar (evita race condition no boot)
-  let tAdmin = 0;
-  while (!window.ADMIN && tAdmin < 20) {
-    await new Promise(r => setTimeout(r, 100));
-    tAdmin++;
-  }
-
-  // Busca config atualizada do Firestore antes de decidir o fluxo
-  let modoSala = _modoSalaAtivo; // fallback: valor cacheado pelo polling
-  if (window.ADMIN) {
-    try {
-      let t = 0;
-      while (!window.GSPAuth?.isReady() && t < 50) {
-        await new Promise(r => setTimeout(r, 100));
-        t++;
-      }
-      const cfg = await window.ADMIN.verificarMensagemGlobal();
-      if (cfg) {
-        _atualizarModoSala(cfg);
-        modoSala = _modoSalaAtivo;
-      }
-    } catch(e) { /* mantém valor cacheado */ }
-  }
-
-  // Se modo sala desativado → vai direto para setores
-  if (!modoSala) {
+  // Modo sala desativado → vai direto para seleção de empresa (modo individual)
+  if (!_modoSalaAtivo) {
     irParaSetores();
     return;
   }
 
-  // Fix: usa getters do SalaMode em vez de variáveis locais (_sala e _grupoAtual
-  // do mainBeta.js só são preenchidas pelo fluxo admin; jogadores comuns ficam com null)
-  const _salaAtual   = SalaMode.getSala();
-  const _grupoAtual  = SalaMode.getGrupo();
+  // Modo sala ativado → mostra modal Solo / Em Grupo
+  const salaAtual  = SalaMode.getSala();
+  const grupoAtual = SalaMode.getGrupo();
+  const descEl     = document.getElementById('modo-grupo-desc');
+  const avisoEl    = document.getElementById('modo-grupo-aviso');
 
-  // Atualiza descrição do card "Em Grupo"
-  const descEl  = document.getElementById('modo-grupo-desc');
-  const avisoEl = document.getElementById('modo-grupo-aviso');
   if (descEl) {
-    if (_salaAtual && _grupoAtual) {
-      descEl.textContent = '🏟️ ' + (_salaAtual.nome || _salaAtual.codigo) + ' · 👥 ' + _grupoAtual.nomeGrupo;
-    } else if (_salaAtual) {
-      descEl.textContent = '🏟️ ' + (_salaAtual.nome || _salaAtual.codigo) + ' — escolha um grupo';
+    if (salaAtual && grupoAtual) {
+      descEl.textContent = '🏟️ ' + (salaAtual.nome || salaAtual.codigo) + ' · 👥 ' + grupoAtual.nomeGrupo;
+    } else if (salaAtual) {
+      descEl.textContent = '🏟️ ' + (salaAtual.nome || salaAtual.codigo) + ' — escolha um grupo';
     } else {
       descEl.textContent = 'Jogue colaborativamente com sua equipe';
     }

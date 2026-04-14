@@ -1550,12 +1550,7 @@ function _calcTendencia(indicador, estado) {
   return cur - prev;
 }
 
-function _atualizarModoSala(cfg) {
-  // Compatibilidade com mainBeta.js
-  const btn = document.getElementById('home-btn-sala');
-  if (!btn) return;
-  btn.style.display = cfg?.modoSala ? 'block' : 'none';
-}
+// _atualizarModoSala removida daqui — gerenciada exclusivamente por mainBeta.js
 
 /* ════════════════════════════════════════
    COMPATIBILIDADE COM BetaUI
@@ -1580,7 +1575,7 @@ window.anfitriaoNovoCiclo    = () => anfNovoCiclo();
 window.anfitriaoEncerrarSala = () => anfEncerrar();
 window.abrirGerenciarGrupos  = () => abrirGerenciar();
 window.fecharGerenciarGrupos = () => fecharGerenciar();
-window._atualizarModoSala    = (cfg) => _atualizarModoSala(cfg);
+// _atualizarModoSala é definida em mainBeta.js — não re-exportar daqui
 window._restaurarSala        = () => restaurar();
 window._restaurarGrupo       = () => restaurar();
 window._atualizarBadgeSala   = () => _atualizarBadge();
