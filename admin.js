@@ -21,6 +21,10 @@ const ADMIN = (() => {
       await new Promise(r => setTimeout(r, 100));
       t++;
     }
+    // Espera o usuário autenticado estar disponível (currentUser pode ser null inicialmente)
+    if (window.GSPAuth?.waitForAuthReady) {
+      await window.GSPAuth.waitForAuthReady();
+    }
     const tok = await window.GSPAuth?.getToken();
     if (!tok) throw new Error('Não autenticado');
     return tok;
