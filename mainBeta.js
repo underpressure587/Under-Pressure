@@ -2701,7 +2701,10 @@ let _modoSalaAtivo = false; // carregado do config/global
 /* ── Carrega flag modoSalaAtivo no polling global ── */
 // Já é retornado por verificarMensagemGlobal — apenas cacheia aqui
 function _atualizarModoSala(cfg) {
-  _modoSalaAtivo = !!cfg?.modoSalaAtivo;
+  // Suporta tanto modoSala quanto modoSalaAtivo (compatibilidade Firestore)
+  _modoSalaAtivo = !!(cfg?.modoSalaAtivo || cfg?.modoSala);
+  const btn = document.getElementById('home-btn-sala');
+  if (btn) btn.style.display = _modoSalaAtivo ? 'block' : 'none';
 }
 
 /* ── Botão Iniciar Mandato ── */
