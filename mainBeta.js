@@ -2695,15 +2695,17 @@ function _atualizarModoSala(cfg) {
 
 /* ── Botão Iniciar Mandato ── */
 async function abrirModalModo() {
-  // Garante que temos o valor mais recente do config — não depende do cache do polling
-  // Usa timeout curto (2s) para não travar a UI em conexão lenta
+  // Espera GSPAuth ficar pronto (módulo ES6 pode carregar depois)
   if (window.ADMIN) {
     try {
-      const cfgPromise = window.ADMIN.verificarMensagemGlobal();
-      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000));
-      const cfg        = await Promise.race([cfgPromise, timeout]);
-      _atualizarModoSala(cfg);
-    } catch(e) { /* usa cache se falhar ou timeout */ }
+      let t = 0;
+      while (!window.GSPAuth?.isReady() && t < 50) {
+        await new Promise(r => setTimeout(r, 100));
+        t++;
+      }
+      const cfg = await window.ADMIN.verificarMensagemGlobal();
+      if (cfg) _atualizarModoSala(cfg);
+    } catch(e) { /* usa cache se falhar */ }
   }
 
   // Se modo sala desativado → vai direto para setores (comportamento atual)

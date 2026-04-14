@@ -15,6 +15,12 @@ const ADMIN = (() => {
 
   /* ── TOKEN ─────────────────────────────────────── */
   async function _token() {
+    // Espera GSPAuth ficar pronto (firebase-config.js é type=module, carrega depois)
+    let t = 0;
+    while (!window.GSPAuth?.isReady() && t < 50) {
+      await new Promise(r => setTimeout(r, 100));
+      t++;
+    }
     const tok = await window.GSPAuth?.getToken();
     if (!tok) throw new Error('Não autenticado');
     return tok;
@@ -819,32 +825,13 @@ const ADMIN = (() => {
     } catch(e) { return {}; }
   }
 
-  async function _gravarLog(tipo, msg) {
-    try {
-      const tok = await window.GSPAuth?.getToken().catch(() => null);
-      if (!tok) return;
-      const id = Date.now();
-      const fields = {
-        msg:   { stringValue: msg || '' },
-        tipo:  { stringValue: tipo || 'info' },
-        ts:    { integerValue: String(id) },
-      };
-      const mask = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
-      await fetch(`${FS}/logs/${id}?${mask}`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields }),
-      }).catch(() => {});
-    } catch(e) { /* silencioso */ }
-  }
-
   async function verificarMensagemGlobal() {
     try {
       const doc = await _get('config/global');
       const fields = _parseFields(doc.fields || {});
       return { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '', modoSalaAtivo: !!fields.modoSalaAtivo };
     } catch(e) {
-      _gravarLog('erro', 'verificarMensagemGlobal: ' + e.message);
+      console.error('[GSP] verificarMensagemGlobal erro:', e.message);
       return { manutencao: false, mensagem: '', modoSalaAtivo: false };
     }
   }
