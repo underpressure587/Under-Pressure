@@ -136,6 +136,12 @@ async function _boot() {
     _atualizarHome();
     await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
     if (window.ADMIN) {
+      // Espera GSPAuth ficar pronto (módulo ES6 carrega depois dos scripts normais)
+      let t = 0;
+      while (!window.GSPAuth?.isReady() && t < 30) {
+        await new Promise(r => setTimeout(r, 100));
+        t++;
+      }
       const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
       if (cfg) _atualizarModoSala(cfg);
     }
