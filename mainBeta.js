@@ -2710,6 +2710,13 @@ function _atualizarModoSala(cfg) {
 
 /* ── Botão Iniciar Mandato ── */
 async function abrirModalModo() {
+  // Fix: aguarda window.ADMIN estar disponível antes de consultar (evita race condition no boot)
+  let tAdmin = 0;
+  while (!window.ADMIN && tAdmin < 20) {
+    await new Promise(r => setTimeout(r, 100));
+    tAdmin++;
+  }
+
   // Busca config atualizada do Firestore antes de decidir o fluxo
   let modoSala = _modoSalaAtivo; // fallback: valor cacheado pelo polling
   if (window.ADMIN) {
@@ -2733,14 +2740,19 @@ async function abrirModalModo() {
     return;
   }
 
+  // Fix: usa getters do SalaMode em vez de variáveis locais (_sala e _grupoAtual
+  // do mainBeta.js só são preenchidas pelo fluxo admin; jogadores comuns ficam com null)
+  const _salaAtual   = SalaMode.getSala();
+  const _grupoAtual  = SalaMode.getGrupo();
+
   // Atualiza descrição do card "Em Grupo"
   const descEl  = document.getElementById('modo-grupo-desc');
   const avisoEl = document.getElementById('modo-grupo-aviso');
   if (descEl) {
-    if (_sala && _grupoAtual) {
-      descEl.textContent = '🏟️ ' + (_sala.nome || _sala.codigo) + ' · 👥 ' + _grupoAtual.nomeGrupo;
-    } else if (_sala) {
-      descEl.textContent = '🏟️ ' + (_sala.nome || _sala.codigo) + ' — escolha um grupo';
+    if (_salaAtual && _grupoAtual) {
+      descEl.textContent = '🏟️ ' + (_salaAtual.nome || _salaAtual.codigo) + ' · 👥 ' + _grupoAtual.nomeGrupo;
+    } else if (_salaAtual) {
+      descEl.textContent = '🏟️ ' + (_salaAtual.nome || _salaAtual.codigo) + ' — escolha um grupo';
     } else {
       descEl.textContent = 'Jogue colaborativamente com sua equipe';
     }
@@ -2765,8 +2777,13 @@ function escolherModoSolo() {
 async function escolherModoGrupo() {
   const avisoEl = document.getElementById('modo-grupo-aviso');
 
+  // Fix: usa getters do SalaMode (variáveis locais _sala/_grupoAtual do mainBeta
+  // não são preenchidas para jogadores comuns que entram via SalaMode.entrar())
+  const _salaAtual  = SalaMode.getSala();
+  const _grupoAtual = SalaMode.getGrupo();
+
   // Não está em sala → abre modal de código
-  if (!_sala) {
+  if (!_salaAtual) {
     fecharModalModo();
     SalaMode.abrirModal();
     return;
