@@ -2497,7 +2497,7 @@ async function _loginOk(player) {
   // Verifica manutenção — admin bypassa, usuários comuns são bloqueados
   if (window.ADMIN) {
     const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
-    _atualizarModoSala(cfg);
+if (cfg) _atualizarModoSala(cfg); // só atualiza se não for null
     if (cfg?.manutencao && !_isAdmin) {
       mostrarTela('screen-home');
       setTimeout(() => _mostrarOverlayManutencao(cfg?.mensagem || ''), 500);
