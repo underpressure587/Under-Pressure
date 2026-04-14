@@ -5726,3 +5726,6 @@ body::after{
   padding: 8px 12px; border-radius: 0 var(--r1) var(--r1) 0;
   animation: jg-fade-in .3s ease;
 }
+#modal-modo-jogo {
+  z-index: 99999 !important;
+}
