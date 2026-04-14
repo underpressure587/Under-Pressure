@@ -2670,7 +2670,6 @@ async function anfitriaoEncerrarSala() {
   } catch(e) { mostrarAviso('Erro: ' + e.message); }
 }
 
-
 /* ════════════════════════════════════════════════════
    MODO DE JOGO — Solo vs Em Grupo
 ════════════════════════════════════════════════════ */
