@@ -2695,13 +2695,16 @@ function _atualizarModoSala(cfg) {
 
 /* ── Botão Iniciar Mandato ── */
 async function abrirModalModo() {
-  // Espera GSPAuth ficar pronto (módulo ES6 pode carregar depois)
+  // Espera GSPAuth ficar pronto e tenta obter config atualizado
   if (window.ADMIN) {
     try {
       let t = 0;
       while (!window.GSPAuth?.isReady() && t < 50) {
         await new Promise(r => setTimeout(r, 100));
         t++;
+      }
+      if (window.GSPAuth?.waitForAuthReady) {
+        await window.GSPAuth.waitForAuthReady();
       }
       const cfg = await window.ADMIN.verificarMensagemGlobal();
       if (cfg) _atualizarModoSala(cfg);

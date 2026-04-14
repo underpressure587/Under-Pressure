@@ -15,17 +15,23 @@ const ADMIN = (() => {
 
   /* ── TOKEN ─────────────────────────────────────── */
   async function _token() {
-    // Espera GSPAuth ficar pronto (firebase-config.js é type=module, carrega depois)
+    // 1. Espera GSPAuth ficar pronto (firebase-config.js é type=module, carrega depois)
     let t = 0;
     while (!window.GSPAuth?.isReady() && t < 50) {
       await new Promise(r => setTimeout(r, 100));
       t++;
     }
-    // Espera o usuário autenticado estar disponível (currentUser pode ser null inicialmente)
+    // 2. Espera o usuário autenticado estar disponível (currentUser pode ser null inicialmente)
     if (window.GSPAuth?.waitForAuthReady) {
       await window.GSPAuth.waitForAuthReady();
     }
-    const tok = await window.GSPAuth?.getToken();
+    // 3. Tenta obter token com retry (até 5s)
+    let tok = null;
+    for (let i = 0; i < 10; i++) {
+      tok = await window.GSPAuth?.getToken().catch(() => null);
+      if (tok) break;
+      await new Promise(r => setTimeout(r, 500));
+    }
     if (!tok) throw new Error('Não autenticado');
     return tok;
   }
