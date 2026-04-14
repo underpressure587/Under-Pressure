@@ -839,10 +839,12 @@ const ADMIN = (() => {
     try {
       const doc = await _get('config/global');
       const fields = _parseFields(doc.fields || {});
-      return { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '', modoSalaAtivo: !!fields.modoSalaAtivo };
+      const result = { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '', modoSalaAtivo: !!fields.modoSalaAtivo };
+      console.log('[GSP] verificarMensagemGlobal:', result);
+      return result;
     } catch(e) {
       console.error('[GSP] verificarMensagemGlobal erro:', e.message);
-      return null; // null = falha de rede, caller usa cache
+      return null;
     }
   }
 
