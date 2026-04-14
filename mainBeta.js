@@ -717,9 +717,20 @@ function _mostrarToastAtualizacao(forcado) {
   document.body.appendChild(toast);
 }
 
-function _iniciarPollingGlobal(uid) {
+async function _iniciarPollingGlobal(uid) {
   _pararPollingGlobal(); // limpa qualquer poll anterior
-  if (!window.ADMIN || !uid) return;
+  if (!uid) return;
+
+  // Aguarda window.ADMIN carregar (script síncrono carregado após o bundle;
+  // em sessões restauradas o boot pode chegar aqui antes de admin.js executar)
+  if (!window.ADMIN) {
+    let tWait = 0;
+    while (!window.ADMIN && tWait < 50) { // até 5s
+      await new Promise(r => setTimeout(r, 100));
+      tWait++;
+    }
+  }
+  if (!window.ADMIN) return; // admin.js não carregou — encerra sem polling
 
   const _tick = async () => {
     try {
