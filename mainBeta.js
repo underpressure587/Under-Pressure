@@ -1343,7 +1343,7 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
         <div class="crucial-round">${emo} Rodada ${d.rodada} — ${d.titulo}</div>
         <div class="crucial-escolha">"${d.escolha}"</div>
         <div style="margin:6px 0">${efeitos}</div>
-        ${d.ensinamento?`<div style="font-size:.75rem;color:var(--text-muted);line-height:1.4;font-style:italic">${d.ensinamento}</div>`:""}
+        ${d.ensinamento?`<div style="font-size:.75rem;color:var(--t2);line-height:1.4;font-style:italic">${d.ensinamento}</div>`:""}
       </div>`;
     }).join("");
   } else if (cruciaisSec) { cruciaisSec.style.display="none"; }
