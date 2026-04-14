@@ -2723,10 +2723,10 @@ async function abrirModalModo() {
   }
 
   // Se modo sala desativado → vai direto para setores (comportamento atual)
-  //if (!_modoSalaAtivo) {
-    //irParaSetores();
-    //return;
-  //}
+  if (!_modoSalaAtivo) {
+    irParaSetores();
+    return;
+  }
 
   // Atualiza descrição do card "Em Grupo"
   const descEl  = document.getElementById('modo-grupo-desc');
