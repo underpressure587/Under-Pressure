@@ -4489,7 +4489,7 @@ body::after{
 
 /* Modal sala */
 .modal-overlay {
-  position: fixed; inset: 0; z-index: 200;
+  position: fixed; inset: 0; z-index: 99999;
   background: rgba(0,0,0,.6);
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
@@ -5725,7 +5725,4 @@ body::after{
   background: var(--bg2); border-left: 3px solid var(--acc);
   padding: 8px 12px; border-radius: 0 var(--r1) var(--r1) 0;
   animation: jg-fade-in .3s ease;
-}
-#modal-modo-jogo {
-  z-index: 99999 !important;
 }
