@@ -2709,7 +2709,8 @@ function _atualizarModoSala(cfg) {
 
 /* ── Botão Iniciar Mandato ── */
 async function abrirModalModo() {
-  // Espera GSPAuth ficar pronto (módulo ES6 pode carregar depois)
+  // Busca config atualizada do Firestore antes de decidir o fluxo
+  let modoSala = _modoSalaAtivo; // fallback: valor cacheado pelo polling
   if (window.ADMIN) {
     try {
       let t = 0;
@@ -2718,12 +2719,15 @@ async function abrirModalModo() {
         t++;
       }
       const cfg = await window.ADMIN.verificarMensagemGlobal();
-      if (cfg) _atualizarModoSala(cfg);
-    } catch(e) { /* usa cache se falhar */ }
+      if (cfg) {
+        _atualizarModoSala(cfg);
+        modoSala = _modoSalaAtivo;
+      }
+    } catch(e) { /* mantém valor cacheado */ }
   }
 
-  // Se modo sala desativado → vai direto para setores (comportamento atual)
-  if (!_modoSalaAtivo) {
+  // Se modo sala desativado → vai direto para setores
+  if (!modoSala) {
     irParaSetores();
     return;
   }
