@@ -2690,7 +2690,7 @@ async function abrirModalModo() {
   if (window.ADMIN) {
     try {
       const cfgPromise = window.ADMIN.verificarMensagemGlobal();
-      const timeout    = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000));
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000));
       const cfg        = await Promise.race([cfgPromise, timeout]);
       _atualizarModoSala(cfg);
     } catch(e) { /* usa cache se falhar ou timeout */ }
