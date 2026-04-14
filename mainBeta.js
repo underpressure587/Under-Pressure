@@ -135,6 +135,10 @@ async function _boot() {
     _verificarSessaoSalva();
     _atualizarHome();
     await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
+    if (window.ADMIN) {
+      const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
+      if (cfg) _atualizarModoSala(cfg);
+    }
     _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
@@ -2497,7 +2501,7 @@ async function _loginOk(player) {
   // Verifica manutenção — admin bypassa, usuários comuns são bloqueados
   if (window.ADMIN) {
     const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
-if (cfg) _atualizarModoSala(cfg); // só atualiza se não for null
+    _atualizarModoSala(cfg);
     if (cfg?.manutencao && !_isAdmin) {
       mostrarTela('screen-home');
       setTimeout(() => _mostrarOverlayManutencao(cfg?.mensagem || ''), 500);
