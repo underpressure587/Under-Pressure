@@ -134,6 +134,17 @@ async function _boot() {
     window._player = _player;
     _verificarSessaoSalva();
     _atualizarHome();
+
+    // Espera o Firebase resolver o auth antes de qualquer chamada ao Firestore
+    if (window.GSPAuth) {
+      let t = 0;
+      while (!window.GSPAuth.isReady() && t < 50) {
+        await new Promise(r => setTimeout(r, 100));
+        t++;
+      }
+      await window.GSPAuth.waitForAuthReady().catch(() => null);
+    }
+
     await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
     if (window.ADMIN) {
       // Espera GSPAuth ficar pronto (módulo ES6 carrega depois dos scripts normais)
@@ -2695,7 +2706,7 @@ function _atualizarModoSala(cfg) {
 
 /* ── Botão Iniciar Mandato ── */
 async function abrirModalModo() {
-  // Espera GSPAuth ficar pronto e tenta obter config atualizado
+  // Espera GSPAuth ficar pronto (módulo ES6 pode carregar depois)
   if (window.ADMIN) {
     try {
       let t = 0;
@@ -2703,19 +2714,16 @@ async function abrirModalModo() {
         await new Promise(r => setTimeout(r, 100));
         t++;
       }
-      if (window.GSPAuth?.waitForAuthReady) {
-        await window.GSPAuth.waitForAuthReady();
-      }
       const cfg = await window.ADMIN.verificarMensagemGlobal();
       if (cfg) _atualizarModoSala(cfg);
     } catch(e) { /* usa cache se falhar */ }
   }
 
   // Se modo sala desativado → vai direto para setores (comportamento atual)
-  if (!_modoSalaAtivo) {
-    irParaSetores();
-    return;
-  }
+  //if (!_modoSalaAtivo) {
+    //irParaSetores();
+    //return;
+  //}
 
   // Atualiza descrição do card "Em Grupo"
   const descEl  = document.getElementById('modo-grupo-desc');
