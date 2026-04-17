@@ -343,6 +343,8 @@ function mostrarTela(id, goBack) {
   // Atualiza botão admin ao entrar na home
   if (id === 'screen-home') {
     _mostrarBotaoAdmin();
+    // Registra presença no RTDB se jogador autenticado
+    if (_player?.uid) _registrarPresencaHome();
     // Exibe mensagem global se houver
     if (window._mensagemGlobal) {
       setTimeout(() => mostrarSucesso(window._mensagemGlobal), 800);
@@ -490,6 +492,7 @@ function restaurarSessao() {
       mostrarTela("screen-game");
       renderSidebar(state, empresa);
       renderRodada(state);
+      _atualizarSessaoAtiva(); // registra presença ao restaurar sessão
       setTimeout(() => mostrarSucesso(`Sessão restaurada: ${state.companyName} · Rodada ${state.currentRound + 1}`), 500);
       return;
     } catch(e) {
@@ -774,6 +777,7 @@ function comecaJogo() {
   iniciarRodadas();
   _renderEmpresaTab();
   _iniciarVerificacaoManutencao();
+  _atualizarSessaoAtiva(); // registra presença imediatamente ao iniciar o jogo
 }
 
 // ─── POLLING UNIVERSAL ─────────────────────────────────────────
@@ -1244,6 +1248,31 @@ function escolher(idx) {
 
   // Pequena pausa para a animação ser vista antes de processar
   setTimeout(() => processarEscolha(idx), 180);
+}
+
+// Registra presença no RTDB quando o jogador está na tela inicial (sem partida ativa)
+async function _registrarPresencaHome() {
+  try {
+    if (!_player?.uid || !window.GSPRtdb) return;
+    const { db, ref, set, onDisconnect } = window.GSPRtdb;
+    const presRef = ref(db, `presence/${_player.uid}`);
+
+    await set(presRef, {
+      nome:        _player.nome || 'Jogador',
+      setor:       '',
+      rodada:      0,
+      companyName: '',
+      versao:      _versaoAtual || '',
+      ts:          Date.now(),
+      status:      'home', // diferencia de quem está em partida
+      online:      true,
+    });
+
+    if (!_presencaInicializada) {
+      onDisconnect(presRef).remove();
+      _presencaInicializada = true;
+    }
+  } catch(e) { /* silencioso */ }
 }
 
 // Atualiza presença no Firebase Realtime Database

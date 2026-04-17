@@ -1098,14 +1098,20 @@ const ADMIN = (() => {
 
         lista.innerHTML = jogadores
           .sort((a, b) => (b.ts || 0) - (a.ts || 0))
-          .map(d => `
+          .map(d => {
+            const emPartida = d.status !== 'home' && d.setor;
+            const detalhe = emPartida
+              ? `${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1}`
+              : '🏠 Na tela inicial';
+            return `
             <div class="admin-aovivo-row">
               <div class="admin-sessao-dot ativa"></div>
               <div class="admin-sessao-info">
                 <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
-                <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1}</div>
+                <div class="admin-sessao-detalhe">${detalhe}</div>
               </div>
-            </div>`).join('');
+            </div>`;
+          }).join('');
       }, (err) => {
         lista.innerHTML = '<div class="admin-empty">Erro ao conectar ao Realtime DB.</div>';
         console.error('[Admin] RTDB onValue erro:', err);
@@ -1443,11 +1449,15 @@ const ADMIN = (() => {
 
         lista.innerHTML = jogadores.map(d => {
           const tempo = d.ts ? _tempoRelativo(d.ts) : '—';
+          const emPartida = d.status !== 'home' && d.setor;
+          const detalhe = emPartida
+            ? `${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1} · ${d.companyName||''}`
+            : '🏠 Na tela inicial';
           return `<div class="admin-sessao-row">
             <div class="admin-sessao-dot ativa"></div>
             <div class="admin-sessao-info">
               <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
-              <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1} · ${d.companyName||''}</div>
+              <div class="admin-sessao-detalhe">${detalhe}</div>
             </div>
             <span class="admin-sessao-tempo">${tempo}</span>
           </div>`;
