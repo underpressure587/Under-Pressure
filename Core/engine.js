@@ -142,7 +142,16 @@ function iniciar(sectorId, groupName, companyName, modoSala) {
 
     const empresa   = EMPRESAS[setorFinal];
     const introList = empresa.intros || (empresa.intro ? [empresa.intro] : []);
-    const introIndex    = Math.floor(Math.random() * introList.length);
+
+    // Sortear apenas entre índices que têm rounds válidos (não-vazios)
+    const indicesValidos = (empresa.rounds || [])
+        .map((r, i) => (r && r.length > 0 ? i : -1))
+        .filter(i => i !== -1 && i < introList.length);
+
+    const introIndex = indicesValidos.length > 0
+        ? indicesValidos[Math.floor(Math.random() * indicesValidos.length)]
+        : 0;
+
     const introSorteada = introList[introIndex] || null;
 
     state.introIndex = introIndex;
