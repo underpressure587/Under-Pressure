@@ -1354,7 +1354,7 @@ body::after{
 }
 .game-ind-val{
   font-size:1.1rem; font-weight:800; line-height:1;
-  font-family: var(--serif);
+  font-family: var(--sans);
 }
 .game-ind-track{
   height:4px; background:var(--bg4); border-radius:2px; overflow:hidden; margin-bottom:5px;
