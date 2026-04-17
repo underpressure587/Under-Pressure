@@ -1272,7 +1272,7 @@ const TecnologiaRounds = [
       {
         text: "Criar um framework de ROI personalizado para cada oportunidade — calcular o retorno específico para cada cliente antes da próxima reunião",
         risco: "baixo",
-        effects: { satisfacao: +3, reputacao: +3, produtividade: -2, financeiro: +1 },
+        effects: { satisfacao: +3, reputacao: +3, produtividade: -1, financeiro: +1 },
         avaliacao: "boa",
         ensinamento: "Em vendas B2B enterprise, o comprador precisa justificar internamente a decisão. ROI documentado com os números do próprio cliente é o argumento mais poderoso — e diferencia empresas que vendem tecnologia de empresas que vendem resultado."
       },

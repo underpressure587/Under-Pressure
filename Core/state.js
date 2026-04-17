@@ -6,13 +6,20 @@
 const BetaState = (() => {
     let _state = null;
 
-    function _indicadoresBase(sector) {
+    function _indicadoresBase(sector, introIndex = 0) {
+        // Tecnologia tem valores iniciais por história pois cada contexto
+        // começa em situações muito diferentes (SaaS saudável vs EdTech em crise vs Scale-up IA)
+        const TECNOLOGIA_POR_HISTORIA = [
+            // [0] SaaS B2B — empresa crescendo, time ainda relativamente ok
+            { financeiro: 9, clima: 7, satisfacao: 7, qualidade: 6, produtividade: 7, reputacao: 8, inovacao: 7, seguranca: 6 },
+            // [1] EdTech — time sobrecarregado, clima crítico (runway 8 meses)
+            { financeiro: 9, clima: 4, satisfacao: 7, qualidade: 6, produtividade: 5, reputacao: 8, inovacao: 7, seguranca: 6 },
+            // [2] Scale-up IA — produto bom, pipeline travado, vendas fracas
+            { financeiro: 9, clima: 6, satisfacao: 7, qualidade: 6, produtividade: 6, reputacao: 8, inovacao: 7, seguranca: 6 },
+        ];
+
         const BASE = {
-            tecnologia: {
-                financeiro: 9, clima: 4, satisfacao: 7,
-                qualidade: 6, produtividade: 5, reputacao: 8,
-                inovacao: 7, seguranca: 6
-            },
+            tecnologia: TECNOLOGIA_POR_HISTORIA[introIndex] || TECNOLOGIA_POR_HISTORIA[0],
             varejo: {
                 financeiro: 6, rh: 7, clientes: 8, processos: 5,
                 margem: 5, estoque: 7, marca: 8, digital: 4
@@ -35,7 +42,7 @@ const BetaState = (() => {
             groupName,
             companyName,
 
-            indicators: _indicadoresBase(sector),
+            indicators: _indicadoresBase(sector, 0), // introIndex=0 como padrão; engine chama aplicarIndicadoresHistoria() logo após
 
             currentRound:  0,
             totalRounds:   15,
@@ -160,11 +167,20 @@ const BetaState = (() => {
         return _state;
     }
 
+    // Chamado pelo engine após sortear o introIndex,
+    // garante que cada história começa com os indicadores corretos
+    function aplicarIndicadoresHistoria(introIndex) {
+        if (!_state) return;
+        _state.indicators = _indicadoresBase(_state.sector, introIndex);
+        _state.introIndex  = introIndex;
+    }
+
     return {
         init, get, getIndicators, applyEffects,
         applyGestorEffects, getGestor, addStakeholderLog,
         addHistory, addEvent, nextRound, setPhase,
         addFlag, setFase, setReputacao, addEstiloGestao,
         addConquista, addTrauma, setSituacaoStatus, restore,
+        aplicarIndicadoresHistoria,
     };
 })();

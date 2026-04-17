@@ -155,6 +155,7 @@ function iniciar(sectorId, groupName, companyName, modoSala) {
     const introSorteada = introList[introIndex] || null;
 
     state.introIndex = introIndex;
+    BetaState.aplicarIndicadoresHistoria(introIndex); // aplica indicadores corretos para esta história
 
     if (empresa.rounds && empresa.rounds[introIndex]?.length > 0) {
         state.gameRounds  = empresa.rounds[introIndex];
