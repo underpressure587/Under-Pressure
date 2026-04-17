@@ -115,7 +115,8 @@ const BetaIndicadores = (() => {
     }
 
     function isGameOver(indicators) {
-        return Object.values(indicators).some(v => v <= 0);
+        // BUG #6 FIX: threshold <= 1 para game over ser alcançável
+        return Object.values(indicators).some(v => v <= 1);
     }
 
     function scoreTotal(indicators, sector = null) {

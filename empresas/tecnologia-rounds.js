@@ -5,7 +5,7 @@
    INDICADORES (8 — exclusivos do setor Tecnologia):
      financeiro    💰  Saúde do caixa / ARR / burn rate
      clima         🧑‍💻  Engajamento e moral do time
-     satisfacao    ⭐  NPS / retenção / churn dos clientes
+     satisfacao    ⭐  NPS / retenção / churn dos satisfacao
      qualidade     🛠️   Estabilidade / bugs / dívida técnica
      produtividade ⚡  Velocidade de entrega / output
      reputacao     📣  Imagem no mercado / percepção de marca
@@ -35,18 +35,18 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Crash de Segunda-Feira",
-    description: "Seu primeiro dia como gestor responsável. Às 9h07, o sistema de monitoramento dispara: a plataforma está fora do ar. Duzentos e trinta clientes não conseguem acessar. O canal de suporte explode com mensagens. O CTO Pedro chega correndo: 'É o módulo de autenticação — o mesmo que está na nossa lista de dívida técnica há 14 meses. Estimamos 3 a 5 horas para restaurar.' Qual é a sua primeira decisão?",
+    description: "Seu primeiro dia como gestor responsável. Às 9h07, o sistema de monitoramento dispara: a plataforma está fora do ar. Duzentos e trinta satisfacao não conseguem acessar. O canal de suporte explode com mensagens. O CTO Pedro chega correndo: 'É o módulo de autenticação — o mesmo que está na nossa lista de dívida técnica há 14 meses. Estimamos 3 a 5 horas para restaurar.' Qual é a sua primeira decisão?",
     tags: ["tecnologia"],
     choices: [
       {
-        text: "Comunicar proativamente todos os clientes afetados com previsão de retorno e atualizações a cada 30 minutos",
+        text: "Comunicar proativamente todos os satisfacao afetados com previsão de retorno e atualizações a cada 30 minutos",
         risco: "baixo",
         effects: { satisfacao: +4, reputacao: +3, clima: +2, qualidade: -1 },
         avaliacao: "boa",
         ensinamento: "Comunicação transparente durante incidentes transforma uma crise técnica em prova de maturidade operacional. Clientes que recebem atualizações frequentes cancelam 60% menos do que os que ficam no silêncio. A percepção de cuidado vale mais que a perfeição técnica."
       },
       {
-        text: "Focar 100% do time na resolução técnica sem comunicar clientes — só falar quando estiver resolvido",
+        text: "Focar 100% do time na resolução técnica sem comunicar satisfacao — só falar quando estiver resolvido",
         risco: "medio",
         effects: { qualidade: +3, satisfacao: -5, reputacao: -3, clima: +1 },
         avaliacao: "ruim",
@@ -61,11 +61,11 @@ const TecnologiaRounds = [
         ensinamento: "Escalada prematura ao conselho antes de ter dados e plano sinaliza despreparo ao time e desgasta credibilidade com os investidores. A decisão operacional de um incidente precisa acontecer em minutos, não em horas de governança."
       },
       {
-        text: "Acionar simultaneamente o time técnico para resolução e o CS para comunicação segmentada, priorizando os maiores clientes",
+        text: "Acionar simultaneamente o time técnico para resolução e o CS para comunicação segmentada, priorizando os maiores satisfacao",
         risco: "baixo",
         effects: { satisfacao: +5, reputacao: +4, clima: +3, qualidade: +2 },
         avaliacao: "boa",
-        ensinamento: "Paralelizar resolução técnica com comunicação comercial é a resposta de empresas maduras a incidentes. Priorizar os maiores clientes no atendimento reduz risco de churn imediato e demonstra que a empresa conhece o valor de cada relacionamento."
+        ensinamento: "Paralelizar resolução técnica com comunicação comercial é a resposta de empresas maduras a incidentes. Priorizar os maiores satisfacao no atendimento reduz risco de churn imediato e demonstra que a empresa conhece o valor de cada relacionamento."
       }
     ]
   },
@@ -157,20 +157,20 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Dashboard de Churn",
-    description: "Marina, head de Customer Success, apresenta o relatório da semana: 31 clientes cancelaram em 7 dias — o maior número em 18 meses. Ela traz os motivos mapeados: 68% citam lentidão e instabilidade da plataforma; 19% citam que o concorrente ofereceu preço menor; 13% citam atendimento demorado. 'Temos um problema técnico que está gerando um problema comercial,' ela conclui. 'E se não agirmos em 30 dias, vamos perder mais 80 clientes.' Como você responde?",
+    description: "Marina, head de Customer Success, apresenta o relatório da semana: 31 satisfacao cancelaram em 7 dias — o maior número em 18 meses. Ela traz os motivos mapeados: 68% citam lentidão e instabilidade da plataforma; 19% citam que o concorrente ofereceu preço menor; 13% citam atendimento demorado. 'Temos um problema técnico que está gerando um problema comercial,' ela conclui. 'E se não agirmos em 30 dias, vamos perder mais 80 satisfacao.' Como você responde?",
     tags: ["tecnologia"],
     choices: [
       {
-        text: "Criar força-tarefa técnica dedicada exclusivamente aos gargalos que mais causam lentidão para os clientes em risco de churn",
+        text: "Criar força-tarefa técnica dedicada exclusivamente aos gargalos que mais causam lentidão para os satisfacao em risco de churn",
         effects: { qualidade: +5, satisfacao: +4, produtividade: -2, clima: +2 },
         avaliacao: "boa",
-        ensinamento: "Atacar a causa-raiz do churn — o problema técnico — com foco nos clientes mais vulneráveis é a decisão com maior retorno sobre investimento. Cada cliente retido custa 5-7× menos do que adquirir um novo. A força-tarefa cria urgência estruturada, não caos."
+        ensinamento: "Atacar a causa-raiz do churn — o problema técnico — com foco nos satisfacao mais vulneráveis é a decisão com maior retorno sobre investimento. Cada cliente retido custa 5-7× menos do que adquirir um novo. A força-tarefa cria urgência estruturada, não caos."
       },
       {
-        text: "Lançar uma campanha agressiva de aquisição de novos clientes para compensar as perdas",
+        text: "Lançar uma campanha agressiva de aquisição de novos satisfacao para compensar as perdas",
         effects: { financeiro: -4, satisfacao: -3, reputacao: -2, qualidade: -1 },
         avaliacao: "ruim",
-        ensinamento: "Adquirir clientes para compensar churn é matematicamente insustentável: o CAC é 5-7× maior que o custo de retenção, e os novos clientes chegam para a mesma plataforma instável — acelerando o próximo ciclo de cancelamentos com mais pessoas no funil."
+        ensinamento: "Adquirir satisfacao para compensar churn é matematicamente insustentável: o CAC é 5-7× maior que o custo de retenção, e os novos satisfacao chegam para a mesma plataforma instável — acelerando o próximo ciclo de cancelamentos com mais pessoas no funil."
       },
       {
         text: "Contratar 3 gerentes de CS adicionais para atendimento personalizado e reduzir o tempo de resposta",
@@ -179,10 +179,10 @@ const TecnologiaRounds = [
         ensinamento: "CS adicional resolve o sintoma de atendimento lento (13% dos motivos), mas não toca o problema principal (68% — instabilidade técnica). É um investimento de baixo retorno quando a causa-raiz domina o motivo do churn."
       },
       {
-        text: "Ligar pessoalmente para os 10 clientes de maior receita em risco e entender o que os faria ficar",
+        text: "Ligar pessoalmente para os 10 satisfacao de maior receita em risco e entender o que os faria ficar",
         effects: { satisfacao: +5, reputacao: +3, clima: +2, financeiro: +1 },
         avaliacao: "boa",
-        ensinamento: "Contato direto da liderança com clientes estratégicos em risco demonstra comprometimento difícil de ignorar. A maioria dos clientes não quer apenas resolver o problema técnico — quer saber que a empresa se importa com eles. Essa ligação frequentemente compra as semanas necessárias para a correção técnica."
+        ensinamento: "Contato direto da liderança com satisfacao estratégicos em risco demonstra comprometimento difícil de ignorar. A maioria dos satisfacao não quer apenas resolver o problema técnico — quer saber que a empresa se importa com eles. Essa ligação frequentemente compra as semanas necessárias para a correção técnica."
       }
     ]
   },
@@ -268,17 +268,17 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "A Falha de Segurança",
-    description: "Um pesquisador de segurança independente envia um e-mail direto para você — não para o suporte: 'Encontrei uma vulnerabilidade de injeção SQL no endpoint de relatórios da sua API. Dados de aproximadamente 4.200 clientes podem ter sido expostos nos últimos 21 dias. Tenho as evidências. Dou 24 horas para uma resposta antes de publicar no meu blog.' Pedro confirma: a falha é real. O time de segurança estima 6 a 8 horas para corrigir completamente.",
+    description: "Um pesquisador de segurança independente envia um e-mail direto para você — não para o suporte: 'Encontrei uma vulnerabilidade de injeção SQL no endpoint de relatórios da sua API. Dados de aproximadamente 4.200 satisfacao podem ter sido expostos nos últimos 21 dias. Tenho as evidências. Dou 24 horas para uma resposta antes de publicar no meu blog.' Pedro confirma: a falha é real. O time de segurança estima 6 a 8 horas para corrigir completamente.",
     tags: ["tecnologia"],
     choices: [
       {
-        text: "Responder ao pesquisador imediatamente agradecendo, pedir 72 horas para correção completa e comunicar os clientes afetados em paralelo com transparência total",
+        text: "Responder ao pesquisador imediatamente agradecendo, pedir 72 horas para correção completa e comunicar os satisfacao afetados em paralelo com transparência total",
         effects: { seguranca: +5, reputacao: +3, satisfacao: +4, financeiro: -2, qualidade: +2 },
         avaliacao: "boa",
         ensinamento: "O programa de responsible disclosure existe exatamente para esse cenário. Agradecer pesquisadores de segurança que reportam vulnerabilidades — em vez de tratá-los como ameaças — cria uma relação que pode proteger a empresa no futuro. Clientes que recebem comunicação proativa sobre incidentes de segurança têm taxa de churn 40% menor do que os que descobrem pela imprensa."
       },
       {
-        text: "Corrigir a vulnerabilidade nas próximas 6 horas sem comunicar clientes — só agir publicamente se o pesquisador publicar mesmo assim",
+        text: "Corrigir a vulnerabilidade nas próximas 6 horas sem comunicar satisfacao — só agir publicamente se o pesquisador publicar mesmo assim",
         effects: { seguranca: +3, satisfacao: -4, reputacao: -4, qualidade: +3 },
         avaliacao: "ruim",
         ensinamento: "Tratar a comunicação como condicional à publicação externa é uma aposta arriscada com probabilidade quase nula de sucesso. Quando a falha for publicada — e será — a omissão intencional será o maior dano. A LGPD exige notificação à ANPD em até 2 dias úteis após a ciência do incidente."
@@ -287,13 +287,13 @@ const TecnologiaRounds = [
         text: "Consultar o jurídico antes de qualquer comunicação para entender as implicações legais da LGPD antes de agir",
         effects: { seguranca: +2, satisfacao: -3, reputacao: -2, financeiro: -2 },
         avaliacao: "media",
-        ensinamento: "O jurídico precisa estar no loop, mas não pode ser a primeira etapa quando há 24 horas de prazo e dados expostos. Cada hora de atraso amplia a janela de exposição dos dados dos clientes. A sequência correta é: corrigir tecnicamente + comunicar clientes + notificar ANPD + alinhar com jurídico em paralelo."
+        ensinamento: "O jurídico precisa estar no loop, mas não pode ser a primeira etapa quando há 24 horas de prazo e dados expostos. Cada hora de atraso amplia a janela de exposição dos dados dos satisfacao. A sequência correta é: corrigir tecnicamente + comunicar satisfacao + notificar ANPD + alinhar com jurídico em paralelo."
       },
       {
         text: "Contratar imediatamente uma empresa especializada em resposta a incidentes de segurança para gerenciar o processo completo",
         effects: { seguranca: +4, reputacao: +4, satisfacao: +3, financeiro: -5, qualidade: +2 },
         avaliacao: "boa",
-        ensinamento: "Especialistas em resposta a incidentes (DFIR) têm playbooks testados para esse cenário exato. O custo financeiro é real, mas o protocolo correto — com linguagem técnica e jurídica precisa, comunicação adequada à ANPD e análise pós-incidente estruturada — reduz significativamente o risco de multa e de perda de clientes enterprise."
+        ensinamento: "Especialistas em resposta a incidentes (DFIR) têm playbooks testados para esse cenário exato. O custo financeiro é real, mas o protocolo correto — com linguagem técnica e jurídica precisa, comunicação adequada à ANPD e análise pós-incidente estruturada — reduz significativamente o risco de multa e de perda de satisfacao enterprise."
       }
     ]
   },
@@ -318,7 +318,7 @@ const TecnologiaRounds = [
         text: "Negociar: aceitar o contrato com SLA de 99,5% e prazo de 120 dias para as customizações, sendo transparente sobre as limitações atuais",
         effects: { financeiro: +4, reputacao: +4, satisfacao: +3, clima: +2, qualidade: +2 },
         avaliacao: "boa",
-        ensinamento: "Negociar condições reais com transparência é o que separa empresas que crescem de empresas que implodem em clients enterprise. O Mercato está comprando uma solução, não um número de SLA — e clientes sofisticados reconhecem e respeitam vendedores que não prometem o impossível."
+        ensinamento: "Negociar condições reais com transparência é o que separa empresas que crescem de empresas que implodem em clients enterprise. O Mercato está comprando uma solução, não um número de SLA — e satisfacao sofisticados reconhecem e respeitam vendedores que não prometem o impossível."
       },
       {
         text: "Recusar o negócio e comunicar ao Mercato que a empresa não está em condições técnicas de atender às exigências no momento",
@@ -383,26 +383,26 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Pivot para IA",
-    description: "Rafael, cofundador e diretor técnico sênior, apresenta em reunião de diretoria: 'Vamos perder para os concorrentes se continuarmos nesse produto. Minha proposta é pivotarmos para IA generativa nos próximos 6 meses — abandonar a plataforma atual e desenvolver um produto completamente novo. Tenho 3 clientes enterprise que já disseram que pagariam por isso.' Pedro é contra: 'Nossa equipe não tem expertise em IA. Vai precisar de contratações massivas que não temos dinheiro para fazer.' Beatriz concorda com Rafael. Você precisa decidir.",
+    description: "Rafael, cofundador e diretor técnico sênior, apresenta em reunião de diretoria: 'Vamos perder para os concorrentes se continuarmos nesse produto. Minha proposta é pivotarmos para IA generativa nos próximos 6 meses — abandonar a plataforma atual e desenvolver um produto completamente novo. Tenho 3 satisfacao enterprise que já disseram que pagariam por isso.' Pedro é contra: 'Nossa equipe não tem expertise em IA. Vai precisar de contratações massivas que não temos dinheiro para fazer.' Beatriz concorda com Rafael. Você precisa decidir.",
     tags: ["tecnologia"],
     choices: [
       {
         text: "Rejeitar o pivot completo, mas criar um laboratório de IA interno com 2 engenheiros dedicados para explorar aplicações incrementais no produto atual",
         effects: { inovacao: +4, clima: +3, financeiro: -2, qualidade: +1, produtividade: +1 },
         avaliacao: "boa",
-        ensinamento: "A versão inteligente de um pivot é a exploração estruturada: proteger o negócio atual enquanto investe em aprender o território novo. Um laboratório interno constrói expertise sem o risco de abandonar a receita existente. Os 3 clientes de Rafael podem financiar um piloto sem exigir abandono do core."
+        ensinamento: "A versão inteligente de um pivot é a exploração estruturada: proteger o negócio atual enquanto investe em aprender o território novo. Um laboratório interno constrói expertise sem o risco de abandonar a receita existente. Os 3 satisfacao de Rafael podem financiar um piloto sem exigir abandono do core."
       },
       {
-        text: "Apoiar o pivot completo — Rafael tem visão de produto e 3 clientes interessados é sinal de mercado suficiente",
+        text: "Apoiar o pivot completo — Rafael tem visão de produto e 3 satisfacao interessados é sinal de mercado suficiente",
         effects: { inovacao: +5, financeiro: -6, produtividade: -5, satisfacao: -4, clima: -3 },
         avaliacao: "ruim",
-        ensinamento: "Pivots radicais com caixa pressionado, time fragilizado e produto principal gerando churn são apostas de sobrevivência — não de crescimento. Três clientes interessados é sinal de demanda, não de produto validado. O risco de ficar sem receita durante o pivot, com os custos de novo desenvolvimento, é existencial."
+        ensinamento: "Pivots radicais com caixa pressionado, time fragilizado e produto principal gerando churn são apostas de sobrevivência — não de crescimento. Três satisfacao interessados é sinal de demanda, não de produto validado. O risco de ficar sem receita durante o pivot, com os custos de novo desenvolvimento, é existencial."
       },
       {
-        text: "Propor um piloto de 90 dias: desenvolver um produto mínimo de IA para os 3 clientes de Rafael sem tocar no produto atual, e avaliar os resultados antes de decidir sobre o pivot",
+        text: "Propor um piloto de 90 dias: desenvolver um produto mínimo de IA para os 3 satisfacao de Rafael sem tocar no produto atual, e avaliar os resultados antes de decidir sobre o pivot",
         effects: { inovacao: +5, financeiro: -3, produtividade: -2, reputacao: +3, clima: +2 },
         avaliacao: "boa",
-        ensinamento: "O piloto estruturado é a abordagem de menor risco para testar uma hipótese de pivot. Noventa dias com 3 clientes pagantes (mesmo a preço reduzido) gera dados reais sobre viabilidade, esforço e product-market fit antes de qualquer comprometimento definitivo de recursos."
+        ensinamento: "O piloto estruturado é a abordagem de menor risco para testar uma hipótese de pivot. Noventa dias com 3 satisfacao pagantes (mesmo a preço reduzido) gera dados reais sobre viabilidade, esforço e product-market fit antes de qualquer comprometimento definitivo de recursos."
       },
       {
         text: "Solicitar análise financeira completa de quanto tempo de runway a empresa tem para executar um pivot antes de decidir qualquer coisa",
@@ -463,7 +463,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "A Investigação da ANPD",
-    description: "A Autoridade Nacional de Proteção de Dados abre formalmente um processo administrativo referente ao incidente de segurança de três semanas atrás. O prazo para apresentar a defesa é de 15 dias úteis. Ao mesmo tempo, dois clientes enterprise recebem o aviso da ANPD diretamente e enviam notificações de rescisão contratual. O jurídico estima que a multa pode variar entre R$ 180 mil e R$ 1,2 milhão dependendo da qualidade da resposta apresentada. Pedro apresenta um plano técnico de adequação que custaria R$ 220 mil e levaria 8 semanas.",
+    description: "A Autoridade Nacional de Proteção de Dados abre formalmente um processo administrativo referente ao incidente de segurança de três semanas atrás. O prazo para apresentar a defesa é de 15 dias úteis. Ao mesmo tempo, dois satisfacao enterprise recebem o aviso da ANPD diretamente e enviam notificações de rescisão contratual. O jurídico estima que a multa pode variar entre R$ 180 mil e R$ 1,2 milhão dependendo da qualidade da resposta apresentada. Pedro apresenta um plano técnico de adequação que custaria R$ 220 mil e levaria 8 semanas.",
     tags: ["tecnologia"],
     choices: [
       {
@@ -483,13 +483,13 @@ const TecnologiaRounds = [
         text: "Negociar acordo de conformidade voluntária com a ANPD, propondo metas de adequação em troca de redução de penalidades",
         effects: { seguranca: +4, reputacao: +3, financeiro: -3, satisfacao: +2, qualidade: +2 },
         avaliacao: "boa",
-        ensinamento: "Acordos de conformidade voluntária são reconhecidos pela ANPD como sinal de boa-fé e frequentemente resultam em penalidades menores e cronogramas mais flexíveis. A proatividade no acordo também cria precedente positivo no histórico regulatório da empresa — especialmente importante para contratos com órgãos públicos e clientes enterprise."
+        ensinamento: "Acordos de conformidade voluntária são reconhecidos pela ANPD como sinal de boa-fé e frequentemente resultam em penalidades menores e cronogramas mais flexíveis. A proatividade no acordo também cria precedente positivo no histórico regulatório da empresa — especialmente importante para contratos com órgãos públicos e satisfacao enterprise."
       },
       {
         text: "Comunicar publicamente nas redes sociais e no site que a empresa está colaborando totalmente com a ANPD para demonstrar transparência ao mercado",
         effects: { reputacao: -2, satisfacao: -1, seguranca: +1, clima: -1 },
         avaliacao: "ruim",
-        ensinamento: "Comunicação pública sobre um processo administrativo em andamento — sem orientação jurídica — pode ser interpretada como reconhecimento de culpa e usado contra a empresa no processo. Transparência com clientes é essencial; publicidade em processo regulatório é perigosa sem protocolo legal cuidadoso."
+        ensinamento: "Comunicação pública sobre um processo administrativo em andamento — sem orientação jurídica — pode ser interpretada como reconhecimento de culpa e usado contra a empresa no processo. Transparência com satisfacao é essencial; publicidade em processo regulatório é perigosa sem protocolo legal cuidadoso."
       }
     ]
   },
@@ -538,20 +538,20 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Lançamento que Não Está Pronto",
-    description: "A nova versão da plataforma — desenvolvida pelos últimos 10 semanas — está 85% concluída. O novo líder técnico Lucas apresenta o estado: 'Temos 43 bugs abertos, sendo 8 classificados como críticos. Com o time atual, precisamos de mais 5 semanas para fechar tudo com qualidade. Mas se lançarmos agora, os clientes vão sentir os problemas e vai parecer a versão anterior.' Os investidores já anunciaram o lançamento para os clientes enterprise como marco do plano. Beatriz diz que esperar mais 5 semanas vai custar 3 contratos que estão condicionados ao lançamento.",
+    description: "A nova versão da plataforma — desenvolvida pelos últimos 10 semanas — está 85% concluída. O novo líder técnico Lucas apresenta o estado: 'Temos 43 bugs abertos, sendo 8 classificados como críticos. Com o time atual, precisamos de mais 5 semanas para fechar tudo com qualidade. Mas se lançarmos agora, os satisfacao vão sentir os problemas e vai parecer a versão anterior.' Os investidores já anunciaram o lançamento para os satisfacao enterprise como marco do plano. Beatriz diz que esperar mais 5 semanas vai custar 3 contratos que estão condicionados ao lançamento.",
     tags: ["tecnologia"],
     choices: [
       {
-        text: "Adiar o lançamento geral por 5 semanas e corrigir todos os bugs críticos — comunicar honestamente aos investidores e clientes o motivo do atraso",
+        text: "Adiar o lançamento geral por 5 semanas e corrigir todos os bugs críticos — comunicar honestamente aos investidores e satisfacao o motivo do atraso",
         effects: { qualidade: +6, reputacao: +3, satisfacao: +2, clima: +3, financeiro: -2 },
         avaliacao: "boa",
-        ensinamento: "Lançar com 8 bugs críticos é repetir o padrão que causou a crise atual — e desta vez com uma versão nova que os clientes têm expectativa elevada. O custo de 3 contratos adiados é real, mas mensurável. O custo de um lançamento malsucedido que reforça a reputação de instabilidade é muito mais alto e mais difícil de reverter."
+        ensinamento: "Lançar com 8 bugs críticos é repetir o padrão que causou a crise atual — e desta vez com uma versão nova que os satisfacao têm expectativa elevada. O custo de 3 contratos adiados é real, mas mensurável. O custo de um lançamento malsucedido que reforça a reputação de instabilidade é muito mais alto e mais difícil de reverter."
       },
       {
-        text: "Fazer um lançamento para primeiros adotantes — um grupo de 20 clientes selecionados — e usar o feedback deles para corrigir os últimos bugs antes do lançamento geral em 3 semanas",
+        text: "Fazer um lançamento para primeiros adotantes — um grupo de 20 satisfacao selecionados — e usar o feedback deles para corrigir os últimos bugs antes do lançamento geral em 3 semanas",
         effects: { qualidade: +4, satisfacao: +3, reputacao: +4, produtividade: +2, clima: +2 },
         avaliacao: "boa",
-        ensinamento: "O lançamento gradual — beta fechado com clientes selecionados — é uma das práticas mais eficazes em software. Transforma o risco técnico em diferencial comercial (ser cliente acesso antecipado). Os bugs críticos são encontrados em ambiente controlado. E o lançamento geral acontece com mais confiança e menos risco reputacional."
+        ensinamento: "O lançamento gradual — beta fechado com satisfacao selecionados — é uma das práticas mais eficazes em software. Transforma o risco técnico em diferencial comercial (ser cliente acesso antecipado). Os bugs críticos são encontrados em ambiente controlado. E o lançamento geral acontece com mais confiança e menos risco reputacional."
       },
       {
         text: "Lançar conforme o prazo — a pressão dos investidores e os 3 contratos condicionados justificam aceitar os riscos dos bugs",
@@ -638,11 +638,11 @@ const TecnologiaRounds = [
     tags: ["tecnologia"],
     choices: [
       {
-        text: "Fazer um diagnóstico cirúrgico: entrevistar os 20 maiores clientes que cancelaram e os 20 mais fiéis antes de qualquer decisão",
+        text: "Fazer um diagnóstico cirúrgico: entrevistar os 20 maiores satisfacao que cancelaram e os 20 mais fiéis antes de qualquer decisão",
         risco: "baixo",
         effects: { satisfacao: +2, qualidade: +2, financeiro: -1, produtividade: -1 },
         avaliacao: "boa",
-        ensinamento: "Decisões estratégicas baseadas em dados de clientes reais são infinitamente mais seguras do que projeções internas. Os cancelamentos e as permanências carregam a resposta sobre o que o produto precisa ser."
+        ensinamento: "Decisões estratégicas baseadas em dados de satisfacao reais são infinitamente mais seguras do que projeções internas. Os cancelamentos e as permanências carregam a resposta sobre o que o produto precisa ser."
       },
       {
         text: "Anunciar imediatamente o pivô para B2B e iniciar prospecção de empresas ainda este mês",
@@ -897,9 +897,9 @@ const TecnologiaRounds = [
       {
         text: "Reduzir o preço para R$69/mês para competir mais diretamente com o Coursera",
         risco: "alto",
-        effects: { satisfacao: +2, clientes: +1, financeiro: -5, margem: -3 },
+        effects: { satisfacao: +2, satisfacao: +1, financeiro: -5, financeiro: -3 },
         avaliacao: "ruim",
-        ensinamento: "Guerra de preços com empresa capitalizada é batalha perdida antes de começar. Reduzir preço comprime margem sem garantir diferencial — e abre um precedente que é difícil de reverter."
+        ensinamento: "Guerra de preços com empresa capitalizada é batalha perdida antes de começar. Reduzir preço comprime financeiro sem garantir diferencial — e abre um precedente que é difícil de reverter."
       },
       {
         text: "Acelerar o desenvolvimento de features que o Coursera não tem: certificações reconhecidas por empresas brasileiras",
@@ -913,7 +913,7 @@ const TecnologiaRounds = [
         risco: "medio",
         effects: { reputacao: -3, satisfacao: -1, financeiro: 0 },
         avaliacao: "ruim",
-        ensinamento: "Silêncio frente a um anúncio competitivo é lido pelo mercado como ausência de estratégia. Investidores, talentos e clientes observam como a empresa reage à pressão — e o silêncio é uma resposta."
+        ensinamento: "Silêncio frente a um anúncio competitivo é lido pelo mercado como ausência de estratégia. Investidores, talentos e satisfacao observam como a empresa reage à pressão — e o silêncio é uma resposta."
       }
     ]
   },
@@ -939,7 +939,7 @@ const TecnologiaRounds = [
         risco: "medio",
         effects: { financeiro: -4, qualidade: +2, inovacao: +2, produtividade: -2, satisfacao: +1 },
         avaliacao: "media",
-        ensinamento: "Customização para fechar um contrato B2B pode criar um produto melhor — ou um produto engessado em torno de uma necessidade específica que não escala. A decisão precisa avaliar se a customização tem valor para outros clientes."
+        ensinamento: "Customização para fechar um contrato B2B pode criar um produto melhor — ou um produto engessado em torno de uma necessidade específica que não escala. A decisão precisa avaliar se a customização tem valor para outros satisfacao."
       },
       {
         text: "Desistir do B2B — o ciclo de 4 meses é incompatível com o runway e os resultados foram decepcionantes",
@@ -1130,7 +1130,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Acordo com Empresa de RH",
-    description: "A maior empresa de consultoria de RH do Brasil quer fazer uma parceria de distribuição: eles incluem sua plataforma nos pacotes de benefícios de 80 clientes corporativos. Em troca, desconto de 40% no valor da licença e split de receita de 30% para eles. O volume potencial é de 12.000 usuários novos — mas a margem por usuário cai para 42% do atual.",
+    description: "A maior empresa de consultoria de RH do Brasil quer fazer uma parceria de distribuição: eles incluem sua plataforma nos pacotes de benefícios de 80 satisfacao corporativos. Em troca, desconto de 40% no valor da licença e split de receita de 30% para eles. O volume potencial é de 12.000 usuários novos — mas a financeiro por usuário cai para 42% do atual.",
     tags: ["tecnologia"],
     choices: [
       {
@@ -1150,11 +1150,11 @@ const TecnologiaRounds = [
         ensinamento: "12.000 usuários novos em um produto ainda com problemas de plataforma e churn alto é um risco operacional real. Suporte para essa base pode colapsar um time já sobrecarregado."
       },
       {
-        text: "Recusar — 40% de desconto e 30% de split destroem a margem por usuário",
+        text: "Recusar — 40% de desconto e 30% de split destroem a financeiro por usuário",
         risco: "medio",
         effects: { financeiro: 0, reputacao: -1, satisfacao: -1, inovacao: +1 },
         avaliacao: "media",
-        ensinamento: "Recusar uma parceria de distribuição por margem pode ser correto se a empresa tiver canais alternativos com custo de aquisição menor. Com CAC triplicado no B2C, a parceria pode ser mais eficiente mesmo com a margem reduzida."
+        ensinamento: "Recusar uma parceria de distribuição por financeiro pode ser correto se a empresa tiver canais alternativos com custo de aquisição menor. Com CAC triplicado no B2C, a parceria pode ser mais eficiente mesmo com a financeiro reduzida."
       },
       {
         text: "Negociar: aceitar com split de 20% (não 30%) e desconto de 30% (não 40%)",
@@ -1248,7 +1248,7 @@ const TecnologiaRounds = [
 
 /* ══════════════════════════════════════════════════════════════════
    HISTÓRIA [2] · Scale-up de IA · Automação Corporativa
-   Contexto: 40 clientes, R$6,8M ARR, 58 funcionários (maioria
+   Contexto: 40 satisfacao, R$6,8M ARR, 58 funcionários (maioria
    cientistas de dados), pipeline travado — 60% em "avaliação técnica"
    há mais de 90 dias, 4 vendedores sem experiência enterprise.
 
@@ -1367,7 +1367,7 @@ const TecnologiaRounds = [
         risco: "alto",
         effects: { financeiro: -4, reputacao: -3, satisfacao: -1, inovacao: -2 },
         avaliacao: "ruim",
-        ensinamento: "Competir com ERP por preço é uma batalha impossível. A Workday tem margem para precificar abaixo do custo por anos para ganhar participação de mercado. Startups que entram em guerra de preço com enterprise geralmente saem de caixa, não de market share."
+        ensinamento: "Competir com ERP por preço é uma batalha impossível. A Workday tem financeiro para precificar abaixo do custo por anos para ganhar participação de mercado. Startups que entram em guerra de preço com enterprise geralmente saem de caixa, não de market share."
       },
       {
         text: "Focar em empresas que não usam os ERPs grandes — mid-market sem SAP ou Workday é o segmento mais defensável",
@@ -1388,7 +1388,7 @@ const TecnologiaRounds = [
     tags: ["tecnologia"],
     choices: [
       {
-        text: "Criar um programa interno de 'cientista de dados no cliente' — visitas mensais aos clientes para ver o produto em uso",
+        text: "Criar um programa interno de 'cientista de dados no cliente' — visitas mensais aos satisfacao para ver o produto em uso",
         risco: "baixo",
         gestorEffects: { reputacaoInterna: +2 },
         effects: { clima: +4, produtividade: +3, qualidade: +2, inovacao: +2 },
@@ -1425,7 +1425,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Cliente que Cancelou com Dados",
-    description: "A empresa Lógica RH, uma das primeiras clientes, notificou cancelamento após 18 meses. O motivo surpreende: 'A acurácia dos modelos é ótima. O problema é que não conseguimos usar o produto no dia a dia — a interface é complexa demais para os nossos analistas de RH.' O relatório interno revela que 60% das features do produto nunca foram usadas pelos clientes existentes.",
+    description: "A empresa Lógica RH, uma das primeiras satisfacao, notificou cancelamento após 18 meses. O motivo surpreende: 'A acurácia dos modelos é ótima. O problema é que não conseguimos usar o produto no dia a dia — a interface é complexa demais para os nossos analistas de RH.' O relatório interno revela que 60% das features do produto nunca foram usadas pelos satisfacao existentes.",
     tags: ["tecnologia"],
     choices: [
       {
@@ -1443,11 +1443,11 @@ const TecnologiaRounds = [
         ensinamento: "Onboarding estruturado compensa a complexidade no curto prazo — mas não a elimina. A melhor solução é um produto que não precise de 4 semanas de treinamento para ser usado."
       },
       {
-        text: "Manter o produto como está e focar em clientes com time técnico de RH mais avançado",
+        text: "Manter o produto como está e focar em satisfacao com time técnico de RH mais avançado",
         risco: "medio",
         effects: { satisfacao: -2, reputacao: -1, inovacao: +2, financeiro: 0 },
         avaliacao: "ruim",
-        ensinamento: "Segmentar para clientes que toleram complexidade é uma estratégia — mas limita severamente o mercado endereçável. RH é uma função que na maioria das empresas não tem time técnico dedicado."
+        ensinamento: "Segmentar para satisfacao que toleram complexidade é uma estratégia — mas limita severamente o mercado endereçável. RH é uma função que na maioria das empresas não tem time técnico dedicado."
       },
       {
         text: "Contratar um time de UX especializado em produto enterprise para liderar a reformulação de interface",
@@ -1464,7 +1464,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "A Vertical Certa",
-    description: "O board pede uma decisão sobre verticalização. O produto atual atende RH e compliance em qualquer setor — mas sem profundidade em nenhum. Três verticais emergem como candidatas: varejo (maior volume de clientes, ticket menor), financeiro (ticket maior, ciclo de venda mais longo, regulação complexa) e manufatura (cadeia de conformidade trabalhista intensa, menor concorrência de IA).",
+    description: "O board pede uma decisão sobre verticalização. O produto atual atende RH e compliance em qualquer setor — mas sem profundidade em nenhum. Três verticais emergem como candidatas: varejo (maior volume de satisfacao, ticket menor), financeiro (ticket maior, ciclo de venda mais longo, regulação complexa) e manufatura (cadeia de conformidade trabalhista intensa, menor concorrência de IA).",
     tags: ["tecnologia"],
     choices: [
       {
@@ -1504,7 +1504,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "SAP Anuncia Módulo Concorrente",
-    description: "A SAP anunciou o SAP SuccessFactors AI Automation — módulo que automatiza compliance trabalhista e processos de RH, integrado nativamente ao ERP. Preço: incluído nos contratos enterprise existentes. Seis dos seus 40 clientes usam SAP. Três já enviaram e-mail perguntando se faz sentido continuar com você. A imprensa especializada publicou: 'SAP torna startups de automação de RH obsoletas?'",
+    description: "A SAP anunciou o SAP SuccessFactors AI Automation — módulo que automatiza compliance trabalhista e processos de RH, integrado nativamente ao ERP. Preço: incluído nos contratos enterprise existentes. Seis dos seus 40 satisfacao usam SAP. Três já enviaram e-mail perguntando se faz sentido continuar com você. A imprensa especializada publicou: 'SAP torna startups de automação de RH obsoletas?'",
     tags: ["tecnologia"],
     choices: [
       {
@@ -1515,12 +1515,12 @@ const TecnologiaRounds = [
         ensinamento: "Dados públicos comparativos são a resposta mais eficiente a anúncios de concorrentes grandes. Comparações objetivas e verificáveis estabelecem credibilidade técnica — e candidatos que pesquisam a categoria confiam mais em benchmarks do que em marketing."
       },
       {
-        text: "Ligar para os 6 clientes SAP proativamente antes que eles cancelem",
+        text: "Ligar para os 6 satisfacao SAP proativamente antes que eles cancelem",
         risco: "baixo",
         gestorEffects: { reputacaoInterna: +1 },
         effects: { satisfacao: +4, reputacao: +2, financeiro: +1, produtividade: -1 },
         avaliacao: "boa",
-        ensinamento: "Contato proativo antes da reclamação é o melhor sinal de parceria que uma empresa de software pode dar. A maioria dos clientes não cancela imediatamente — eles esperam ver se a empresa vai reagir."
+        ensinamento: "Contato proativo antes da reclamação é o melhor sinal de parceria que uma empresa de software pode dar. A maioria dos satisfacao não cancela imediatamente — eles esperam ver se a empresa vai reagir."
       },
       {
         text: "Buscar parceria com a SAP para complementar o módulo deles com a profundidade técnica do seu produto",
@@ -1535,7 +1535,7 @@ const TecnologiaRounds = [
         risco: "alto",
         effects: { satisfacao: -3, reputacao: -3, inovacao: 0, financeiro: -1 },
         avaliacao: "ruim",
-        ensinamento: "Ignorar o anúncio da SAP é deixar clientes sem resposta quando eles precisam de uma. Mesmo que o produto da SAP leve 2 anos para madurecer, o silêncio da sua empresa hoje é interpretado como confirmação da ameaça."
+        ensinamento: "Ignorar o anúncio da SAP é deixar satisfacao sem resposta quando eles precisam de uma. Mesmo que o produto da SAP leve 2 anos para madurecer, o silêncio da sua empresa hoje é interpretado como confirmação da ameaça."
       }
     ]
   },
@@ -1549,12 +1549,12 @@ const TecnologiaRounds = [
     tags: ["tecnologia"],
     choices: [
       {
-        text: "Aceitar a expansão com desconto de 20% (não 35%) e features que beneficiem todos os clientes de manufatura",
+        text: "Aceitar a expansão com desconto de 20% (não 35%) e features que beneficiem todos os satisfacao de manufatura",
         risco: "medio",
         gestorEffects: { capitalPolitico: +1 },
         effects: { financeiro: +5, satisfacao: +3, reputacao: +2, produtividade: -2, inovacao: +2 },
         avaliacao: "boa",
-        ensinamento: "Negociar o desconto e condicionar o desenvolvimento ao benefício de múltiplos clientes é a resposta certa. Features exclusivas para um cliente criam dívida técnica que prejudica toda a plataforma — e você paga o custo sem o benefício de escala."
+        ensinamento: "Negociar o desconto e condicionar o desenvolvimento ao benefício de múltiplos satisfacao é a resposta certa. Features exclusivas para um cliente criam dívida técnica que prejudica toda a plataforma — e você paga o custo sem o benefício de escala."
       },
       {
         text: "Aceitar as condições integralmente — R$1,4M adicionais resolve problemas maiores do que o custo de features exclusivas",
@@ -1565,11 +1565,11 @@ const TecnologiaRounds = [
         ensinamento: "Features exclusivas para o maior cliente é uma armadilha clássica em SaaS. Em 12 meses, o produto está fragmentado entre o que o cliente âncora precisa e o que o mercado precisa — e os dois raramente convergem."
       },
       {
-        text: "Recusar o desconto de 35% mas aceitar as features — manter a margem mesmo perdendo o deal",
+        text: "Recusar o desconto de 35% mas aceitar as features — manter a financeiro mesmo perdendo o deal",
         risco: "medio",
         effects: { financeiro: -1, reputacao: -1, inovacao: +2, produtividade: -2, qualidade: +1 },
         avaliacao: "media",
-        ensinamento: "Manter disciplina de preço protege a margem e o posicionamento, mas perder R$1,4M em expansão de um cliente satisfeito é custoso. A negociação é o caminho — não a recusa."
+        ensinamento: "Manter disciplina de preço protege a financeiro e o posicionamento, mas perder R$1,4M em expansão de um cliente satisfeito é custoso. A negociação é o caminho — não a recusa."
       },
       {
         text: "Propor uma joint venture para desenvolver as features: cliente financia, startup entrega e compartilha IP",
@@ -1586,7 +1586,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Modelo de IA Generativa Entra em Cena",
-    description: "O mercado está em euforia com IA generativa e clientes potenciais estão perguntando se o produto usa 'ChatGPT' ou algo similar. Sua tecnologia usa modelos preditivos clássicos — mais confiáveis para compliance, mas menos 'sexy' no pitch. O CTO propõe integrar um modelo de linguagem para criar uma interface conversacional. Custo: R$520k e 3 meses. O risco: latência e alucinações do LLM em contexto de compliance.",
+    description: "O mercado está em euforia com IA generativa e satisfacao potenciais estão perguntando se o produto usa 'ChatGPT' ou algo similar. Sua tecnologia usa modelos preditivos clássicos — mais confiáveis para compliance, mas menos 'sexy' no pitch. O CTO propõe integrar um modelo de linguagem para criar uma interface conversacional. Custo: R$520k e 3 meses. O risco: latência e alucinações do LLM em contexto de compliance.",
     tags: ["tecnologia"],
     choices: [
       {
@@ -1626,7 +1626,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Round de Investimento Bate à Porta",
-    description: "Um fundo de venture capital especializado em IA B2B quer liderar uma rodada Serie A de R$18M com valuation de R$60M. A due diligence vai começar em 2 semanas. Os pontos de atenção que o fundo levantou: pipeline com baixa taxa de conversão, clima do time em nível baixo e concentração de receita nos 5 maiores clientes (64% do ARR). Você tem 2 semanas para preparar as respostas.",
+    description: "Um fundo de venture capital especializado em IA B2B quer liderar uma rodada Serie A de R$18M com valuation de R$60M. A due diligence vai começar em 2 semanas. Os pontos de atenção que o fundo levantou: pipeline com baixa taxa de conversão, clima do time em nível baixo e concentração de receita nos 5 maiores satisfacao (64% do ARR). Você tem 2 semanas para preparar as respostas.",
     tags: ["tecnologia"],
     choices: [
       {
@@ -1646,7 +1646,7 @@ const TecnologiaRounds = [
         ensinamento: "Converter pipeline acelerando o processo pode criar contratos com expectativas desalinhadas. Clientes que entram por pressão de timing geralmente têm churn mais alto — o que aparece nos próximos relatórios que o fundo vai pedir."
       },
       {
-        text: "Negociar com os 5 maiores clientes expansões de contrato para diluir a concentração de receita",
+        text: "Negociar com os 5 maiores satisfacao expansões de contrato para diluir a concentração de receita",
         risco: "medio",
         effects: { financeiro: +4, satisfacao: +3, produtividade: -1, reputacao: +2 },
         avaliacao: "boa",
@@ -1667,7 +1667,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Partnership Estratégico",
-    description: "A consultoria EY quer fazer um partnership de go-to-market: eles indicam a sua plataforma para os clientes deles em troca de 15% de comissão e exclusividade de integração com os projetos de transformação de RH deles. Volume potencial: 30 novos clientes por ano. A exclusividade, porém, impede parcerias com outras consultorias pelo prazo de 2 anos.",
+    description: "A consultoria EY quer fazer um partnership de go-to-market: eles indicam a sua plataforma para os satisfacao deles em troca de 15% de comissão e exclusividade de integração com os projetos de transformação de RH deles. Volume potencial: 30 novos satisfacao por ano. A exclusividade, porém, impede parcerias com outras consultorias pelo prazo de 2 anos.",
     tags: ["tecnologia"],
     choices: [
       {
@@ -1679,7 +1679,7 @@ const TecnologiaRounds = [
         ensinamento: "Exclusividade de canal por 2 anos é uma das concessões mais perigosas para uma startup em crescimento. As melhores parcerias de distribuição não exigem exclusividade — elas ganham sua lealdade pelo volume."
       },
       {
-        text: "Aceitar com exclusividade — 30 clientes por ano resolve o problema de pipeline de uma vez",
+        text: "Aceitar com exclusividade — 30 satisfacao por ano resolve o problema de pipeline de uma vez",
         risco: "alto",
         gestorEffects: { capitalPolitico: +2, esgotamento: +1 },
         effects: { financeiro: +5, satisfacao: +4, reputacao: +2, inovacao: -2, produtividade: -1 },
@@ -1708,11 +1708,11 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "A Simplificação do Produto",
-    description: "O diagnóstico de UX confirmou: 60% das features nunca são usadas. O head de produto propõe uma reformulação radical — reduzir o produto para as 40% de features mais usadas e criar uma experiência completamente nova e intuitiva. O CTO alerta: 'A reformulação vai gerar breaking changes para 8 clientes que usam as features que vamos remover.' O head de produto responde: '8 clientes em 40 é o custo de evoluir.'",
+    description: "O diagnóstico de UX confirmou: 60% das features nunca são usadas. O head de produto propõe uma reformulação radical — reduzir o produto para as 40% de features mais usadas e criar uma experiência completamente nova e intuitiva. O CTO alerta: 'A reformulação vai gerar breaking changes para 8 satisfacao que usam as features que vamos remover.' O head de produto responde: '8 satisfacao em 40 é o custo de evoluir.'",
     tags: ["tecnologia"],
     choices: [
       {
-        text: "Aprovar a reformulação e conversar com os 8 clientes afetados antes de executar",
+        text: "Aprovar a reformulação e conversar com os 8 satisfacao afetados antes de executar",
         risco: "medio",
         gestorEffects: { reputacaoInterna: +1 },
         effects: { qualidade: +5, satisfacao: +3, inovacao: +3, produtividade: -2, financeiro: -2 },
@@ -1727,14 +1727,14 @@ const TecnologiaRounds = [
         ensinamento: "UX sobre feature bloat é um compromisso que não resolve a causa. O produto continua complexo por baixo — e a dívida técnica de manter features não usadas continua crescendo."
       },
       {
-        text: "Fazer a reformulação apenas para novos clientes — manter a versão atual para os clientes existentes indefinidamente",
+        text: "Fazer a reformulação apenas para novos satisfacao — manter a versão atual para os satisfacao existentes indefinidamente",
         risco: "alto",
         effects: { qualidade: -1, inovacao: +2, produtividade: -4, financeiro: -3, satisfacao: 0 },
         avaliacao: "ruim",
-        ensinamento: "Manter duas versões do produto em paralelo é a decisão mais cara tecnicamente. O time vai gastar o dobro de esforço em cada mudança — e os clientes existentes nunca vão migrar por conta própria."
+        ensinamento: "Manter duas versões do produto em paralelo é a decisão mais cara tecnicamente. O time vai gastar o dobro de esforço em cada mudança — e os satisfacao existentes nunca vão migrar por conta própria."
       },
       {
-        text: "Fazer um teste A/B: metade dos novos clientes usa a versão reformulada por 3 meses antes de decidir",
+        text: "Fazer um teste A/B: metade dos novos satisfacao usa a versão reformulada por 3 meses antes de decidir",
         risco: "baixo",
         effects: { qualidade: +2, inovacao: +2, satisfacao: +1, produtividade: -1, financeiro: -1 },
         avaliacao: "boa",
@@ -1748,7 +1748,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "A Equipe de Customer Success",
-    description: "O churn dos últimos 6 meses foi de 14% — muito acima dos 7% que o modelo financeiro suporta. O head de CS identifica a causa: clientes contratam animados mas ficam sem suporte depois do onboarding. 'Precisamos de 4 CSMs dedicados. Hoje atendo 40 clientes sozinho.' A contratação custa R$520k/ano. O CFO apresenta o contra-argumento: 'Cada cliente que sai tira R$170k do ARR. 14% de churn custa R$950k/ano.'",
+    description: "O churn dos últimos 6 meses foi de 14% — muito acima dos 7% que o modelo financeiro suporta. O head de CS identifica a causa: satisfacao contratam animados mas ficam sem suporte depois do onboarding. 'Precisamos de 4 CSMs dedicados. Hoje atendo 40 satisfacao sozinho.' A contratação custa R$520k/ano. O CFO apresenta o contra-argumento: 'Cada cliente que sai tira R$170k do ARR. 14% de churn custa R$950k/ano.'",
     tags: ["tecnologia"],
     choices: [
       {
@@ -1766,7 +1766,7 @@ const TecnologiaRounds = [
         ensinamento: "Escalar CS gradualmente com estrutura de gestão é a abordagem correta. Contratar 4 CSMs sem processo os transforma em bombeiros — apagando incêndios sem sistema para preveni-los."
       },
       {
-        text: "Criar programa de health score automatizado — identificar clientes em risco antes que cancelem",
+        text: "Criar programa de health score automatizado — identificar satisfacao em risco antes que cancelem",
         risco: "baixo",
         effects: { satisfacao: +2, inovacao: +3, qualidade: +2, financeiro: -1, produtividade: -1 },
         avaliacao: "media",
@@ -1788,7 +1788,7 @@ const TecnologiaRounds = [
   ═══════════════════════════════════════════════════════ */
   {
     title: "A Aquisição Surge",
-    description: "A Totvs, maior empresa de software de gestão da América Latina, fez uma proposta de aquisição: R$42M por 80% da empresa, com earnout de R$12M se as metas dos próximos 2 anos forem atingidas. A oferta é 6,2x o ARR atual. Os fundadores originais têm posições diferentes: dois querem vender (o produto escala com a base de clientes da Totvs), um quer manter a independência.",
+    description: "A Totvs, maior empresa de software de gestão da América Latina, fez uma proposta de aquisição: R$42M por 80% da empresa, com earnout de R$12M se as metas dos próximos 2 anos forem atingidas. A oferta é 6,2x o ARR atual. Os fundadores originais têm posições diferentes: dois querem vender (o produto escala com a base de satisfacao da Totvs), um quer manter a independência.",
     tags: ["tecnologia"],
     choices: [
       {
@@ -1800,7 +1800,7 @@ const TecnologiaRounds = [
         ensinamento: "Toda proposta de aquisição tem gordura. Negociar participação menor e earnout maior com métricas que você controla é preservar upside sem recusar um exit que pode não voltar."
       },
       {
-        text: "Recusar — a Totvs vai engessar o produto nas necessidades dos clientes de ERP deles",
+        text: "Recusar — a Totvs vai engessar o produto nas necessidades dos satisfacao de ERP deles",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1, esgotamento: +2 },
         effects: { financeiro: -1, inovacao: +3, reputacao: +1, clima: -1, produtividade: +2 },
@@ -1808,12 +1808,12 @@ const TecnologiaRounds = [
         ensinamento: "Recusar aquisição estratégica por medo de perder independência é válido — se você tem um plano claro para criar mais valor sozinho. Sem o plano, a independência pode custar mais do que o controle que você está preservando."
       },
       {
-        text: "Aceitar as condições da Totvs integralmente — o acesso à base de 40k clientes deles acelera o crescimento em 10x",
+        text: "Aceitar as condições da Totvs integralmente — o acesso à base de 40k satisfacao deles acelera o crescimento em 10x",
         risco: "alto",
         gestorEffects: { capitalPolitico: +2, esgotamento: +1 },
         effects: { financeiro: +8, satisfacao: +3, reputacao: +2, inovacao: -3, clima: -2 },
         avaliacao: "media",
-        ensinamento: "A base de clientes da Totvs é o maior ativo estratégico dessa aquisição — mas 80% de uma empresa dentro de uma grande corporação muda radicalmente a cultura e a velocidade. Os 20% que ficam raramente têm a influência que imaginavam."
+        ensinamento: "A base de satisfacao da Totvs é o maior ativo estratégico dessa aquisição — mas 80% de uma empresa dentro de uma grande corporação muda radicalmente a cultura e a velocidade. Os 20% que ficam raramente têm a influência que imaginavam."
       },
       {
         text: "Usar a oferta da Totvs como alavanca para reabrir negociações com o fundo de VC que propôs a Serie A",

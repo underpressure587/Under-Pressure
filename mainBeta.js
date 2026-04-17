@@ -44,6 +44,8 @@ let _ultimaMensagemGlobal = '';
 let _timerSegs        = 0;
 let _bloqueioAte      = 0; // timestamp — bloqueia escolher() durante transições
 let _prevIndicators   = {}; // track trends
+// BUG #1 FIX: hook called by engine.iniciar() to seed prev state before first render
+window._initPrevIndicators = (indicators) => { _prevIndicators = { ...indicators }; };
 let _sala             = null; // sala ativa: { codigo, nome, ... } | null
 
 /* ════════════════════════════════════════════════════
@@ -361,12 +363,28 @@ function _atualizarHome() {
 ════════════════════════════════════════════════════ */
 function _salvarSessao() {
   const state = BetaState.get();
-  if (!state || state.phase === "result") { LS.remove(SK.SESSION); return; }
+  if (!state || state.phase === "result") { LS.remove(SK.SESSION); LS.remove('gsp_session_state'); return; }
   LS.set(SK.SESSION, {
     sector: state.sector, companyName: state.companyName,
     currentRound: state.currentRound, totalRounds: state.totalRounds,
     ts: Date.now(),
   });
+  // BUG #3 FIX: salvar estado completo para restaurarSessao não recomeçar do zero
+  try {
+    LS.set('gsp_session_state', {
+      sector:       state.sector,
+      companyName:  state.companyName,
+      currentRound: state.currentRound,
+      totalRounds:  state.totalRounds,
+      introIndex:   state.introIndex,
+      indicators:   { ...state.indicators },
+      gestor:       { ...state.gestor },
+      history:      [...(state.history || [])],
+      storyState:   JSON.parse(JSON.stringify(state.storyState || {})),
+      activeEvents: JSON.parse(JSON.stringify(state.activeEvents || [])),
+      ts: Date.now(),
+    });
+  } catch(e) { console.warn('_salvarSessao: falha ao salvar estado completo', e); }
 }
 
 function _verificarSessaoSalva() {
@@ -386,18 +404,34 @@ function _verificarSessaoSalva() {
 function restaurarSessao() {
   const sess = LS.get(SK.SESSION);
   if (!sess) return;
-  // BUG #12 FIX: verificar se há estado completo salvo
   const estadoCompleto = LS.get('gsp_session_state');
-  if (estadoCompleto && estadoCompleto.sector === sess.sector) {
-    // Restaurar estado real: setor, rodada e companyName corretos
-    iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
-    // Notificar jogador que começa da rodada onde parou (próxima melhoria: restaurar state completo)
-    setTimeout(() => mostrarSucesso(`Sessão restaurada: ${sess.companyName} · Rodada ${sess.currentRound + 1}`), 500);
-  } else {
-    // Fallback: iniciar do começo, mas avisar jogador
-    iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
-    setTimeout(() => mostrarAviso('Sessão reiniciada do início. Progresso anterior não recuperável.'), 500);
+  // BUG #3 FIX: restaurar estado real em vez de recomeçar do zero
+  if (estadoCompleto && estadoCompleto.sector === sess.sector && estadoCompleto.currentRound > 0) {
+    try {
+      const state   = BetaState.restore(estadoCompleto);
+      const empresa = EMPRESAS[state.sector];
+      // Re-carrega os rounds do setor e posiciona na rodada correta
+      const introIdx = state.introIndex || 0;
+      const rounds   = empresa?.rounds?.[introIdx];
+      if (rounds) {
+        state.gameRounds  = rounds;
+        state.totalRounds = rounds.length;
+      }
+      state.companyInfo = COMPANY_INFO[state.sector] || null;
+      window._initPrevIndicators?.(state.indicators);
+      _preparaRodada(state);
+      mostrarTela("screen-game");
+      renderSidebar(state, empresa);
+      renderRodada(state);
+      setTimeout(() => mostrarSucesso(`Sessão restaurada: ${state.companyName} · Rodada ${state.currentRound + 1}`), 500);
+      return;
+    } catch(e) {
+      console.warn("restaurarSessao: falha ao restaurar estado completo, reiniciando", e);
+    }
   }
+  // Fallback: iniciar do começo
+  iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
+  setTimeout(() => mostrarAviso('Sessão reiniciada do início. Progresso anterior não recuperável.'), 500);
 }
 
 function descartarSessao() {
@@ -893,6 +927,10 @@ function _bench(sector, key) { return BENCHMARKS[sector]?.[key] ?? null; }
 ════════════════════════════════════════════════════ */
 function renderSidebar(state, empresa) {
   try {
+  // BUG #1 FIX: snapshot _prevIndicators at the START of render so trend arrows
+  // reflect the *previous* render's values, not the current one being drawn.
+  const snapPrev = { ..._prevIndicators };
+
   const nameEl = document.getElementById("game-company-name");
   if (nameEl) nameEl.textContent = `${state.companyName} · ${empresa?.nome||""}`;
 
@@ -921,8 +959,8 @@ function renderSidebar(state, empresa) {
       const b        = _bench(state.sector, k);
       const benchHtml = b ? `<span class="game-ind-bench">Méd: ${b}</span>` : "";
 
-      // Seta de tendência vs rodada anterior
-      const prev = _prevIndicators[k];
+      // Seta de tendência vs rodada anterior — usa snapPrev (capturado no início da função)
+      const prev = snapPrev[k];
       let trendHtml = "";
       if (prev !== undefined) {
         const diff = v - prev;
@@ -953,7 +991,7 @@ function renderSidebar(state, empresa) {
       </div>`;
     }).join("");
 
-    // Salvar indicadores atuais para próxima comparação
+    // BUG #1 FIX: update _prevIndicators AFTER rendering (was inside the map, updating mid-render)
     _prevIndicators = { ...state.indicators };
 
     // Toast para indicadores recém-críticos
@@ -1179,7 +1217,7 @@ function _iniciarTimer() {
     _timerSegs--;
     el.textContent = `⏱ ${_timerSegs}s`;
     if (_timerSegs <= 10) el.classList.add("danger");
-    if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }
+    if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) { const _cards = document.querySelectorAll(".choice-card"); escolher(Math.floor(Math.random() * (_cards.length || 1))); } }
   }, 1000);
 }
 
@@ -1993,7 +2031,7 @@ function continuarJogo() {
   const overlay = document.getElementById('overlay-pause');
   _fecharOverlay('overlay-pause');
   // BUG #11 FIX: se timer chegou a 0 durante pausa, forçar escolha imediata
-  if (_settings.timer && !_escolhaFeita && _timerSegs <= 0) { escolher(0); return; }
+  if (_settings.timer && !_escolhaFeita && _timerSegs <= 0) { const _cards = document.querySelectorAll(".choice-card"); escolher(Math.floor(Math.random() * (_cards.length || 1))); return; }
   if (_settings.timer && !_escolhaFeita && _timerSegs > 0) {
     const el = document.getElementById('timer-display');
     if (el) { el.classList.add('active'); if (_timerSegs <= 10) el.classList.add('danger'); }
@@ -2001,7 +2039,7 @@ function continuarJogo() {
       _timerSegs--;
       if (el) el.textContent = `⏱ ${_timerSegs}s`;
       if (_timerSegs <= 10 && el) el.classList.add('danger');
-      if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) escolher(0); }
+      if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) { const _c = document.querySelectorAll(".choice-card"); escolher(Math.floor(Math.random() * (_c.length || 1))); } }
     }, 1000);
   }
 }

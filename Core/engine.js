@@ -159,6 +159,8 @@ function iniciar(sectorId, groupName, companyName, modoSala) {
         // No modo sala o SalaMode controla a navegação — apenas inicializa o estado
         state.phase = "playing";
         _preparaRodada(state);
+        // BUG #1 FIX: seed _prevIndicators so first render shows flat arrows, not always "—"
+        if (typeof window !== "undefined") window._initPrevIndicators?.(state.indicators);
         return state;
     }
 
@@ -169,6 +171,8 @@ function iniciar(sectorId, groupName, companyName, modoSala) {
     } else {
         state.phase = "playing";
         _preparaRodada(state);
+        // BUG #1 FIX: seed before first renderSidebar call
+        if (typeof window !== "undefined") window._initPrevIndicators?.(state.indicators);
         _ui.mostrarTela?.("screen-game");
         _ui.renderSidebar?.(state, empresa);
         _ui.renderRodada?.(state);
@@ -205,8 +209,16 @@ function processarEscolha(choiceIndex) {
         efeitosFinais, state.indicators, state.situacaoAtual
     );
 
+    // BUG #7 FIX: capturar snapshot antes de aplicar para calcular delta líquido real
+    const indicadoresAntes = { ...state.indicators };
     BetaState.applyEffects(efeitosFinais);
     _aplicarInterdependencias(state.sector, state.indicators);
+    // Efeitos líquidos = diferença real após efeitos + interdependências
+    const efeitosLiquidos = {};
+    Object.keys(state.indicators).forEach(k => {
+        const delta = state.indicators[k] - (indicadoresAntes[k] ?? 0);
+        if (delta !== 0) efeitosLiquidos[k] = delta;
+    });
 
     const storyStateAntes = {
         flags:      [...state.storyState.flags],
@@ -250,7 +262,7 @@ function processarEscolha(choiceIndex) {
         choice,
         choiceIndex,
         avaliacaoContextual: avaliacao,
-        efeitosFinais,
+        efeitosFinais: efeitosLiquidos,   // BUG #7 FIX: efeitos líquidos reais pós-interdependências
         eventoAtivo,
         history: state.history,
         storyState:         state.storyState,
@@ -365,7 +377,11 @@ function _aplicarInterdependencias(sector, indicators) {
 function _calcularEfeitosGestorAutomatico(efeitosEmpresa, avaliacao, state) {
     const efeitos = { reputacaoInterna: 0, capitalPolitico: 0, esgotamento: 0 };
 
-    const impactoRH = (efeitosEmpresa.rh ?? 0) + (efeitosEmpresa.clima ?? 0);
+    // BUG #5 FIX: inclui seguranca e frota no impacto de liderança (não só rh/clima)
+    const impactoRH = (efeitosEmpresa.rh       ?? 0)
+                    + (efeitosEmpresa.clima     ?? 0)
+                    + (efeitosEmpresa.seguranca ?? 0) * 0.5
+                    + (efeitosEmpresa.frota     ?? 0) * 0.3;
     if (impactoRH <= -3) efeitos.reputacaoInterna -= 1;
     else if (impactoRH <= -5) efeitos.reputacaoInterna -= 2;
     else if (impactoRH >= 3) efeitos.reputacaoInterna += 1;
@@ -393,18 +409,22 @@ function _calcularMelhorAlternativa(choices, choiceIndex, indicators, situacao) 
     return melhor;
 }
 
+// BUG #8 FIX: pondera score pela urgência — melhorar indicador crítico vale mais,
+// piorar indicador já baixo é penalizado mais
 function _scoreSimples(effects, indicators) {
-    const pos = Object.values(effects).filter(v => v > 0).reduce((a, b) => a + b, 0);
-    const neg = Math.abs(Object.values(effects).filter(v => v < 0).reduce((a, b) => a + b, 0));
-    return pos - neg;
+    return Object.entries(effects).reduce((acc, [k, v]) => {
+        const atual   = indicators[k] ?? 10;
+        const urgencia = atual <= 4 ? 2.5 : atual <= 7 ? 1.5 : 1.0;
+        return acc + (v > 0 ? v * urgencia : v * (atual <= 6 ? urgencia : 1.0));
+    }, 0);
 }
 
 function _atualizarSituacaoStatus(state) {
-    const round = state.currentRound;
-    if (round !== 7 && round !== 12) return;
+    // BUG #9 FIX: atualiza a cada rodada (>=3) em vez de só nas rodadas 7 e 12
+    if (state.currentRound < 3) return;
 
-    const vals  = Object.values(state.indicators);
-    const media = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const vals   = Object.values(state.indicators);
+    const media  = vals.reduce((a, b) => a + b, 0) / vals.length;
     const criticos = vals.filter(v => v <= 4).length;
 
     if (criticos === 0 && media >= 11) {

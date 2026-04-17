@@ -133,11 +133,38 @@ const BetaState = (() => {
     function getGestor()              { return _state.gestor; }
     function setSituacaoStatus(s)     { _state.situacaoStatus = s; }
 
+    // BUG #3 FIX: restaura estado completo salvo pelo _salvarSessao
+    function restore(saved) {
+        _state = {
+            sector:        saved.sector,
+            groupName:     saved.groupName || "",
+            companyName:   saved.companyName,
+            currentRound:  saved.currentRound,
+            totalRounds:   saved.totalRounds,
+            introIndex:    saved.introIndex || 0,
+            indicators:    { ...saved.indicators },
+            gestor:        { ...saved.gestor },
+            history:       [...(saved.history || [])],
+            activeEvents:  JSON.parse(JSON.stringify(saved.activeEvents || [])),
+            storyState:    JSON.parse(JSON.stringify(saved.storyState || {
+                faseEmpresa: "fundacao", estiloGestao: [], reputacaoMercado: "boa",
+                flags: [], conquistas: [], traumas: [], flagMotivos: {}
+            })),
+            situacaoAtual: saved.situacaoAtual || null,
+            companyInfo:   saved.companyInfo   || null,
+            situacaoStatus: saved.situacaoStatus || null,
+            stakeholderLog: saved.stakeholderLog || [],
+            gameRounds:    [],   // será re-carregado pelo engine
+            phase:         "playing",
+        };
+        return _state;
+    }
+
     return {
         init, get, getIndicators, applyEffects,
         applyGestorEffects, getGestor, addStakeholderLog,
         addHistory, addEvent, nextRound, setPhase,
         addFlag, setFase, setReputacao, addEstiloGestao,
-        addConquista, addTrauma, setSituacaoStatus,
+        addConquista, addTrauma, setSituacaoStatus, restore,
     };
 })();
