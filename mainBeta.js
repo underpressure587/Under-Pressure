@@ -40,6 +40,7 @@ let _feedbackCallback = null;
 let _timerInterval    = null;
 let _manutencaoInterval = null;
 let _globalPollInterval  = null;
+let _guestPollInterval   = null;
 let _ultimaMensagemGlobal = '';
 let _timerSegs        = 0;
 let _bloqueioAte      = 0; // timestamp — bloqueia escolher() durante transições
@@ -121,6 +122,31 @@ function _abrirOverlay(id) {
 function _fecharOverlay(id) {
   const el = document.getElementById(id);
   if (el) el.style.display = 'none';
+}
+
+/* ════════════════════════════════════════════════════
+   VERIFICAÇÃO DE MANUTENÇÃO LEVE (sem window.ADMIN)
+   Usada no boot pré-login e no polling de convidado.
+   Faz GET REST direto com apiKey — leitura pública.
+════════════════════════════════════════════════════ */
+async function _verificarManutencaoInicial() {
+  try {
+    const API_KEY  = 'AIzaSyB_Zkl12AyT5RMfg9eJ68QFTakdBKSioVU';
+    const PROJECT  = 'under-pressure-49320';
+    const FS       = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/default/documents`;
+    const r = await fetch(`${FS}/config/global?key=${API_KEY}`);
+    if (!r.ok) return null;
+    const doc = await r.json();
+    const f = doc.fields || {};
+    const _v = (field) => {
+      if (!field) return undefined;
+      return field.booleanValue ?? field.stringValue ?? field.integerValue ?? null;
+    };
+    return {
+      manutencao: !!_v(f.manutencao),
+      mensagem:   _v(f.mensagem) || '',
+    };
+  } catch(e) { return null; }
 }
 
 async function _boot() {
@@ -241,6 +267,27 @@ async function _boot() {
     await new Promise(r => setTimeout(r, 400));
   }
   _iniciarListenerAuth();
+
+  // Verifica manutenção antes de mostrar a tela de login
+  const _cfgPreLogin = await _verificarManutencaoInicial().catch(() => null);
+  if (_cfgPreLogin?.manutencao) {
+    // Sem sessão salva → sem botão "Salvar e Sair"
+    const btnSalvar = document.getElementById('manut-btn-salvar');
+    if (btnSalvar) btnSalvar.style.display = 'none';
+    _mostrarOverlayManutencao(_cfgPreLogin.mensagem || '');
+    // Polling leve para detectar fim da manutenção e liberar login
+    const _preLoginPoll = setInterval(async () => {
+      const cfg = await _verificarManutencaoInicial().catch(() => null);
+      if (cfg && !cfg.manutencao) {
+        clearInterval(_preLoginPoll);
+        _esconderOverlayManutencao();
+        if (btnSalvar) btnSalvar.style.display = '';
+        mostrarTela('screen-login');
+      }
+    }, 20000);
+    return; // não mostra screen-login ainda
+  }
+
   mostrarTela('screen-login');
 }
 
@@ -322,6 +369,25 @@ function irComoConvidado() {
   window._player = _player;
   _atualizarHome();
   mostrarTela("screen-home");
+
+  // Convidado não tem uid → polling global não inicia. Polling leve só de manutenção.
+  if (_guestPollInterval) { clearInterval(_guestPollInterval); _guestPollInterval = null; }
+  const _guestTick = async () => {
+    const cfg = await _verificarManutencaoInicial().catch(() => null);
+    if (!cfg) return;
+    if (cfg.manutencao) {
+      // Convidado não tem partida para salvar → esconde botão
+      const btnSalvar = document.getElementById('manut-btn-salvar');
+      if (btnSalvar) btnSalvar.style.display = 'none';
+      _mostrarOverlayManutencao(cfg.mensagem || '');
+    } else {
+      const btnSalvar = document.getElementById('manut-btn-salvar');
+      if (btnSalvar) btnSalvar.style.display = '';
+      _esconderOverlayManutencao();
+    }
+  };
+  _guestTick();
+  _guestPollInterval = setInterval(_guestTick, 20000);
 }
 
 function confirmarNome() {
@@ -341,6 +407,7 @@ function confirmarNome() {
 
 function sair() {
   _pararPollingGlobal();
+  if (_guestPollInterval) { clearInterval(_guestPollInterval); _guestPollInterval = null; }
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
   _player = null;

@@ -1493,6 +1493,8 @@ const ADMIN = (() => {
       const fim    = document.getElementById('admin-manut-fim');
       if (inicio) inicio.value = cfg.manutencaoInicio || '';
       if (fim)    fim.value    = cfg.manutencaoFim    || '';
+      const mensagemEl = document.getElementById('admin-manut-mensagem');
+      if (mensagemEl) mensagemEl.value = cfg.mensagem || '';
     } catch(e) { console.warn('[ADMIN] Config:', e); }
     // Admins
     try {
@@ -1516,11 +1518,13 @@ const ADMIN = (() => {
       const inicio    = document.getElementById('admin-manut-inicio')?.value || '';
       const fim       = document.getElementById('admin-manut-fim')?.value    || '';
       const modoSala  = document.getElementById('admin-modo-sala')?.checked  || false;
+      const mensagem  = document.getElementById('admin-manut-mensagem')?.value.trim() || '';
       await _patch('config/global', {
         manutencao:       _fsBool(manut),
         manutencaoInicio: _fsStr(inicio),
         manutencaoFim:    _fsStr(fim),
         modoSalaAtivo:    _fsBool(modoSala),
+        mensagem:         _fsStr(mensagem),
       });
       const banner = document.getElementById('admin-manutencao-banner');
       if (banner) banner.style.display = manut ? 'block' : 'none';
