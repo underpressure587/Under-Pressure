@@ -410,12 +410,14 @@ function confirmarNome() {
 function sair() {
   _pararPollingGlobal();
   if (_guestPollInterval) { clearInterval(_guestPollInterval); _guestPollInterval = null; }
+  _removerPresenca(); // remove presença do RTDB antes de limpar _player
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
   _player = null;
   window._player = null;
   _isAdmin = false;
   window._isAdmin = false;
+  _presencaInicializada = false; // permite reconfigurar onDisconnect no próximo login
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
@@ -1250,6 +1252,8 @@ function escolher(idx) {
   setTimeout(() => processarEscolha(idx), 180);
 }
 
+let _presencaInicializada = false;
+
 // Registra presença no RTDB quando o jogador está na tela inicial (sem partida ativa)
 async function _registrarPresencaHome() {
   try {
@@ -1277,7 +1281,6 @@ async function _registrarPresencaHome() {
 
 // Atualiza presença no Firebase Realtime Database
 // Chamada a cada escolha do jogador; onDisconnect garante limpeza automática
-let _presencaInicializada = false;
 async function _atualizarSessaoAtiva() {
   try {
     if (!_player?.uid) return;
