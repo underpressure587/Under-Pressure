@@ -1069,32 +1069,74 @@ const ADMIN = (() => {
   }
 
   /* ════════════════════════════════════════════════════
-     AO VIVO (Geral)
+     AO VIVO (Geral) — Firebase Realtime Database
   ════════════════════════════════════════════════════ */
-  async function carregarAoVivo() {
+  let _aoVivoUnsubscribe = null; // guarda o unsubscribe do listener RTDB
+
+  function carregarAoVivo() {
     const lista = document.getElementById('admin-aovivo-lista');
     if (!lista) return;
-    try {
-      const res = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'sessoes' }],
-          orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
-          limit: 10
+
+    // — RTDB (tempo real) —
+    if (window.GSPRtdb) {
+      const { db, ref, onValue } = window.GSPRtdb;
+
+      // Cancela listener anterior se existir
+      if (_aoVivoUnsubscribe) { _aoVivoUnsubscribe(); _aoVivoUnsubscribe = null; }
+
+      lista.innerHTML = '<div class="admin-loading">Conectando...</div>';
+
+      const presRef = ref(db, 'presence');
+      _aoVivoUnsubscribe = onValue(presRef, (snapshot) => {
+        const dados = snapshot.val() || {};
+        const jogadores = Object.values(dados);
+
+        if (!jogadores.length) {
+          lista.innerHTML = '<div class="admin-empty">Sem jogadores online agora.</div>';
+          return;
         }
+
+        lista.innerHTML = jogadores
+          .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+          .map(d => `
+            <div class="admin-aovivo-row">
+              <div class="admin-sessao-dot ativa"></div>
+              <div class="admin-sessao-info">
+                <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
+                <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1}</div>
+              </div>
+            </div>`).join('');
+      }, (err) => {
+        lista.innerHTML = '<div class="admin-empty">Erro ao conectar ao Realtime DB.</div>';
+        console.error('[Admin] RTDB onValue erro:', err);
       });
-      const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
-      const agora = Date.now();
-      const ativas = docs.filter(d => d.ts && (agora - d.ts) < 300000); // 5 min
-      if (!ativas.length) { lista.innerHTML = '<div class="admin-empty">Sem sessões ativas.</div>'; return; }
-      lista.innerHTML = ativas.map(d => `
-        <div class="admin-aovivo-row">
-          <div class="admin-sessao-dot ativa"></div>
-          <div class="admin-sessao-info">
-            <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
-            <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1}</div>
-          </div>
-        </div>`).join('');
-    } catch(e) { lista.innerHTML = '<div class="admin-empty">Erro ao carregar.</div>'; }
+      return;
+    }
+
+    // — Fallback: Firestore REST (RTDB não configurado) —
+    (async () => {
+      try {
+        const res = await _query({
+          structuredQuery: {
+            from: [{ collectionId: 'sessoes' }],
+            orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+            limit: 10
+          }
+        });
+        const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
+        const agora = Date.now();
+        const ativas = docs.filter(d => d.ts && (agora - d.ts) < 300000);
+        if (!ativas.length) { lista.innerHTML = '<div class="admin-empty">Sem sessões ativas.</div>'; return; }
+        lista.innerHTML = ativas.map(d => `
+          <div class="admin-aovivo-row">
+            <div class="admin-sessao-dot ativa"></div>
+            <div class="admin-sessao-info">
+              <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
+              <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1}</div>
+            </div>
+          </div>`).join('');
+      } catch(e) { lista.innerHTML = '<div class="admin-empty">Erro ao carregar.</div>'; }
+    })();
   }
 
   /* ════════════════════════════════════════════════════
@@ -1367,38 +1409,86 @@ const ADMIN = (() => {
   }
 
   /* ════════════════════════════════════════════════════
-     SESSÕES
+     SESSÕES — Firebase Realtime Database
   ════════════════════════════════════════════════════ */
-  async function carregarSessoes() {
+  let _sessoesUnsubscribe = null; // guarda o unsubscribe do listener RTDB
+
+  function carregarSessoes() {
     const lista = document.getElementById('admin-sessoes-lista');
     const contador = document.getElementById('sessoes-contador');
-    lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
-    try {
-      const res = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'sessoes' }],
-          orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
-          limit: 20
+    if (!lista) return;
+
+    // — RTDB (tempo real) —
+    if (window.GSPRtdb) {
+      const { db, ref, onValue } = window.GSPRtdb;
+
+      // Cancela listener anterior se existir
+      if (_sessoesUnsubscribe) { _sessoesUnsubscribe(); _sessoesUnsubscribe = null; }
+
+      lista.innerHTML = '<div class="admin-loading">Conectando...</div>';
+      if (contador) contador.textContent = '...';
+
+      const presRef = ref(db, 'presence');
+      _sessoesUnsubscribe = onValue(presRef, (snapshot) => {
+        const dados = snapshot.val() || {};
+        const jogadores = Object.values(dados).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+        const total = jogadores.length;
+        if (contador) contador.textContent = `${total} online${total !== 1 ? 's' : ''}`;
+
+        if (!total) {
+          lista.innerHTML = '<div class="admin-empty">Nenhum jogador online no momento.</div>';
+          return;
         }
+
+        lista.innerHTML = jogadores.map(d => {
+          const tempo = d.ts ? _tempoRelativo(d.ts) : '—';
+          return `<div class="admin-sessao-row">
+            <div class="admin-sessao-dot ativa"></div>
+            <div class="admin-sessao-info">
+              <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
+              <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1} · ${d.companyName||''}</div>
+            </div>
+            <span class="admin-sessao-tempo">${tempo}</span>
+          </div>`;
+        }).join('');
+      }, (err) => {
+        lista.innerHTML = '<div class="admin-empty">Erro ao conectar ao Realtime DB.</div>';
+        console.error('[Admin] RTDB sessões erro:', err);
       });
-      const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
-      const agora = Date.now();
-      const ativas = docs.filter(d => d.ts && (agora - d.ts) < 300000).length;
-      contador.textContent = `${ativas} ativa${ativas !== 1 ? 's' : ''}`;
-      if (!docs.length) { lista.innerHTML = '<div class="admin-empty">Sem sessões registradas.</div>'; return; }
-      lista.innerHTML = docs.map(d => {
-        const ativa = d.ts && (agora - d.ts) < 300000;
-        const tempo = d.ts ? _tempoRelativo(d.ts) : '—';
-        return `<div class="admin-sessao-row">
-          <div class="admin-sessao-dot ${ativa ? 'ativa' : 'inativa'}"></div>
-          <div class="admin-sessao-info">
-            <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
-            <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1} · ${d.companyName||''}</div>
-          </div>
-          <span class="admin-sessao-tempo">${tempo}</span>
-        </div>`;
-      }).join('');
-    } catch(e) { lista.innerHTML = '<div class="admin-empty">Erro ao carregar sessões.</div>'; }
+      return;
+    }
+
+    // — Fallback: Firestore REST —
+    (async () => {
+      lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
+      try {
+        const res = await _query({
+          structuredQuery: {
+            from: [{ collectionId: 'sessoes' }],
+            orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+            limit: 20
+          }
+        });
+        const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
+        const agora = Date.now();
+        const ativas = docs.filter(d => d.ts && (agora - d.ts) < 300000).length;
+        if (contador) contador.textContent = `${ativas} ativa${ativas !== 1 ? 's' : ''}`;
+        if (!docs.length) { lista.innerHTML = '<div class="admin-empty">Sem sessões registradas.</div>'; return; }
+        lista.innerHTML = docs.map(d => {
+          const ativa = d.ts && (agora - d.ts) < 300000;
+          const tempo = d.ts ? _tempoRelativo(d.ts) : '—';
+          return `<div class="admin-sessao-row">
+            <div class="admin-sessao-dot ${ativa ? 'ativa' : 'inativa'}"></div>
+            <div class="admin-sessao-info">
+              <div class="admin-sessao-nome">${d.nome || 'Jogador'}</div>
+              <div class="admin-sessao-detalhe">${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1} · ${d.companyName||''}</div>
+            </div>
+            <span class="admin-sessao-tempo">${tempo}</span>
+          </div>`;
+        }).join('');
+      } catch(e) { lista.innerHTML = '<div class="admin-empty">Erro ao carregar sessões.</div>'; }
+    })();
   }
 
   /* ════════════════════════════════════════════════════

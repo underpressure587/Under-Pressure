@@ -1246,12 +1246,40 @@ function escolher(idx) {
   setTimeout(() => processarEscolha(idx), 180);
 }
 
-// Atualiza a sessão ativa no Firestore a cada escolha do jogador
+// Atualiza presença no Firebase Realtime Database
+// Chamada a cada escolha do jogador; onDisconnect garante limpeza automática
+let _presencaInicializada = false;
 async function _atualizarSessaoAtiva() {
   try {
-    if (!_player?.uid || !window.GSPAuth) return;
+    if (!_player?.uid) return;
     const state = BetaState.get();
     if (!state) return;
+
+    // — RTDB (preferido, tempo real) —
+    if (window.GSPRtdb) {
+      const { db, ref, set, onDisconnect } = window.GSPRtdb;
+      const presRef = ref(db, `presence/${_player.uid}`);
+
+      await set(presRef, {
+        nome:        _player.nome || 'Jogador',
+        setor:       state.sector || '',
+        rodada:      state.currentRound || 0,
+        companyName: state.companyName || '',
+        versao:      _versaoAtual || '',
+        ts:          Date.now(),
+        online:      true,
+      });
+
+      // Configura remoção automática ao desconectar (só precisa fazer 1x)
+      if (!_presencaInicializada) {
+        onDisconnect(presRef).remove();
+        _presencaInicializada = true;
+      }
+      return;
+    }
+
+    // — Fallback: Firestore REST (caso RTDB não esteja configurado) —
+    if (!window.GSPAuth) return;
     const tok = await window.GSPAuth.getToken();
     if (!tok) return;
     const FS = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents`;
@@ -1268,9 +1296,21 @@ async function _atualizarSessaoAtiva() {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields }),
-    }).catch(() => {}); // silencioso
+    }).catch(() => {});
   } catch(e) { /* silencioso */ }
 }
+
+// Remove presença do RTDB ao sair/fechar a aba
+function _removerPresenca() {
+  try {
+    if (!_player?.uid || !window.GSPRtdb) return;
+    const { db, ref, set } = window.GSPRtdb;
+    // Usa sendBeacon para garantir execução no unload
+    const presRef = ref(db, `presence/${_player.uid}`);
+    set(presRef, null).catch(() => {});
+  } catch(e) {}
+}
+window.addEventListener('beforeunload', _removerPresenca);
 
 function _iniciarTimer() {
   _pararTimer();

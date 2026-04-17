@@ -8,6 +8,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getDatabase, ref as rtdbRef, set as rtdbSet,
+  onDisconnect, onValue, serverTimestamp as rtdbServerTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyB_Zkl12AyT5RMfg9eJ68QFTakdBKSioVU",
@@ -15,7 +19,8 @@ const firebaseConfig = {
   projectId:         "under-pressure-49320",
   storageBucket:     "under-pressure-49320.firebasestorage.app",
   messagingSenderId: "240438805750",
-  appId:             "1:240438805750:web:9e090a1be367fea18f58d7"
+  appId:             "1:240438805750:web:9e090a1be367fea18f58d7",
+  databaseURL: "https://under-pressure-49320-default-rtdb.firebaseio.com",
 };
 
 const PROJECT_ID = "under-pressure-49320";
@@ -39,6 +44,19 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
     auth           = getAuth(app);
     initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
     googleProvider = new GoogleAuthProvider();
+
+    // Realtime Database — presença em tempo real
+    if (firebaseConfig.databaseURL && !firebaseConfig.databaseURL.startsWith('COLE_AQUI')) {
+      try {
+        const rtdb = getDatabase(app);
+        window.GSPRtdb = { db: rtdb, ref: rtdbRef, set: rtdbSet, onDisconnect, onValue, serverTimestamp: rtdbServerTimestamp };
+      } catch(e) {
+        console.warn('[GSP] RTDB não inicializado:', e.message);
+        window.GSPRtdb = null;
+      }
+    } else {
+      window.GSPRtdb = null;
+    }
     _firebaseReady = true;
     // Captura usuário imediatamente ao inicializar
     let _redirectDone = false;
