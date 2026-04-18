@@ -839,12 +839,39 @@ const ADMIN = (() => {
     try {
       const doc = await _get('config/global');
       const fields = _parseFields(doc.fields || {});
-      const result = { manutencao: !!fields.manutencao, mensagem: fields.mensagem || '', modoSalaAtivo: !!fields.modoSalaAtivo };
+      const result = {
+        manutencao:   !!fields.manutencao,
+        mensagem:     fields.mensagem || '',
+        modoSalaAtivo: !!fields.modoSalaAtivo,
+        liberados:    Array.isArray(fields.liberados) ? fields.liberados : [],
+      };
       console.log('[GSP] verificarMensagemGlobal:', result);
       return result;
     } catch(e) {
       console.error('[GSP] verificarMensagemGlobal erro:', e.message);
       return null;
+    }
+  }
+
+  // ── Adicionar / remover UID da lista de liberados durante manutenção ──
+  async function toggleLiberado(uid, adicionar) {
+    uid = (uid || '').trim();
+    if (!uid) { _showAdminToast('⚠ Informe um UID válido.', true); return; }
+    try {
+      const snap     = await _get('config/global');
+      const fields   = _parseFields(snap.fields || {});
+      const liberados = Array.isArray(fields.liberados) ? fields.liberados : [];
+      const atualizado = adicionar
+        ? [...new Set([...liberados, uid])]
+        : liberados.filter(u => u !== uid);
+      await _patch('config/global', {
+        liberados: { arrayValue: { values: atualizado.map(u => ({ stringValue: u })) } }
+      });
+      _showAdminToast(adicionar ? `✅ UID liberado` : `🚫 UID removido`);
+      _registrarAuditoria(adicionar ? `UID liberado em manutenção: ${uid}` : `UID removido dos liberados: ${uid}`);
+    } catch(e) {
+      console.error('[Admin] toggleLiberado:', e);
+      _showAdminToast('❌ Erro ao atualizar lista de liberados.', true);
     }
   }
 
@@ -1653,7 +1680,7 @@ const ADMIN = (() => {
   }
 
   return {
-    verificarAdmin, verificarBan, _getBanInfo, verificarMensagemGlobal,
+    verificarAdmin, verificarBan, _getBanInfo, verificarMensagemGlobal, toggleLiberado,
     irParaSecao,
     carregarJogadores, verHistoricoJogador, toggleBan,
     filtrarJogadores, exportarCSVJogadores, exportarCSVPodio,

@@ -91,7 +91,13 @@ const BetaState = (() => {
         });
     }
 
-    function addHistory(entry) { _state.history.push(entry); }
+    // BUG 12 FIX: limita o histórico a maxEntries para evitar crescimento ilimitado de memória
+    function addHistory(entry, maxEntries = 100) {
+        _state.history.push(entry);
+        if (_state.history.length > maxEntries) {
+            _state.history.splice(0, _state.history.length - maxEntries);
+        }
+    }
     function addEvent(ev)      { _state.activeEvents.push(ev); }
 
     function removeExpiredEvents() {

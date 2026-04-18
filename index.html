@@ -768,6 +768,14 @@
             <label class="admin-label" style="display:block;margin-bottom:4px">💬 Mensagem exibida no overlay de manutenção</label>
             <textarea id="admin-manut-mensagem" class="admin-input" rows="2" placeholder="Ex: Voltamos em breve! Previsão: 14h00." style="width:100%;resize:vertical;font-size:.82rem;line-height:1.4"></textarea>
           </div>
+          <div style="margin-top:10px">
+            <label class="admin-label" style="display:block;margin-bottom:6px">🔓 Liberar UID durante manutenção</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="uid-liberar" class="admin-input" placeholder="UID do Firebase Auth" style="flex:1">
+              <button class="admin-btn admin-btn-ok" onclick="ADMIN.toggleLiberado(document.getElementById('uid-liberar').value, true)">+ Liberar</button>
+              <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2)" onclick="ADMIN.toggleLiberado(document.getElementById('uid-liberar').value, false)">✕ Remover</button>
+            </div>
+          </div>
           <button id="btn-salvar-config" class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()" style="display:flex;align-items:center;gap:6px;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar</button>
           <div class="admin-sec-title" style="margin-top:16px">📋 Log de Auditoria</div>
           <div id="admin-audit-log"><div class="admin-empty">Sem registros.</div></div>

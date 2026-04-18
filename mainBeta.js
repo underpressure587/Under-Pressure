@@ -856,8 +856,12 @@ async function _iniciarPollingGlobal(uid) {
       _atualizarModoSala(cfg);
 
       if (cfg.manutencao && !_isAdmin) {
-        _mostrarOverlayManutencao(cfg.mensagem || '');
-        return;
+        // Respeita lista de UIDs liberados pelo admin
+        const liberado = Array.isArray(cfg.liberados) && _player?.uid && cfg.liberados.includes(_player.uid);
+        if (!liberado) {
+          _mostrarOverlayManutencao(cfg.mensagem || '');
+          return;
+        }
       }
       // Manutenção desativada — esconde overlay se estava visível
       _esconderOverlayManutencao();
