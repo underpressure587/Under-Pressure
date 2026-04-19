@@ -284,7 +284,7 @@ async function _boot() {
         if (btnSalvar) btnSalvar.style.display = '';
         mostrarTela('screen-login');
       }
-    }, 20000);
+    }, 5000);
     return; // não mostra screen-login ainda
   }
 
@@ -389,7 +389,7 @@ function irComoConvidado() {
     }
   };
   _guestTick();
-  _guestPollInterval = setInterval(_guestTick, 20000);
+  _guestPollInterval = setInterval(_guestTick, 5000);
 }
 
 function confirmarNome() {
@@ -837,7 +837,24 @@ async function _iniciarPollingGlobal(uid) {
       tWait++;
     }
   }
-  if (!window.ADMIN) return; // admin.js não carregou — encerra sem polling
+  if (!window.ADMIN) {
+    // Fallback: polling leve via REST público — não depende de admin.js
+    const _tickLeve = async () => {
+      const cfg = await _verificarManutencaoInicial().catch(() => null);
+      if (!cfg) return;
+      if (cfg.manutencao) {
+        const btnSalvar = document.getElementById('manut-btn-salvar');
+        const emJogo = !!BetaState.get();
+        if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
+        _mostrarOverlayManutencao(cfg.mensagem || '');
+      } else {
+        _esconderOverlayManutencao();
+      }
+    };
+    _tickLeve();
+    _globalPollInterval = setInterval(_tickLeve, 5000);
+    return;
+  }
 
   const _tick = async () => {
     try {
@@ -893,7 +910,7 @@ async function _iniciarPollingGlobal(uid) {
   };
 
   _tick(); // executa imediatamente no login
-  _globalPollInterval = setInterval(_tick, 20000);
+  _globalPollInterval = setInterval(_tick, 5000);
 }
 
 /* ════════════════════════════════════════════════════
