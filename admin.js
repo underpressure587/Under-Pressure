@@ -9,6 +9,8 @@ const ADMIN = (() => {
   const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/default/documents`;
 
   let _adminUids = [];
+  let _adminOwner = '';          // UID do owner do sistema (protegido)
+  let _adminPermissoes = {};     // { uid: ['jogadores','config',...] }
   let _currentSection = 'visao-geral';
   let _setorSelecionado = '';  // setor ativo no dropdown do pódio
   let _banUid = '';            // uid do jogador sendo analisado no modal de ban
@@ -427,28 +429,39 @@ const ADMIN = (() => {
       _adminUids = uids;
       if (input) input.value = '';
       _showAdminToast('✅ Admin adicionado!');
-      carregarAdmins();
+      _registrarAuditoria(`Admin adicionado: ${uid.slice(0,8)}`);
+      _renderAdminLista();
     } catch(e) {
       _showAdminToast('Erro: ' + e.message, true);
     }
   }
 
   async function removerAdmin(uid) {
-    if (!confirm(`Remover ${uid} dos admins?`)) return;
+    if (uid === _adminOwner) { _showAdminToast('Owner não pode ser removido.', true); return; }
+    if (!confirm(`Remover ${uid.slice(0,12)}... dos admins?`)) return;
     try {
       const uids = _adminUids.filter(u => u !== uid);
+      const novasPermissoes = { ..._adminPermissoes };
+      delete novasPermissoes[uid];
       const tok = await _token();
-      const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids`, {
+      const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids&updateMask.fieldPaths=permissoes`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: {
-          uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } }
+          uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } },
+          permissoes: { mapValue: { fields: Object.fromEntries(
+            Object.entries(novasPermissoes).map(([k, v]) => [k, {
+              arrayValue: { values: (Array.isArray(v) ? v : []).map(s => ({ stringValue: s })) }
+            }])
+          )}}
         }})
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       _adminUids = uids;
+      _adminPermissoes = novasPermissoes;
       _showAdminToast('Admin removido.');
-      carregarAdmins();
+      _registrarAuditoria(`Admin removido: ${uid.slice(0,8)}`);
+      _renderAdminLista();
     } catch(e) {
       _showAdminToast('Erro: ' + e.message, true);
     }
@@ -1572,11 +1585,15 @@ const ADMIN = (() => {
   ════════════════════════════════════════════════════ */
   async function _registrarAuditoria(acao) {
     try {
-      const ts = Date.now().toString();
+      const ts   = Date.now().toString();
+      const user = window._player;
+      const nome = user?.nome || 'Admin';
+      const uid  = user?.uid  || 'desconhecido';
       await _patch(`auditoria/${ts}`, {
-        acao: _fsStr(acao),
-        uid:  _fsStr('admin'),
-        ts:   _fsInt(Date.now()),
+        acao:  _fsStr(acao),
+        uid:   _fsStr(uid),
+        nome:  _fsStr(nome),
+        ts:    _fsInt(Date.now()),
       });
     } catch(e) { /* silencioso */ }
   }
@@ -1592,15 +1609,46 @@ const ADMIN = (() => {
           limit: 20
         }
       });
-      const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
-      if (!docs.length) { el.innerHTML = '<div class="admin-empty">Sem registros.</div>'; return; }
-      el.innerHTML = docs.map(d => `
+      const docs = res.filter(r => r.document).map(r => ({
+        ..._parseFields(r.document.fields),
+        _id: r.document.name.split('/').pop()
+      }));
+      const isOwner = window._player?.uid && window._player.uid === _adminOwner;
+      const limparBtn = isOwner
+        ? `<button class="admin-btn admin-btn-danger" style="margin-bottom:8px;font-size:.75rem" onclick="ADMIN.limparAuditLog()">🗑 Limpar log</button>`
+        : '';
+      if (!docs.length) {
+        el.innerHTML = limparBtn + '<div class="admin-empty">Sem registros.</div>';
+        return;
+      }
+      el.innerHTML = limparBtn + docs.map(d => `
         <div class="admin-audit-row">
-          <span class="admin-audit-quem">${d.uid?.slice(0,8)||'admin'}</span>
+          <span class="admin-audit-quem">Admin — ${d.nome || d.uid?.slice(0,8) || 'desconhecido'}</span>
           <span> — ${d.acao||''}</span>
           <span class="admin-audit-quando"> · ${d.ts ? _formatarDataHora(d.ts) : ''}</span>
         </div>`).join('');
     } catch(e) { el.innerHTML = '<div class="admin-empty">Sem registros.</div>'; }
+  }
+
+  async function limparAuditLog() {
+    if (!confirm('Limpar todo o log de auditoria? Esta ação não pode ser desfeita.')) return;
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'auditoria' }],
+          limit: 100
+        }
+      });
+      const ids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
+      const tok = await _token();
+      await Promise.all(ids.map(id =>
+        fetch(`${FS}/auditoria/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } })
+      ));
+      _showAdminToast('✅ Log de auditoria limpo.');
+      carregarAuditLog();
+    } catch(e) {
+      _showAdminToast('Erro ao limpar: ' + e.message, true);
+    }
   }
 
   /* ════════════════════════════════════════════════════
@@ -1624,17 +1672,116 @@ const ADMIN = (() => {
       if (mensagemEl) mensagemEl.value = cfg.mensagem || '';
     } catch(e) { console.warn('[ADMIN] Config:', e); }
     // Admins
+    carregarAdmins();
+  }
+
+  const _SECOES = [
+    { id: 'visao-geral', label: '📊 Geral'      },
+    { id: 'jogadores',   label: '👥 Jogadores'   },
+    { id: 'podio',       label: '🏆 Pódio'       },
+    { id: 'dashboard',   label: '📈 Dashboard'   },
+    { id: 'historias',   label: '🎮 Histórias'   },
+    { id: 'feedback',    label: '💬 Feedback'    },
+    { id: 'sessoes',     label: '🖥️ Sessões'     },
+    { id: 'versao',      label: '🔖 Versão'      },
+    { id: 'logs',        label: '🐛 Logs'        },
+    { id: 'config',      label: '⚙️ Config'      },
+  ];
+
+  async function carregarAdmins() {
     try {
       const doc = await _get('config/admins');
-      const uids = _val(doc.fields?.uids) || [];
-      _adminUids = uids;
-      const lista = document.getElementById('admin-admins-lista');
-      if (lista) lista.innerHTML = uids.map(u => `
-        <div class="admin-uid-row">
-          <span class="admin-uid-text">${u}</span>
-          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${u}')">✕</button>
-        </div>`).join('') || '<div class="admin-empty">Nenhum admin cadastrado.</div>';
-    } catch(e) {}
+      _adminUids      = _val(doc.fields?.uids)        || [];
+      _adminOwner     = _val(doc.fields?.owner)       || '';
+      _adminPermissoes = _val(doc.fields?.permissoes) || {};
+      _renderAdminLista();
+      _aplicarPermissoesNav();
+    } catch(e) { console.warn('[ADMIN] carregarAdmins:', e); }
+  }
+
+  function _renderAdminLista() {
+    const lista = document.getElementById('admin-admins-lista');
+    if (!lista) return;
+    const meUID = window._player?.uid || '';
+    if (!_adminUids.length) {
+      lista.innerHTML = '<div class="admin-empty">Nenhum admin cadastrado.</div>';
+      return;
+    }
+    lista.innerHTML = _adminUids.map(u => {
+      const isOwner  = u === _adminOwner;
+      const perms    = Array.isArray(_adminPermissoes[u]) ? _adminPermissoes[u] : _SECOES.map(s => s.id);
+      const permBtns = isOwner ? '<span style="font-size:.7rem;color:var(--warn);font-weight:700">👑 Owner</span>' : `
+        <button class="admin-btn-sm" style="background:var(--bg3);border:1px solid var(--line2)" onclick="ADMIN.abrirPermissoes('${u}')">⚙️ Permissões</button>
+        <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${u}')">✕</button>`;
+      return `
+        <div class="admin-uid-row" style="flex-wrap:wrap;gap:6px">
+          <span class="admin-uid-text" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${u}${isOwner ? '' : ` <span style="font-size:.65rem;color:var(--t3)">(${perms.length}/${_SECOES.length} seções)</span>`}</span>
+          <div style="display:flex;gap:4px;flex-shrink:0">${permBtns}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function _aplicarPermissoesNav() {
+    const meUID = window._player?.uid || '';
+    if (!meUID || meUID === _adminOwner) return; // owner vê tudo
+    const perms = Array.isArray(_adminPermissoes[meUID]) ? _adminPermissoes[meUID] : null;
+    if (!perms) return;
+    document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+      const sec = btn.dataset.sec;
+      btn.style.display = perms.includes(sec) ? '' : 'none';
+    });
+  }
+
+  function abrirPermissoes(uid) {
+    const perms = Array.isArray(_adminPermissoes[uid]) ? _adminPermissoes[uid] : _SECOES.map(s => s.id);
+    const modal = document.getElementById('admin-modal');
+    const body  = document.getElementById('admin-modal-body');
+    if (!modal || !body) return;
+    body.innerHTML = `
+      <div style="padding:16px">
+        <div class="admin-sec-title" style="margin-bottom:12px">⚙️ Permissões — ${uid.slice(0,12)}...</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${_SECOES.map(s => `
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" data-perm="${s.id}" ${perms.includes(s.id) ? 'checked' : ''}
+                style="width:16px;height:16px;accent-color:var(--s-text)">
+              <span style="font-size:.85rem">${s.label}</span>
+            </label>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="admin-btn admin-btn-ok" style="flex:1" onclick="ADMIN.salvarPermissoes('${uid}')">✅ Salvar</button>
+          <button class="admin-btn" style="flex:1;background:var(--bg3);border:1px solid var(--line2)" onclick="ADMIN.fecharModal()">Cancelar</button>
+        </div>
+      </div>`;
+    modal.style.display = 'flex';
+  }
+
+  async function salvarPermissoes(uid) {
+    const checkboxes = document.querySelectorAll('#admin-modal-body input[data-perm]');
+    const selecionadas = Array.from(checkboxes).filter(c => c.checked).map(c => c.dataset.perm);
+    try {
+      const novasPermissoes = { ..._adminPermissoes, [uid]: selecionadas };
+      const tok = await _token();
+      const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=permissoes`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: {
+          permissoes: { mapValue: { fields: Object.fromEntries(
+            Object.entries(novasPermissoes).map(([k, v]) => [k, {
+              arrayValue: { values: v.map(s => ({ stringValue: s })) }
+            }])
+          )}}
+        }})
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      _adminPermissoes = novasPermissoes;
+      fecharModal();
+      _showAdminToast('✅ Permissões salvas!');
+      _registrarAuditoria(`Permissões de ${uid.slice(0,8)} atualizadas`);
+      _renderAdminLista();
+    } catch(e) {
+      _showAdminToast('Erro: ' + e.message, true);
+    }
   }
 
   async function salvarConfigGlobal() {
@@ -1686,7 +1833,8 @@ const ADMIN = (() => {
     filtrarJogadores, exportarCSVJogadores, exportarCSVPodio,
     removerDoPodio, resetarPodioPorSetor,
     carregarConfigGlobal, salvarConfigGlobal,
-    adicionarAdmin, removerAdmin,
+    adicionarAdmin, removerAdmin, carregarAdmins, abrirPermissoes, salvarPermissoes,
+    limparAuditLog,
     fecharModal,
     toggleDropdown, selecionarSetor,
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
