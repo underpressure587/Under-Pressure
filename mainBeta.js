@@ -1917,7 +1917,7 @@ async function irParaPerfil() {
   if (cqEl) {
     if (isGuest) {
       cqEl.innerHTML = `
-        <div class="hist-guest-banner" style="margin:0">
+        <div class="hist-guest-banner" style="margin:0;grid-column:1/-1">
           <div class="hist-guest-icon">🏆</div>
           <div class="hist-guest-title">Conquistas bloqueadas</div>
           <div class="hist-guest-desc">Crie uma conta para desbloquear conquistas e salvar seu progresso.</div>
