@@ -271,7 +271,7 @@ async function _boot() {
   // Verifica manutenção antes de mostrar a tela de login
   const _cfgPreLogin = await _verificarManutencaoInicial().catch(() => null);
   if (_cfgPreLogin?.manutencao) {
-    // Sem sessão salva → sem botão "Salvar e Sair"
+    mostrarTela('screen-login'); // mostra fundo para o overlay não ficar sobre tela preta
     const btnSalvar = document.getElementById('manut-btn-salvar');
     if (btnSalvar) btnSalvar.style.display = 'none';
     _mostrarOverlayManutencao(_cfgPreLogin.mensagem || '');
@@ -282,10 +282,9 @@ async function _boot() {
         clearInterval(_preLoginPoll);
         _esconderOverlayManutencao();
         if (btnSalvar) btnSalvar.style.display = '';
-        mostrarTela('screen-login');
       }
     }, 5000);
-    return; // não mostra screen-login ainda
+    return;
   }
 
   mostrarTela('screen-login');
