@@ -368,6 +368,7 @@ function voltar(tela) {
 function irComoConvidado() {
   _player = { nome: "Convidado", tipo: "guest" };
   window._player = _player;
+  LS.set(SK.PLAYER, _player); // persiste para não perder _player ao recarregar
   _atualizarHome();
   mostrarTela("screen-home");
 
@@ -412,11 +413,13 @@ function sair() {
   _removerPresenca(); // remove presença do RTDB antes de limpar _player
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
+  LS.remove(SK.HIST_GUEST); // limpa histórico guest para não vazar entre sessões
   _player = null;
   window._player = null;
   _isAdmin = false;
   window._isAdmin = false;
   _presencaInicializada = false; // permite reconfigurar onDisconnect no próximo login
+  _aplicarTemaSetor(null); // reseta tema para não vazar para a tela de login
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
@@ -461,7 +464,7 @@ function _verificarSessaoSalva() {
   const sess   = LS.get(SK.SESSION);
   const banner = document.getElementById("session-restore-banner");
   const texto  = document.getElementById("session-restore-text");
-  if (sess && banner && texto) {
+  if (sess && banner && texto && _player) {
     const mins  = Math.round((Date.now() - sess.ts) / 60000);
     const tempo = mins < 60 ? `${mins} min atrás` : `${Math.round(mins/60)}h atrás`;
     texto.textContent = `Jogo em andamento: ${sess.companyName} (${sess.sector}) — Rodada ${sess.currentRound + 1}/${sess.totalRounds} · salvo ${tempo}`;
@@ -1912,7 +1915,16 @@ async function irParaPerfil() {
   const cqEl = document.getElementById('perfil-conquistas');
   const _prevUnlocked = JSON.parse(sessionStorage.getItem('gsp_prev_unlocked') || '[]');
   if (cqEl) {
-    cqEl.innerHTML = conquistas.map(c => `
+    if (isGuest) {
+      cqEl.innerHTML = `
+        <div class="hist-guest-banner" style="margin:0">
+          <div class="hist-guest-icon">🏆</div>
+          <div class="hist-guest-title">Conquistas bloqueadas</div>
+          <div class="hist-guest-desc">Crie uma conta para desbloquear conquistas e salvar seu progresso.</div>
+          <button class="btn btn-primary hist-guest-btn" onclick="BetaUI.irParaAuth()">Criar conta grátis</button>
+        </div>`;
+    } else {
+      cqEl.innerHTML = conquistas.map(c => `
       <div class="perfil-conquista ${c.unlocked ? 'unlocked' : ''}">
         <div class="perfil-conquista-icon">${c.unlocked ? c.icon : '🔒'}</div>
         <div>
@@ -1920,13 +1932,14 @@ async function irParaPerfil() {
           <div class="perfil-conquista-desc">${c.desc}</div>
         </div>
       </div>`).join('');
-    const cards = cqEl.querySelectorAll('.perfil-conquista.unlocked');
-    conquistas.filter(c => c.unlocked).forEach((c, i) => {
-      if (!_prevUnlocked.includes(c.nome)) {
-        setTimeout(() => cards[i]?.classList.add('new-unlock'), 200 + i * 120);
-        setTimeout(() => cards[i]?.classList.remove('new-unlock'), 1200 + i * 120);
-      }
-    });
+      const cards = cqEl.querySelectorAll('.perfil-conquista.unlocked');
+      conquistas.filter(c => c.unlocked).forEach((c, i) => {
+        if (!_prevUnlocked.includes(c.nome)) {
+          setTimeout(() => cards[i]?.classList.add('new-unlock'), 200 + i * 120);
+          setTimeout(() => cards[i]?.classList.remove('new-unlock'), 1200 + i * 120);
+        }
+      });
+    }
   }
   sessionStorage.setItem('gsp_prev_unlocked', JSON.stringify(conquistas.filter(c => c.unlocked).map(c => c.nome)));
 
@@ -1991,6 +2004,9 @@ function _calcularConquistas(hist) {
 let _podioFiltro = 'all';
 
 function filtrarPodio(setor) {
+  // Guest não tem acesso — filtro não deve buscar Firestore
+  if (!_player?.uid || _player?.tipo === 'guest') return;
+
   _podioFiltro = setor;
   document.querySelectorAll('.podio-filter').forEach(b =>
     b.classList.toggle('active', b.dataset.filter === setor)
@@ -3010,11 +3026,17 @@ function _mostrarOverlayManutencao(msgExtra) {
   if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
 
   el.style.display = 'flex';
+
+  // Pausa o engine para bloquear interações sem derrubar o estado
+  if (typeof Engine !== 'undefined') Engine.setPausado(true);
 }
 
 function _esconderOverlayManutencao() {
   const el = document.getElementById('overlay-manutencao');
   if (el) el.style.display = 'none';
+
+  // Retoma o engine
+  if (typeof Engine !== 'undefined') Engine.setPausado(false);
 }
 
 function manutencaoSalvarSair() {
