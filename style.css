@@ -2859,12 +2859,12 @@ body::after{
     box-shadow: 0 12px 32px rgba(0,0,0,.3);
   }
 
-  .sector-field, .sector-mode-row {
+  .sector-field {
     padding: var(--sp2) 32px; max-width: 860px; margin: 0 auto; width: 100%;
   }
 
   .sector-mode-row {
-    margin: 0 auto var(--sp2); padding: 12px 32px;
+    padding: 12px 32px; max-width: 860px; margin: 0 auto var(--sp2); width: 100%;
   }
 
   .sector-cta {
