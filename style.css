@@ -2836,12 +2836,12 @@ body::after{
      SELEÇÃO DE SETOR
   ══════════════════════════════════════════ */
   #screen-sector {
-    align-items: center; overflow-y: auto;
+    align-items: stretch; overflow-y: auto;
     background: var(--bg);
   }
 
-  #screen-sector > div:not(.sector-cta) {
-    width: 100%; max-width: 860px;
+  #screen-sector > div {
+    width: 100%; max-width: 860px; margin-left: auto; margin-right: auto;
   }
 
   .sector-grid {
@@ -2864,7 +2864,7 @@ body::after{
   }
 
   .sector-mode-row {
-    padding: 12px var(--sp2); margin: 0 32px var(--sp2); width: auto; max-width: none;
+    padding: 12px 32px; margin: 0 auto var(--sp2);
   }
 
   .sector-cta {
