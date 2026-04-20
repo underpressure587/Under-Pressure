@@ -1799,6 +1799,7 @@ async function irParaPerfil() {
     }
   }, 500);
   mostrarTela('screen-perfil');
+  _renderizarPerfilMsgs();
   const playerSalvo = LS.get(SK.PLAYER);
   if (playerSalvo) { _player = playerSalvo; window._player = _player; }
   const isGuest = _player?.tipo === "guest" || !_player?.uid;
@@ -2762,6 +2763,8 @@ async function _loginOk(player) {
   _iniciarPollingGlobal(player.uid);
   // Inicia inbox em tempo real
   _iniciarInbox(player.uid);
+  // Boas-vindas para novo jogador (verifica se é novo)
+  _enviarBoasVindas(player.uid, player.nome || 'Gestor').catch(() => {});
 
   // Entra no painel imediatamente — sem esperar Firestore
   _restaurarSala();
@@ -3274,15 +3277,15 @@ async function removerMembroGrupo(uid, nomeGrupo) {
 
 
 /* ════════════════════════════════════════════════════
-   CAIXA DE ENTRADA (INBOX) — TEMPO REAL VIA FIRESTORE
+   CAIXA DE ENTRADA (INBOX) — COMUNICADOS DO ADMIN
 ════════════════════════════════════════════════════ */
 let _inboxMensagens   = [];
 let _inboxUnsubscribe = null;
 const _FS_BASE = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents`;
+const _CAT_ICONS_PLAYER = { geral:'💬', aviso:'📢', conquista:'🎉', alerta:'⚠️' };
 
 function _iniciarInbox(uid) {
   if (!uid) return;
-  // Polling a cada 15s para detectar novas mensagens (sem SDK)
   _pararInbox();
   _buscarMensagens(uid);
   _inboxUnsubscribe = setInterval(() => _buscarMensagens(uid), 15000);
@@ -3296,14 +3299,13 @@ async function _buscarMensagens(uid) {
   try {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return;
-    // Busca subcoleção mensagens
     const r = await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens`, {
       headers: { Authorization: `Bearer ${tok}` }
     });
     if (!r.ok) return;
     const data = await r.json();
-    const docs = (data.documents || []);
-    _inboxMensagens = docs.map(doc => {
+    const agora = Date.now();
+    const docs = (data.documents || []).map(doc => {
       const f = doc.fields || {};
       const _v = v => {
         if (!v) return null;
@@ -3313,14 +3315,36 @@ async function _buscarMensagens(uid) {
         return null;
       };
       return {
-        id:    doc.name.split('/').pop(),
-        texto: _v(f.texto),
-        de:    _v(f.de) || 'admin',
-        ts:    _v(f.ts) || 0,
-        lida:  _v(f.lida) || false,
+        id:                doc.name.split('/').pop(),
+        texto:             _v(f.texto),
+        de:                _v(f.de) || 'admin',
+        ts:                _v(f.ts) || 0,
+        lida:              _v(f.lida) || false,
+        confirmada:        _v(f.confirmada) || false,
+        categoria:         _v(f.categoria) || 'geral',
+        fixada:            _v(f.fixada) || false,
+        exigirConfirmacao: _v(f.exigirConfirmacao) || false,
+        expiraEm:          _v(f.expiraEm) || 0,
+        broadcast:         _v(f.broadcast) || false,
       };
-    }).sort((a, b) => b.ts - a.ts);
+    }).filter(m => !m.expiraEm || m.expiraEm > agora) // remove expiradas
+      .sort((a, b) => {
+        if (a.fixada && !b.fixada) return -1;
+        if (!a.fixada && b.fixada) return 1;
+        return b.ts - a.ts;
+      });
+
+    const anterior = _inboxMensagens.filter(m => !m.lida).length;
+    _inboxMensagens = docs;
+    const atual = docs.filter(m => !m.lida).length;
+
+    // Toast de nova mensagem se chegou algo novo
+    if (atual > anterior && anterior >= 0 && document.visibilityState !== undefined) {
+      _showToast('📬 Você tem um novo comunicado', 'ok', 4000);
+    }
+
     _atualizarBadgeInbox();
+    _renderizarPerfilMsgs(); // atualiza aba no perfil se estiver aberta
   } catch(e) { /* silencioso */ }
 }
 
@@ -3329,45 +3353,63 @@ function _atualizarBadgeInbox() {
   const btn   = document.getElementById('btn-inbox');
   const badge = document.getElementById('inbox-badge');
   if (!btn) return;
-  if (_inboxMensagens.length > 0) {
-    btn.style.display = '';
-    if (badge) {
-      badge.style.display = naoLidas > 0 ? '' : 'none';
-      badge.textContent   = naoLidas > 9 ? '9+' : String(naoLidas);
-    }
-  } else {
-    btn.style.display = 'none';
+  btn.style.display = _inboxMensagens.length > 0 ? '' : 'none';
+  if (badge) {
+    badge.style.display = naoLidas > 0 ? '' : 'none';
+    badge.textContent   = naoLidas > 9 ? '9+' : String(naoLidas);
   }
 }
 
 function abrirInbox() {
-  const overlay = document.getElementById('overlay-inbox');
-  const lista   = document.getElementById('inbox-lista');
+  const overlay  = document.getElementById('overlay-inbox');
+  const lista    = document.getElementById('inbox-lista');
+  const subtit   = document.getElementById('inbox-subtitulo');
   if (!overlay || !lista) return;
-  if (!_inboxMensagens.length) {
-    lista.innerHTML = '<div style="color:var(--t3,#666);font-size:.85rem;text-align:center;padding:20px 0">Nenhuma mensagem.</div>';
+
+  const total    = _inboxMensagens.length;
+  const naoLidas = _inboxMensagens.filter(m => !m.lida).length;
+  if (subtit) subtit.textContent = total === 0 ? 'Nenhum comunicado' : `${naoLidas > 0 ? naoLidas + ' não lido(s) · ' : ''}${total} total`;
+
+  if (!total) {
+    lista.innerHTML = '<div style="color:var(--t3,#666);font-size:.85rem;text-align:center;padding:30px 0">Nenhum comunicado recebido.</div>';
   } else {
     lista.innerHTML = _inboxMensagens.map(m => {
-      const data = m.ts ? new Date(m.ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+      const catIcon = _CAT_ICONS_PLAYER[m.categoria] || '💬';
+      const data    = m.ts ? new Date(m.ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+      const fixPin  = m.fixada ? '<span style="font-size:.7rem;color:var(--s-primary,#eab308);font-weight:700">📌 Fixado</span>' : '';
+      const lida_cl = m.lida ? 'lida' : 'nao-lida';
+      const fix_cl  = m.fixada ? ' fixada' : '';
+      const confirmar_btn = (!m.lida && m.exigirConfirmacao && !m.confirmada)
+        ? `<button class="inbox-confirmar-btn" onclick="BetaUI._confirmarLeitura('${m.id}')">✅ Entendido</button>`
+        : '';
+      const apagar_btn = `<button onclick="BetaUI._apagarMsg('${m.id}')" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;padding:2px 4px" title="Apagar">🗑️</button>`;
       return `
-        <div data-msg-id="${m.id}" style="background:${m.lida ? 'var(--bg3,#222)' : 'rgba(234,179,8,.08)'};border:1px solid ${m.lida ? 'var(--line2,#333)' : 'rgba(234,179,8,.3)'};border-radius:10px;padding:12px 14px;cursor:pointer" onclick="BetaUI._lerMensagem('${m.id}')">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">
-            <span style="font-size:.7rem;color:var(--t3,#666);background:var(--bg3,#222);padding:2px 7px;border-radius:999px">🛡️ Admin</span>
-            <span style="font-size:.68rem;color:var(--t3,#666);flex-shrink:0">${data}</span>
+        <div class="inbox-msg-item ${lida_cl}${fix_cl}" id="inbox-item-${m.id}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
+            <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:.7rem;background:var(--bg4,#111);border:1px solid var(--line2);border-radius:999px;padding:2px 7px;color:var(--t2)">${catIcon} ${m.categoria}</span>
+              ${fixPin}
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+              <span style="font-size:.68rem;color:var(--t3,#666)">${data}</span>
+              ${apagar_btn}
+            </div>
           </div>
-          <div style="font-size:.85rem;color:${m.lida ? 'var(--t2,#aaa)' : 'var(--t1,#fff)'};line-height:1.4">${m.texto || ''}</div>
-          ${!m.lida ? '<div style="font-size:.65rem;color:#eab308;margin-top:6px;font-weight:600">● Não lida</div>' : ''}
+          <div style="font-size:.85rem;color:${m.lida ? 'var(--t2,#aaa)' : 'var(--t1,#fff)'};line-height:1.45" onclick="BetaUI._lerMensagem('${m.id}')">${m.texto || ''}</div>
+          ${!m.lida && !m.exigirConfirmacao ? `<div style="font-size:.65rem;color:#eab308;margin-top:5px;font-weight:600">● Não lido — toque para marcar</div>` : ''}
+          ${confirmar_btn}
         </div>`;
     }).join('');
   }
   overlay.style.display = 'flex';
-  // Marca como lidas ao abrir
-  if (_player?.uid) _marcarTodasLidasFirestore(_player.uid);
+  // Marca simples como lidas ao abrir (não as que exigem confirmação)
+  if (_player?.uid) _marcarLidasSimples(_player.uid);
 }
 
 function fecharInbox() {
   const overlay = document.getElementById('overlay-inbox');
   if (overlay) overlay.style.display = 'none';
+  _atualizarBadgeInbox();
 }
 
 async function _lerMensagem(msgId) {
@@ -3375,8 +3417,14 @@ async function _lerMensagem(msgId) {
   const msg = _inboxMensagens.find(m => m.id === msgId);
   if (!msg || msg.lida) return;
   msg.lida = true;
+  // Atualiza visual inline
+  const item = document.getElementById(`inbox-item-${msgId}`);
+  if (item) {
+    item.classList.replace('nao-lida', 'lida');
+    const hint = item.querySelector('[style*="eab308"]');
+    if (hint) hint.remove();
+  }
   _atualizarBadgeInbox();
-  // Atualiza no Firestore
   try {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return;
@@ -3385,31 +3433,180 @@ async function _lerMensagem(msgId) {
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields: { lida: { booleanValue: true } } })
     });
+    // Atualiza lidoPor no log se broadcast
+    if (msg.broadcast) _incrementarLidoPor(msgId);
+  } catch(e) { /* silencioso */ }
+}
+
+async function _confirmarLeitura(msgId) {
+  if (!_player?.uid) return;
+  const msg = _inboxMensagens.find(m => m.id === msgId);
+  if (!msg) return;
+  msg.lida = true;
+  msg.confirmada = true;
+  const item = document.getElementById(`inbox-item-${msgId}`);
+  if (item) {
+    item.classList.replace('nao-lida', 'lida');
+    const btn = item.querySelector('.inbox-confirmar-btn');
+    if (btn) btn.remove();
+  }
+  _atualizarBadgeInbox();
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    await fetch(`${_FS_BASE}/usuarios/${_player.uid}/mensagens/${msgId}?updateMask.fieldPaths=lida&updateMask.fieldPaths=confirmada`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { lida: { booleanValue: true }, confirmada: { booleanValue: true } } })
+    });
+    if (msg.broadcast) _incrementarLidoPor(msgId);
+  } catch(e) { /* silencioso */ }
+}
+
+async function _apagarMsg(msgId) {
+  if (!_player?.uid) return;
+  _inboxMensagens = _inboxMensagens.filter(m => m.id !== msgId);
+  const item = document.getElementById(`inbox-item-${msgId}`);
+  if (item) item.remove();
+  _atualizarBadgeInbox();
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    await fetch(`${_FS_BASE}/usuarios/${_player.uid}/mensagens/${msgId}`, {
+      method: 'DELETE', headers: { Authorization: `Bearer ${tok}` }
+    });
+  } catch(e) { /* silencioso */ }
+}
+
+async function apagarTodasMsgs() {
+  if (!_player?.uid || !_inboxMensagens.length) return;
+  const ids = [..._inboxMensagens.map(m => m.id)];
+  _inboxMensagens = [];
+  fecharInbox();
+  _atualizarBadgeInbox();
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    for (const id of ids) {
+      fetch(`${_FS_BASE}/usuarios/${_player.uid}/mensagens/${id}`, {
+        method: 'DELETE', headers: { Authorization: `Bearer ${tok}` }
+      }).catch(() => {});
+    }
   } catch(e) { /* silencioso */ }
 }
 
 async function marcarTodasLidas() {
   if (!_player?.uid) return;
-  _inboxMensagens.forEach(m => { m.lida = true; });
+  const naoLidas = _inboxMensagens.filter(m => !m.lida);
+  naoLidas.forEach(m => { m.lida = true; });
   _atualizarBadgeInbox();
   fecharInbox();
-  await _marcarTodasLidasFirestore(_player.uid);
-}
-
-async function _marcarTodasLidasFirestore(uid) {
   try {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return;
-    const naoLidas = _inboxMensagens.filter(m => !m.lida);
     for (const msg of naoLidas) {
+      fetch(`${_FS_BASE}/usuarios/${_player.uid}/mensagens/${msg.id}?updateMask.fieldPaths=lida`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { lida: { booleanValue: true } } })
+      }).catch(() => {});
+      if (msg.broadcast) _incrementarLidoPor(msg.id);
+    }
+  } catch(e) { /* silencioso */ }
+}
+
+async function _marcarLidasSimples(uid) {
+  const simples = _inboxMensagens.filter(m => !m.lida && !m.exigirConfirmacao);
+  if (!simples.length) return;
+  simples.forEach(m => { m.lida = true; });
+  _atualizarBadgeInbox();
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    for (const msg of simples) {
       fetch(`${_FS_BASE}/usuarios/${uid}/mensagens/${msg.id}?updateMask.fieldPaths=lida`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: { lida: { booleanValue: true } } })
       }).catch(() => {});
+      if (msg.broadcast) _incrementarLidoPor(msg.id);
     }
   } catch(e) { /* silencioso */ }
 }
+
+async function _incrementarLidoPor(msgId) {
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    const r = await fetch(`${_FS_BASE}/mensagens_log/${msgId}`, { headers: { Authorization: `Bearer ${tok}` } });
+    if (!r.ok) return;
+    const doc = await r.json();
+    const atual = parseInt(doc.fields?.lidoPor?.integerValue || '0');
+    await fetch(`${_FS_BASE}/mensagens_log/${msgId}?updateMask.fieldPaths=lidoPor`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { lidoPor: { integerValue: String(atual + 1) } } })
+    });
+  } catch(e) { /* silencioso */ }
+}
+
+function _renderizarPerfilMsgs() {
+  const lista = document.getElementById('perfil-msgs-lista');
+  const titulo = document.getElementById('perfil-msgs-titulo');
+  if (!lista) return;
+  if (!_inboxMensagens.length) {
+    if (titulo) titulo.style.display = 'none';
+    lista.innerHTML = '';
+    return;
+  }
+  if (titulo) titulo.style.display = '';
+  lista.innerHTML = _inboxMensagens.map(m => {
+    const catIcon = _CAT_ICONS_PLAYER[m.categoria] || '💬';
+    const data    = m.ts ? new Date(m.ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+    return `
+      <div style="background:var(--bg3);border:1px solid ${m.lida ? 'var(--line2)' : 'rgba(234,179,8,.3)'};border-radius:10px;padding:11px 13px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="flex:1">
+          <div style="font-size:.7rem;color:var(--t3);margin-bottom:4px">${catIcon} ${m.categoria} · ${data}</div>
+          <div style="font-size:.83rem;color:${m.lida ? 'var(--t2)' : 'var(--t1)'};line-height:1.4">${m.texto || ''}</div>
+        </div>
+        <button onclick="BetaUI._apagarMsg('${m.id}');BetaUI._renderPerfilMsgsPublic()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;flex-shrink:0;padding:2px">🗑️</button>
+      </div>`;
+  }).join('');
+}
+
+// Public wrapper for profile screen delete refresh
+function _renderPerfilMsgsPublic() { _renderizarPerfilMsgs(); }
+
+// Boas-vindas para novos jogadores
+async function _enviarBoasVindas(uid, nome) {
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    // Verifica se já tem alguma mensagem (evita duplicar boas-vindas)
+    const check = await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens`, { headers: { Authorization: `Bearer ${tok}` } });
+    if (check.ok) {
+      const d = await check.json();
+      if ((d.documents || []).length > 0) return; // já tem mensagens
+    }
+    const msgId = `bv_${Date.now()}`;
+    await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens/${msgId}?updateMask.fieldPaths=texto&updateMask.fieldPaths=de&updateMask.fieldPaths=ts&updateMask.fieldPaths=lida&updateMask.fieldPaths=confirmada&updateMask.fieldPaths=categoria&updateMask.fieldPaths=fixada&updateMask.fieldPaths=exigirConfirmacao&updateMask.fieldPaths=expiraEm`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: {
+        texto:             { stringValue: `Bem-vindo(a) ao Under Pressure, ${nome}! 🎮 Aqui você vai tomar decisões críticas como CEO e ver os resultados em tempo real. Boa sorte nos mandatos!` },
+        de:                { stringValue: 'admin' },
+        ts:                { integerValue: String(Date.now()) },
+        lida:              { booleanValue: false },
+        confirmada:        { booleanValue: false },
+        categoria:         { stringValue: 'geral' },
+        fixada:            { booleanValue: true },
+        exigirConfirmacao: { booleanValue: false },
+        expiraEm:          { integerValue: String(Date.now() + 90*24*60*60*1000) },
+      }})
+    });
+  } catch(e) { /* silencioso */ }
+}
+
 
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
@@ -3453,6 +3650,7 @@ window.BetaUI = {
   abrirModalModo, fecharModalModo, escolherModoSolo, escolherModoGrupo,
   // Inbox
   abrirInbox, fecharInbox, marcarTodasLidas, _lerMensagem,
+  _confirmarLeitura, _apagarMsg, apagarTodasMsgs, _renderPerfilMsgsPublic,
   // Manutenção
   manutencaoSalvarSair,
   // Criar sala (admin)

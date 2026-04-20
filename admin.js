@@ -918,7 +918,34 @@ const ADMIN = (() => {
     if (!texto) { _showAdminToast('Digite uma mensagem.', true); return; }
     fecharBroadcast();
     _showAdminToast('Enviando para todos...');
-    await enviarMensagemTodos(texto);
+    try {
+      const res = await _query({ structuredQuery: { from: [{ collectionId: 'usuarios' }], select: { fields: [{ fieldPath: 'nome' }] } } });
+      const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
+      let ok = 0;
+      const msgId = `bcast_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+      for (const uid of uids) {
+        try {
+          await _patch(`usuarios/${uid}/mensagens/${msgId}`, {
+            texto: { stringValue: texto }, de: { stringValue: 'admin' },
+            ts: { integerValue: String(Date.now()) }, lida: { booleanValue: false },
+            confirmada: { booleanValue: false }, categoria: { stringValue: 'aviso' },
+            fixada: { booleanValue: false }, exigirConfirmacao: { booleanValue: false },
+            expiraEm: { integerValue: String(Date.now() + 30*24*60*60*1000) },
+            broadcast: { booleanValue: true },
+          });
+          ok++;
+        } catch(e) { /* continua */ }
+      }
+      await _patch(`mensagens_log/${msgId}`, {
+        texto: { stringValue: texto }, destUid: { stringValue: '' }, destNome: { stringValue: '' },
+        categoria: { stringValue: 'aviso' }, fixada: { booleanValue: false },
+        exigirConfirmacao: { booleanValue: false }, broadcast: { booleanValue: true },
+        lidoPor: { integerValue: '0' }, totalEnviado: { integerValue: String(ok) },
+        ts: { integerValue: String(Date.now()) },
+      });
+      _showAdminToast(`✅ Mensagem enviada para ${ok} jogadores!`);
+      if (_currentSection === 'mensagens') carregarMensagens();
+    } catch(e) { _showAdminToast('Erro: ' + e.message, true); }
   }
 
 
@@ -1023,6 +1050,7 @@ const ADMIN = (() => {
     if (id === 'versao')       carregarVersao();
     if (id === 'logs')         carregarLogs();
     if (id === 'config')       { carregarConfigGlobal(); carregarAuditLog(); }
+    if (id === 'mensagens')    carregarMensagens();
   }
 
   function fecharModal() {
@@ -1774,6 +1802,7 @@ const ADMIN = (() => {
   const _SECOES = [
     { id: 'visao-geral', label: '📊 Geral'      },
     { id: 'jogadores',   label: '👥 Jogadores'   },
+    { id: 'mensagens',   label: '✉️ Mensagens'   },
     { id: 'podio',       label: '🏆 Pódio'       },
     { id: 'dashboard',   label: '📈 Dashboard'   },
     { id: 'historias',   label: '🎮 Histórias'   },
@@ -1933,6 +1962,9 @@ const ADMIN = (() => {
     limparAuditLog,
     fecharModal,
     abrirModalInbox, fecharModalInbox, enviarMensagemInbox, enviarMensagemTodos,
+    abrirNovaMsg, fecharNovaMsg, enviarNovaMsg, selecionarCategoria,
+    carregarMensagens, apagarMensagemLog,
+    abrirBroadcast, fecharBroadcast, confirmarBroadcast,
     abrirBroadcast, fecharBroadcast, confirmarBroadcast,
     toggleDropdown, selecionarSetor,
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
