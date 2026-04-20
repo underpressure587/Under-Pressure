@@ -814,27 +814,44 @@ function _mostrarToastAtualizacao(forcado) {
 async function _iniciarPollingGlobal(uid) {
   _pararPollingGlobal(); // limpa qualquer poll anterior
   if (!uid) return;
+  console.log('[Polling] 🚀 _iniciarPollingGlobal iniciado | uid:', uid, '| _isAdmin no momento:', _isAdmin, '| window.ADMIN disponível:', !!window.ADMIN, '| timestamp:', Date.now());
 
   // Aguarda window.ADMIN carregar (script síncrono carregado após o bundle;
   // em sessões restauradas o boot pode chegar aqui antes de admin.js executar)
   if (!window.ADMIN) {
+    console.warn('[Polling] ⚠️ window.ADMIN indisponível no início do polling — aguardando até 5s...');
     let tWait = 0;
     while (!window.ADMIN && tWait < 50) { // até 5s
       await new Promise(r => setTimeout(r, 100));
       tWait++;
     }
+    if (!window.ADMIN) {
+      console.error('[Polling] ❌ window.ADMIN não carregou após 5s — ENTRANDO NO FALLBACK. _isAdmin=', _isAdmin, '. Se admin, o overlay será exibido indevidamente!');
+    } else {
+      console.log('[Polling] ✅ window.ADMIN carregou após', tWait * 100, 'ms. _isAdmin atual:', _isAdmin);
+    }
+  } else {
+    console.log('[Polling] ✅ window.ADMIN já disponível imediatamente. _isAdmin atual:', _isAdmin);
+  }
+    }
   }
   if (!window.ADMIN) {
     // Fallback: polling leve via REST público — não depende de admin.js
+    console.warn('[Polling] ⚠️ FALLBACK ATIVO — window.ADMIN não carregou. Admin será tratado como usuário comum neste path! _isAdmin atual:', _isAdmin);
     const _tickLeve = async () => {
       const cfg = await _verificarManutencaoInicial().catch(() => null);
       if (!cfg) return;
+      console.log('[TickLeve] cfg.manutencao:', cfg.manutencao, '| _isAdmin:', _isAdmin, '| window._isAdmin:', window._isAdmin);
       if (cfg.manutencao && !_isAdmin) {
+        console.warn('[TickLeve] 🚨 Mostrando overlay de manutenção (fallback). Se este for admin, é aqui o bug — _isAdmin=false no fallback path.');
         const btnSalvar = document.getElementById('manut-btn-salvar');
         const emJogo = !!BetaState.get();
         if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
         _mostrarOverlayManutencao(cfg.mensagem || '');
       } else {
+        if (cfg.manutencao && _isAdmin) {
+          console.log('[TickLeve] ✅ Manutenção ativa mas _isAdmin=true — overlay não exibido');
+        }
         _esconderOverlayManutencao();
       }
     };
@@ -860,22 +877,37 @@ async function _iniciarPollingGlobal(uid) {
       _atualizarModoSala(cfg);
 
       if (cfg.manutencao && !_isAdmin) {
+        console.log('[Tick] 🔧 Manutenção ativa e _isAdmin=false — iniciando recheck de admin para uid:', _player?.uid);
         // Re-verifica admin antes de bloquear — evita falso negativo por race condition no boot
         if (_player?.uid) {
-          const recheck = await window.ADMIN.verificarAdmin(_player.uid).catch(() => false);
+          const recheck = await window.ADMIN.verificarAdmin(_player.uid).catch((e) => {
+            console.warn('[Tick] ❌ recheck verificarAdmin lançou exceção:', e?.message);
+            return false;
+          });
+          console.log('[Tick] Recheck resultado:', recheck, '| _isAdmin anterior:', _isAdmin);
           if (recheck) {
             _isAdmin = true;
             window._isAdmin = true;
+            console.log('[Tick] ✅ Admin confirmado no recheck — escondendo overlay');
             _esconderOverlayManutencao();
             return;
+          } else {
+            console.warn('[Tick] ⚠️ Recheck retornou false — usuário NÃO é admin. Se deveria ser admin, verifique a regra no Firestore/ADMIN.verificarAdmin.');
           }
+        } else {
+          console.warn('[Tick] ⚠️ _player?.uid indisponível — impossível fazer recheck de admin');
         }
         // Respeita lista de UIDs liberados pelo admin
         const liberado = Array.isArray(cfg.liberados) && _player?.uid && cfg.liberados.includes(_player.uid);
         if (!liberado) {
+          console.warn('[Tick] 🚨 Mostrando overlay de manutenção. liberados:', cfg.liberados, '| uid:', _player?.uid);
           _mostrarOverlayManutencao(cfg.mensagem || '');
           return;
+        } else {
+          console.log('[Tick] ✅ UID na lista de liberados — overlay não exibido');
         }
+      } else if (cfg.manutencao && _isAdmin) {
+        console.log('[Tick] ✅ Manutenção ativa mas _isAdmin=true — overlay bloqueado corretamente');
       }
       // Manutenção desativada — esconde overlay se estava visível
       _esconderOverlayManutencao();
@@ -2763,44 +2795,66 @@ async function _loginOk(player) {
 
 async function _atualizarBotaoAdmin(uid) {
   if (!uid) return;
+  console.log('[AdminCheck] 🔍 Iniciando verificação de admin para uid:', uid, '| timestamp:', Date.now());
   try {
     // Aguarda window.ADMIN carregar antes de verificar (evita _isAdmin=false por race condition)
     if (!window.ADMIN) {
+      console.log('[AdminCheck] ⏳ window.ADMIN não disponível ainda — aguardando até 5s...');
       let t = 0;
       while (!window.ADMIN && t < 50) {
         await new Promise(r => setTimeout(r, 100));
         t++;
       }
+      if (!window.ADMIN) {
+        console.warn('[AdminCheck] ❌ window.ADMIN não carregou após 5s — _isAdmin ficará false. CAUSA PROVÁVEL DO BUG: admin.js não carregou ou carregou tarde demais.');
+      } else {
+        console.log('[AdminCheck] ✅ window.ADMIN disponível após', t * 100, 'ms');
+      }
+    } else {
+      console.log('[AdminCheck] ✅ window.ADMIN já disponível imediatamente');
     }
     // Garante que o token Firebase esteja disponível antes de chamar verificarAdmin.
-    // waitForAuthReady resolve quando currentUser existe, mas o JWT pode ainda estar
-    // sendo buscado. Tentamos obter o token diretamente com retry (até 10s).
     if (window.GSPAuth?.getToken) {
+      console.log('[AdminCheck] 🔑 Aguardando token Firebase...');
       let tok = null;
       for (let i = 0; i < 20; i++) {
-        tok = await window.GSPAuth.getToken().catch(() => null);
-        if (tok) break;
+        tok = await window.GSPAuth.getToken().catch((e) => {
+          console.warn('[AdminCheck] ⚠️ getToken tentativa', i+1, 'falhou:', e?.message);
+          return null;
+        });
+        if (tok) {
+          console.log('[AdminCheck] ✅ Token Firebase obtido na tentativa', i+1);
+          break;
+        }
         await new Promise(r => setTimeout(r, 500));
       }
       if (!tok) {
-        console.warn('[Admin] Token não disponível após 10s — _isAdmin permanece false');
+        console.warn('[AdminCheck] ❌ Token não disponível após 10s — _isAdmin permanece false. CAUSA PROVÁVEL DO BUG: falha na autenticação Firebase.');
         _isAdmin = false;
         window._isAdmin = false;
         _mostrarBotaoAdmin();
         return;
       }
+    } else {
+      console.warn('[AdminCheck] ⚠️ window.GSPAuth?.getToken não disponível — pulando verificação de token');
     }
-    _isAdmin = await window.ADMIN?.verificarAdmin(uid) || false;
+    console.log('[AdminCheck] 📡 Chamando verificarAdmin...');
+    const resultado = await window.ADMIN?.verificarAdmin(uid);
+    _isAdmin = resultado || false;
     window._isAdmin = _isAdmin;
+    console.log('[AdminCheck] 🏁 verificarAdmin retornou:', resultado, '→ _isAdmin =', _isAdmin);
   } catch(e) {
-    console.warn('[Admin] verificarAdmin falhou:', e);
+    console.warn('[AdminCheck] ❌ verificarAdmin lançou exceção:', e?.message, e);
     _isAdmin = false;
     window._isAdmin = false;
   }
   _mostrarBotaoAdmin();
   // Se confirmado admin, garante que engine não fique pausado por manutenção
   if (_isAdmin) {
+    console.log('[AdminCheck] 🛡️ Admin confirmado — escondendo overlay de manutenção se visível');
     _esconderOverlayManutencao();
+  } else {
+    console.warn('[AdminCheck] ⚠️ Usuário NÃO reconhecido como admin. Se era para ser admin, verifique os logs acima.');
   }
 }
 
@@ -3025,7 +3079,12 @@ async function escolherModoGrupo() {
 
 function _mostrarOverlayManutencao(msgExtra) {
   // Admin nunca vê o overlay de manutenção
-  if (_isAdmin) return;
+  if (_isAdmin) {
+    console.log('[Overlay] 🛡️ _mostrarOverlayManutencao chamado mas _isAdmin=true — bloqueado corretamente');
+    return;
+  }
+  console.warn('[Overlay] 🚨 MOSTRANDO overlay de manutenção | _isAdmin:', _isAdmin, '| window._isAdmin:', window._isAdmin, '| uid:', _player?.uid);
+  console.trace('[Overlay] Stack trace — de onde veio a chamada:');
   const el = document.getElementById('overlay-manutencao');
   if (!el) return;
   // Mostra mensagem extra do admin se houver
