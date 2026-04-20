@@ -2840,13 +2840,8 @@ body::after{
     background: var(--bg);
   }
 
-  #screen-sector > div:not(.sector-cta) {
+  #screen-sector > div {
     width: min(100%, 860px);
-  }
-
-  .sector-cta {
-    width: min(100%, 860px);
-    padding: 0 32px var(--sp3);
   }
 
   .sector-grid {
@@ -2865,11 +2860,11 @@ body::after{
   }
 
   .sector-field, .sector-mode-row {
-    padding: var(--sp2) 32px; max-width: 860px; margin: 0 auto; width: 100%;
+    padding: var(--sp2) 32px;
   }
 
   .sector-cta {
-    padding: 0 32px var(--sp3); max-width: 860px; margin: 0 auto; width: 100%;
+    padding: var(--sp2) 32px var(--sp3);
   }
 
   /* ══════════════════════════════════════════
