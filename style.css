@@ -2840,8 +2840,8 @@ body::after{
     background: var(--bg);
   }
 
-  #screen-sector > div {
-    width: 100%; max-width: 860px; box-sizing: border-box;
+  #screen-sector > div:not(.sector-cta) {
+    width: 100%; max-width: 860px;
   }
 
   .sector-grid {
@@ -2859,16 +2859,16 @@ body::after{
     box-shadow: 0 12px 32px rgba(0,0,0,.3);
   }
 
-  .sector-field {
-    padding: var(--sp2) 32px;
+  .sector-field, .sector-mode-row {
+    padding: var(--sp2) 32px; max-width: 860px; margin: 0 auto; width: 100%;
   }
 
   .sector-mode-row {
-    padding: 12px 32px; margin-bottom: var(--sp2);
+    padding: 12px var(--sp2); margin: 0 32px var(--sp2); width: auto; max-width: none;
   }
 
   .sector-cta {
-    padding: 0 32px var(--sp3);
+    padding: 0 32px var(--sp3); max-width: 860px; margin: 0 auto; width: 100%;
   }
 
   /* ══════════════════════════════════════════
