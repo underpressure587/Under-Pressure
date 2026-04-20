@@ -838,7 +838,7 @@ async function _iniciarPollingGlobal(uid) {
         _esconderOverlayManutencao();
       }
     };
-    _tickLeve();
+  await _tickLeve();
     _globalPollInterval = setInterval(_tickLeve, 5000);
     return;
   }
@@ -906,7 +906,7 @@ async function _iniciarPollingGlobal(uid) {
     } catch(e) { /* ignora erros de rede temporários */ }
   };
 
-  _tick(); // executa imediatamente no login
+  await _tick(); // executa imediatamente no login — await garante que o admin check termine antes de mostrar a tela
   _globalPollInterval = setInterval(_tick, 5000);
 }
 
@@ -2736,25 +2736,10 @@ async function _loginOk(player) {
   // Verifica se é admin antes de qualquer outra coisa
   await _atualizarBotaoAdmin(player.uid);
 
-  // Verifica manutenção — admin e UIDs liberados bypassam, usuários comuns são bloqueados
-  if (window.ADMIN) {
-    const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
-    _atualizarModoSala(cfg);
-    if (cfg?.manutencao && !_isAdmin) {
-      const liberado = Array.isArray(cfg.liberados) && player?.uid && cfg.liberados.includes(player.uid);
-      if (!liberado) {
-        mostrarTela('screen-home');
-        setTimeout(() => _mostrarOverlayManutencao(cfg?.mensagem || ''), 500);
-        return;
-      }
-    }
-    if (cfg?.mensagem) {
-      window._mensagemGlobal = cfg.mensagem;
-    }
-  }
-
-  // Inicia o polling universal (ban + manutenção + mensagem global)
-  _iniciarPollingGlobal(player.uid);
+  // Inicia o polling universal (ban + manutenção + mensagem global).
+  // await garante que o primeiro _tick (com re-check de admin) termine ANTES de
+  // mostrar a tela home — elimina o flash do overlay de manutenção para admins.
+  await _iniciarPollingGlobal(player.uid);
   // Inicia inbox em tempo real
   _iniciarInbox(player.uid);
   // Boas-vindas para novo jogador (verifica se é novo)
