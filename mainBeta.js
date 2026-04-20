@@ -842,7 +842,7 @@ async function _iniciarPollingGlobal(uid) {
     if (!_isAdmin && uid) {
       console.log('[Polling] ⏳ Aguardando _isAdmin ser resolvido antes do primeiro tick...');
       let tAdmin = 0;
-      while (!window._isAdmin && tAdmin < 120) { // até 12s
+      while (!window._isAdmin && tAdmin < 200) { // até 20s
         await new Promise(r => setTimeout(r, 100));
         tAdmin++;
         if (window._isAdmin === true) break;
@@ -854,6 +854,20 @@ async function _iniciarPollingGlobal(uid) {
     const _tickLeve = async () => {
       // Sincroniza com window._isAdmin (pode ter sido atualizado após boot)
       if (window._isAdmin) _isAdmin = true;
+
+      // Se window.ADMIN já carregou e ainda não confirmamos o admin, tenta agora
+      if (!_isAdmin && uid && window.ADMIN) {
+        console.log('[TickLeve] 🔄 window.ADMIN disponível — re-verificando admin uid:', uid);
+        const recheck = await window.ADMIN.verificarAdmin(uid).catch(() => undefined);
+        if (recheck === true) {
+          _isAdmin = true;
+          window._isAdmin = true;
+          console.log('[TickLeve] ✅ Admin confirmado via recheck — overlay bloqueado');
+        } else {
+          console.log('[TickLeve] recheck resultado:', recheck, '— _isAdmin permanece false');
+        }
+      }
+
       const cfg = await _verificarManutencaoInicial().catch(() => null);
       if (!cfg) return;
       console.log('[TickLeve] cfg.manutencao:', cfg.manutencao, '| _isAdmin:', _isAdmin);
@@ -2811,77 +2825,81 @@ async function _loginOk(player) {
 async function _atualizarBotaoAdmin(uid) {
   if (!uid) return;
   console.log('[AdminCheck] 🔍 Iniciando verificação de admin para uid:', uid, '| timestamp:', Date.now());
-  try {
-    // Aguarda window.ADMIN carregar antes de verificar (evita _isAdmin=false por race condition)
-    if (!window.ADMIN) {
-      console.log('[AdminCheck] ⏳ window.ADMIN não disponível ainda — aguardando até 5s...');
-      let t = 0;
-      while (!window.ADMIN && t < 50) {
-        await new Promise(r => setTimeout(r, 100));
-        t++;
-      }
-      if (!window.ADMIN) {
-        console.warn('[AdminCheck] ❌ window.ADMIN não carregou após 5s — _isAdmin ficará false. CAUSA PROVÁVEL DO BUG: admin.js não carregou ou carregou tarde demais.');
-      } else {
-        console.log('[AdminCheck] ✅ window.ADMIN disponível após', t * 100, 'ms');
-      }
-    } else {
-      console.log('[AdminCheck] ✅ window.ADMIN já disponível imediatamente');
+
+  // ── Passo 1: obter token Firebase (necessário para qualquer caminho) ──────
+  let _tok = null;
+  if (window.GSPAuth?.getToken) {
+    console.log('[AdminCheck] 🔑 Aguardando token Firebase...');
+    for (let i = 0; i < 20; i++) {
+      _tok = await window.GSPAuth.getToken().catch(() => null);
+      if (_tok) { console.log('[AdminCheck] ✅ Token obtido na tentativa', i + 1); break; }
+      await new Promise(r => setTimeout(r, 500));
     }
-    // Garante que o token Firebase esteja disponível antes de chamar verificarAdmin.
-    if (window.GSPAuth?.getToken) {
-      console.log('[AdminCheck] 🔑 Aguardando token Firebase...');
-      let tok = null;
-      for (let i = 0; i < 20; i++) {
-        tok = await window.GSPAuth.getToken().catch((e) => {
-          console.warn('[AdminCheck] ⚠️ getToken tentativa', i+1, 'falhou:', e?.message);
-          return null;
-        });
-        if (tok) {
-          console.log('[AdminCheck] ✅ Token Firebase obtido na tentativa', i+1);
-          break;
-        }
-        await new Promise(r => setTimeout(r, 500));
-      }
-      if (!tok) {
-        console.warn('[AdminCheck] ❌ Token não disponível após 10s — _isAdmin permanece false. CAUSA PROVÁVEL DO BUG: falha na autenticação Firebase.');
-        _isAdmin = false;
-        window._isAdmin = false;
-        _mostrarBotaoAdmin();
-        return;
-      }
-    } else {
-      console.warn('[AdminCheck] ⚠️ window.GSPAuth?.getToken não disponível — pulando verificação de token');
-    }
-    console.log('[AdminCheck] 📡 Chamando verificarAdmin...');
+  }
+  if (!_tok) {
+    console.warn('[AdminCheck] ❌ Token não disponível — _isAdmin permanece false.');
+    _isAdmin = false; window._isAdmin = false; _mostrarBotaoAdmin(); return;
+  }
+
+  // ── Passo 2: verificação via window.ADMIN (aguarda até 5s) ───────────────
+  if (!window.ADMIN) {
+    console.log('[AdminCheck] ⏳ window.ADMIN não disponível — aguardando até 5s...');
+    let t = 0;
+    while (!window.ADMIN && t < 50) { await new Promise(r => setTimeout(r, 100)); t++; }
+    if (window.ADMIN) console.log('[AdminCheck] ✅ window.ADMIN disponível após', t * 100, 'ms');
+  }
+
+  if (window.ADMIN) {
+    // Caminho normal: usa admin.js com retry para tolerar falhas transitórias
     let resultado;
     for (let tentativa = 1; tentativa <= 5; tentativa++) {
-      resultado = await window.ADMIN?.verificarAdmin(uid).catch(e => {
-        console.warn('[AdminCheck] ⚠️ verificarAdmin tentativa', tentativa, 'lançou exceção:', e?.message);
+      resultado = await window.ADMIN.verificarAdmin(uid).catch(e => {
+        console.warn('[AdminCheck] ⚠️ verificarAdmin tentativa', tentativa, 'exceção:', e?.message);
         return undefined;
       });
-      console.log('[AdminCheck] 🔄 verificarAdmin tentativa', tentativa, '→ resultado:', resultado);
-      if (resultado === true) break;   // confirmado admin
-      if (resultado === false) break;  // confirmado não-admin
-      // resultado === undefined: Firestore falhou, tenta novamente
-      console.warn('[AdminCheck] ⚠️ verificarAdmin retornou undefined na tentativa', tentativa, '— aguardando 1s e repetindo...');
+      console.log('[AdminCheck] 🔄 tentativa', tentativa, '→', resultado);
+      if (resultado === true || resultado === false) break;
+      console.warn('[AdminCheck] ⚠️ resultado undefined na tentativa', tentativa, '— aguardando 1s...');
       await new Promise(r => setTimeout(r, 1000));
     }
     _isAdmin = resultado === true;
     window._isAdmin = _isAdmin;
-    console.log('[AdminCheck] 🏁 verificarAdmin resultado final:', resultado, '→ _isAdmin =', _isAdmin);
-  } catch(e) {
-    console.warn('[AdminCheck] ❌ verificarAdmin lançou exceção:', e?.message, e);
-    _isAdmin = false;
-    window._isAdmin = false;
+    console.log('[AdminCheck] 🏁 Resultado final (via ADMIN):', resultado, '→ _isAdmin =', _isAdmin);
+  } else {
+    // ── Passo 3: fallback REST direto — admin.js não carregou ───────────────
+    console.warn('[AdminCheck] ⚠️ window.ADMIN indisponível — usando fallback REST direto para verificar admin.');
+    const FS = 'https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents';
+    let resultado = false;
+    for (let tentativa = 1; tentativa <= 5; tentativa++) {
+      try {
+        const r = await fetch(`${FS}/config/admins`, {
+          headers: { Authorization: `Bearer ${_tok}` }
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const doc = await r.json();
+        const fields = doc?.fields;
+        if (!fields) throw new Error('doc.fields indefinido');
+        const uids  = (fields.uids?.arrayValue?.values  || []).map(v => v.stringValue);
+        const owner = fields.owner?.stringValue || '';
+        resultado = uids.includes(uid) || uid === owner;
+        console.log('[AdminCheck] ✅ Fallback REST tentativa', tentativa, '| uids:', uids, '| owner:', owner, '| resultado:', resultado);
+        break; // sucesso
+      } catch(e) {
+        console.warn('[AdminCheck] ❌ Fallback REST tentativa', tentativa, 'falhou:', e?.message);
+        if (tentativa < 5) await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+    _isAdmin = resultado === true;
+    window._isAdmin = _isAdmin;
+    console.log('[AdminCheck] 🏁 Resultado final (via REST fallback):', resultado, '→ _isAdmin =', _isAdmin);
   }
+
   _mostrarBotaoAdmin();
-  // Se confirmado admin, garante que engine não fique pausado por manutenção
   if (_isAdmin) {
-    console.log('[AdminCheck] 🛡️ Admin confirmado — escondendo overlay de manutenção se visível');
+    console.log('[AdminCheck] 🛡️ Admin confirmado — escondendo overlay de manutenção se visível.');
     _esconderOverlayManutencao();
   } else {
-    console.warn('[AdminCheck] ⚠️ Usuário NÃO reconhecido como admin. Se era para ser admin, verifique os logs acima.');
+    console.warn('[AdminCheck] ⚠️ Usuário NÃO reconhecido como admin.');
   }
 }
 

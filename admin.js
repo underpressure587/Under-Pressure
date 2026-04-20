@@ -101,22 +101,55 @@ const ADMIN = (() => {
   /* ── VERIFICAR ADMIN ────────────────────────────── */
   async function verificarAdmin(uid) {
     if (!uid) { console.warn('[ADMIN] verificarAdmin chamado sem uid'); return false; }
+
+    // — Tentativa 1: RTDB (mais rápido e não sofre de indisponibilidade do Firestore) —
+    if (window.GSPRtdb) {
+      try {
+        const { db, ref, onValue } = window.GSPRtdb;
+        const DB_URL = 'https://under-pressure-49320-default-rtdb.firebaseio.com';
+        const result = await new Promise((resolve, reject) => {
+          const admRef = ref(db, 'config/admins');
+          const unsub = onValue(admRef, (snapshot) => {
+            unsub(); // leitura única
+            resolve(snapshot.val());
+          }, (err) => {
+            unsub();
+            reject(err);
+          }, { onlyOnce: true });
+        });
+        console.log('[ADMIN] verificarAdmin via RTDB — dados recebidos:', JSON.stringify(result));
+        if (result) {
+          const uids  = Array.isArray(result.uids)  ? result.uids  : [];
+          const owner = typeof result.owner === 'string' ? result.owner : '';
+          _adminUids  = uids;
+          _adminOwner = owner;
+          const isAdmin = !!(uids.includes(uid) || uid === owner);
+          console.log('[ADMIN] verificarAdmin RTDB | uid:', uid, '| uids:', uids, '| owner:', owner, '| isAdmin:', isAdmin);
+          return isAdmin;
+        }
+        console.warn('[ADMIN] verificarAdmin RTDB: nó config/admins vazio — tentando Firestore...');
+      } catch(e) {
+        console.warn('[ADMIN] verificarAdmin RTDB falhou:', e?.message, '— tentando Firestore...');
+      }
+    }
+
+    // — Tentativa 2: Firestore REST (fallback) —
     try {
       const doc = await _get('config/admins');
-      console.log('[ADMIN] config/admins doc recebido:', JSON.stringify(doc?.fields));
+      console.log('[ADMIN] verificarAdmin via Firestore — doc recebido:', JSON.stringify(doc?.fields));
       if (!doc || !doc.fields) {
-        console.warn('[ADMIN] verificarAdmin: doc ou doc.fields indefinido — retornando false');
+        console.warn('[ADMIN] verificarAdmin Firestore: doc.fields indefinido — retornando false');
         return false;
       }
       const uids  = _val(doc.fields?.uids)  || [];
       const owner = _val(doc.fields?.owner) || '';
       _adminUids  = uids;
       _adminOwner = owner;
-      const isAdmin = !!(uids.includes(uid) || uid === owner); // garante boolean
-      console.log('[ADMIN] verificarAdmin | uid:', uid, '| uids na lista:', uids, '| owner:', owner, '| resultado:', isAdmin);
+      const isAdmin = !!(uids.includes(uid) || uid === owner);
+      console.log('[ADMIN] verificarAdmin Firestore | uid:', uid, '| uids:', uids, '| owner:', owner, '| isAdmin:', isAdmin);
       return isAdmin;
     } catch(e) {
-      console.error('[ADMIN] Erro ao verificar admin:', e?.message, e);
+      console.error('[ADMIN] verificarAdmin Firestore também falhou:', e?.message, e);
       return false;
     }
   }
@@ -420,6 +453,21 @@ const ADMIN = (() => {
     return map[s] || '🏢';
   }
 
+  /* ── RTDB SYNC: mantém config/admins no RTDB sincronizado ── */
+  async function _rtdbSyncAdmins(uids, owner) {
+    if (!window.GSPRtdb) return;
+    try {
+      const { db, ref, set } = window.GSPRtdb;
+      await set(ref(db, 'config/admins'), {
+        uids:  Array.isArray(uids)          ? uids  : _adminUids,
+        owner: typeof owner === 'string'    ? owner : _adminOwner,
+      });
+      console.log('[ADMIN] RTDB config/admins sincronizado | uids:', uids);
+    } catch(e) {
+      console.warn('[ADMIN] _rtdbSyncAdmins falhou (não crítico):', e?.message);
+    }
+  }
+
   /* ── CONFIGURAÇÕES GLOBAIS ──────────────────────── */
   async function adicionarAdmin() {
     const input = document.getElementById('admin-novo-uid');
@@ -438,6 +486,7 @@ const ADMIN = (() => {
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       _adminUids = uids;
+      await _rtdbSyncAdmins(uids, _adminOwner);
       if (input) input.value = '';
       _showAdminToast('✅ Admin adicionado!');
       _registrarAuditoria(`Admin adicionado: ${uid.slice(0,8)}`);
@@ -470,6 +519,7 @@ const ADMIN = (() => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       _adminUids = uids;
       _adminPermissoes = novasPermissoes;
+      await _rtdbSyncAdmins(uids, _adminOwner);
       _showAdminToast('Admin removido.');
       _registrarAuditoria(`Admin removido: ${uid.slice(0,8)}`);
       _renderAdminLista();
@@ -1829,6 +1879,8 @@ const ADMIN = (() => {
       _adminUids      = _val(doc.fields?.uids)        || [];
       _adminOwner     = _val(doc.fields?.owner)       || '';
       _adminPermissoes = _val(doc.fields?.permissoes) || {};
+      // Sincroniza RTDB sempre que o painel carrega — mantém os dados atualizados para verificarAdmin rápido
+      await _rtdbSyncAdmins(_adminUids, _adminOwner);
       _renderAdminLista();
       _aplicarPermissoesNav();
     } catch(e) { console.warn('[ADMIN] carregarAdmins:', e); }
