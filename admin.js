@@ -100,15 +100,19 @@ const ADMIN = (() => {
 
   /* ── VERIFICAR ADMIN ────────────────────────────── */
   async function verificarAdmin(uid) {
+    if (!uid) { console.warn('[ADMIN] verificarAdmin chamado sem uid'); return false; }
     try {
       const doc = await _get('config/admins');
+      console.log('[ADMIN] config/admins doc recebido:', JSON.stringify(doc?.fields));
       const uids  = _val(doc.fields?.uids)  || [];
       const owner = _val(doc.fields?.owner) || '';
       _adminUids  = uids;
       _adminOwner = owner;
-      return uids.includes(uid) || uid === owner;
+      const isAdmin = uids.includes(uid) || uid === owner;
+      console.log('[ADMIN] verificarAdmin | uid:', uid, '| uids na lista:', uids, '| owner:', owner, '| resultado:', isAdmin);
+      return isAdmin; // sempre boolean
     } catch(e) {
-      console.error('[ADMIN] Erro ao verificar admin:', e);
+      console.error('[ADMIN] Erro ao verificar admin:', e?.message, e);
       return false;
     }
   }

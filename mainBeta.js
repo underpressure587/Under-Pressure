@@ -835,25 +835,42 @@ async function _iniciarPollingGlobal(uid) {
   }
   if (!window.ADMIN) {
     // Fallback: polling leve via REST público — não depende de admin.js
-    console.warn('[Polling] ⚠️ FALLBACK ATIVO — window.ADMIN não carregou. Admin será tratado como usuário comum neste path! _isAdmin atual:', _isAdmin);
+    console.warn('[Polling] ⚠️ FALLBACK ATIVO — window.ADMIN não carregou. _isAdmin atual:', _isAdmin);
+
+    // Aguarda _atualizarBotaoAdmin terminar — ela roda em paralelo e pode ainda
+    // estar buscando o token Firebase. Esperamos até 12s antes do primeiro tick.
+    if (!_isAdmin && uid) {
+      console.log('[Polling] ⏳ Aguardando _isAdmin ser resolvido antes do primeiro tick...');
+      let tAdmin = 0;
+      while (!window._isAdmin && tAdmin < 120) { // até 12s
+        await new Promise(r => setTimeout(r, 100));
+        tAdmin++;
+        if (window._isAdmin === true) break;
+      }
+      _isAdmin = window._isAdmin || false;
+      console.log('[Polling] Aguardou', tAdmin * 100, 'ms — _isAdmin final:', _isAdmin);
+    }
+
     const _tickLeve = async () => {
+      // Sincroniza com window._isAdmin (pode ter sido atualizado após boot)
+      if (window._isAdmin) _isAdmin = true;
       const cfg = await _verificarManutencaoInicial().catch(() => null);
       if (!cfg) return;
-      console.log('[TickLeve] cfg.manutencao:', cfg.manutencao, '| _isAdmin:', _isAdmin, '| window._isAdmin:', window._isAdmin);
+      console.log('[TickLeve] cfg.manutencao:', cfg.manutencao, '| _isAdmin:', _isAdmin);
       if (cfg.manutencao && !_isAdmin) {
-        console.warn('[TickLeve] 🚨 Mostrando overlay de manutenção (fallback). Se este for admin, é aqui o bug — _isAdmin=false no fallback path.');
+        console.warn('[TickLeve] 🚨 Mostrando overlay de manutenção (fallback)');
         const btnSalvar = document.getElementById('manut-btn-salvar');
         const emJogo = !!BetaState.get();
         if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
         _mostrarOverlayManutencao(cfg.mensagem || '');
       } else {
         if (cfg.manutencao && _isAdmin) {
-          console.log('[TickLeve] ✅ Manutenção ativa mas _isAdmin=true — overlay não exibido');
+          console.log('[TickLeve] ✅ Manutenção ativa mas _isAdmin=true — overlay bloqueado');
         }
         _esconderOverlayManutencao();
       }
     };
-  await _tickLeve();
+    await _tickLeve();
     _globalPollInterval = setInterval(_tickLeve, 5000);
     return;
   }
