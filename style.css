@@ -2864,7 +2864,7 @@ body::after{
   }
 
   .sector-mode-row {
-    margin: 0 auto var(--sp2);
+    margin: 0 auto var(--sp2); padding: 12px 32px;
   }
 
   .sector-cta {
