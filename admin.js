@@ -102,9 +102,11 @@ const ADMIN = (() => {
   async function verificarAdmin(uid) {
     try {
       const doc = await _get('config/admins');
-      const uids = _val(doc.fields?.uids) || [];
-      _adminUids = uids;
-      return uids.includes(uid);
+      const uids  = _val(doc.fields?.uids)  || [];
+      const owner = _val(doc.fields?.owner) || '';
+      _adminUids  = uids;
+      _adminOwner = owner;
+      return uids.includes(uid) || uid === owner;
     } catch(e) {
       console.error('[ADMIN] Erro ao verificar admin:', e);
       return false;
