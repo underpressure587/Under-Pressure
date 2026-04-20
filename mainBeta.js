@@ -2767,6 +2767,14 @@ async function _loginOk(player) {
 async function _atualizarBotaoAdmin(uid) {
   if (!uid) return;
   try {
+    // Aguarda window.ADMIN carregar antes de verificar (evita _isAdmin=false por race condition)
+    if (!window.ADMIN) {
+      let t = 0;
+      while (!window.ADMIN && t < 50) {
+        await new Promise(r => setTimeout(r, 100));
+        t++;
+      }
+    }
     _isAdmin = await window.ADMIN?.verificarAdmin(uid) || false;
     window._isAdmin = _isAdmin;
   } catch(e) {
