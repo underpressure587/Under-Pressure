@@ -2154,7 +2154,7 @@ body::after{
 /* Modo Treino row */
 .sector-mode-row{
   display:flex; align-items:center; justify-content:space-between;
-  margin:0 var(--sp2) var(--sp2); padding:12px var(--sp2);
+  padding:12px var(--sp2); margin-bottom:var(--sp2);
   background:var(--bg2); border:1px solid var(--line2); border-radius:var(--r2);
 }
 .sector-mode-info{ flex:1; margin-right:12px; }
