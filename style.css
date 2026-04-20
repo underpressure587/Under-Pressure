@@ -2840,7 +2840,7 @@ body::after{
     background: var(--bg);
   }
 
-  #screen-sector > div {
+  #screen-sector > div:not(.sector-mode-row) {
     width: min(100%, 860px);
   }
 
@@ -2864,9 +2864,8 @@ body::after{
   }
 
   .sector-mode-row {
-    align-self: stretch;
-    margin: 0 32px var(--sp2);
-    width: auto;
+    width: calc(min(100%, 860px) - 64px);
+    margin: 0 0 var(--sp2);
   }
 
   .sector-cta {
