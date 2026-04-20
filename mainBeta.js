@@ -409,6 +409,7 @@ function confirmarNome() {
 
 function sair() {
   _pararPollingGlobal();
+  _pararInbox();
   if (_guestPollInterval) { clearInterval(_guestPollInterval); _guestPollInterval = null; }
   _removerPresenca(); // remove presença do RTDB antes de limpar _player
   LS.remove(SK.PLAYER);
@@ -2759,6 +2760,8 @@ async function _loginOk(player) {
 
   // Inicia o polling universal (ban + manutenção + mensagem global)
   _iniciarPollingGlobal(player.uid);
+  // Inicia inbox em tempo real
+  _iniciarInbox(player.uid);
 
   // Entra no painel imediatamente — sem esperar Firestore
   _restaurarSala();
@@ -3269,6 +3272,145 @@ async function removerMembroGrupo(uid, nomeGrupo) {
 }
 
 
+
+/* ════════════════════════════════════════════════════
+   CAIXA DE ENTRADA (INBOX) — TEMPO REAL VIA FIRESTORE
+════════════════════════════════════════════════════ */
+let _inboxMensagens   = [];
+let _inboxUnsubscribe = null;
+const _FS_BASE = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents`;
+
+function _iniciarInbox(uid) {
+  if (!uid) return;
+  // Polling a cada 15s para detectar novas mensagens (sem SDK)
+  _pararInbox();
+  _buscarMensagens(uid);
+  _inboxUnsubscribe = setInterval(() => _buscarMensagens(uid), 15000);
+}
+
+function _pararInbox() {
+  if (_inboxUnsubscribe) { clearInterval(_inboxUnsubscribe); _inboxUnsubscribe = null; }
+}
+
+async function _buscarMensagens(uid) {
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    // Busca subcoleção mensagens
+    const r = await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens`, {
+      headers: { Authorization: `Bearer ${tok}` }
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    const docs = (data.documents || []);
+    _inboxMensagens = docs.map(doc => {
+      const f = doc.fields || {};
+      const _v = v => {
+        if (!v) return null;
+        if (v.stringValue  !== undefined) return v.stringValue;
+        if (v.integerValue !== undefined) return parseInt(v.integerValue);
+        if (v.booleanValue !== undefined) return v.booleanValue;
+        return null;
+      };
+      return {
+        id:    doc.name.split('/').pop(),
+        texto: _v(f.texto),
+        de:    _v(f.de) || 'admin',
+        ts:    _v(f.ts) || 0,
+        lida:  _v(f.lida) || false,
+      };
+    }).sort((a, b) => b.ts - a.ts);
+    _atualizarBadgeInbox();
+  } catch(e) { /* silencioso */ }
+}
+
+function _atualizarBadgeInbox() {
+  const naoLidas = _inboxMensagens.filter(m => !m.lida).length;
+  const btn   = document.getElementById('btn-inbox');
+  const badge = document.getElementById('inbox-badge');
+  if (!btn) return;
+  if (_inboxMensagens.length > 0) {
+    btn.style.display = '';
+    if (badge) {
+      badge.style.display = naoLidas > 0 ? '' : 'none';
+      badge.textContent   = naoLidas > 9 ? '9+' : String(naoLidas);
+    }
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+function abrirInbox() {
+  const overlay = document.getElementById('overlay-inbox');
+  const lista   = document.getElementById('inbox-lista');
+  if (!overlay || !lista) return;
+  if (!_inboxMensagens.length) {
+    lista.innerHTML = '<div style="color:var(--t3,#666);font-size:.85rem;text-align:center;padding:20px 0">Nenhuma mensagem.</div>';
+  } else {
+    lista.innerHTML = _inboxMensagens.map(m => {
+      const data = m.ts ? new Date(m.ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+      return `
+        <div data-msg-id="${m.id}" style="background:${m.lida ? 'var(--bg3,#222)' : 'rgba(234,179,8,.08)'};border:1px solid ${m.lida ? 'var(--line2,#333)' : 'rgba(234,179,8,.3)'};border-radius:10px;padding:12px 14px;cursor:pointer" onclick="BetaUI._lerMensagem('${m.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">
+            <span style="font-size:.7rem;color:var(--t3,#666);background:var(--bg3,#222);padding:2px 7px;border-radius:999px">🛡️ Admin</span>
+            <span style="font-size:.68rem;color:var(--t3,#666);flex-shrink:0">${data}</span>
+          </div>
+          <div style="font-size:.85rem;color:${m.lida ? 'var(--t2,#aaa)' : 'var(--t1,#fff)'};line-height:1.4">${m.texto || ''}</div>
+          ${!m.lida ? '<div style="font-size:.65rem;color:#eab308;margin-top:6px;font-weight:600">● Não lida</div>' : ''}
+        </div>`;
+    }).join('');
+  }
+  overlay.style.display = 'flex';
+  // Marca como lidas ao abrir
+  if (_player?.uid) _marcarTodasLidasFirestore(_player.uid);
+}
+
+function fecharInbox() {
+  const overlay = document.getElementById('overlay-inbox');
+  if (overlay) overlay.style.display = 'none';
+}
+
+async function _lerMensagem(msgId) {
+  if (!_player?.uid) return;
+  const msg = _inboxMensagens.find(m => m.id === msgId);
+  if (!msg || msg.lida) return;
+  msg.lida = true;
+  _atualizarBadgeInbox();
+  // Atualiza no Firestore
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    await fetch(`${_FS_BASE}/usuarios/${_player.uid}/mensagens/${msgId}?updateMask.fieldPaths=lida`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { lida: { booleanValue: true } } })
+    });
+  } catch(e) { /* silencioso */ }
+}
+
+async function marcarTodasLidas() {
+  if (!_player?.uid) return;
+  _inboxMensagens.forEach(m => { m.lida = true; });
+  _atualizarBadgeInbox();
+  fecharInbox();
+  await _marcarTodasLidasFirestore(_player.uid);
+}
+
+async function _marcarTodasLidasFirestore(uid) {
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    const naoLidas = _inboxMensagens.filter(m => !m.lida);
+    for (const msg of naoLidas) {
+      fetch(`${_FS_BASE}/usuarios/${uid}/mensagens/${msg.id}?updateMask.fieldPaths=lida`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { lida: { booleanValue: true } } })
+      }).catch(() => {});
+    }
+  } catch(e) { /* silencioso */ }
+}
+
 window.BetaUI = {
   irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
@@ -3309,6 +3451,8 @@ window.BetaUI = {
   anfitriaoEncerrarSala:() => SalaMode.anfEncerrar(),
   // Modo de jogo
   abrirModalModo, fecharModalModo, escolherModoSolo, escolherModoGrupo,
+  // Inbox
+  abrirInbox, fecharInbox, marcarTodasLidas, _lerMensagem,
   // Manutenção
   manutencaoSalvarSair,
   // Criar sala (admin)

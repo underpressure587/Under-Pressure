@@ -267,6 +267,10 @@
           <span id="firebase-status-dot" class="firebase-dot firebase-dot--connecting"></span>
           <span id="firebase-status-label" class="firebase-status-label">Conectando</span>
         </div>
+        <button class="btn-ghost btn-icon" id="btn-inbox" onclick="BetaUI.abrirInbox()" title="Caixa de Entrada" style="position:relative;display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span id="inbox-badge" style="display:none;position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:.55rem;font-weight:700;border-radius:999px;min-width:14px;height:14px;line-height:14px;text-align:center;padding:0 3px"></span>
+        </button>
         <button class="btn-ghost" onclick="BetaUI.openGlossary()" style="color:var(--s-text);font-weight:700">?</button>
         <button class="btn-ghost btn-icon" onclick="BetaUI.openSettings()" title="Configurações"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
       </div>
@@ -626,10 +630,11 @@
           <input id="admin-busca" class="admin-input" placeholder="Buscar por nome ou e-mail..." oninput="ADMIN.carregarJogadores(this.value)">
           <button class="admin-btn admin-btn-csv" onclick="ADMIN.exportarCSVJogadores()" title="Exportar CSV">⬇ CSV</button>
         </div>
-        <div class="admin-filtros-row">
+        <div class="admin-filtros-row" style="flex-wrap:wrap;gap:6px">
           <button class="admin-filtro-btn active" data-filtro="todos"   onclick="ADMIN.filtrarJogadores('todos')">Todos</button>
           <button class="admin-filtro-btn"        data-filtro="ativos"  onclick="ADMIN.filtrarJogadores('ativos')">Ativos</button>
           <button class="admin-filtro-btn"        data-filtro="banidos" onclick="ADMIN.filtrarJogadores('banidos')">Banidos</button>
+          <button class="admin-btn" style="margin-left:auto;background:var(--bg3);border:1px solid var(--line2);color:var(--t2);font-size:.75rem" onclick="ADMIN.abrirBroadcast()">📢 Msg para Todos</button>
         </div>
         <div id="admin-jogadores-lista"></div>
       </div>
@@ -863,6 +868,42 @@
       </div>
     </div>
 
+    <!-- Modal: Broadcast para Todos -->
+    <div id="admin-modal-broadcast" class="admin-modal-overlay" style="display:none">
+      <div class="admin-modal-card">
+        <div class="admin-modal-head">
+          <span class="admin-modal-title">📢 Mensagem para Todos os Jogadores</span>
+          <button class="admin-modal-close" onclick="ADMIN.fecharBroadcast()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="admin-modal-body">
+          <p style="font-size:.8rem;color:var(--t2);margin:0 0 12px">Esta mensagem será enviada para a caixa de entrada de <strong>todos os jogadores</strong> cadastrados.</p>
+          <textarea id="admin-broadcast-texto" placeholder="Digite a mensagem para todos os jogadores..." style="width:100%;min-height:100px;background:var(--bg3);border:1px solid var(--line2);border-radius:8px;color:var(--t1);padding:10px;font-size:.85rem;resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
+        </div>
+        <div class="admin-modal-foot">
+          <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2)" onclick="ADMIN.fecharBroadcast()">Cancelar</button>
+          <button class="admin-btn admin-btn-ok" onclick="ADMIN.confirmarBroadcast()">📨 Enviar para Todos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Enviar Mensagem (Admin) -->
+    <div id="admin-modal-inbox" class="admin-modal-overlay" style="display:none">
+      <div class="admin-modal-card">
+        <div class="admin-modal-head">
+          <span class="admin-modal-title">✉️ Enviar Mensagem</span>
+          <button class="admin-modal-close" onclick="ADMIN.fecharModalInbox()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="admin-modal-body">
+          <div id="admin-inbox-dest" style="font-size:.8rem;color:var(--t2);margin-bottom:12px;padding:8px 10px;background:var(--bg3);border-radius:8px;border:1px solid var(--line2)"></div>
+          <textarea id="admin-inbox-texto" placeholder="Digite sua mensagem para o jogador..." style="width:100%;min-height:100px;background:var(--bg3);border:1px solid var(--line2);border-radius:8px;color:var(--t1);padding:10px;font-size:.85rem;resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
+        </div>
+        <div class="admin-modal-foot">
+          <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2)" onclick="ADMIN.fecharModalInbox()">Cancelar</button>
+          <button class="admin-btn admin-btn-ok" onclick="ADMIN.enviarMensagemInbox()">📨 Enviar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast -->
     <div id="admin-toast" class="admin-toast" style="display:none"></div>
   </div>
@@ -870,6 +911,22 @@
 
 
 </div>
+  <!-- ══ OVERLAY: CAIXA DE ENTRADA DO JOGADOR ══ -->
+  <div id="overlay-inbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100002;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;backdrop-filter:blur(4px)">
+    <div style="background:var(--bg2,#1a1a2e);border-radius:16px;width:100%;max-width:420px;max-height:80vh;display:flex;flex-direction:column;border:1px solid var(--line2,#333)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line2,#333)">
+        <span style="font-weight:700;font-size:1rem;color:var(--t1,#fff)">📬 Caixa de Entrada</span>
+        <button onclick="BetaUI.fecharInbox()" style="background:none;border:none;cursor:pointer;color:var(--t2,#aaa);padding:4px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div id="inbox-lista" style="overflow-y:auto;flex:1;padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="color:var(--t3,#666);font-size:.85rem;text-align:center;padding:20px 0">Nenhuma mensagem.</div>
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid var(--line2,#333)">
+        <button onclick="BetaUI.marcarTodasLidas()" style="width:100%;background:var(--bg3,#222);border:1px solid var(--line2,#333);border-radius:8px;color:var(--t2,#aaa);padding:9px;font-size:.8rem;cursor:pointer">✅ Marcar todas como lidas</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ OVERLAY: CONFIRMAÇÃO DE SAÍDA ══ -->
   <div id="overlay-confirmar-saida" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100001;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)">
     <div class="confirmar-saida-card">

@@ -212,6 +212,7 @@ const ADMIN = (() => {
           </div>
           <div class="admin-jogador-acoes">
             <button class="admin-btn-sm" onclick="ADMIN.verHistoricoJogador('${j.uid}', '${(j.nome||'').replace(/'/g,"\'")}')">📋 Histórico</button>
+            <button class="admin-btn-sm" onclick="ADMIN.abrirModalInbox('${j.uid}', '${(j.nome||'').replace(/'/g,"\\'")}')">✉️ Msg</button>
             <button class="admin-btn-sm ${j.banido ? 'admin-btn-ok' : 'admin-btn-danger'}" onclick="ADMIN.abrirModalBan('${j.uid}', '${(j.nome||'').replace(/'/g,"\'")}', ${!!j.banido})">
               ${j.banido ? '✅ Desbanir' : '🚫 Banir'}
             </button>
@@ -825,6 +826,101 @@ const ADMIN = (() => {
       btns?.forEach(b => { b.disabled = false; });
     }
   }
+
+  /* ── INBOX (MENSAGENS PARA JOGADOR) ─────────────── */
+  let _inboxUid = '';
+  let _inboxNome = '';
+
+  function abrirModalInbox(uid, nome) {
+    _inboxUid = uid;
+    _inboxNome = nome || uid;
+    const modal = document.getElementById('admin-modal-inbox');
+    const dest  = document.getElementById('admin-inbox-dest');
+    const txt   = document.getElementById('admin-inbox-texto');
+    if (!modal) return;
+    if (dest) dest.innerHTML = `Para: <strong style="color:var(--t1)">${_inboxNome}</strong>`;
+    if (txt) txt.value = '';
+    modal.style.display = 'flex';
+  }
+
+  function fecharModalInbox() {
+    const modal = document.getElementById('admin-modal-inbox');
+    if (modal) modal.style.display = 'none';
+    _inboxUid  = '';
+    _inboxNome = '';
+  }
+
+  async function enviarMensagemInbox() {
+    const texto = document.getElementById('admin-inbox-texto')?.value?.trim();
+    if (!texto) { _showAdminToast('Digite uma mensagem.', true); return; }
+    if (!_inboxUid) { _showAdminToast('Destinatário inválido.', true); return; }
+    try {
+      const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+      await _patch(`usuarios/${_inboxUid}/mensagens/${msgId}`, {
+        texto:     { stringValue: texto },
+        de:        { stringValue: 'admin' },
+        ts:        { integerValue: String(Date.now()) },
+        lida:      { booleanValue: false },
+      });
+      _showAdminToast(`✅ Mensagem enviada para ${_inboxNome}!`);
+      fecharModalInbox();
+    } catch(e) {
+      _showAdminToast('Erro ao enviar: ' + e.message, true);
+    }
+  }
+
+  async function enviarMensagemTodos(texto) {
+    if (!texto) return;
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'usuarios' }],
+          select: { fields: [{ fieldPath: 'nome' }] }
+        }
+      });
+      const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
+      let ok = 0;
+      for (const uid of uids) {
+        try {
+          const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+          await _patch(`usuarios/${uid}/mensagens/${msgId}`, {
+            texto:  { stringValue: texto },
+            de:     { stringValue: 'admin' },
+            ts:     { integerValue: String(Date.now()) },
+            lida:   { booleanValue: false },
+          });
+          ok++;
+        } catch(e) { /* continua */ }
+      }
+      _showAdminToast(`✅ Mensagem enviada para ${ok} jogadores!`);
+    } catch(e) {
+      _showAdminToast('Erro ao enviar broadcast: ' + e.message, true);
+    }
+  }
+
+
+  /* ── BROADCAST ──────────────────────────────────── */
+  function abrirBroadcast() {
+    const modal = document.getElementById('admin-modal-broadcast');
+    const txt   = document.getElementById('admin-broadcast-texto');
+    if (!modal) return;
+    if (txt) txt.value = '';
+    modal.style.display = 'flex';
+  }
+
+  function fecharBroadcast() {
+    const modal = document.getElementById('admin-modal-broadcast');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function confirmarBroadcast() {
+    const texto = document.getElementById('admin-broadcast-texto')?.value?.trim();
+    if (!texto) { _showAdminToast('Digite uma mensagem.', true); return; }
+    fecharBroadcast();
+    _showAdminToast('Enviando para todos...');
+    await enviarMensagemTodos(texto);
+  }
+
 
   function fecharModalBan() {
     const modal = document.getElementById('admin-modal-ban');
@@ -1836,6 +1932,8 @@ const ADMIN = (() => {
     adicionarAdmin, removerAdmin, carregarAdmins, abrirPermissoes, salvarPermissoes,
     limparAuditLog,
     fecharModal,
+    abrirModalInbox, fecharModalInbox, enviarMensagemInbox, enviarMensagemTodos,
+    abrirBroadcast, fecharBroadcast, confirmarBroadcast,
     toggleDropdown, selecionarSetor,
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
     abrirModalBan, fecharModalBan, confirmarBan, selecionarMotivo, _atualizarContadorDetalhe,
