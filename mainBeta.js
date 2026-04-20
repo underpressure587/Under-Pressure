@@ -827,7 +827,7 @@ async function _iniciarPollingGlobal(uid) {
     const _tickLeve = async () => {
       const cfg = await _verificarManutencaoInicial().catch(() => null);
       if (!cfg) return;
-      if (cfg.manutencao) {
+      if (cfg.manutencao && !_isAdmin) {
         const btnSalvar = document.getElementById('manut-btn-salvar');
         const emJogo = !!BetaState.get();
         if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
@@ -2996,6 +2996,8 @@ async function escolherModoGrupo() {
 ════════════════════════════════════════════════════ */
 
 function _mostrarOverlayManutencao(msgExtra) {
+  // Admin nunca vê o overlay de manutenção
+  if (_isAdmin) return;
   const el = document.getElementById('overlay-manutencao');
   if (!el) return;
   // Mostra mensagem extra do admin se houver
