@@ -833,8 +833,6 @@ async function _iniciarPollingGlobal(uid) {
   } else {
     console.log('[Polling] ✅ window.ADMIN já disponível imediatamente. _isAdmin atual:', _isAdmin);
   }
-    }
-  }
   if (!window.ADMIN) {
     // Fallback: polling leve via REST público — não depende de admin.js
     console.warn('[Polling] ⚠️ FALLBACK ATIVO — window.ADMIN não carregou. Admin será tratado como usuário comum neste path! _isAdmin atual:', _isAdmin);
