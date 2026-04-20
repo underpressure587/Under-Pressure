@@ -268,25 +268,7 @@ async function _boot() {
   }
   _iniciarListenerAuth();
 
-  // Verifica manutenção antes de mostrar a tela de login
-  const _cfgPreLogin = await _verificarManutencaoInicial().catch(() => null);
-  if (_cfgPreLogin?.manutencao) {
-    mostrarTela('screen-login'); // mostra fundo para o overlay não ficar sobre tela preta
-    const btnSalvar = document.getElementById('manut-btn-salvar');
-    if (btnSalvar) btnSalvar.style.display = 'none';
-    _mostrarOverlayManutencao(_cfgPreLogin.mensagem || '');
-    // Polling leve para detectar fim da manutenção e liberar login
-    const _preLoginPoll = setInterval(async () => {
-      const cfg = await _verificarManutencaoInicial().catch(() => null);
-      if (cfg && !cfg.manutencao) {
-        clearInterval(_preLoginPoll);
-        _esconderOverlayManutencao();
-        if (btnSalvar) btnSalvar.style.display = '';
-      }
-    }, 5000);
-    return;
-  }
-
+  // Manutenção só é verificada APÓS login — não bloqueia a tela inicial
   mostrarTela('screen-login');
 }
 
