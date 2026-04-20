@@ -90,7 +90,9 @@ function _iniciarListenerAuth() {
         mostrarTela('screen-loading');
         _setLoadingMsg('Entrando no painel...', 'Bem-vindo de volta!', 90);
       }
-      _loginOk(user);
+      // IIFE async: onAuthChange nao suporta callback async,
+      // mas _loginOk precisa de await para verificar admin antes de checar manutencao
+      (async () => { await _loginOk(user); })();
     }
   });
 }
@@ -2629,13 +2631,13 @@ async function authLogin() {
   if (!senha)  { _authShowErr("auth-login-err", "Digite sua senha."); return; }
   if (!window.GSPAuth?.isReady()) {
     const nome = email.split("@")[0];
-    _loginOk({ nome, email, tipo: "user" });
+    await _loginOk({ nome, email, tipo: "user" });
     return;
   }
   _authSetLoading("login", true);
   try {
     const player = await window.GSPAuth.login({ email, senha });
-    _loginOk(player);
+    await _loginOk(player);
   } catch(e) {
     const msg = _traduzirErroFirebase(e.code);
     _authShowErr("auth-login-err", msg);
@@ -2653,7 +2655,7 @@ async function authCadastrar() {
   if (!email) { _authShowErr("auth-reg-err", "Digite seu e-mail."); return; }
   if (!senha || senha.length < 6) { _authShowErr("auth-reg-err", "A senha deve ter ao menos 6 caracteres."); return; }
   if (!window.GSPAuth?.isReady()) {
-    _loginOk({ nome, email, tipo: "user" });
+    await _loginOk({ nome, email, tipo: "user" });
     return;
   }
   _authSetLoading("reg", true);
@@ -2785,14 +2787,28 @@ async function _atualizarBotaoAdmin(uid) {
         t++;
       }
     }
-    // Garante que o token Firebase esteja disponível antes de chamar verificarAdmin
-    // (necessário quando _loginOk é chamado sem await a partir do callback do GSPAuth)
-    if (window.GSPAuth?.waitForAuthReady) {
-      await window.GSPAuth.waitForAuthReady().catch(() => {});
+    // Garante que o token Firebase esteja disponível antes de chamar verificarAdmin.
+    // waitForAuthReady resolve quando currentUser existe, mas o JWT pode ainda estar
+    // sendo buscado. Tentamos obter o token diretamente com retry (até 10s).
+    if (window.GSPAuth?.getToken) {
+      let tok = null;
+      for (let i = 0; i < 20; i++) {
+        tok = await window.GSPAuth.getToken().catch(() => null);
+        if (tok) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      if (!tok) {
+        console.warn('[Admin] Token não disponível após 10s — _isAdmin permanece false');
+        _isAdmin = false;
+        window._isAdmin = false;
+        _mostrarBotaoAdmin();
+        return;
+      }
     }
     _isAdmin = await window.ADMIN?.verificarAdmin(uid) || false;
     window._isAdmin = _isAdmin;
   } catch(e) {
+    console.warn('[Admin] verificarAdmin falhou:', e);
     _isAdmin = false;
     window._isAdmin = false;
   }
