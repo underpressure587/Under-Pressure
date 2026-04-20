@@ -104,13 +104,17 @@ const ADMIN = (() => {
     try {
       const doc = await _get('config/admins');
       console.log('[ADMIN] config/admins doc recebido:', JSON.stringify(doc?.fields));
+      if (!doc || !doc.fields) {
+        console.warn('[ADMIN] verificarAdmin: doc ou doc.fields indefinido — retornando false');
+        return false;
+      }
       const uids  = _val(doc.fields?.uids)  || [];
       const owner = _val(doc.fields?.owner) || '';
       _adminUids  = uids;
       _adminOwner = owner;
-      const isAdmin = uids.includes(uid) || uid === owner;
+      const isAdmin = !!(uids.includes(uid) || uid === owner); // garante boolean
       console.log('[ADMIN] verificarAdmin | uid:', uid, '| uids na lista:', uids, '| owner:', owner, '| resultado:', isAdmin);
-      return isAdmin; // sempre boolean
+      return isAdmin;
     } catch(e) {
       console.error('[ADMIN] Erro ao verificar admin:', e?.message, e);
       return false;

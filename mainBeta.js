@@ -2854,10 +2854,22 @@ async function _atualizarBotaoAdmin(uid) {
       console.warn('[AdminCheck] ⚠️ window.GSPAuth?.getToken não disponível — pulando verificação de token');
     }
     console.log('[AdminCheck] 📡 Chamando verificarAdmin...');
-    const resultado = await window.ADMIN?.verificarAdmin(uid);
-    _isAdmin = resultado || false;
+    let resultado;
+    for (let tentativa = 1; tentativa <= 5; tentativa++) {
+      resultado = await window.ADMIN?.verificarAdmin(uid).catch(e => {
+        console.warn('[AdminCheck] ⚠️ verificarAdmin tentativa', tentativa, 'lançou exceção:', e?.message);
+        return undefined;
+      });
+      console.log('[AdminCheck] 🔄 verificarAdmin tentativa', tentativa, '→ resultado:', resultado);
+      if (resultado === true) break;   // confirmado admin
+      if (resultado === false) break;  // confirmado não-admin
+      // resultado === undefined: Firestore falhou, tenta novamente
+      console.warn('[AdminCheck] ⚠️ verificarAdmin retornou undefined na tentativa', tentativa, '— aguardando 1s e repetindo...');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    _isAdmin = resultado === true;
     window._isAdmin = _isAdmin;
-    console.log('[AdminCheck] 🏁 verificarAdmin retornou:', resultado, '→ _isAdmin =', _isAdmin);
+    console.log('[AdminCheck] 🏁 verificarAdmin resultado final:', resultado, '→ _isAdmin =', _isAdmin);
   } catch(e) {
     console.warn('[AdminCheck] ❌ verificarAdmin lançou exceção:', e?.message, e);
     _isAdmin = false;
