@@ -2863,6 +2863,10 @@ body::after{
     padding: var(--sp2) 32px;
   }
 
+  .sector-mode-row {
+    margin-left: 0; margin-right: 0;
+  }
+
   .sector-cta {
     padding: var(--sp2) 32px var(--sp3);
   }
