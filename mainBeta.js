@@ -2774,6 +2774,10 @@ async function _atualizarBotaoAdmin(uid) {
     window._isAdmin = false;
   }
   _mostrarBotaoAdmin();
+  // Se confirmado admin, garante que engine não fique pausado por manutenção
+  if (_isAdmin) {
+    _esconderOverlayManutencao();
+  }
 }
 
 function _mostrarBotaoAdmin() {
