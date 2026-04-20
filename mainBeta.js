@@ -858,6 +858,16 @@ async function _iniciarPollingGlobal(uid) {
       _atualizarModoSala(cfg);
 
       if (cfg.manutencao && !_isAdmin) {
+        // Re-verifica admin antes de bloquear — evita falso negativo por race condition no boot
+        if (_player?.uid) {
+          const recheck = await window.ADMIN.verificarAdmin(_player.uid).catch(() => false);
+          if (recheck) {
+            _isAdmin = true;
+            window._isAdmin = true;
+            _esconderOverlayManutencao();
+            return;
+          }
+        }
         // Respeita lista de UIDs liberados pelo admin
         const liberado = Array.isArray(cfg.liberados) && _player?.uid && cfg.liberados.includes(_player.uid);
         if (!liberado) {
@@ -2774,6 +2784,11 @@ async function _atualizarBotaoAdmin(uid) {
         await new Promise(r => setTimeout(r, 100));
         t++;
       }
+    }
+    // Garante que o token Firebase esteja disponível antes de chamar verificarAdmin
+    // (necessário quando _loginOk é chamado sem await a partir do callback do GSPAuth)
+    if (window.GSPAuth?.waitForAuthReady) {
+      await window.GSPAuth.waitForAuthReady().catch(() => {});
     }
     _isAdmin = await window.ADMIN?.verificarAdmin(uid) || false;
     window._isAdmin = _isAdmin;
