@@ -2864,7 +2864,9 @@ body::after{
   }
 
   .sector-mode-row {
-    margin-left: 0; margin-right: 0;
+    align-self: stretch;
+    margin: 0 32px var(--sp2);
+    width: auto;
   }
 
   .sector-cta {
