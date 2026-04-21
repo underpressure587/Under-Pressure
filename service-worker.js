@@ -1,22 +1,7 @@
-const CACHE_NAME = 'up-admin-v1';
+const CACHE_NAME = 'up-admin-v2';
 
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/mainBeta.js',
-  '/admin.js',
-  '/firebase-config.js',
-  '/sala-mode-new.js',
-  '/logo.jpg',
-  '/manifest.json'
-];
-
-// Instalação — faz cache dos arquivos principais
+// Instalação mínima — sem cache obrigatório que pode falhar
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-  );
   self.skipWaiting();
 });
 
@@ -32,11 +17,16 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch — serve do cache, tenta rede se não tiver
+// Fetch — tenta rede primeiro, cai no cache se offline
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return cached || fetch(event.request);
-    })
+    fetch(event.request)
+      .then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
