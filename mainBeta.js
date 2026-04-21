@@ -132,7 +132,6 @@ async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
   _carregarVersaoAtual(); // carrega versão atual em background
-  _iniciarLoggerErros();  // captura erros críticos do jogo
 
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
