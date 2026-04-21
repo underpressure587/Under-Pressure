@@ -1,7 +1,7 @@
 {
-  "name": "UnderPressure Admin",
-  "short_name": "UP Admin",
-  "description": "Painel administrativo do jogo Gestão Sob Pressão",
+  "name": "Under Pressure",
+  "short_name": "Under Pressure",
+  "description": "Simulação Executiva — Tome decisões reais. Enfrente crises verdadeiras.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",
