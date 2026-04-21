@@ -38,9 +38,9 @@ let _setorSelecionado = null;
 let _escolhaFeita     = false;
 let _feedbackCallback = null;
 let _timerInterval    = null;
-let _manutencaoInterval = null;
-let _globalPollInterval  = null;
-let _guestPollInterval   = null;
+// _manutencaoInterval → maintenance.js
+// _globalPollInterval → maintenance.js
+// _guestPollInterval → maintenance.js
 let _ultimaMensagemGlobal = '';
 let _timerSegs        = 0;
 let _bloqueioAte      = 0; // timestamp — bloqueia escolher() durante transições
@@ -126,30 +126,7 @@ function _fecharOverlay(id) {
   if (el) el.style.display = 'none';
 }
 
-/* ════════════════════════════════════════════════════
-   VERIFICAÇÃO DE MANUTENÇÃO LEVE (sem window.ADMIN)
-   Usada no boot pré-login e no polling de convidado.
-   Faz GET REST direto com apiKey — leitura pública.
-════════════════════════════════════════════════════ */
-async function _verificarManutencaoInicial() {
-  try {
-    const API_KEY  = 'AIzaSyB_Zkl12AyT5RMfg9eJ68QFTakdBKSioVU';
-    const PROJECT  = 'under-pressure-49320';
-    const FS       = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/default/documents`;
-    const r = await fetch(`${FS}/config/global?key=${API_KEY}`);
-    if (!r.ok) return null;
-    const doc = await r.json();
-    const f = doc.fields || {};
-    const _v = (field) => {
-      if (!field) return undefined;
-      return field.booleanValue ?? field.stringValue ?? field.integerValue ?? null;
-    };
-    return {
-      manutencao: !!_v(f.manutencao),
-      mensagem:   _v(f.mensagem) || '',
-    };
-  } catch(e) { return null; }
-}
+/* _verificarManutencaoInicial → maintenance.js */
 
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
@@ -356,24 +333,8 @@ function irComoConvidado() {
   _atualizarHome();
   mostrarTela("screen-home");
 
-  // Convidado não tem uid → polling global não inicia. Polling leve só de manutenção.
-  if (_guestPollInterval) { clearInterval(_guestPollInterval); _guestPollInterval = null; }
-  const _guestTick = async () => {
-    const cfg = await _verificarManutencaoInicial().catch(() => null);
-    if (!cfg) return;
-    if (cfg.manutencao) {
-      // Convidado não tem partida para salvar → esconde botão
-      const btnSalvar = document.getElementById('manut-btn-salvar');
-      if (btnSalvar) btnSalvar.style.display = 'none';
-      _mostrarOverlayManutencao(cfg.mensagem || '');
-    } else {
-      const btnSalvar = document.getElementById('manut-btn-salvar');
-      if (btnSalvar) btnSalvar.style.display = '';
-      _esconderOverlayManutencao();
-    }
-  };
-  _guestTick();
-  _guestPollInterval = setInterval(_guestTick, 5000);
+  // Convidado não tem uid → polling leve só de manutenção
+  window.Maintenance.iniciarPollingConvidado();
 }
 
 function confirmarNome() {
@@ -394,17 +355,19 @@ function confirmarNome() {
 function sair() {
   _pararPollingGlobal();
   _pararInbox();
-  if (_guestPollInterval) { clearInterval(_guestPollInterval); _guestPollInterval = null; }
-  _removerPresenca(); // remove presença do RTDB antes de limpar _player
+  window.Maintenance.pararPolling();
+  window.Maintenance.pararPollingConvidado();
+  window.Maintenance.setAdminCheckPending(true); // reseta para o próximo login
+  _removerPresenca();
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
-  LS.remove(SK.HIST_GUEST); // limpa histórico guest para não vazar entre sessões
+  LS.remove(SK.HIST_GUEST);
   _player = null;
   window._player = null;
   _isAdmin = false;
   window._isAdmin = false;
-  _presencaInicializada = false; // permite reconfigurar onDisconnect no próximo login
-  _aplicarTemaSetor(null); // reseta tema para não vazar para a tela de login
+  _presencaInicializada = false;
+  _aplicarTemaSetor(null);
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
@@ -811,203 +774,11 @@ function _mostrarToastAtualizacao(forcado) {
   document.body.appendChild(toast);
 }
 
-async function _iniciarPollingGlobal(uid) {
-  _pararPollingGlobal(); // limpa qualquer poll anterior
-  if (!uid) return;
-  console.log('[Polling] 🚀 _iniciarPollingGlobal iniciado | uid:', uid, '| _isAdmin no momento:', _isAdmin, '| window.ADMIN disponível:', !!window.ADMIN, '| timestamp:', Date.now());
+// _iniciarPollingGlobal → window.Maintenance.iniciarPolling(uid)
+function _iniciarPollingGlobal(uid) { window.Maintenance.iniciarPolling(uid); }
 
-  // Aguarda window.ADMIN carregar (script síncrono carregado após o bundle;
-  // em sessões restauradas o boot pode chegar aqui antes de admin.js executar)
-  if (!window.ADMIN) {
-    console.warn('[Polling] ⚠️ window.ADMIN indisponível no início do polling — aguardando até 5s...');
-    let tWait = 0;
-    while (!window.ADMIN && tWait < 50) { // até 5s
-      await new Promise(r => setTimeout(r, 100));
-      tWait++;
-    }
-    if (!window.ADMIN) {
-      console.error('[Polling] ❌ window.ADMIN não carregou após 5s — ENTRANDO NO FALLBACK. _isAdmin=', _isAdmin, '. Se admin, o overlay será exibido indevidamente!');
-    } else {
-      console.log('[Polling] ✅ window.ADMIN carregou após', tWait * 100, 'ms. _isAdmin atual:', _isAdmin);
-    }
-  } else {
-    console.log('[Polling] ✅ window.ADMIN já disponível imediatamente. _isAdmin atual:', _isAdmin);
-  }
-  if (!window.ADMIN) {
-    // Fallback: polling leve via REST público — não depende de admin.js
-    console.warn('[Polling] ⚠️ FALLBACK ATIVO — window.ADMIN não carregou. _isAdmin atual:', _isAdmin);
-
-    // Aguarda _atualizarBotaoAdmin terminar — ela roda em paralelo e pode ainda
-    // estar buscando o token Firebase. Esperamos até 12s antes do primeiro tick.
-    if (!_isAdmin && uid) {
-      console.log('[Polling] ⏳ Aguardando _isAdmin ser resolvido antes do primeiro tick...');
-      let tAdmin = 0;
-      while (!window._isAdmin && tAdmin < 200) { // até 20s
-        await new Promise(r => setTimeout(r, 100));
-        tAdmin++;
-        if (window._isAdmin === true) break;
-      }
-      _isAdmin = window._isAdmin || false;
-      console.log('[Polling] Aguardou', tAdmin * 100, 'ms — _isAdmin final:', _isAdmin);
-    }
-
-    const _tickLeve = async () => {
-      // Sincroniza com window._isAdmin (pode ter sido atualizado após boot)
-      if (window._isAdmin) _isAdmin = true;
-
-      // Se window.ADMIN já carregou e ainda não confirmamos o admin, tenta agora
-      if (!_isAdmin && uid && window.ADMIN) {
-        console.log('[TickLeve] 🔄 window.ADMIN disponível — re-verificando admin uid:', uid);
-        const recheck = await window.ADMIN.verificarAdmin(uid).catch(() => undefined);
-        if (recheck === true) {
-          _isAdmin = true;
-          window._isAdmin = true;
-          console.log('[TickLeve] ✅ Admin confirmado via recheck — overlay bloqueado');
-        } else {
-          console.log('[TickLeve] recheck resultado:', recheck, '— _isAdmin permanece false');
-        }
-      }
-
-      const cfg = await _verificarManutencaoInicial().catch(() => null);
-      if (!cfg) return;
-      console.log('[TickLeve] cfg.manutencao:', cfg.manutencao, '| _isAdmin:', _isAdmin);
-      if (cfg.manutencao && !_isAdmin) {
-        console.warn('[TickLeve] 🚨 Mostrando overlay de manutenção (fallback)');
-        const btnSalvar = document.getElementById('manut-btn-salvar');
-        const emJogo = !!BetaState.get();
-        if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
-        _mostrarOverlayManutencao(cfg.mensagem || '');
-      } else {
-        if (cfg.manutencao && _isAdmin) {
-          console.log('[TickLeve] ✅ Manutenção ativa mas _isAdmin=true — overlay bloqueado');
-        }
-        _esconderOverlayManutencao();
-      }
-    };
-    await _tickLeve();
-    _globalPollInterval = setInterval(_tickLeve, 5000);
-    return;
-  }
-
-  const _tick = async () => {
-    try {
-      // 1. Verifica ban (admin nunca é banido)
-      if (!_isAdmin) {
-        const banido = await window.ADMIN.verificarBan(uid);
-        if (banido) {
-          _forcarSaida('🚫 Sua conta foi suspensa pelo administrador.');
-          return;
-        }
-      }
-
-      // 2. Verifica manutenção + mensagem global
-      const cfg = await window.ADMIN.verificarMensagemGlobal();
-      if (!cfg) return; // falha de rede — mantém estado anterior
-      _atualizarModoSala(cfg);
-
-      if (cfg.manutencao && !_isAdmin) {
-        console.log('[Tick] 🔧 Manutenção ativa e _isAdmin=false — iniciando recheck de admin para uid:', _player?.uid);
-        // Re-verifica admin antes de bloquear — evita falso negativo por race condition no boot
-        if (_player?.uid) {
-          const recheck = await window.ADMIN.verificarAdmin(_player.uid).catch((e) => {
-            console.warn('[Tick] ❌ recheck verificarAdmin lançou exceção:', e?.message);
-            return false;
-          });
-          console.log('[Tick] Recheck resultado:', recheck, '| _isAdmin anterior:', _isAdmin);
-          if (recheck) {
-            _isAdmin = true;
-            window._isAdmin = true;
-            console.log('[Tick] ✅ Admin confirmado no recheck — escondendo overlay');
-            _esconderOverlayManutencao();
-            return;
-          } else {
-            console.warn('[Tick] ⚠️ Recheck retornou false — usuário NÃO é admin. Se deveria ser admin, verifique a regra no Firestore/ADMIN.verificarAdmin.');
-          }
-        } else {
-          console.warn('[Tick] ⚠️ _player?.uid indisponível — impossível fazer recheck de admin');
-        }
-        // Respeita lista de UIDs liberados pelo admin
-        const liberado = Array.isArray(cfg.liberados) && _player?.uid && cfg.liberados.includes(_player.uid);
-        if (!liberado) {
-          console.warn('[Tick] 🚨 Mostrando overlay de manutenção. liberados:', cfg.liberados, '| uid:', _player?.uid);
-          _mostrarOverlayManutencao(cfg.mensagem || '');
-          return;
-        } else {
-          console.log('[Tick] ✅ UID na lista de liberados — overlay não exibido');
-        }
-      } else if (cfg.manutencao && _isAdmin) {
-        console.log('[Tick] ✅ Manutenção ativa mas _isAdmin=true — overlay bloqueado corretamente');
-      }
-      // Manutenção desativada — esconde overlay se estava visível
-      _esconderOverlayManutencao();
-
-      // 3. Mensagem global — mostra só se mudou desde a última vez
-      if (cfg.mensagem && cfg.mensagem !== _ultimaMensagemGlobal) {
-        _ultimaMensagemGlobal = cfg.mensagem;
-        mostrarSucesso(cfg.mensagem);
-      }
-
-      // 4. Verifica forçar atualização global (admin acionou)
-      if (cfg.forcarAtualizacao && cfg.forcarAtualizacao !== _versaoAtual) {
-        _mostrarToastAtualizacao(true);
-        return;
-      }
-
-      // 5. Verifica nova versão via version.json
-      if (_versaoAtual) {
-        const r = await fetch('/version.json?t=' + Date.now());
-        if (r.ok) {
-          const v = await r.json();
-          if (v.hash && v.hash !== _versaoAtual) {
-            _mostrarToastAtualizacao(false);
-          }
-        }
-      }
-
-    } catch(e) { /* ignora erros de rede temporários */ }
-  };
-
-  await _tick(); // executa imediatamente no login — await garante que o admin check termine antes de mostrar a tela
-  _globalPollInterval = setInterval(_tick, 5000);
-}
-
-/* ════════════════════════════════════════════════════
-   LOGGER DE ERROS CRÍTICOS
-════════════════════════════════════════════════════ */
-function _iniciarLoggerErros() {
-  window.addEventListener('error', (e) => {
-    // Só loga erros que acontecem dentro do fluxo do jogo
-    const state = BetaState.get();
-    if (!state || !_player?.uid) return;
-    try {
-      const FS = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents`;
-      const id = Date.now();
-      const fields = {
-        msg:         { stringValue: e.message || 'Erro desconhecido' },
-        tipo:        { stringValue: 'erro' },
-        setor:       { stringValue: state.sector || '' },
-        rodada:      { integerValue: String(state.currentRound || 0) },
-        versao:      { stringValue: _versaoAtual || '' },
-        nomeJogador: { stringValue: _player.nome || 'Jogador' },
-        ts:          { integerValue: String(id) },
-      };
-      const mask = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
-      window.GSPAuth?.getToken().then(tok => {
-        if (!tok) return;
-        fetch(`${FS}/logs/${id}?${mask}`, {
-          method: 'PATCH',
-          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fields }),
-        }).catch(() => {});
-      }).catch(() => {});
-    } catch(err) { /* silencioso */ }
-  });
-}
-
-function _pararPollingGlobal() {
-  if (_globalPollInterval) { clearInterval(_globalPollInterval); _globalPollInterval = null; }
-  if (_manutencaoInterval) { clearInterval(_manutencaoInterval); _manutencaoInterval = null; }
-}
+// _pararPollingGlobal → window.Maintenance.pararPolling()
+function _pararPollingGlobal() { window.Maintenance.pararPolling(); }
 
 function _forcarSaida(msg) {
   _pararPollingGlobal();
@@ -2838,7 +2609,9 @@ async function _atualizarBotaoAdmin(uid) {
   }
   if (!_tok) {
     console.warn('[AdminCheck] ❌ Token não disponível — _isAdmin permanece false.');
-    _isAdmin = false; window._isAdmin = false; _mostrarBotaoAdmin(); return;
+    _isAdmin = false; window._isAdmin = false;
+    window.Maintenance.setAdminCheckPending(false);
+    _mostrarBotaoAdmin(); return;
   }
 
   // ── Passo 2: verificação via window.ADMIN (aguarda até 5s) ───────────────
@@ -2894,6 +2667,7 @@ async function _atualizarBotaoAdmin(uid) {
     console.log('[AdminCheck] 🏁 Resultado final (via REST fallback):', resultado, '→ _isAdmin =', _isAdmin);
   }
 
+  window.Maintenance.setAdminCheckPending(false); // verificação concluída
   _mostrarBotaoAdmin();
   if (_isAdmin) {
     console.log('[AdminCheck] 🛡️ Admin confirmado — escondendo overlay de manutenção se visível.');
@@ -3116,58 +2890,10 @@ async function escolherModoGrupo() {
 }
 
 
-/* ════════════════════════════════════════════════════
-   OVERLAY MANUTENÇÃO
-   Mostra overlay sem chutar o jogador da partida.
-   O jogador pode salvar e sair se quiser.
-════════════════════════════════════════════════════ */
-
-function _mostrarOverlayManutencao(msgExtra) {
-  // Admin nunca vê o overlay de manutenção
-  if (_isAdmin) {
-    console.log('[Overlay] 🛡️ _mostrarOverlayManutencao chamado mas _isAdmin=true — bloqueado corretamente');
-    return;
-  }
-  console.warn('[Overlay] 🚨 MOSTRANDO overlay de manutenção | _isAdmin:', _isAdmin, '| window._isAdmin:', window._isAdmin, '| uid:', _player?.uid);
-  console.trace('[Overlay] Stack trace — de onde veio a chamada:');
-  const el = document.getElementById('overlay-manutencao');
-  if (!el) return;
-  // Mostra mensagem extra do admin se houver
-  const extra = document.getElementById('manut-msg-extra');
-  if (extra) {
-    if (msgExtra) {
-      extra.textContent = msgExtra;
-      extra.style.display = 'block';
-    } else {
-      extra.style.display = 'none';
-    }
-  }
-  // Esconde botão "Salvar e Sair" se não estiver em jogo
-  const btnSalvar = document.getElementById('manut-btn-salvar');
-  const emJogo = !!BetaState.get();
-  if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
-
-  el.style.display = 'flex';
-
-  // Pausa o engine para bloquear interações sem derrubar o estado
-  if (typeof Engine !== 'undefined') Engine.setPausado(true);
-}
-
-function _esconderOverlayManutencao() {
-  const el = document.getElementById('overlay-manutencao');
-  if (el) el.style.display = 'none';
-
-  // Retoma o engine
-  if (typeof Engine !== 'undefined') Engine.setPausado(false);
-}
-
-function manutencaoSalvarSair() {
-  // Se estava em jogo, salva sessão antes de sair
-  try { _salvarSessao(); } catch(e) {}
-  _esconderOverlayManutencao();
-  sair();
-}
-
+/* _mostrarOverlayManutencao / _esconderOverlayManutencao / manutencaoSalvarSair → maintenance.js */
+function _mostrarOverlayManutencao(msg) { window.Maintenance.mostrarOverlay(msg); }
+function _esconderOverlayManutencao()   { window.Maintenance.esconderOverlay(); }
+function manutencaoSalvarSair()         { window.Maintenance.salvarSair(); }
 
 /* ════════════════════════════════════════════════════
    CRIAR SALA — só admin

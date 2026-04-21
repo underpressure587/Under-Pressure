@@ -959,6 +959,147 @@ const ADMIN = (() => {
   }
 
 
+  /* ── NOVA MENSAGEM INDIVIDUAL (aba Mensagens) ───── */
+  let _novaMsgUid       = '';
+  let _novaMsgNome      = '';
+  let _novaMsgCategoria = 'geral';
+
+  function abrirNovaMsg(uid, nome) {
+    _novaMsgUid       = uid  || '';
+    _novaMsgNome      = nome || '';
+    _novaMsgCategoria = 'geral';
+    const modal = document.getElementById('admin-modal-nova-msg');
+    const dest  = document.getElementById('admin-nova-msg-dest');
+    const txt   = document.getElementById('admin-nova-msg-texto');
+    const fixar = document.getElementById('admin-nova-msg-fixar');
+    const conf  = document.getElementById('admin-nova-msg-confirmar');
+    if (!modal) return;
+    if (dest) dest.textContent = nome ? `Para: ${nome}` : 'Para: todos os jogadores';
+    if (txt)   txt.value = '';
+    if (fixar) fixar.checked = false;
+    if (conf)  conf.checked  = false;
+    // Reseta botões de categoria
+    modal.querySelectorAll('.admin-msg-cat-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.cat === 'geral');
+    });
+    modal.style.display = 'flex';
+  }
+
+  function fecharNovaMsg() {
+    const modal = document.getElementById('admin-modal-nova-msg');
+    if (modal) modal.style.display = 'none';
+    _novaMsgUid = ''; _novaMsgNome = ''; _novaMsgCategoria = 'geral';
+  }
+
+  function selecionarCategoria(btn) {
+    const modal = document.getElementById('admin-modal-nova-msg');
+    modal?.querySelectorAll('.admin-msg-cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _novaMsgCategoria = btn.dataset.cat || 'geral';
+  }
+
+  async function enviarNovaMsg() {
+    const texto = document.getElementById('admin-nova-msg-texto')?.value?.trim();
+    if (!texto) { _showAdminToast('Digite uma mensagem.', true); return; }
+    const fixar = !!(document.getElementById('admin-nova-msg-fixar')?.checked);
+    const conf  = !!(document.getElementById('admin-nova-msg-confirmar')?.checked);
+    const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+    const campos = {
+      texto:             { stringValue: texto },
+      de:                { stringValue: 'admin' },
+      ts:                { integerValue: String(Date.now()) },
+      lida:              { booleanValue: false },
+      confirmada:        { booleanValue: false },
+      categoria:         { stringValue: _novaMsgCategoria },
+      fixada:            { booleanValue: fixar },
+      exigirConfirmacao: { booleanValue: conf },
+      broadcast:         { booleanValue: !_novaMsgUid },
+      expiraEm:          { integerValue: String(Date.now() + 30*24*60*60*1000) },
+    };
+    try {
+      if (_novaMsgUid) {
+        // Mensagem individual
+        await _patch(`usuarios/${_novaMsgUid}/mensagens/${msgId}`, campos);
+        await _patch(`mensagens_log/${msgId}`, {
+          ...campos,
+          destUid:  { stringValue: _novaMsgUid },
+          destNome: { stringValue: _novaMsgNome },
+          lidoPor:  { integerValue: '0' }, totalEnviado: { integerValue: '1' },
+        });
+        _showAdminToast(`✅ Mensagem enviada para ${_novaMsgNome || _novaMsgUid}!`);
+      } else {
+        // Sem destinatário definido — abre broadcast
+        fecharNovaMsg();
+        abrirBroadcast();
+        return;
+      }
+      fecharNovaMsg();
+      if (_currentSection === 'mensagens') carregarMensagens();
+    } catch(e) {
+      _showAdminToast('Erro ao enviar: ' + e.message, true);
+    }
+  }
+
+  /* ── HISTÓRICO DE MENSAGENS ─────────────────────── */
+  async function carregarMensagens() {
+    const lista = document.getElementById('admin-msgs-lista');
+    const total = document.getElementById('admin-msgs-total');
+    if (!lista) return;
+    lista.innerHTML = '<div class="admin-empty">Carregando...</div>';
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'mensagens_log' }],
+          orderBy: [{ field: { fieldPath: 'ts' }, direction: 'DESCENDING' }],
+          limit: 50,
+        }
+      });
+      const msgs = res.filter(r => r.document).map(r => {
+        const f = _parseFields(r.document.fields || {});
+        const id = r.document.name.split('/').pop();
+        return { id, ...f };
+      });
+      if (total) total.textContent = msgs.length;
+      if (!msgs.length) {
+        lista.innerHTML = '<div class="admin-empty">Nenhuma mensagem enviada ainda.</div>';
+        return;
+      }
+      lista.innerHTML = msgs.map(m => {
+        const data = new Date(Number(m.ts) || 0).toLocaleString('pt-BR');
+        const dest = m.broadcast ? 'Todos' : (m.destNome || m.destUid || '—');
+        const lidos = m.lidoPor !== undefined ? m.lidoPor : '—';
+        return `<div style="background:var(--bg3);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:.75rem;color:var(--t3)">${data} · Para: <strong style="color:var(--t2)">${dest}</strong></span>
+            <span style="font-size:.7rem;background:var(--bg2);border:1px solid var(--line2);border-radius:20px;padding:2px 8px;color:var(--t3)">${m.categoria || 'geral'}</span>
+          </div>
+          <div style="font-size:.85rem;color:var(--t1);margin-bottom:6px">${m.texto || ''}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.72rem;color:var(--t3)">👁 Lidos: ${lidos}${m.totalEnviado ? ' / ' + m.totalEnviado : ''}</span>
+            <button class="admin-btn" style="padding:3px 10px;font-size:.72rem;background:transparent;border:1px solid var(--line2);color:var(--t3)" onclick="ADMIN.apagarMensagemLog('${m.id}')">🗑 Apagar</button>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      lista.innerHTML = `<div class="admin-empty">Erro: ${e.message}</div>`;
+    }
+  }
+
+  async function apagarMensagemLog(id) {
+    if (!id) return;
+    try {
+      const tok = await _token();
+      await fetch(`${FS}/mensagens_log/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${tok}` },
+      });
+      _showAdminToast('Mensagem removida do log.');
+      carregarMensagens();
+    } catch(e) {
+      _showAdminToast('Erro ao apagar: ' + e.message, true);
+    }
+  }
+
   /* ── BROADCAST ──────────────────────────────────── */
   function abrirBroadcast() {
     const modal = document.getElementById('admin-modal-broadcast');

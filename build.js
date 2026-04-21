@@ -29,6 +29,7 @@ const ORDEM = [
   { marcador: 'rounds/logistica-rounds.js',     arquivo: 'empresas/logistica-rounds.js' },
   { marcador: 'rounds/industria-rounds.js',     arquivo: 'empresas/industria-rounds.js' },
   { marcador: 'core/engine.js',                 arquivo: 'Core/engine.js' },
+  { marcador: 'maintenance.js',                 arquivo: 'maintenance.js' },
   { marcador: 'mainBeta.js',                    arquivo: 'mainBeta.js' },
   { marcador: 'sala-mode-new.js',               arquivo: 'sala-mode-new.js' },
 ];
