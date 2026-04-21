@@ -377,6 +377,9 @@ function _atualizarHome() {
   if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;
   const av = document.getElementById("home-avatar-icon");
   if (av && _player?.nome) av.textContent = _player.nome.charAt(0).toUpperCase();
+  // Botão inbox sempre visível para usuários logados
+  const btnInbox = document.getElementById('btn-inbox');
+  if (btnInbox && _player?.uid) btnInbox.style.display = '';
 }
 
 /* ════════════════════════════════════════════════════
@@ -3195,7 +3198,7 @@ function _atualizarBadgeInbox() {
   const btn   = document.getElementById('btn-inbox');
   const badge = document.getElementById('inbox-badge');
   if (!btn) return;
-  btn.style.display = _inboxMensagens.length > 0 ? '' : 'none';
+  btn.style.display = ''; // sempre visível quando logado
   if (badge) {
     badge.style.display = naoLidas > 0 ? '' : 'none';
     badge.textContent   = naoLidas > 9 ? '9+' : String(naoLidas);

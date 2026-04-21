@@ -916,14 +916,29 @@ const ADMIN = (() => {
     if (!_inboxUid) { _showAdminToast('Destinatário inválido.', true); return; }
     try {
       const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-      await _patch(`usuarios/${_inboxUid}/mensagens/${msgId}`, {
-        texto:     { stringValue: texto },
-        de:        { stringValue: 'admin' },
-        ts:        { integerValue: String(Date.now()) },
-        lida:      { booleanValue: false },
+      const campos = {
+        texto:             { stringValue: texto },
+        de:                { stringValue: 'admin' },
+        ts:                { integerValue: String(Date.now()) },
+        lida:              { booleanValue: false },
+        confirmada:        { booleanValue: false },
+        categoria:         { stringValue: 'geral' },
+        fixada:            { booleanValue: false },
+        exigirConfirmacao: { booleanValue: false },
+        broadcast:         { booleanValue: false },
+        expiraEm:          { integerValue: String(Date.now() + 30*24*60*60*1000) },
+      };
+      await _patch(`usuarios/${_inboxUid}/mensagens/${msgId}`, campos);
+      await _patch(`mensagens_log/${msgId}`, {
+        ...campos,
+        destUid:      { stringValue: _inboxUid },
+        destNome:     { stringValue: _inboxNome },
+        lidoPor:      { integerValue: '0' },
+        totalEnviado: { integerValue: '1' },
       });
       _showAdminToast(`✅ Mensagem enviada para ${_inboxNome}!`);
       fecharModalInbox();
+      if (_currentSection === 'mensagens') carregarMensagens();
     } catch(e) {
       _showAdminToast('Erro ao enviar: ' + e.message, true);
     }
@@ -939,20 +954,35 @@ const ADMIN = (() => {
         }
       });
       const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
+      const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+      const campos = {
+        texto:             { stringValue: texto },
+        de:                { stringValue: 'admin' },
+        ts:                { integerValue: String(Date.now()) },
+        lida:              { booleanValue: false },
+        confirmada:        { booleanValue: false },
+        categoria:         { stringValue: 'aviso' },
+        fixada:            { booleanValue: false },
+        exigirConfirmacao: { booleanValue: false },
+        broadcast:         { booleanValue: true },
+        expiraEm:          { integerValue: String(Date.now() + 30*24*60*60*1000) },
+      };
       let ok = 0;
       for (const uid of uids) {
         try {
-          const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-          await _patch(`usuarios/${uid}/mensagens/${msgId}`, {
-            texto:  { stringValue: texto },
-            de:     { stringValue: 'admin' },
-            ts:     { integerValue: String(Date.now()) },
-            lida:   { booleanValue: false },
-          });
+          await _patch(`usuarios/${uid}/mensagens/${msgId}`, campos);
           ok++;
         } catch(e) { /* continua */ }
       }
+      await _patch(`mensagens_log/${msgId}`, {
+        ...campos,
+        destUid:      { stringValue: '' },
+        destNome:     { stringValue: '' },
+        lidoPor:      { integerValue: '0' },
+        totalEnviado: { integerValue: String(ok) },
+      });
       _showAdminToast(`✅ Mensagem enviada para ${ok} jogadores!`);
+      if (_currentSection === 'mensagens') carregarMensagens();
     } catch(e) {
       _showAdminToast('Erro ao enviar broadcast: ' + e.message, true);
     }
@@ -1097,6 +1127,69 @@ const ADMIN = (() => {
       carregarMensagens();
     } catch(e) {
       _showAdminToast('Erro ao apagar: ' + e.message, true);
+    }
+  }
+
+  async function apagarTodasMensagens() {
+    if (!confirm('⚠️ Apagar TODAS as mensagens de TODOS os jogadores e limpar o log?\n\nEsta ação não pode ser desfeita.')) return;
+    _showAdminToast('Apagando mensagens...');
+    let totalApagadas = 0;
+    let erros = 0;
+    try {
+      const tok = await _token();
+
+      // 1. Busca todos os usuários
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'usuarios' }],
+          select: { fields: [{ fieldPath: 'nome' }] }
+        }
+      });
+      const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
+
+      // 2. Para cada usuário, busca e apaga suas mensagens
+      for (const uid of uids) {
+        try {
+          const r = await fetch(`${FS}/usuarios/${uid}/mensagens`, {
+            headers: { Authorization: `Bearer ${tok}` }
+          });
+          if (!r.ok) continue;
+          const data = await r.json();
+          const docs = data.documents || [];
+          for (const doc of docs) {
+            try {
+              await fetch(doc.name.replace('https://firestore.googleapis.com/v1/', 'https://firestore.googleapis.com/v1/'), {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${tok}` }
+              });
+              totalApagadas++;
+            } catch(e) { erros++; }
+          }
+        } catch(e) { erros++; }
+      }
+
+      // 3. Apaga todo o mensagens_log
+      const logRes = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'mensagens_log' }],
+          select: { fields: [{ fieldPath: 'ts' }] }
+        }
+      });
+      const logDocs = logRes.filter(r => r.document);
+      for (const doc of logDocs) {
+        try {
+          const name = doc.document.name;
+          await fetch(`https://firestore.googleapis.com/v1/${name}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${tok}` }
+          });
+        } catch(e) { /* continua */ }
+      }
+
+      _showAdminToast(`✅ ${totalApagadas} mensagens apagadas${erros > 0 ? ` (${erros} erros)` : ''}.`);
+      carregarMensagens();
+    } catch(e) {
+      _showAdminToast('Erro: ' + e.message, true);
     }
   }
 
@@ -2166,7 +2259,7 @@ const ADMIN = (() => {
     fecharModal,
     abrirModalInbox, fecharModalInbox, enviarMensagemInbox, enviarMensagemTodos,
     abrirNovaMsg, fecharNovaMsg, enviarNovaMsg, selecionarCategoria,
-    carregarMensagens, apagarMensagemLog,
+    carregarMensagens, apagarMensagemLog, apagarTodasMensagens,
     abrirBroadcast, fecharBroadcast, confirmarBroadcast,
     abrirBroadcast, fecharBroadcast, confirmarBroadcast,
     toggleDropdown, selecionarSetor,
