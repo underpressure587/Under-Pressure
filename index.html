@@ -32,6 +32,13 @@
       .inbox-msg-item.fixada { border-color:var(--s-primary,#eab308)!important; }
       .inbox-confirmar-btn { width:100%;margin-top:10px;padding:9px;border-radius:8px;background:var(--s-primary,#eab308);border:none;color:#000;font-weight:700;font-size:.82rem;cursor:pointer; }
     </style>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f59e0b">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js');
+  }
+</script>
 </head>
 <body>
 <div id="critical-toast-container"></div>
