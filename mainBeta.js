@@ -357,7 +357,7 @@ function sair() {
   _pararInbox();
   window.Maintenance.pararPolling();
   window.Maintenance.pararPollingConvidado();
-  window.Maintenance.setAdminCheckPending(true); // reseta para o próximo login
+  window.Maintenance.setAdminCheckPending(true);
   _removerPresenca();
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
@@ -368,6 +368,8 @@ function sair() {
   window._isAdmin = false;
   _presencaInicializada = false;
   _aplicarTemaSetor(null);
+  const btnInbox = document.getElementById('btn-inbox');
+  if (btnInbox) btnInbox.style.display = 'none';
   if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
   mostrarTela("screen-login");
 }
@@ -379,7 +381,7 @@ function _atualizarHome() {
   if (av && _player?.nome) av.textContent = _player.nome.charAt(0).toUpperCase();
   // Botão inbox sempre visível para usuários logados
   const btnInbox = document.getElementById('btn-inbox');
-  if (btnInbox && _player?.uid) btnInbox.style.display = '';
+  if (btnInbox) btnInbox.style.display = _player?.uid ? '' : 'none';
 }
 
 /* ════════════════════════════════════════════════════
