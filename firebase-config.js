@@ -1,8 +1,7 @@
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth, setPersistence, browserLocalStoragePersistence,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
   signInWithPopup, signInWithRedirect, getRedirectResult,
   GoogleAuthProvider, sendPasswordResetEmail,
   onAuthStateChanged, signOut, updateProfile
@@ -43,7 +42,6 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
   try {
     app            = initializeApp(firebaseConfig);
     auth           = getAuth(app);
-    setPersistence(auth, browserLocalStoragePersistence).catch(console.error);
     initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
     googleProvider = new GoogleAuthProvider();
 
