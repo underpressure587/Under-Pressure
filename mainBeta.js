@@ -870,9 +870,11 @@ function renderSidebar(state, empresa) {
 
   const roundBadge = document.getElementById("game-round-badge");
   if (roundBadge) {
-    const faseLabel = { fundacao:"Diagnóstico",crescimento:"Crescimento",
+    const faseLabel = { diagnostico:"Diagnóstico", pressao:"Pressão", decisao:"Decisão Crítica",
+                        fundacao:"Diagnóstico",crescimento:"Crescimento",
                         crise:"⚠ Crise",consolidacao:"Consolidação",expansao:"Expansão" };
-    const fase = state.storyState?.faseEmpresa;
+    const round = state.gameRounds?.[state.currentRound];
+    const fase = round?.fase || state.storyState?.faseEmpresa;
     roundBadge.textContent = `Rod. ${state.currentRound+1}/${state.totalRounds} · ${faseLabel[fase]||""}`;
   }
   const grid = document.getElementById("game-indicators-grid");
@@ -893,7 +895,7 @@ function renderSidebar(state, empresa) {
         const diff = v - prev;
         if      (diff >  0) trendHtml = `<span class="game-ind-trend up">▲${diff}</span>`;
         else if (diff <  0) trendHtml = `<span class="game-ind-trend down">▼${Math.abs(diff)}</span>`;
-        else                trendHtml = `<span class="game-ind-trend flat">—</span>`;
+        // flat: sem símbolo para não confundir com número negativo
       }
 
       // Classe crítico se valor <= 3
