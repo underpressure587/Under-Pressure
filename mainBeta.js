@@ -1520,6 +1520,12 @@ function _atualizarBotaoFullscreen() {
 }
 document.addEventListener("fullscreenchange", _atualizarBotaoFullscreen);
 
+function reverTutorial() {
+  localStorage.removeItem('gsp_tutorial_done');
+  _fecharOverlay('overlay-settings');
+  mostrarTela('screen-tutorial');
+}
+
 function reiniciar() { _pararVerificacaoManutencao(); LS.remove(SK.SESSION); _aplicarTemaSetor(null); mostrarTela("screen-home"); }
 
 function _showToast(msg, tipo = "info", duracao = 3200) {
@@ -3469,7 +3475,7 @@ window.BetaUI = {
   openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus,
   toggleFullscreen, voltar,
   // Novos
-  pularTutorial, tutorialStep, irParaSlide,
+  pularTutorial, tutorialStep, irParaSlide, reverTutorial,
   pausarJogo, continuarJogo, abandonarJogo,
   pedirConfirmacaoSaida, cancelarSaida, confirmarSaida,
   abrirTooltipIndicador, closeTooltip,
