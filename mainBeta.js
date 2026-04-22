@@ -132,6 +132,7 @@ async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
   _carregarVersaoAtual(); // carrega versão atual em background
+  _iniciarLoggerErros();  // captura erros críticos do jogo
 
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
@@ -2586,7 +2587,11 @@ async function _loginOk(player) {
   _restaurarGrupo();
   _verificarSessaoSalva();
   _atualizarHome();
-  mostrarTela("screen-home");
+  if (!localStorage.getItem('gsp_tutorial_done')) {
+    mostrarTela('screen-tutorial');
+  } else {
+    mostrarTela("screen-home");
+  }
 
   // Sincroniza dados em background (não bloqueia a UI)
   _sincronizarFirebaseBackground(player);
