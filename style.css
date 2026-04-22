@@ -34,6 +34,7 @@
   --t1:  #F0EDE8;
   --t2:  #9A97A0;
   --t3:  #52505A;
+  --t4:  #3A3840;
 
   /* Status */
   --ok:    #2ECC71;
@@ -3226,6 +3227,36 @@ body::after{
 .admin-toggle-row{ display:flex; justify-content:space-between; align-items:center; }
 /* Toggle switch — substitui checkbox nativo */
 .admin-checkbox { display: none; } /* oculta o nativo caso ainda exista */
+
+/* Checkbox nativo do admin — fundo escuro */
+#versao-critica-check {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--line2);
+  border-radius: 4px;
+  background: var(--bg3);
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+#versao-critica-check:checked {
+  background: var(--s-primary, #f59e0b);
+  border-color: var(--s-primary, #f59e0b);
+}
+#versao-critica-check:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 6px;
+  height: 10px;
+  border: 2px solid #000;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
 
 .admin-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
 .admin-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
