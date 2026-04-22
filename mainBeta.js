@@ -3542,6 +3542,8 @@ function _overlayAberto() {
 function _iniciarPopstate() {
   // Garante que há um estado inicial no histórico
   history.replaceState({ gsp: true }, '');
+  // Adiciona um segundo estado — assim o primeiro popstate não sai do site
+  history.pushState({ gsp: true }, '');
 
   window.addEventListener('popstate', function() {
     // Repõe o estado para o browser não sair do site
