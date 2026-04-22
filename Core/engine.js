@@ -205,8 +205,28 @@ function iniciar(sectorId, groupName, companyName, modoSala) {
     BetaState.aplicarIndicadoresHistoria(introIndex);
 
     if (empresa.rounds && empresa.rounds[introIndex]?.length > 0) {
-        state.gameRounds  = empresa.rounds[introIndex];
-        state.totalRounds = state.gameRounds.length;
+        const _todasRounds = empresa.rounds[introIndex];
+
+        // Sistema de sorteio por fase
+        // Se as rodadas têm campo "fase", sorteia candidatas por fase
+        const _temFase = _todasRounds.some(r => r.fase);
+        if (_temFase) {
+            const _sortearFase = (fase, candidatas, selecionar) => {
+                const pool = _todasRounds.filter(r => r.fase === fase);
+                // Embaralha e pega as candidatas
+                const embaralhado = pool.sort(() => Math.random() - 0.5).slice(0, candidatas);
+                // Seleciona as definitivas
+                return embaralhado.sort(() => Math.random() - 0.5).slice(0, selecionar);
+            };
+            const diagnostico = _sortearFase('diagnostico', 5, 3);
+            const pressao     = _sortearFase('pressao', 5, 4);
+            const decisao     = _sortearFase('decisao', 5, 3);
+            state.gameRounds  = [...diagnostico, ...pressao, ...decisao];
+            state.totalRounds = state.gameRounds.length; // 10 rodadas por partida
+        } else {
+            state.gameRounds  = _todasRounds;
+            state.totalRounds = state.gameRounds.length;
+        }
     } else {
         state.gameRounds  = [];
         state.totalRounds = 0;

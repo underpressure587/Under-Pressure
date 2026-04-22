@@ -37,6 +37,7 @@ const TecnologiaRounds = [
     title: "O Crash de Segunda-Feira",
     description: "Seu primeiro dia como gestor responsável. Às 9h07, o sistema de monitoramento dispara: a plataforma está fora do ar. Duzentos e trinta satisfacao não conseguem acessar. O canal de suporte explode com mensagens. O CTO Pedro chega correndo: 'É o módulo de autenticação — o mesmo que está na nossa lista de dívida técnica há 14 meses. Estimamos 3 a 5 horas para restaurar.' Qual é a sua primeira decisão?",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Comunicar proativamente todos os satisfacao afetados com previsão de retorno e atualizações a cada 30 minutos",
@@ -79,6 +80,7 @@ const TecnologiaRounds = [
     title: "O Dev que Sabe Demais",
     description: "André, o único engenheiro que conhece profundamente o módulo de pagamentos — responsável por 38% do ARR — bate à sua porta: 'Preciso de 3 semanas de férias. Estou esgotado desde o crash.' Você consulta o Pedro: 'Se André sair agora, qualquer problema nesse módulo vai nos parar por dias. Ele nunca documentou nada.' Você tem 24 horas para responder a André.",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Aprovar as férias integrais — negar seria injusto e pioraria o clima geral do time",
@@ -122,6 +124,7 @@ const TecnologiaRounds = [
     title: "A Reunião que Virou uma Briga",
     description: "Reunião de planejamento quinzenal. Juliana, head de Produto, apresenta um roadmap com 11 novas features para os próximos 60 dias. Pedro interrompe: 'Impossível. Com a dívida técnica atual, cada nova feature vai demorar 3× mais e vai criar 2× mais bugs. Precisamos de pelo menos 6 semanas só para estabilizar.' Juliana rebate: 'Enquanto isso, o concorrente vai lançar 4 features e a gente vai perder mais deals.' A reunião para. Todo mundo olha para você.",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Dar razão ao Pedro: bloquear todas as features por 6 semanas e focar 100% na estabilização técnica",
@@ -159,6 +162,7 @@ const TecnologiaRounds = [
     title: "O Dashboard de Churn",
     description: "Marina, head de Customer Success, apresenta o relatório da semana: 31 satisfacao cancelaram em 7 dias — o maior número em 18 meses. Ela traz os motivos mapeados: 68% citam lentidão e instabilidade da plataforma; 19% citam que o concorrente ofereceu preço menor; 13% citam atendimento demorado. 'Temos um problema técnico que está gerando um problema comercial,' ela conclui. 'E se não agirmos em 30 dias, vamos perder mais 80 satisfacao.' Como você responde?",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Criar força-tarefa técnica dedicada exclusivamente aos gargalos que mais causam lentidão para os satisfacao em risco de churn",
@@ -196,6 +200,7 @@ const TecnologiaRounds = [
     title: "Os Quatro que Querem Sair",
     description: "Gabriel, um dos seus engenheiros mais antigos, pede uma conversa reservada. Ele é direto: 'Não vim pedir demissão — vim te avisar que quatro colegas estão olhando para fora. Dois já têm entrevistas marcadas. O problema não é salário. É que estamos mantendo um sistema que regride e não há sinal de que vai mudar.' Você tem a informação antes que se torne uma crise pública. O que você faz com ela?",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Agradecer a Gabriel pela honestidade, convocá-lo como aliado e co-criar com ele um plano de melhoria técnica que você vai apresentar ao time esta semana",
@@ -233,6 +238,7 @@ const TecnologiaRounds = [
     title: "O Recrutador da Concorrência",
     description: "Um recrutador da startup concorrente entrou em contato com seis engenheiros do seu time pelo LinkedIn — incluindo Pedro, seu CTO. As mensagens foram encaminhadas para você por dois deles. A proposta tem salário 35% maior e bônus de assinatura. O timing é cirúrgico: acontece exatamente na semana em que seu time está mais fragilizado. Pedro menciona casualmente que 'a mensagem chegou para ele também.'",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Criar imediatamente um programa de retenção com stock options escalonados para os 10 talentos mais críticos do time técnico",
@@ -270,6 +276,7 @@ const TecnologiaRounds = [
     title: "A Falha de Segurança",
     description: "Um pesquisador de segurança independente envia um e-mail direto para você — não para o suporte: 'Encontrei uma vulnerabilidade de injeção SQL no endpoint de relatórios da sua API. Dados de aproximadamente 4.200 satisfacao podem ter sido expostos nos últimos 21 dias. Tenho as evidências. Dou 24 horas para uma resposta antes de publicar no meu blog.' Pedro confirma: a falha é real. O time de segurança estima 6 a 8 horas para corrigir completamente.",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Responder ao pesquisador imediatamente agradecendo, pedir 72 horas para correção completa e comunicar os satisfacao afetados em paralelo com transparência total",
@@ -307,6 +314,7 @@ const TecnologiaRounds = [
     title: "O Contrato que Muda Tudo",
     description: "Beatriz, sua head comercial, chega eufórica: 'A rede Mercato Varejo quer assinar um contrato de R$ 900 mil anuais — nosso maior deal em toda a história. Mas eles exigem 3 customizações profundas na plataforma entregues em 90 dias e um SLA de 99,9% de uptime garantido por contrato.' Pedro é categórico: 'Com a plataforma nesse estado, 99,9% de uptime é impossível. E as customizações levam no mínimo 120 dias com qualidade. Se prometemos e não entregamos, vira processo.' O prazo para responder ao Mercato é amanhã.",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Aceitar o contrato com as condições exatas — uma receita de R$ 900K justifica o risco e vai financiar a melhoria técnica",
@@ -347,6 +355,7 @@ const TecnologiaRounds = [
     title: "O Ultimato dos Investidores",
     description: "Você recebe um memo formal dos investidores da Série A: 'Monitoramos os números de churn com preocupação crescente. Nossa condição para participar da Série B é clara: o churn mensal precisa cair para abaixo de 2,5% em 60 dias. Se não, não renovamos nossa posição e indicaremos ao conselho a contratação de um CEO profissional.' É a primeira vez que a palavra 'substituição' aparece num documento formal. Pedro e Beatriz estão com você. Como você responde?",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Responder com um plano estruturado de 60 dias com metas específicas por semana, mostrando exatamente como o churn vai cair para 2,5%",
@@ -377,7 +386,7 @@ const TecnologiaRounds = [
   },
 
   /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO · O Pivot para IA
+     R10 · DECISÃO CRÍTICA · O Pivot para IA
      Contexto: 8ª semana. Uma proposta radical divide a liderança.
      Um dos sócios fundadores quer mudar tudo.
   ═══════════════════════════════════════════════════════ */
@@ -385,6 +394,7 @@ const TecnologiaRounds = [
     title: "O Pivot para IA",
     description: "Rafael, cofundador e diretor técnico sênior, apresenta em reunião de diretoria: 'Vamos perder para os concorrentes se continuarmos nesse produto. Minha proposta é pivotarmos para IA generativa nos próximos 6 meses — abandonar a plataforma atual e desenvolver um produto completamente novo. Tenho 3 satisfacao enterprise que já disseram que pagariam por isso.' Pedro é contra: 'Nossa equipe não tem expertise em IA. Vai precisar de contratações massivas que não temos dinheiro para fazer.' Beatriz concorda com Rafael. Você precisa decidir.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Rejeitar o pivot completo, mas criar um laboratório de IA interno com 2 engenheiros dedicados para explorar aplicações incrementais no produto atual",
@@ -422,6 +432,7 @@ const TecnologiaRounds = [
     title: "A Oferta de Aquisição",
     description: "Um email chega diretamente para você — enviado pelo CEO da TechBridge, uma empresa americana de software com presença em 14 países: 'Temos acompanhado o crescimento de vocês no mercado brasileiro de SaaS B2B. Gostaríamos de propor uma conversa sobre aquisição. Nossa oferta indicativa é de R$ 28 milhões por 100% da empresa.' O múltiplo é de 6,7× o ARR atual — acima da média do mercado. Rafael quer aceitar imediatamente. Pedro quer rejeitar. Os investidores querem discutir.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Entrar nas conversas de due diligence com a TechBridge sem compromisso, para entender a oferta real antes de qualquer decisão",
@@ -465,6 +476,7 @@ const TecnologiaRounds = [
     title: "A Investigação da ANPD",
     description: "A Autoridade Nacional de Proteção de Dados abre formalmente um processo administrativo referente ao incidente de segurança de três semanas atrás. O prazo para apresentar a defesa é de 15 dias úteis. Ao mesmo tempo, dois satisfacao enterprise recebem o aviso da ANPD diretamente e enviam notificações de rescisão contratual. O jurídico estima que a multa pode variar entre R$ 180 mil e R$ 1,2 milhão dependendo da qualidade da resposta apresentada. Pedro apresenta um plano técnico de adequação que custaria R$ 220 mil e levaria 8 semanas.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Investir imediatamente no plano técnico de Pedro e apresentar à ANPD um programa completo de adequação com cronograma detalhado e DPO nomeado",
@@ -503,6 +515,7 @@ const TecnologiaRounds = [
     title: "O CTO Vai Embora",
     description: "Pedro pede uma reunião reservada. Ele é direto: 'Tenho um cofounder, uma ideia que valida uma hipótese de mercado que eu acredito muito, e um angel que já confirmou R$ 500 mil de seed. Vou sair para criar essa startup. Meu prazo é 30 dias.' Pedro está há 3 anos na empresa. Ele é o principal arquiteto de tudo que vocês construíram. Sem ele, o conhecimento técnico da plataforma cai dramaticamente. Você tem 30 dias para reagir.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Aceitar a decisão com elegância, negociar um período de transição de 60 dias com documentação estruturada e promover o dev sênior mais preparado a líder técnico interino",
@@ -540,6 +553,7 @@ const TecnologiaRounds = [
     title: "O Lançamento que Não Está Pronto",
     description: "A nova versão da plataforma — desenvolvida pelos últimos 10 semanas — está 85% concluída. O novo líder técnico Lucas apresenta o estado: 'Temos 43 bugs abertos, sendo 8 classificados como críticos. Com o time atual, precisamos de mais 5 semanas para fechar tudo com qualidade. Mas se lançarmos agora, os satisfacao vão sentir os problemas e vai parecer a versão anterior.' Os investidores já anunciaram o lançamento para os satisfacao enterprise como marco do plano. Beatriz diz que esperar mais 5 semanas vai custar 3 contratos que estão condicionados ao lançamento.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Adiar o lançamento geral por 5 semanas e corrigir todos os bugs críticos — comunicar honestamente aos investidores e satisfacao o motivo do atraso",
@@ -577,6 +591,7 @@ const TecnologiaRounds = [
     title: "O Board Meeting Final",
     description: "Reunião do conselho. Na sala: os dois investidores da Série A, Rafael (cofundador), Lucas (novo líder técnico), Beatriz (comercial) e você. Os investidores colocam a questão diretamente na mesa: 'A empresa sobreviveu à crise. Mas o mercado não vai esperar por uma empresa em modo de recuperação indefinidamente. Precisamos definir hoje: qual é a estratégia dos próximos 24 meses?' Quatro caminhos foram apresentados previamente em documento. Agora é a hora da decisão.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Crescimento sustentável: atingir break-even em 14 meses com expansão orgânica da base atual, e negociar Série B apenas quando a empresa estiver em posição de força técnica e operacional",
@@ -636,6 +651,7 @@ const TecnologiaRounds = [
     title: "O Relatório dos 8 Meses",
     description: "Carla, sua CFO, coloca os números na mesa: runway de 8 meses, CAC de R$187 por assinante (era R$62 há 18 meses), LTV médio caído de R$940 para R$410. A base saiu de 180k para 94k assinantes. 'Temos duas opções estruturais', ela diz. 'Cortar custos para chegar ao break-even no B2C — ou pivotar para B2B corporativo, onde o ticket é 12x maior mas o ciclo de venda é de 90 dias.' Por onde você começa?",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Fazer um diagnóstico cirúrgico: entrevistar os 20 maiores satisfacao que cancelaram e os 20 mais fiéis antes de qualquer decisão",
@@ -678,6 +694,7 @@ const TecnologiaRounds = [
     title: "O Time de Conteúdo no Limite",
     description: "Rafael, head de conteúdo e um dos fundadores originais, pede reunião. 'O time está produzindo 4 cursos por mês com a estrutura de 1 curso por mês. Três pessoas estão de atestado por ansiedade. Se não contratar ou redistribuir, vou perder mais dois sêniors até o final do mês.' O clima já está em nível crítico. Qualquer nova queda vai arrastar produtividade e qualidade junto.",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Contratar 4 produtores de conteúdo freelancers para aliviar a sobrecarga imediatamente",
@@ -719,6 +736,7 @@ const TecnologiaRounds = [
     title: "O Cliente que Cancela e Explica",
     description: "As entrevistas de cancelamento revelaram três padrões dominantes: 60% cancela por 'falta de tempo para estudar' (conteúdo muito longo), 25% por 'não consigo aplicar no trabalho' (teoria sem prática), 15% por preço frente a alternativas gratuitas. O head de produto propõe reformular os cursos em módulos de 8 minutos com projetos práticos. O time de conteúdo estima 4 meses de trabalho para reformular o catálogo atual.",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Reformular os 20 cursos mais populares em módulos curtos com projetos práticos — priorizar impacto máximo",
@@ -760,6 +778,7 @@ const TecnologiaRounds = [
     title: "A Plataforma Que Ficou Para Trás",
     description: "O relatório técnico chega: a plataforma tem performance média de 4,8 segundos para carregar no mobile — o benchmark do setor é 1,8s. O app iOS tem nota 3,2 na App Store. O CTO Eduardo estima 3 meses de refatoração para atingir o padrão atual do mercado. 'É dívida técnica que acumulamos quando crescemos rápido durante a pandemia', ele explica. 'Cada semana que postergamos custa mais para resolver depois.'",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Alocar 40% da equipe de engenharia para refatoração e manter 60% em novas features — equilibrar débito e produto",
@@ -801,6 +820,7 @@ const TecnologiaRounds = [
     title: "O Fundo de Corporate Venture",
     description: "O fundo de corporate venture de um grande grupo educacional quer investir R$8M por 25% da empresa. A condição: a empresa precisa pivotar para B2B e atender prioritariamente o grupo controlador por 3 anos. O cheque resolve o runway, mas o pivô forçado pode desalinhar o time e limitar o mercado endereçável no futuro. Seu investidor-anjo atual aconselha cautela.",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Negociar as condições: aceitar os R$8M mas reduzir a exclusividade para 18 meses e o stake para 18%",
@@ -844,6 +864,7 @@ const TecnologiaRounds = [
     title: "O Head de Produto Quer Sair",
     description: "Tatiana, sua head de produto, pede uma conversa difícil: 'Recebi uma oferta de uma startup financiada para ser CPO. Salário 40% acima. Posso ficar se houver um caminho claro para o produto daqui — mas não consigo trabalhar com a incerteza atual.' Tatiana tem 4 anos de empresa e domina toda a visão de produto. Reposicioná-la levaria meses.",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Apresentar o roadmap estratégico dos próximos 12 meses e oferecer participação societária como retenção",
@@ -886,6 +907,7 @@ const TecnologiaRounds = [
     title: "Coursera Anuncia Expansão no Brasil",
     description: "O Coursera anunciou parceria com 8 universidades brasileiras e planos de localizar todo o catálogo em português até o próximo semestre. A precificação será de R$59/mês — R$40 abaixo da sua assinatura atual. A imprensa especializada já faz comparações diretas. Três investidores-anjos que você está prospectando enviaram o artigo com a pergunta: 'Como vocês respondem a isso?'",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Posicionar publicamente o diferencial: instrutores brasileiros, contexto local e projetos aplicados ao mercado nacional",
@@ -926,6 +948,7 @@ const TecnologiaRounds = [
     title: "O Resultado do Piloto B2B",
     description: "O piloto B2B com 3 empresas terminou. Os resultados são mistos: a empresa A vai contratar (R$180k/ano, 200 licenças), a empresa B quer mais customização antes de decidir, a empresa C achou 'caro para o que entrega'. O ticket médio do B2B seria 11x o do B2C, mas o ciclo de venda foi de 4 meses. Com o runway atual, quantos ciclos de 4 meses você consegue financiar?",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Assinar o contrato com a empresa A, usar como caso de referência e montar equipe de 2 vendedores B2B especializados",
@@ -968,6 +991,7 @@ const TecnologiaRounds = [
     title: "A Crise de Retenção Chega ao Pico",
     description: "Os dados de coorte mostram que o churn no 3º mês de assinatura está em 41% — era 18% há dois anos. O head de CS Marcos propõe uma iniciativa de 'sucesso do aluno': check-ins semanais automatizados, trilhas personalizadas e gamificação de progresso. Custo de implementação: R$340k em tecnologia e 3 meses de trabalho. Impacto estimado: redução de 12% no churn mensal.",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Aprovar o projeto de sucesso do aluno — reduzir o churn é a prioridade mais urgente",
@@ -1001,12 +1025,13 @@ const TecnologiaRounds = [
   },
 
   /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO · O Investidor Anjo Cobra Uma Posição
+     R10 · DECISÃO CRÍTICA · O Investidor Anjo Cobra Uma Posição
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Investidor Anjo Cobra Uma Posição",
     description: "Seu principal investidor-anjo, Henrique, que aportou R$1,2M na fundação, pede uma reunião. Ele é direto: 'Você tem 5 meses de runway. Eu posso participar de um bridge de R$3M se você me apresentar uma estratégia clara — B2C reformulado com métricas de retenção, ou B2B com pipeline documentado. Não posso apostar em 'ainda estamos descobrindo'.' Você tem 7 dias para responder.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Apresentar uma estratégia dual clara: B2C enxuto com foco em retenção + B2B como canal secundário crescente",
@@ -1050,6 +1075,7 @@ const TecnologiaRounds = [
     title: "O Momento do Pivô",
     description: "Com o bridge aprovado e 9 meses de runway restantes, você precisa definir a alocação dos recursos. O board tem duas posições: metade quer 80% do time focado no B2B para chegar a R$500k MRR em 8 meses. A outra metade quer reformar o produto B2C e recuperar a base. O head de produto alerta: 'Não temos gente para os dois com excelência. Qualquer que seja a escolha, precisamos de 100% de comprometimento.'",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "B2B como prioridade: realocar 70% do time para construir o canal corporativo com o pipeline atual",
@@ -1092,6 +1118,7 @@ const TecnologiaRounds = [
     title: "A Plataforma ou o Conteúdo?",
     description: "O orçamento de produto para o próximo semestre precisa ser alocado. O CTO quer R$1,2M para refatorar a plataforma e lançar um app nativo. O head de conteúdo quer R$1M para produzir 40 novos cursos com instrutores de referência. O CFO diz que há R$1,5M disponível para produto no total — não para os dois. Cada área garante que o sucesso da empresa depende da sua prioridade.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Investir R$1M na plataforma — sem produto técnico confiável, o conteúdo não chega ao usuário",
@@ -1132,6 +1159,7 @@ const TecnologiaRounds = [
     title: "O Acordo com Empresa de RH",
     description: "A maior empresa de consultoria de RH do Brasil quer fazer uma parceria de distribuição: eles incluem sua plataforma nos pacotes de benefícios de 80 satisfacao corporativos. Em troca, desconto de 40% no valor da licença e split de receita de 30% para eles. O volume potencial é de 12.000 usuários novos — mas a financeiro por usuário cai para 42% do atual.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Aceitar a parceria com limite de volume: máximo de 4.000 usuários para testar o canal antes de escalar",
@@ -1173,6 +1201,7 @@ const TecnologiaRounds = [
     title: "A Reestruturação do Time",
     description: "Com a direção estratégica definida, é hora de alinhar o time ao novo modelo. O CEO de RH sugere reestruturação: desligar 18 pessoas que não fazem parte do caminho escolhido e contratar 12 perfis específicos para B2B. O CFO aponta que o custo da reestruturação (indenizações + seleção) é de R$820k — mas a economia anual é de R$600k.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Fazer a reestruturação com cuidado: comunicação clara, indenizações generosas e suporte de recolocação",
@@ -1215,6 +1244,7 @@ const TecnologiaRounds = [
     title: "O Futuro da EdTech",
     description: "Você chegou ao final do ciclo estratégico. A empresa sobreviveu à crise de runway, tomou decisões difíceis e precisa agora definir como crescer de forma sustentável. Os dados do último trimestre mostram sinais de estabilização. O board pede uma visão para os próximos 3 anos.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Empresa de aprendizagem corporativa: B2B como motor principal, B2C como funil de entrada para empresas",
@@ -1268,6 +1298,7 @@ const TecnologiaRounds = [
     title: "O Pipeline Travado",
     description: "Marcos, seu head de vendas, apresenta o mapa do pipeline: 24 oportunidades em negociação, R$4,2M em valor potencial. Mas 60% está em 'avaliação técnica' há mais de 90 dias sem avançar. Ele explica: 'As demos são boas tecnicamente, mas os decisores de negócio — CFOs e CHROs — saem sem entender o ROI concreto. Eles precisam de números, não de arquitetura de IA.' Qual é o diagnóstico e o plano?",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Criar um framework de ROI personalizado para cada oportunidade — calcular o retorno específico para cada cliente antes da próxima reunião",
@@ -1308,6 +1339,7 @@ const TecnologiaRounds = [
     title: "A Demo que Afasta",
     description: "Você assiste a uma gravação de demo. O que vê: 45 minutos de arquitetura de IA, gráficos de acurácia de modelos e terminologia técnica que o CHRO da empresa claramente não acompanhou. No final, ele pergunta: 'Isso funciona com o nosso sistema de RH?' A resposta do cientista de dados foi uma explicação de 10 minutos sobre APIs de integração. O CHRO agradeceu e nunca mais respondeu.",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Reformular a demo completamente: começar pelo problema do cliente, mostrar o antes e o depois em 15 minutos",
@@ -1347,6 +1379,7 @@ const TecnologiaRounds = [
     title: "O Concorrente Enterprise Chega",
     description: "Um prospect que estava em negociação avançada informa que vai assinar com a Workday, que acaba de lançar um módulo de automação de RH com IA generativa integrado ao ERP deles. 'É mais caro, mas elimina o risco de integração,' explica o CPO da empresa prospect. Dois outros prospects enviaram mensagens similares na semana. O mercado está observando como você posiciona a empresa diante dos grandes players.",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Posicionar a empresa como especialista vertical — o produto mais profundo para automação de RH do que qualquer ERP generalista",
@@ -1386,6 +1419,7 @@ const TecnologiaRounds = [
     title: "O Cientista de Dados que Quer Mudar",
     description: "Felipe, seu melhor cientista de dados, pede uma conversa: 'Passamos 3 anos construindo modelos que funcionam — e a empresa não consegue vender. Estou recebendo proposta do Mercado Livre para trabalhar em escala real. Aqui sinto que o meu trabalho não chega ao cliente.' Dois outros cientistas demonstram frustração similar em reuniões. O clima está em nível crítico e a produtividade do time técnico ameaça cair.",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Criar um programa interno de 'cientista de dados no cliente' — visitas mensais aos satisfacao para ver o produto em uso",
@@ -1427,6 +1461,7 @@ const TecnologiaRounds = [
     title: "O Cliente que Cancelou com Dados",
     description: "A empresa Lógica RH, uma das primeiras satisfacao, notificou cancelamento após 18 meses. O motivo surpreende: 'A acurácia dos modelos é ótima. O problema é que não conseguimos usar o produto no dia a dia — a interface é complexa demais para os nossos analistas de RH.' O relatório interno revela que 60% das features do produto nunca foram usadas pelos satisfacao existentes.",
     tags: ["tecnologia"],
+    fase: "diagnostico",
     choices: [
       {
         text: "Reformular a interface priorizando os 40% de features mais usadas — produto mais simples, adoção maior",
@@ -1466,6 +1501,7 @@ const TecnologiaRounds = [
     title: "A Vertical Certa",
     description: "O board pede uma decisão sobre verticalização. O produto atual atende RH e compliance em qualquer setor — mas sem profundidade em nenhum. Três verticais emergem como candidatas: varejo (maior volume de satisfacao, ticket menor), financeiro (ticket maior, ciclo de venda mais longo, regulação complexa) e manufatura (cadeia de conformidade trabalhista intensa, menor concorrência de IA).",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Manufatura: menor concorrência, conformidade trabalhista é problema crítico e recorrente, menos sujeito ao hype de IA generativa",
@@ -1506,6 +1542,7 @@ const TecnologiaRounds = [
     title: "SAP Anuncia Módulo Concorrente",
     description: "A SAP anunciou o SAP SuccessFactors AI Automation — módulo que automatiza compliance trabalhista e processos de RH, integrado nativamente ao ERP. Preço: incluído nos contratos enterprise existentes. Seis dos seus 40 satisfacao usam SAP. Três já enviaram e-mail perguntando se faz sentido continuar com você. A imprensa especializada publicou: 'SAP torna startups de automação de RH obsoletas?'",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Responder com dados: publicar benchmark comparativo mostrando acurácia superior e funcionalidades exclusivas",
@@ -1547,6 +1584,7 @@ const TecnologiaRounds = [
     title: "O Cliente Âncora Quer Mais",
     description: "A Construtora Andrade, seu maior cliente (R$780k/ano), quer expandir o uso para mais 3 plantas industriais — mas em troca pede desconto de 35% no contrato expandido e features exclusivas de compliance para o setor de construção civil. A expansão geraria R$1,4M adicionais por ano, mas as features exclusivas exigem 4 meses de desenvolvimento dedicado.",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Aceitar a expansão com desconto de 20% (não 35%) e features que beneficiem todos os satisfacao de manufatura",
@@ -1588,6 +1626,7 @@ const TecnologiaRounds = [
     title: "O Modelo de IA Generativa Entra em Cena",
     description: "O mercado está em euforia com IA generativa e satisfacao potenciais estão perguntando se o produto usa 'ChatGPT' ou algo similar. Sua tecnologia usa modelos preditivos clássicos — mais confiáveis para compliance, mas menos 'sexy' no pitch. O CTO propõe integrar um modelo de linguagem para criar uma interface conversacional. Custo: R$520k e 3 meses. O risco: latência e alucinações do LLM em contexto de compliance.",
     tags: ["tecnologia"],
+    fase: "pressao",
     choices: [
       {
         text: "Integrar IA generativa apenas na interface — o usuário conversa com o produto, mas as decisões são dos modelos preditivos confiáveis",
@@ -1622,12 +1661,13 @@ const TecnologiaRounds = [
   },
 
   /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO · O Round de Investimento Bate à Porta
+     R10 · DECISÃO CRÍTICA · O Round de Investimento Bate à Porta
   ═══════════════════════════════════════════════════════ */
   {
     title: "O Round de Investimento Bate à Porta",
     description: "Um fundo de venture capital especializado em IA B2B quer liderar uma rodada Serie A de R$18M com valuation de R$60M. A due diligence vai começar em 2 semanas. Os pontos de atenção que o fundo levantou: pipeline com baixa taxa de conversão, clima do time em nível baixo e concentração de receita nos 5 maiores satisfacao (64% do ARR). Você tem 2 semanas para preparar as respostas.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Ser completamente transparente com o fundo — apresentar os problemas e o plano de solução",
@@ -1669,6 +1709,7 @@ const TecnologiaRounds = [
     title: "O Partnership Estratégico",
     description: "A consultoria EY quer fazer um partnership de go-to-market: eles indicam a sua plataforma para os satisfacao deles em troca de 15% de comissão e exclusividade de integração com os projetos de transformação de RH deles. Volume potencial: 30 novos satisfacao por ano. A exclusividade, porém, impede parcerias com outras consultorias pelo prazo de 2 anos.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Aceitar sem exclusividade — 15% de comissão sim, exclusividade não",
@@ -1710,6 +1751,7 @@ const TecnologiaRounds = [
     title: "A Simplificação do Produto",
     description: "O diagnóstico de UX confirmou: 60% das features nunca são usadas. O head de produto propõe uma reformulação radical — reduzir o produto para as 40% de features mais usadas e criar uma experiência completamente nova e intuitiva. O CTO alerta: 'A reformulação vai gerar breaking changes para 8 satisfacao que usam as features que vamos remover.' O head de produto responde: '8 satisfacao em 40 é o custo de evoluir.'",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Aprovar a reformulação e conversar com os 8 satisfacao afetados antes de executar",
@@ -1750,6 +1792,7 @@ const TecnologiaRounds = [
     title: "A Equipe de Customer Success",
     description: "O churn dos últimos 6 meses foi de 14% — muito acima dos 7% que o modelo financeiro suporta. O head de CS identifica a causa: satisfacao contratam animados mas ficam sem suporte depois do onboarding. 'Precisamos de 4 CSMs dedicados. Hoje atendo 40 satisfacao sozinho.' A contratação custa R$520k/ano. O CFO apresenta o contra-argumento: 'Cada cliente que sai tira R$170k do ARR. 14% de churn custa R$950k/ano.'",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Contratar os 4 CSMs e estruturar playbooks de sucesso do cliente para os primeiros 90 dias",
@@ -1790,6 +1833,7 @@ const TecnologiaRounds = [
     title: "A Aquisição Surge",
     description: "A Totvs, maior empresa de software de gestão da América Latina, fez uma proposta de aquisição: R$42M por 80% da empresa, com earnout de R$12M se as metas dos próximos 2 anos forem atingidas. A oferta é 6,2x o ARR atual. Os fundadores originais têm posições diferentes: dois querem vender (o produto escala com a base de satisfacao da Totvs), um quer manter a independência.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Negociar contra-proposta: 70% de participação a R$50M com earnout maior — manter algum controle e upside",
@@ -1832,6 +1876,7 @@ const TecnologiaRounds = [
     title: "O Futuro da IA Corporativa",
     description: "O pipeline desbloqueou, o time está mais engajado e o produto ganhou clareza. Você precisa agora definir a estratégia de longo prazo: onde quer estar em 3 anos e como chegar lá.",
     tags: ["tecnologia"],
+    fase: "decisao",
     choices: [
       {
         text: "Plataforma vertical de IA para RH e compliance: líder técnico no segmento com os modelos mais precisos do mercado",
@@ -1864,3 +1909,5 @@ const TecnologiaRounds = [
 ]
 
 ]; // fim TecnologiaRounds
+
+fase: "decisao",
