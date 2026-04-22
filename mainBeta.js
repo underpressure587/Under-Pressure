@@ -965,9 +965,10 @@ function renderRodada(state) {
   const round = state.gameRounds[state.currentRound];
   if (!round) return;
 
-  const faseLabel = { fundacao:"Diagnóstico",crescimento:"Crescimento",
+  const faseLabel = { diagnostico:"Diagnóstico", pressao:"Pressão", decisao:"Decisão Crítica",
+                      fundacao:"Diagnóstico",crescimento:"Crescimento",
                       crise:"⚠ Crise",consolidacao:"Consolidação",expansao:"Expansão" };
-  const fase = state.storyState?.faseEmpresa;
+  const fase = round?.fase || state.storyState?.faseEmpresa;
   document.getElementById("hist-round-badge").textContent =
     `Rodada ${state.currentRound+1} · ${faseLabel[fase]||""}`;
   document.getElementById("hist-round-title").textContent = round.title || "";
