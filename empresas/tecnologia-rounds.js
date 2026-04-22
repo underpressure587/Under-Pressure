@@ -432,7 +432,7 @@ const TecnologiaRounds = [
     title: "A Oferta de Aquisição",
     description: "Um email chega diretamente para você — enviado pelo CEO da TechBridge, uma empresa americana de software com presença em 14 países: 'Temos acompanhado o crescimento de vocês no mercado brasileiro de SaaS B2B. Gostaríamos de propor uma conversa sobre aquisição. Nossa oferta indicativa é de R$ 28 milhões por 100% da empresa.' O múltiplo é de 6,7× o ARR atual — acima da média do mercado. Rafael quer aceitar imediatamente. Pedro quer rejeitar. Os investidores querem discutir.",
     tags: ["tecnologia"],
-    fase: "decisao",
+    fase: "pressao",
     choices: [
       {
         text: "Entrar nas conversas de due diligence com a TechBridge sem compromisso, para entender a oferta real antes de qualquer decisão",
@@ -1075,7 +1075,7 @@ const TecnologiaRounds = [
     title: "O Momento do Pivô",
     description: "Com o bridge aprovado e 9 meses de runway restantes, você precisa definir a alocação dos recursos. O board tem duas posições: metade quer 80% do time focado no B2B para chegar a R$500k MRR em 8 meses. A outra metade quer reformar o produto B2C e recuperar a base. O head de produto alerta: 'Não temos gente para os dois com excelência. Qualquer que seja a escolha, precisamos de 100% de comprometimento.'",
     tags: ["tecnologia"],
-    fase: "decisao",
+    fase: "pressao",
     choices: [
       {
         text: "B2B como prioridade: realocar 70% do time para construir o canal corporativo com o pipeline atual",
@@ -1709,7 +1709,7 @@ const TecnologiaRounds = [
     title: "O Partnership Estratégico",
     description: "A consultoria EY quer fazer um partnership de go-to-market: eles indicam a sua plataforma para os satisfacao deles em troca de 15% de comissão e exclusividade de integração com os projetos de transformação de RH deles. Volume potencial: 30 novos satisfacao por ano. A exclusividade, porém, impede parcerias com outras consultorias pelo prazo de 2 anos.",
     tags: ["tecnologia"],
-    fase: "decisao",
+    fase: "pressao",
     choices: [
       {
         text: "Aceitar sem exclusividade — 15% de comissão sim, exclusividade não",
@@ -1910,4 +1910,3 @@ const TecnologiaRounds = [
 
 ]; // fim TecnologiaRounds
 
-fase: "decisao",
