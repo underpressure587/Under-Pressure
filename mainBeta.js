@@ -3523,7 +3523,72 @@ window.BetaUI = {
 // Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando
 (function() {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _boot);
+    
+/* ════════════════════════════════════════════════════
+   BOTÃO VOLTAR — popstate
+════════════════════════════════════════════════════ */
+function _telaAtiva() {
+  return document.querySelector('.screen.active')?.id || '';
+}
+
+function _overlayAberto() {
+  const overlays = ['overlay-pause','overlay-tooltip','overlay-glossary','overlay-settings'];
+  return overlays.find(id => {
+    const el = document.getElementById(id);
+    return el && el.style.display !== 'none' && el.style.display !== '';
+  }) || null;
+}
+
+function _iniciarPopstate() {
+  // Garante que há um estado inicial no histórico
+  history.replaceState({ gsp: true }, '');
+
+  window.addEventListener('popstate', function() {
+    // Repõe o estado para o browser não sair do site
+    history.pushState({ gsp: true }, '');
+
+    // 1. Overlay aberto → fecha o overlay
+    const overlay = _overlayAberto();
+    if (overlay) {
+      _fecharOverlay(overlay);
+      return;
+    }
+
+    const tela = _telaAtiva();
+
+    // 2. Durante o jogo → abre pausa
+    if (tela === 'screen-game' || tela === 'screen-intro' || tela === 'screen-feedback') {
+      pausarJogo();
+      return;
+    }
+
+    // 3. Telas que voltam para home
+    if (['screen-perfil','screen-podio','screen-historico-jogos','screen-admin','screen-sector'].includes(tela)) {
+      voltar('screen-home');
+      return;
+    }
+
+    // 4. Seleção de empresa → volta para setor
+    if (tela === 'screen-company') {
+      voltar('screen-sector');
+      return;
+    }
+
+    // 5. Auth — cadastro/recuperar → volta para login
+    if (tela === 'screen-auth') {
+      const abaAtiva = document.getElementById('auth-form-cadastro')?.style.display !== 'none'
+        || document.getElementById('auth-form-recuperar')?.style.display !== 'none';
+      if (abaAtiva) {
+        authMudarAba('login');
+      }
+      return;
+    }
+
+    // 6. Home, login, tutorial → não faz nada
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() { _iniciarPopstate(); _boot(); });
   } else {
     _boot();
   }
