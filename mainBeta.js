@@ -3532,7 +3532,7 @@ function _telaAtiva() {
 }
 
 function _overlayAberto() {
-  const overlays = ['overlay-pause','overlay-tooltip','overlay-glossary','overlay-settings'];
+  const overlays = ['overlay-pause','overlay-tooltip','overlay-glossary','overlay-settings','overlay-inbox'];
   return overlays.find(id => {
     const el = document.getElementById(id);
     return el && el.style.display !== 'none' && el.style.display !== '';
