@@ -122,7 +122,7 @@ window.GSPAuth = {
       const cred = await signInWithPopup(auth, googleProvider);
       const nome = cred.user.displayName || cred.user.email.split("@")[0];
       await GSPAuth._salvarPerfil(cred.user, nome);
-      return { uid: cred.user.uid, nome, email: cred.user.email, tipo: "user" };
+      return { uid: cred.user.uid, nome, email: cred.user.email, tipo: "google", photoURL: cred.user.photoURL || null };
     } catch (e) {
       if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
         await signInWithRedirect(auth, googleProvider);
@@ -144,7 +144,8 @@ window.GSPAuth = {
   onAuthChange(callback) {
     if (!_firebaseReady) return;
     onAuthStateChanged(auth, user => {
-      if (user) callback({ uid: user.uid, nome: user.displayName || user.email, email: user.email, tipo: "user" });
+      const isGoogle = user.providerData?.some(p => p.providerId === "google.com");
+      if (user) callback({ uid: user.uid, nome: user.displayName || user.email, email: user.email, tipo: isGoogle ? "google" : "user", photoURL: isGoogle ? (user.photoURL || null) : null });
       else callback(null);
     });
   },

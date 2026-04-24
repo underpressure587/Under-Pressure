@@ -33,7 +33,7 @@ const SK = {
 ════════════════════════════════════════════════════ */
 let _player   = null;
 let _isAdmin  = false;
-let _settings = { timer: false, cloudStatus: false };
+let _settings = { timer: false, cloudStatus: false, fotoPerfil: false };
 let _setorSelecionado = null;
 let _escolhaFeita     = false;
 let _feedbackCallback = null;
@@ -137,7 +137,7 @@ function _fecharOverlay(id) {
 /* _verificarManutencaoInicial → maintenance.js */
 
 async function _boot() {
-  _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
+  _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false, fotoPerfil: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
   _carregarVersaoAtual(); // carrega versão atual em background
 
@@ -391,6 +391,27 @@ function _atualizarHome() {
   // Botão inbox sempre visível para usuários logados
   const btnInbox = document.getElementById('btn-inbox');
   if (btnInbox) btnInbox.style.display = _player?.uid ? '' : 'none';
+  _aplicarFotoAvatar();
+}
+
+// Aplica ou remove a foto do Google nos avatares (home + perfil)
+function _aplicarFotoAvatar() {
+  const usarFoto = _settings.fotoPerfil === true
+    && _player?.tipo === 'google'
+    && _player?.photoURL;
+
+  const ids = ['home-avatar-icon', 'perfil-avatar'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (usarFoto) {
+      el.innerHTML = `<img src="${_player.photoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      // Restaura inicial do nome
+      const inicial = (_player?.nome || 'J').charAt(0).toUpperCase();
+      el.textContent = inicial;
+    }
+  });
 }
 
 /* ════════════════════════════════════════════════════
@@ -1576,13 +1597,30 @@ function toggleCloudStatus() {
 }
 
 function toggleFotoPerfil() {
-  _settings.fotoPerfil = !(_settings.fotoPerfil === true);
+  // Se está desligado e vai ligar → pede confirmação
+  if (_settings.fotoPerfil !== true) {
+    _abrirOverlay('overlay-confirmar-foto');
+    return;
+  }
+  // Se está ligado → desliga direto, sem confirmação
+  _settings.fotoPerfil = false;
   LS.set(SK.SETTINGS, _settings);
   const btn = document.getElementById('toggle-foto-btn');
-  if (btn) {
-    btn.textContent = _settings.fotoPerfil ? 'ON' : 'OFF';
-    btn.className = `toggle-btn ${_settings.fotoPerfil ? 'on' : 'off'}`;
-  }
+  if (btn) { btn.textContent = 'OFF'; btn.className = 'toggle-btn off'; }
+  _aplicarFotoAvatar();
+}
+
+function confirmarFotoPerfil() {
+  _fecharOverlay('overlay-confirmar-foto');
+  _settings.fotoPerfil = true;
+  LS.set(SK.SETTINGS, _settings);
+  const btn = document.getElementById('toggle-foto-btn');
+  if (btn) { btn.textContent = 'ON'; btn.className = 'toggle-btn on'; }
+  _aplicarFotoAvatar();
+}
+
+function cancelarFotoPerfil() {
+  _fecharOverlay('overlay-confirmar-foto');
 }
 
 function abrirEditarNome() {
@@ -1800,6 +1838,7 @@ async function irParaPerfil() {
   // Avatar
   const av = document.getElementById('perfil-avatar');
   if (av) av.textContent = nome.charAt(0).toUpperCase();
+  _aplicarFotoAvatar();
   const pn = document.getElementById('perfil-nome');
   if (pn) pn.textContent = nome;
 
@@ -3627,7 +3666,7 @@ window.BetaUI = {
   mudarTab, escolher, avancar, reiniciar,
   openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus,
   toggleFullscreen, voltar,
-  irParaConfig, toggleFotoPerfil, abrirEditarNome, fecharEditarNome, salvarNome,
+  irParaConfig, toggleFotoPerfil, confirmarFotoPerfil, cancelarFotoPerfil, abrirEditarNome, fecharEditarNome, salvarNome,
   // Novos
   pularTutorial, tutorialStep, irParaSlide, reverTutorial,
   pausarJogo, continuarJogo, abandonarJogo,
