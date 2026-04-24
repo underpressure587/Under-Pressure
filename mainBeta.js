@@ -386,8 +386,6 @@ function sair() {
 function _atualizarHome() {
   const el = document.getElementById("home-player-name");
   if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;
-  const av = document.getElementById("home-avatar-icon");
-  if (av && _player?.nome) av.textContent = _player.nome.charAt(0).toUpperCase();
   // Botão inbox sempre visível para usuários logados
   const btnInbox = document.getElementById('btn-inbox');
   if (btnInbox) btnInbox.style.display = _player?.uid ? '' : 'none';
@@ -1831,16 +1829,23 @@ async function irParaPerfil() {
   mostrarTela('screen-perfil');
   _renderizarPerfilMsgs();
   const playerSalvo = LS.get(SK.PLAYER);
-  if (playerSalvo) { _player = playerSalvo; window._player = _player; }
+  if (playerSalvo) {
+    // Preserva tipo google e photoURL do Firebase Auth, nao do LS antigo
+    const isGoogleLive = window.GSPAuth?.isGoogleUser?.();
+    _player = {
+      ...playerSalvo,
+      tipo: isGoogleLive ? 'google' : (playerSalvo.tipo || 'user'),
+      photoURL: playerSalvo.photoURL || (isGoogleLive ? window.GSPAuth?.getPhotoURL?.() : null) || null,
+    };
+    window._player = _player;
+  }
   const isGuest = _player?.tipo === "guest" || !_player?.uid;
 
   // Renderiza IMEDIATAMENTE com dados locais
   const hist = LS.get(isGuest ? SK.HIST_GUEST : SK.HISTORICO) || [];
   const nome = _player?.nome || 'Jogador';
 
-  // Avatar
-  const av = document.getElementById('perfil-avatar');
-  if (av) av.textContent = nome.charAt(0).toUpperCase();
+  // Avatar: _aplicarFotoAvatar decide entre foto e inicial
   _aplicarFotoAvatar();
   const pn = document.getElementById('perfil-nome');
   if (pn) pn.textContent = nome;
