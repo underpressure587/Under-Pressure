@@ -1534,8 +1534,23 @@ function _atualizarBotaoFullscreen() {
 document.addEventListener("fullscreenchange", _atualizarBotaoFullscreen);
 
 function reverTutorial() {
-  localStorage.removeItem('gsp_tutorial_done');
+  // Não remove gsp_tutorial_done — evita que o tutorial reapareça
+  // no boot caso o usuário feche o app sem terminar de ver
   _fecharOverlay('overlay-settings');
+  // Salva a tela de origem para pularTutorial saber para onde voltar
+  const telaAtual = document.querySelector('.screen.active')?.id;
+  window._tutorialOrigem = telaAtual || 'screen-home';
+  _tutorialStep = 0;
+  const slides = document.querySelectorAll('.tutorial-slide');
+  const dots   = document.querySelectorAll('.tut-dot');
+  slides.forEach(s => s.classList.remove('active'));
+  dots.forEach(d => d.classList.remove('active'));
+  slides[0]?.classList.add('active');
+  dots[0]?.classList.add('active');
+  const prevBtn = document.getElementById('tut-prev');
+  const nextBtn = document.getElementById('tut-next');
+  if (prevBtn) prevBtn.style.display = 'none';
+  if (nextBtn) nextBtn.textContent = 'Próximo →';
   mostrarTela('screen-tutorial');
 }
 
@@ -1596,6 +1611,14 @@ const _TUTORIAL_TOTAL = 4;
 
 function pularTutorial() {
   localStorage.setItem('gsp_tutorial_done', '1');
+  // Se veio de dentro do jogo (via reverTutorial), volta pra tela de origem
+  const origem = window._tutorialOrigem;
+  window._tutorialOrigem = null;
+  const TELAS_JOGO = ['screen-game', 'screen-intro', 'screen-feedback', 'screen-result'];
+  if (origem && TELAS_JOGO.includes(origem)) {
+    mostrarTela(origem);
+    return;
+  }
   _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela('screen-home');
