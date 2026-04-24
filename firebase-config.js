@@ -99,6 +99,8 @@ window.dispatchEvent(new Event('gsp-firebase-loaded'));
 window.GSPAuth = {
   isReady: () => _firebaseReady,
   getToken: () => _getToken(),
+  isGoogleUser: () => { const u = _cachedAuthUser || auth?.currentUser; return !!u?.providerData?.some(p => p.providerId === 'google.com'); },
+  getPhotoURL: () => { const u = _cachedAuthUser || auth?.currentUser; return u?.photoURL || null; },
 
   async cadastrar({ nome, email, senha }) {
     if (!_firebaseReady) throw new Error("Firebase não configurado.");

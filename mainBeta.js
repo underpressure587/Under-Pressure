@@ -396,9 +396,9 @@ function _atualizarHome() {
 
 // Aplica ou remove a foto do Google nos avatares (home + perfil)
 function _aplicarFotoAvatar() {
-  const usarFoto = _settings.fotoPerfil === true
-    && _player?.tipo === 'google'
-    && _player?.photoURL;
+  const photoURL = _player?.photoURL || window.GSPAuth?.getPhotoURL?.() || null;
+  const isGoogle = _player?.tipo === 'google' || window.GSPAuth?.isGoogleUser?.();
+  const usarFoto = _settings.fotoPerfil === true && isGoogle && photoURL;
 
   const ids = ['home-avatar-icon', 'perfil-avatar'];
   ids.forEach(id => {
@@ -1560,9 +1560,12 @@ function _atualizarTelaConfig() {
   // Foto de perfil — só mostra se logado com Google
   const rowFoto = document.getElementById('config-row-foto');
   if (rowFoto) {
-    const isGoogle = _player?.tipo === 'google' || window.GSPAuth?.currentUser?.providerData?.some(p => p.providerId === 'google.com');
+    const isGoogle = _player?.tipo === 'google' || window.GSPAuth?.isGoogleUser?.();
     rowFoto.style.display = isGoogle ? 'flex' : 'none';
     if (isGoogle) {
+      // Garantir que photoURL está no _player mesmo se veio do LS antigo
+      if (!_player.photoURL) _player.photoURL = window.GSPAuth?.getPhotoURL?.() || null;
+      if (_player.tipo !== 'google') _player.tipo = 'google';
       const fotoOn = _settings.fotoPerfil === true;
       const fotoBtn = document.getElementById('toggle-foto-btn');
       if (fotoBtn) {
