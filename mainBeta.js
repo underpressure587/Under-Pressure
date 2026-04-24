@@ -1511,13 +1511,117 @@ function openSettings() {
   }
 }
 function closeSettings() { _fecharOverlay('overlay-settings'); }
-function toggleTimerSetting() { _settings.timer=!_settings.timer; LS.set(SK.SETTINGS,_settings); _atualizarToggleTimer(); }
+
+function irParaConfig() {
+  mostrarTela('screen-config');
+  _atualizarTelaConfig();
+}
+
+function _atualizarTelaConfig() {
+  // Timer
+  const timerBtn = document.getElementById('config-toggle-timer-btn');
+  if (timerBtn) {
+    timerBtn.textContent = _settings.timer ? 'ON' : 'OFF';
+    timerBtn.className = `toggle-btn ${_settings.timer ? 'on' : 'off'}`;
+  }
+  // Cloud
+  const cloudBtn = document.getElementById('config-toggle-cloud-btn');
+  if (cloudBtn) {
+    const on = _settings.cloudStatus !== false;
+    cloudBtn.textContent = on ? 'ON' : 'OFF';
+    cloudBtn.className = `toggle-btn ${on ? 'on' : 'off'}`;
+  }
+  // Fullscreen
+  _atualizarBotaoFullscreen();
+  // Nome atual
+  const nomeEl = document.getElementById('config-nome-atual');
+  if (nomeEl) nomeEl.textContent = _player?.nome || '—';
+  // Foto de perfil — só mostra se logado com Google
+  const rowFoto = document.getElementById('config-row-foto');
+  if (rowFoto) {
+    const isGoogle = _player?.tipo === 'google' || window.GSPAuth?.currentUser?.providerData?.some(p => p.providerId === 'google.com');
+    rowFoto.style.display = isGoogle ? 'flex' : 'none';
+    if (isGoogle) {
+      const fotoOn = _settings.fotoPerfil === true;
+      const fotoBtn = document.getElementById('toggle-foto-btn');
+      if (fotoBtn) {
+        fotoBtn.textContent = fotoOn ? 'ON' : 'OFF';
+        fotoBtn.className = `toggle-btn ${fotoOn ? 'on' : 'off'}`;
+      }
+    }
+  }
+}
+
+function toggleTimerSetting() {
+  _settings.timer = !_settings.timer;
+  LS.set(SK.SETTINGS, _settings);
+  _atualizarToggleTimer();
+  // Atualiza botão da tela config também
+  const configBtn = document.getElementById('config-toggle-timer-btn');
+  if (configBtn) {
+    configBtn.textContent = _settings.timer ? 'ON' : 'OFF';
+    configBtn.className = `toggle-btn ${_settings.timer ? 'on' : 'off'}`;
+  }
+}
+
 function toggleCloudStatus() {
   _settings.cloudStatus = !_settings.cloudStatus;
   LS.set(SK.SETTINGS, _settings);
+  // Overlay
   const btn = document.getElementById('toggle-cloud-btn');
   if (btn) { btn.textContent = _settings.cloudStatus ? 'ON' : 'OFF'; btn.className = `toggle-btn ${_settings.cloudStatus ? 'on' : 'off'}`; }
+  // Tela config
+  const configBtn = document.getElementById('config-toggle-cloud-btn');
+  if (configBtn) { configBtn.textContent = _settings.cloudStatus ? 'ON' : 'OFF'; configBtn.className = `toggle-btn ${_settings.cloudStatus ? 'on' : 'off'}`; }
 }
+
+function toggleFotoPerfil() {
+  _settings.fotoPerfil = !(_settings.fotoPerfil === true);
+  LS.set(SK.SETTINGS, _settings);
+  const btn = document.getElementById('toggle-foto-btn');
+  if (btn) {
+    btn.textContent = _settings.fotoPerfil ? 'ON' : 'OFF';
+    btn.className = `toggle-btn ${_settings.fotoPerfil ? 'on' : 'off'}`;
+  }
+}
+
+function abrirEditarNome() {
+  const input = document.getElementById('input-novo-nome');
+  if (input) input.value = _player?.nome || '';
+  _abrirOverlay('overlay-editar-nome');
+  setTimeout(() => input?.focus(), 200);
+}
+
+function fecharEditarNome() { _fecharOverlay('overlay-editar-nome'); }
+
+async function salvarNome() {
+  const input = document.getElementById('input-novo-nome');
+  const novoNome = input?.value?.trim();
+  if (!novoNome || novoNome.length < 2) { mostrarAviso('Nome muito curto. Mínimo 2 caracteres.'); return; }
+  if (novoNome.length > 30) { mostrarAviso('Nome muito longo. Máximo 30 caracteres.'); return; }
+  if (_player) {
+    _player.nome = novoNome;
+    LS.set(SK.PLAYER, _player);
+    window._player = _player;
+  }
+  fecharEditarNome();
+  const nomeEl = document.getElementById('config-nome-atual');
+  if (nomeEl) nomeEl.textContent = novoNome;
+  // Tenta salvar no Firestore se logado
+  if (_player?.uid && window.GSPAuth?.isReady()) {
+    try {
+      const tok = await window.GSPAuth.getToken();
+      const url = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents/usuarios/${_player.uid}?updateMask.fieldPaths=nome`;
+      await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { nome: { stringValue: novoNome } } })
+      });
+    } catch(e) { /* silencioso */ }
+  }
+  mostrarAviso('Nome atualizado!');
+}
+
 function _atualizarToggleTimer() {
   const btn=document.getElementById("toggle-timer-btn"); if(!btn) return;
   btn.textContent=_settings.timer?"ON":"OFF"; btn.className=`toggle-btn ${_settings.timer?"on":"off"}`;
@@ -1537,10 +1641,12 @@ function toggleFullscreen() {
   }
 }
 function _atualizarBotaoFullscreen() {
-  const btn = document.getElementById("settings-fs-btn");
-  if (!btn) return;
   const isFs = !!document.fullscreenElement;
-  btn.textContent = isFs ? "✕ Sair" : "⛶ Ativar";
+  const label = isFs ? "✕ Sair" : "⛶ Ativar";
+  const btn = document.getElementById("settings-fs-btn");
+  if (btn) btn.textContent = label;
+  const configBtn = document.getElementById("config-fs-btn");
+  if (configBtn) configBtn.textContent = label;
 }
 document.addEventListener("fullscreenchange", _atualizarBotaoFullscreen);
 
@@ -3521,6 +3627,7 @@ window.BetaUI = {
   mudarTab, escolher, avancar, reiniciar,
   openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus,
   toggleFullscreen, voltar,
+  irParaConfig, toggleFotoPerfil, abrirEditarNome, fecharEditarNome, salvarNome,
   // Novos
   pularTutorial, tutorialStep, irParaSlide, reverTutorial,
   pausarJogo, continuarJogo, abandonarJogo,

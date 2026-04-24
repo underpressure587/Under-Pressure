@@ -289,7 +289,7 @@
           <span id="inbox-badge" style="display:none;position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:.55rem;font-weight:700;border-radius:999px;min-width:14px;height:14px;line-height:14px;text-align:center;padding:0 3px"></span>
         </button>
         <button class="btn-ghost" onclick="BetaUI.openGlossary()" style="color:var(--s-text);font-weight:700">?</button>
-        <button class="btn-ghost btn-icon" onclick="BetaUI.openSettings()" title="Configurações"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+        <button class="btn-ghost btn-icon" onclick="BetaUI.irParaConfig()" title="Configurações"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
       </div>
     </div>
     <div id="session-restore-banner" class="session-banner" style="display:none">
@@ -339,6 +339,117 @@
       <div class="perfil-conquistas" id="perfil-conquistas"></div>
       <div class="perfil-conquistas-title" id="perfil-msgs-titulo" style="margin-top:20px;display:none">📬 Mensagens Recebidas</div>
       <div id="perfil-msgs-lista" style="display:flex;flex-direction:column;gap:8px;padding-bottom:16px"></div>
+    </div>
+  </div>
+
+  <!-- ══ CONFIGURAÇÕES ══ -->
+  <div id="screen-config" class="screen">
+    <div class="podio-header">
+      <button class="btn-back" onclick="BetaUI.voltar('screen-home')"></button>
+      <span class="podio-title" style="display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Configurações</span>
+      <div style="width:60px"></div>
+    </div>
+    <div class="perfil-body">
+
+      <!-- PERFIL / CONTA -->
+      <div class="config-section-title">Perfil / Conta</div>
+
+      <div class="config-row">
+        <div class="config-row-info">
+          <span class="config-row-label">Nome de exibição</span>
+          <span class="config-row-desc" id="config-nome-atual">—</span>
+        </div>
+        <button class="btn-settings-fullscreen" onclick="BetaUI.abrirEditarNome()">✏️ Editar</button>
+      </div>
+
+      <div class="config-row" id="config-row-foto" style="display:none">
+        <div class="config-row-info">
+          <span class="config-row-label">Foto de perfil do Google</span>
+          <span class="config-row-desc">Outros jogadores poderão ver sua foto</span>
+        </div>
+        <button id="toggle-foto-btn" class="toggle-btn off" onclick="BetaUI.toggleFotoPerfil()">OFF</button>
+      </div>
+
+      <!-- VISUAL -->
+      <div class="config-section-title" style="margin-top:24px">Visual</div>
+      <div class="config-soon-card">
+        <span class="config-soon-icon">🎨</span>
+        <div>
+          <div class="config-soon-label">Tema e aparência</div>
+          <div class="config-soon-desc">Tema claro/escuro e tamanho de fonte</div>
+        </div>
+        <span class="config-soon-badge">Em breve</span>
+      </div>
+
+      <!-- JOGO -->
+      <div class="config-section-title" style="margin-top:24px">Jogo</div>
+
+      <div class="config-row">
+        <div class="config-row-info">
+          <span class="config-row-label">Timer por rodada</span>
+          <span class="config-row-desc">90 segundos por decisão</span>
+        </div>
+        <button id="config-toggle-timer-btn" class="toggle-btn off" onclick="BetaUI.toggleTimerSetting()">OFF</button>
+      </div>
+
+      <div class="config-soon-card">
+        <span class="config-soon-icon">💡</span>
+        <div>
+          <div class="config-soon-label">Mostrar dicas</div>
+          <div class="config-soon-desc">Exibir dicas durante a partida</div>
+        </div>
+        <span class="config-soon-badge">Em breve</span>
+      </div>
+
+      <!-- SISTEMA -->
+      <div class="config-section-title" style="margin-top:24px">Sistema</div>
+
+      <div class="config-row">
+        <div class="config-row-info">
+          <span class="config-row-label">Tela cheia</span>
+        </div>
+        <button class="btn-settings-fullscreen" onclick="BetaUI.toggleFullscreen()" id="config-fs-btn">⛶ Ativar</button>
+      </div>
+
+      <div class="config-row">
+        <div class="config-row-info">
+          <span class="config-row-label">Salvamento na nuvem</span>
+          <span class="config-row-desc">Exibir status de sincronização</span>
+        </div>
+        <button id="config-toggle-cloud-btn" class="toggle-btn off" onclick="BetaUI.toggleCloudStatus()">OFF</button>
+      </div>
+
+      <div class="config-row">
+        <div class="config-row-info">
+          <span class="config-row-label">Rever tutorial</span>
+        </div>
+        <button class="btn-settings-fullscreen" onclick="BetaUI.reverTutorial()">▶ Ver</button>
+      </div>
+
+      <div class="config-row" style="margin-top:8px">
+        <span class="config-row-label" style="font-size:.74rem;color:var(--t3)">v6.0 · Under Pressure · Beta</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ MODAL: EDITAR NOME ══ -->
+  <div id="overlay-editar-nome" class="overlay" onclick="if(event.target===this)BetaUI.fecharEditarNome()">
+    <div class="overlay-card">
+      <div class="overlay-head">
+        <span class="overlay-title">Editar nome</span>
+        <button class="overlay-close" onclick="BetaUI.fecharEditarNome()">✕</button>
+      </div>
+      <div class="overlay-body">
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <span class="settings-row-label">Novo nome de exibição</span>
+          <input id="input-novo-nome" type="text" class="input-field" maxlength="30" placeholder="Seu nome aqui" style="width:100%;box-sizing:border-box" autocomplete="off">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn btn-secondary" style="flex:1" onclick="BetaUI.fecharEditarNome()">Cancelar</button>
+          <button class="btn btn-primary" style="flex:1" onclick="BetaUI.salvarNome()">Salvar</button>
+        </div>
+      </div>
     </div>
   </div>
 

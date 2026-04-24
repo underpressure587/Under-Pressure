@@ -1952,6 +1952,39 @@ body::after{
 .btn-settings-fullscreen:hover { background: var(--bg4); }
 
 /* ════════════════════════════════════════════════════
+   TELA DE CONFIGURAÇÕES
+════════════════════════════════════════════════════ */
+.config-section-title {
+  font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--t3);
+  padding: 0 0 10px 0; margin-top: 4px;
+}
+.config-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--line);
+  gap: 12px;
+}
+.config-row:last-of-type { border-bottom: none; }
+.config-row-info { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.config-row-label { font-size: .87rem; color: var(--t2); font-weight: 500; }
+.config-row-desc { font-size: .75rem; color: var(--t3); }
+.config-soon-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0; border-bottom: 1px solid var(--line);
+  opacity: .65;
+}
+.config-soon-icon { font-size: 1.3rem; flex-shrink: 0; }
+.config-soon-label { font-size: .87rem; color: var(--t2); font-weight: 500; }
+.config-soon-desc { font-size: .75rem; color: var(--t3); margin-top: 2px; }
+.config-soon-badge {
+  margin-left: auto; flex-shrink: 0;
+  background: var(--bg3); border: 1px solid var(--line2);
+  color: var(--t3); font-size: .65rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 4px 8px; border-radius: var(--rpill);
+}
+
+/* ════════════════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════════════════ */
 @media (max-width:380px){
