@@ -280,7 +280,9 @@ function _setLoadingMsg(msg, sub, progress) {
 function mostrarTela(id, goBack) {
   document.querySelectorAll(".screen").forEach(s => {
     s.classList.remove("active", "go-back");
-    s.style.display = '';
+    // Não resetar display aqui: o CSS já define display:none para .screen sem .active.
+    // Resetar display causava um frame onde todos os screens ficavam visíveis
+    // simultaneamente (flash do sala-mode no fundo ao voltar para home).
     s.style.opacity = '';
     s.style.transition = '';
     s.style.animation = '';
