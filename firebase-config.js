@@ -99,8 +99,7 @@ window.dispatchEvent(new Event('gsp-firebase-loaded'));
 window.GSPAuth = {
   isReady: () => _firebaseReady,
   getToken: () => _getToken(),
-  isGoogleUser: () => { const u = _cachedAuthUser || auth?.currentUser; return !!u?.providerData?.some(p => p.providerId === 'google.com'); },
-  getPhotoURL: () => { const u = _cachedAuthUser || auth?.currentUser; return u?.photoURL || null; },
+  get currentUser() { return auth?.currentUser || _cachedAuthUser || null; },
 
   async cadastrar({ nome, email, senha }) {
     if (!_firebaseReady) throw new Error("Firebase não configurado.");
@@ -124,7 +123,7 @@ window.GSPAuth = {
       const cred = await signInWithPopup(auth, googleProvider);
       const nome = cred.user.displayName || cred.user.email.split("@")[0];
       await GSPAuth._salvarPerfil(cred.user, nome);
-      return { uid: cred.user.uid, nome, email: cred.user.email, tipo: "google", photoURL: cred.user.photoURL || null };
+      return { uid: cred.user.uid, nome, email: cred.user.email, tipo: "user" };
     } catch (e) {
       if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
         await signInWithRedirect(auth, googleProvider);
@@ -146,8 +145,7 @@ window.GSPAuth = {
   onAuthChange(callback) {
     if (!_firebaseReady) return;
     onAuthStateChanged(auth, user => {
-      const isGoogle = user.providerData?.some(p => p.providerId === "google.com");
-      if (user) callback({ uid: user.uid, nome: user.displayName || user.email, email: user.email, tipo: isGoogle ? "google" : "user", photoURL: isGoogle ? (user.photoURL || null) : null });
+      if (user) callback({ uid: user.uid, nome: user.displayName || user.email, email: user.email, tipo: "user" });
       else callback(null);
     });
   },
@@ -173,13 +171,36 @@ window.GSPAuth = {
         await new Promise(r => setTimeout(r, 500));
       }
       if (!token) { console.warn("[GSP] _salvarPerfil: sem token"); return; }
+
+      // Verifica se já existe um nome customizado salvo no Firestore
+      const getUrl = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + user.uid;
+      let nomeParaSalvar = nome || '';
+      try {
+        const res = await fetch(getUrl, { headers: { 'Authorization': 'Bearer ' + token } });
+        if (res.ok) {
+          const doc = await res.json();
+          const nomeSalvo = doc?.fields?.nome?.stringValue;
+          // Se já tem nome customizado no Firestore, preserva
+          if (nomeSalvo && nomeSalvo.trim() !== '') nomeParaSalvar = nomeSalvo;
+        }
+      } catch(e) { /* usa nome do Google mesmo */ }
+
       // FIX: apenas nome e email — nunca sobrescrever mandatos/melhorScore (resetaria stats do jogador)
       const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + user.uid + "?updateMask.fieldPaths=nome&updateMask.fieldPaths=email";
       const body = { fields: {
-        nome:  { stringValue: nome || '' },
+        nome:  { stringValue: nomeParaSalvar },
         email: { stringValue: user.email || '' },
       }};
       await fetch(url, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+      // Atualiza localStorage com nome preservado
+      try {
+        const lsPlayer = JSON.parse(localStorage.getItem('gsp_player') || '{}');
+        if (lsPlayer?.uid === user.uid) {
+          lsPlayer.nome = nomeParaSalvar;
+          localStorage.setItem('gsp_player', JSON.stringify(lsPlayer));
+        }
+      } catch(e) {}
     } catch (e) { console.warn("[GSP] _salvarPerfil:", e.message); }
   },
 };
@@ -399,7 +420,6 @@ window.GSPSync = {
       totalJogos:    { integerValue: String(totalJogos) },
       ultimaPartida: { timestampValue: new Date().toISOString() },
       melhorPorSetor: { mapValue: { fields: melhorPorSetorFields } },
-      photoURL:      { stringValue: entrada.photoURL || '' },
     }};
 
     const patchRes = await fetch(url, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -451,7 +471,6 @@ window.GSPSync = {
             totalJogos:    _pi(f.totalJogos) || 1,
             ultimaPartida: f.ultimaPartida?.timestampValue || null,
             melhorPorSetor,
-            photoURL:      f.photoURL?.stringValue || null,
           };
         })
         .filter(p => p.uid && p.melhorScore > 0);

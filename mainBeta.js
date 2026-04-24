@@ -33,7 +33,7 @@ const SK = {
 ════════════════════════════════════════════════════ */
 let _player   = null;
 let _isAdmin  = false;
-let _settings = { timer: false, cloudStatus: false, fotoPerfil: false };
+let _settings = { timer: false, cloudStatus: false };
 let _setorSelecionado = null;
 let _escolhaFeita     = false;
 let _feedbackCallback = null;
@@ -137,7 +137,7 @@ function _fecharOverlay(id) {
 /* _verificarManutencaoInicial → maintenance.js */
 
 async function _boot() {
-  _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false, fotoPerfil: false };
+  _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
   _carregarVersaoAtual(); // carrega versão atual em background
 
@@ -386,30 +386,19 @@ function sair() {
 function _atualizarHome() {
   const el = document.getElementById("home-player-name");
   if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;
+  const av = document.getElementById("home-avatar-icon");
+  if (av) {
+    const photoURL = window.GSPAuth?.currentUser?.photoURL || _cachedAuthUser?.photoURL;
+    const fotoOn = LS.get(SK.SETTINGS)?.fotoPerfil === true;
+    if (photoURL && fotoOn) {
+      av.innerHTML = `<img src="${photoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else if (_player?.nome) {
+      av.textContent = _player.nome.charAt(0).toUpperCase();
+    }
+  }
   // Botão inbox sempre visível para usuários logados
   const btnInbox = document.getElementById('btn-inbox');
   if (btnInbox) btnInbox.style.display = _player?.uid ? '' : 'none';
-  _aplicarFotoAvatar();
-}
-
-// Aplica ou remove a foto do Google nos avatares (home + perfil)
-function _aplicarFotoAvatar() {
-  const photoURL = _player?.photoURL || window.GSPAuth?.getPhotoURL?.() || null;
-  const isGoogle = _player?.tipo === 'google' || window.GSPAuth?.isGoogleUser?.();
-  const usarFoto = _settings.fotoPerfil === true && isGoogle && photoURL;
-
-  const ids = ['home-avatar-icon', 'perfil-avatar'];
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (usarFoto) {
-      el.innerHTML = `<img src="${_player.photoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-    } else {
-      // Restaura inicial do nome
-      const inicial = (_player?.nome || 'J').charAt(0).toUpperCase();
-      el.textContent = inicial;
-    }
-  });
 }
 
 /* ════════════════════════════════════════════════════
@@ -505,9 +494,6 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
     player: _player?.nome || 'Convidado',
     score, scoreGestor, sector, companyName, ts: Date.now(),
     uid: _player?.uid || null,
-    photoURL: (_settings.fotoPerfil === true && _player?.tipo === 'google')
-      ? (_player?.photoURL || window.GSPAuth?.getPhotoURL?.() || null)
-      : null,
   };
 
   // Salva no histórico local
@@ -1561,12 +1547,9 @@ function _atualizarTelaConfig() {
   // Foto de perfil — só mostra se logado com Google
   const rowFoto = document.getElementById('config-row-foto');
   if (rowFoto) {
-    const isGoogle = _player?.tipo === 'google' || window.GSPAuth?.isGoogleUser?.();
+    const isGoogle = _player?.tipo === 'google' || window.GSPAuth?.currentUser?.providerData?.some(p => p.providerId === 'google.com');
     rowFoto.style.display = isGoogle ? 'flex' : 'none';
     if (isGoogle) {
-      // Garantir que photoURL está no _player mesmo se veio do LS antigo
-      if (!_player.photoURL) _player.photoURL = window.GSPAuth?.getPhotoURL?.() || null;
-      if (_player.tipo !== 'google') _player.tipo = 'google';
       const fotoOn = _settings.fotoPerfil === true;
       const fotoBtn = document.getElementById('toggle-foto-btn');
       if (fotoBtn) {
@@ -1601,30 +1584,15 @@ function toggleCloudStatus() {
 }
 
 function toggleFotoPerfil() {
-  // Se está desligado e vai ligar → pede confirmação
-  if (_settings.fotoPerfil !== true) {
-    _abrirOverlay('overlay-confirmar-foto');
-    return;
+  _settings.fotoPerfil = !(_settings.fotoPerfil === true);
+  LS.set(SK.SETTINGS, _settings);
+  const btn = document.getElementById('toggle-foto-btn');
+  if (btn) {
+    btn.textContent = _settings.fotoPerfil ? 'ON' : 'OFF';
+    btn.className = `toggle-btn ${_settings.fotoPerfil ? 'on' : 'off'}`;
   }
-  // Se está ligado → desliga direto, sem confirmação
-  _settings.fotoPerfil = false;
-  LS.set(SK.SETTINGS, _settings);
-  const btn = document.getElementById('toggle-foto-btn');
-  if (btn) { btn.textContent = 'OFF'; btn.className = 'toggle-btn off'; }
-  _aplicarFotoAvatar();
-}
-
-function confirmarFotoPerfil() {
-  _fecharOverlay('overlay-confirmar-foto');
-  _settings.fotoPerfil = true;
-  LS.set(SK.SETTINGS, _settings);
-  const btn = document.getElementById('toggle-foto-btn');
-  if (btn) { btn.textContent = 'ON'; btn.className = 'toggle-btn on'; }
-  _aplicarFotoAvatar();
-}
-
-function cancelarFotoPerfil() {
-  _fecharOverlay('overlay-confirmar-foto');
+  // Atualiza avatar da home imediatamente
+  _atualizarHome();
 }
 
 function abrirEditarNome() {
@@ -1832,24 +1800,16 @@ async function irParaPerfil() {
   mostrarTela('screen-perfil');
   _renderizarPerfilMsgs();
   const playerSalvo = LS.get(SK.PLAYER);
-  if (playerSalvo) {
-    // Preserva tipo google e photoURL do Firebase Auth, nao do LS antigo
-    const isGoogleLive = window.GSPAuth?.isGoogleUser?.();
-    _player = {
-      ...playerSalvo,
-      tipo: isGoogleLive ? 'google' : (playerSalvo.tipo || 'user'),
-      photoURL: playerSalvo.photoURL || (isGoogleLive ? window.GSPAuth?.getPhotoURL?.() : null) || null,
-    };
-    window._player = _player;
-  }
+  if (playerSalvo) { _player = playerSalvo; window._player = _player; }
   const isGuest = _player?.tipo === "guest" || !_player?.uid;
 
   // Renderiza IMEDIATAMENTE com dados locais
   const hist = LS.get(isGuest ? SK.HIST_GUEST : SK.HISTORICO) || [];
   const nome = _player?.nome || 'Jogador';
 
-  // Avatar: _aplicarFotoAvatar decide entre foto e inicial
-  _aplicarFotoAvatar();
+  // Avatar
+  const av = document.getElementById('perfil-avatar');
+  if (av) av.textContent = nome.charAt(0).toUpperCase();
   const pn = document.getElementById('perfil-nome');
   if (pn) pn.textContent = nome;
 
@@ -2179,13 +2139,10 @@ function _renderPodio(lista, podio, setor) {
     const sub  = isAll
       ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
       : `${icones[p.sector]||'🏢'} ${p.companyName}`;
-    const avatarConteudo = p.photoURL
-      ? `<img src="${p.photoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-      : (p.player||'?').charAt(0).toUpperCase();
     return `<div class="podio-top3-card ${cls} ${isMe ? 'podio-top3-me' : ''}" data-sector="${p.sector||''}">
       <div class="podio-top3-player">
         ${isMe ? '<div class="podio-top3-you">Você</div>' : ''}
-        <div class="podio-top3-avatar">${avatarConteudo}</div>
+        <div class="podio-top3-avatar">${(p.player||'?').charAt(0).toUpperCase()}</div>
         <div class="podio-top3-name">${p.player}</div>
         <div class="podio-top3-company">${sub}</div>
         <div class="podio-top3-score">${val}</div>
@@ -2797,20 +2754,12 @@ async function _loginOk(player) {
   _restaurarSala();
   _restaurarGrupo();
   _verificarSessaoSalva();
-  // Garantir photoURL e tipo google antes de renderizar
-  if (window.GSPAuth?.isGoogleUser?.()) {
-    _player.tipo = 'google';
-    if (!_player.photoURL) _player.photoURL = window.GSPAuth.getPhotoURL?.() || null;
-    LS.set(SK.PLAYER, _player);
-  }
   _atualizarHome();
   if (!localStorage.getItem('gsp_tutorial_done')) {
     mostrarTela('screen-tutorial');
   } else {
     mostrarTela("screen-home");
   }
-  // Segunda chamada com pequeno delay — garante que o avatar já está no DOM
-  setTimeout(_aplicarFotoAvatar, 100);
 
   // Sincroniza dados em background (não bloqueia a UI)
   _sincronizarFirebaseBackground(player);
@@ -3688,7 +3637,7 @@ window.BetaUI = {
   mudarTab, escolher, avancar, reiniciar,
   openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus,
   toggleFullscreen, voltar,
-  irParaConfig, toggleFotoPerfil, confirmarFotoPerfil, cancelarFotoPerfil, abrirEditarNome, fecharEditarNome, salvarNome,
+  irParaConfig, toggleFotoPerfil, abrirEditarNome, fecharEditarNome, salvarNome,
   // Novos
   pularTutorial, tutorialStep, irParaSlide, reverTutorial,
   pausarJogo, continuarJogo, abandonarJogo,

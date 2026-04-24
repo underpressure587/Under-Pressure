@@ -994,7 +994,6 @@ body::after{
   width: 40px; height: 40px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--serif); font-size: 1.1rem; font-weight: 700;
-  overflow: hidden;
 }
 .podio-top3-1 .podio-top3-avatar {
   width: 46px; height: 46px; font-size: 1.3rem;
@@ -1958,11 +1957,6 @@ body::after{
 .config-body {
   padding-bottom: 40px;
   gap: 0 !important;
-}
-
-.config-col {
-  display: block;
-  width: 100%;
 }
 
 .config-section-title {
@@ -2947,7 +2941,7 @@ body::after{
 
   /* Expande o app quando config está ativa */
   #app:has(#screen-config.active) {
-    max-width: 1000px;
+    max-width: 720px;
   }
 
   .podio-header {
@@ -2964,37 +2958,14 @@ body::after{
     gap: 20px; padding: 20px 32px; align-items: start;
   }
 
-  /* Config: duas colunas no desktop via wrappers */
+  /* Config usa coluna única centralizada no desktop */
   #screen-config .perfil-body,
   #screen-config .config-body {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: flex-start !important;
-    flex-wrap: nowrap !important;
+    display: flex; flex-direction: column;
     width: 100%;
     max-width: 100%;
-    padding: 0 40px 24px !important;
-    gap: 40px !important;
-    overflow-y: visible;
-  }
-
-  #screen-config .config-col {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
+    padding: 0 40px 40px !important;
     gap: 0;
-  }
-
-  #screen-config .config-col .config-section-title:not(:first-child) {
-    margin-top: 20px;
-  }
-
-  #screen-config .config-version {
-    text-align: center;
-    padding: 8px 40px 24px;
-    font-size: .72rem;
-    color: var(--t3);
   }
 
   #screen-config .config-section-title {
