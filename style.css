@@ -2322,7 +2322,7 @@ body::after{
   background:var(--bg1); border-radius:var(--r3);
   animation:popIn .25s cubic-bezier(.22,.68,0,1.2);
 }
-.pause-icon{ font-size:2.5rem; margin-bottom:var(--sp2); filter:drop-shadow(0 0 16px var(--s-glow)); }
+.pause-icon{ display:flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:var(--r2); background:var(--s-bg-accent); border:1px solid var(--s-bd-accent); color:var(--s-primary); margin-bottom:var(--sp2); filter:drop-shadow(0 0 16px var(--s-glow)); }
 .pause-title{ font-family:var(--serif); font-size:1.6rem; font-weight:700; color:var(--t1); margin-bottom:8px; }
 .pause-info{ font-size:.84rem; color:var(--t3); line-height:1.6; margin-bottom:var(--sp3); }
 .pause-btns{ display:flex; flex-direction:column; gap:10px; width:100%; }

@@ -306,7 +306,7 @@ function mostrarTela(id, goBack) {
     setTimeout(() => { el.style.animation = ''; }, 350);
   }
   // Remove tema de setor em todas as telas fora do jogo
-  const TELAS_JOGO = ["screen-intro","screen-game","screen-feedback","screen-result"];
+  const TELAS_JOGO = ["screen-intro","screen-game","screen-feedback","screen-result","screen-tutorial"];
   if (!TELAS_JOGO.includes(id)) _aplicarTemaSetor(null);
   window.scrollTo(0, 0);
   // Atualiza botão admin ao entrar na home
