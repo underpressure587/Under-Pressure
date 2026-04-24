@@ -106,8 +106,14 @@ function _abrirOverlay(id) {
     if (oid !== id) { var o = document.getElementById(oid); if (o) o.style.display = 'none'; }
   });
   if (el.parentNode !== document.body) document.body.appendChild(el);
-  // Alinha com o #app para centralizar corretamente
+  // Herda o tema do setor atual do #app (pause, tooltip, glossário, settings ficam
+  // com as cores do jogo). Ao sair da partida _aplicarTemaSetor(null) remove o
+  // data-sector do #app, e _fecharOverlay limpa o atributo no overlay também.
   const app = document.getElementById('app');
+  const sector = app ? app.getAttribute('data-sector') : null;
+  if (sector) el.setAttribute('data-sector', sector);
+  else el.removeAttribute('data-sector');
+  // Alinha com o #app para centralizar corretamente
   const rect = app ? app.getBoundingClientRect() : {left:0, top:0, width:window.innerWidth, height:window.innerHeight};
   el.style.position        = 'fixed';
   el.style.left            = rect.left + 'px';
@@ -123,7 +129,9 @@ function _abrirOverlay(id) {
 }
 function _fecharOverlay(id) {
   const el = document.getElementById(id);
-  if (el) el.style.display = 'none';
+  if (!el) return;
+  el.style.display = 'none';
+  el.removeAttribute('data-sector');
 }
 
 /* _verificarManutencaoInicial → maintenance.js */

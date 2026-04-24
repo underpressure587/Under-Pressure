@@ -119,6 +119,63 @@
   --bg3:  #281828;
 }
 
+/* ── TEMAS POR SETOR — overlays fora do #app ───────── */
+/* _abrirOverlay move o elemento pro document.body,     */
+/* então o seletor #app não cobre mais. Duplicamos as   */
+/* vars para .overlay[data-sector] aplicar o tema.      */
+.overlay[data-sector="tecnologia"] {
+  --s-primary:   #5B8DEF;
+  --s-secondary: #7BA7FF;
+  --s-bg-accent: rgba(91,141,239,.12);
+  --s-bd-accent: rgba(91,141,239,.30);
+  --s-glow:      rgba(91,141,239,.25);
+  --s-gradient:  linear-gradient(135deg,#5B8DEF,#7BA7FF);
+  --s-text:      #7BA7FF;
+  --bg:   #080C14;
+  --bg1:  #0C1120;
+  --bg2:  #101629;
+  --bg3:  #151C35;
+}
+.overlay[data-sector="industria"] {
+  --s-primary:   #E8711A;
+  --s-secondary: #FF9448;
+  --s-bg-accent: rgba(232,113,26,.12);
+  --s-bd-accent: rgba(232,113,26,.30);
+  --s-glow:      rgba(232,113,26,.22);
+  --s-gradient:  linear-gradient(135deg,#E8711A,#FF9448);
+  --s-text:      #FF9448;
+  --bg:   #0F0C08;
+  --bg1:  #18130D;
+  --bg2:  #201912;
+  --bg3:  #282015;
+}
+.overlay[data-sector="logistica"] {
+  --s-primary:   #1FB885;
+  --s-secondary: #3DD6A3;
+  --s-bg-accent: rgba(31,184,133,.12);
+  --s-bd-accent: rgba(31,184,133,.30);
+  --s-glow:      rgba(31,184,133,.22);
+  --s-gradient:  linear-gradient(135deg,#1FB885,#3DD6A3);
+  --s-text:      #3DD6A3;
+  --bg:   #07100D;
+  --bg1:  #0C1812;
+  --bg2:  #102018;
+  --bg3:  #152820;
+}
+.overlay[data-sector="varejo"] {
+  --s-primary:   #E8467A;
+  --s-secondary: #FF6B9A;
+  --s-bg-accent: rgba(232,70,122,.12);
+  --s-bd-accent: rgba(232,70,122,.30);
+  --s-glow:      rgba(232,70,122,.22);
+  --s-gradient:  linear-gradient(135deg,#E8467A,#FF6B9A);
+  --s-text:      #FF6B9A;
+  --bg:   #100810;
+  --bg1:  #180D18;
+  --bg2:  #201220;
+  --bg3:  #281828;
+}
+
 /* ── RESET ─────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
