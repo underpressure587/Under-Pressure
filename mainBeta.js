@@ -505,6 +505,9 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
     player: _player?.nome || 'Convidado',
     score, scoreGestor, sector, companyName, ts: Date.now(),
     uid: _player?.uid || null,
+    photoURL: (_settings.fotoPerfil === true && _player?.tipo === 'google')
+      ? (_player?.photoURL || window.GSPAuth?.getPhotoURL?.() || null)
+      : null,
   };
 
   // Salva no histórico local
@@ -2176,10 +2179,13 @@ function _renderPodio(lista, podio, setor) {
     const sub  = isAll
       ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
       : `${icones[p.sector]||'🏢'} ${p.companyName}`;
+    const avatarConteudo = p.photoURL
+      ? `<img src="${p.photoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      : (p.player||'?').charAt(0).toUpperCase();
     return `<div class="podio-top3-card ${cls} ${isMe ? 'podio-top3-me' : ''}" data-sector="${p.sector||''}">
       <div class="podio-top3-player">
         ${isMe ? '<div class="podio-top3-you">Você</div>' : ''}
-        <div class="podio-top3-avatar">${(p.player||'?').charAt(0).toUpperCase()}</div>
+        <div class="podio-top3-avatar">${avatarConteudo}</div>
         <div class="podio-top3-name">${p.player}</div>
         <div class="podio-top3-company">${sub}</div>
         <div class="podio-top3-score">${val}</div>
