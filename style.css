@@ -5840,3 +5840,12 @@ body::after{
   padding: 8px 12px; border-radius: 0 var(--r1) var(--r1) 0;
   animation: jg-fade-in .3s ease;
 }
+
+/* Bloquear menu de contexto e arrastar nas imagens do logo */
+.login-logo-img,
+.auth-logo-img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
+  pointer-events: none;
+}
