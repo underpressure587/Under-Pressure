@@ -1978,7 +1978,7 @@ body::after{
 /* Item dentro do grupo */
 .config-item {
   display: flex; align-items: center; gap: 14px;
-  padding: 15px 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--line);
   transition: background .15s;
 }
@@ -2952,10 +2952,10 @@ body::after{
   #screen-config .perfil-body,
   #screen-config .config-body {
     display: flex; flex-direction: column;
-    max-width: 680px; width: 100%;
-    padding: 0 24px 40px !important;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 40px 40px !important;
     gap: 0;
-    flex: 1;
   }
 
   #screen-config .config-section-title {
@@ -2968,21 +2968,9 @@ body::after{
     margin-bottom: 4px;
   }
 
-  #screen-config .config-item {
-    padding: 18px 20px;
-  }
-
-  #screen-config .config-group-grow {
-    flex: 1;
-  }
-
-  #screen-config .config-version {
-    margin-top: auto;
-    padding-top: 24px;
-  }
-
   #screen-config .podio-header {
-    max-width: 680px;
+    max-width: 100%;
+    padding: 20px 40px;
   }
 
   .perfil-avatar-block {
