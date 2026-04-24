@@ -1809,7 +1809,15 @@ async function irParaPerfil() {
 
   // Avatar
   const av = document.getElementById('perfil-avatar');
-  if (av) av.textContent = nome.charAt(0).toUpperCase();
+  if (av) {
+    const photoURL = window.GSPAuth?.currentUser?.photoURL;
+    const fotoOn = LS.get(SK.SETTINGS)?.fotoPerfil === true;
+    if (photoURL && fotoOn) {
+      av.innerHTML = `<img src="${photoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      av.textContent = nome.charAt(0).toUpperCase();
+    }
+  }
   const pn = document.getElementById('perfil-nome');
   if (pn) pn.textContent = nome;
 
@@ -2737,6 +2745,19 @@ async function _loginOk(player) {
   _player = player;
   window._player = _player;
   LS.set(SK.PLAYER, _player);
+
+  // Carrega nome customizado do Firestore antes de qualquer coisa
+  // Evita sobrescrever nome editado pelo usuário com o displayName do Google
+  if (player.uid && window.GSPSync?.carregarPerfil) {
+    try {
+      const perfil = await window.GSPSync.carregarPerfil(player.uid);
+      if (perfil?.nome && perfil.nome.trim() !== '') {
+        _player.nome = perfil.nome;
+        window._player = _player;
+        LS.set(SK.PLAYER, _player);
+      }
+    } catch(e) { /* usa nome do Google mesmo */ }
+  }
 
   // Verifica se é admin antes de qualquer outra coisa
   await _atualizarBotaoAdmin(player.uid);
