@@ -1959,6 +1959,11 @@ body::after{
   gap: 0 !important;
 }
 
+.config-col {
+  display: block;
+  width: 100%;
+}
+
 .config-section-title {
   font-size: .67rem; font-weight: 700; letter-spacing: .12em;
   text-transform: uppercase; color: var(--t3);
@@ -2961,13 +2966,15 @@ body::after{
   /* Config: duas colunas no desktop via wrappers */
   #screen-config .perfil-body,
   #screen-config .config-body {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    flex-wrap: nowrap !important;
     width: 100%;
     max-width: 100%;
-    padding: 0 40px 40px !important;
-    gap: 28px;
+    padding: 0 40px 24px !important;
+    gap: 40px !important;
+    overflow-y: visible;
   }
 
   #screen-config .config-col {
@@ -2975,13 +2982,18 @@ body::after{
     min-width: 0;
     display: flex;
     flex-direction: column;
+    gap: 0;
   }
 
-  /* Versão: fora das colunas, full width */
+  #screen-config .config-col .config-section-title:not(:first-child) {
+    margin-top: 20px;
+  }
+
   #screen-config .config-version {
-    width: 100%;
     text-align: center;
-    padding-top: 16px;
+    padding: 8px 40px 24px;
+    font-size: .72rem;
+    color: var(--t3);
   }
 
   #screen-config .config-section-title {
