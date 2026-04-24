@@ -2934,6 +2934,11 @@ body::after{
     background: var(--bg);
   }
 
+  /* Config ocupa largura total — sem centralização */
+  #screen-config {
+    align-items: stretch;
+  }
+
   .podio-header {
     width: 100%; max-width: 820px; padding: 20px 32px;
   }
