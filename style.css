@@ -1954,13 +1954,14 @@ body::after{
 /* ════════════════════════════════════════════════════
    TELA DE CONFIGURAÇÕES — Premium Minimal
 ════════════════════════════════════════════════════ */
-.config-body { padding-bottom: 40px; }
+.config-body { padding-bottom: 40px; gap: 0 !important; }
 
 .config-section-title {
   font-size: .67rem; font-weight: 700; letter-spacing: .12em;
   text-transform: uppercase; color: var(--t3);
   padding: 20px 0 8px 4px;
 }
+.config-section-title:first-child { padding-top: 4px; }
 
 /* Grupo = card que agrupa itens relacionados */
 .config-group {
@@ -2917,6 +2918,7 @@ body::after{
      PERFIL / PÓDIO / HISTÓRICO
   ══════════════════════════════════════════ */
   #screen-perfil,
+  #screen-config,
   #screen-podio,
   #screen-historico-jogos {
     flex-direction: column;
@@ -2936,6 +2938,19 @@ body::after{
     width: 100%; max-width: 820px;
     display: grid; grid-template-columns: 240px 1fr;
     gap: 20px; padding: 20px 32px; align-items: start;
+  }
+
+  /* Config usa coluna única centralizada no desktop */
+  #screen-config .perfil-body,
+  #screen-config .config-body {
+    display: flex; flex-direction: column;
+    max-width: 600px; width: 100%;
+    padding: 20px 32px;
+    gap: 0;
+  }
+
+  #screen-config .podio-header {
+    max-width: 600px;
   }
 
   .perfil-avatar-block {
@@ -3189,6 +3204,7 @@ body::after{
 
 /* Screens sem background explícito — transparentes no mobile deixam screen-loading vazar */
 #screen-perfil,
+#screen-config,
 #screen-podio,
 #screen-historico-jogos,
 #screen-grupos,
