@@ -1952,36 +1952,72 @@ body::after{
 .btn-settings-fullscreen:hover { background: var(--bg4); }
 
 /* ════════════════════════════════════════════════════
-   TELA DE CONFIGURAÇÕES
+   TELA DE CONFIGURAÇÕES — Premium Minimal
 ════════════════════════════════════════════════════ */
+.config-body { padding-bottom: 40px; }
+
 .config-section-title {
-  font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+  font-size: .67rem; font-weight: 700; letter-spacing: .12em;
   text-transform: uppercase; color: var(--t3);
-  padding: 0 0 10px 0; margin-top: 4px;
+  padding: 20px 0 8px 4px;
 }
-.config-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 0; border-bottom: 1px solid var(--line);
-  gap: 12px;
+
+/* Grupo = card que agrupa itens relacionados */
+.config-group {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 4px;
 }
-.config-row:last-of-type { border-bottom: none; }
-.config-row-info { display: flex; flex-direction: column; gap: 3px; flex: 1; }
-.config-row-label { font-size: .87rem; color: var(--t2); font-weight: 500; }
-.config-row-desc { font-size: .75rem; color: var(--t3); }
-.config-soon-card {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 0; border-bottom: 1px solid var(--line);
-  opacity: .65;
+
+/* Item dentro do grupo */
+.config-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  transition: background .15s;
 }
-.config-soon-icon { font-size: 1.3rem; flex-shrink: 0; }
-.config-soon-label { font-size: .87rem; color: var(--t2); font-weight: 500; }
-.config-soon-desc { font-size: .75rem; color: var(--t3); margin-top: 2px; }
-.config-soon-badge {
-  margin-left: auto; flex-shrink: 0;
+.config-item:active { background: var(--bg3); }
+.config-item.config-item-last { border-bottom: none; }
+.config-item.config-item-soon { opacity: .55; }
+
+/* Ícone colorido arredondado */
+.config-item-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Textos do item */
+.config-item-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.config-item-label { font-size: .86rem; color: var(--t1); font-weight: 500; }
+.config-item-desc { font-size: .73rem; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Botão de ação (Editar, Ver, Ativar) */
+.config-item-btn {
   background: var(--bg3); border: 1px solid var(--line2);
-  color: var(--t3); font-size: .65rem; font-weight: 700;
+  color: var(--t2); font-size: .78rem; font-weight: 600;
+  padding: 6px 14px; border-radius: 8px;
+  cursor: pointer; font-family: var(--sans);
+  white-space: nowrap; transition: background .15s, color .15s;
+  flex-shrink: 0;
+}
+.config-item-btn:active { background: var(--bg4); color: var(--t1); }
+
+/* Badge Em breve */
+.config-soon-badge {
+  flex-shrink: 0;
+  background: transparent; border: 1px solid var(--line2);
+  color: var(--t3); font-size: .62rem; font-weight: 700;
   letter-spacing: .08em; text-transform: uppercase;
-  padding: 4px 8px; border-radius: var(--rpill);
+  padding: 4px 9px; border-radius: 20px;
+}
+
+/* Versão no rodapé */
+.config-version {
+  text-align: center; font-size: .72rem; color: var(--t3);
+  margin-top: 24px; padding-bottom: 8px;
 }
 
 /* ════════════════════════════════════════════════════
