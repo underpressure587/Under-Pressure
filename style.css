@@ -2941,7 +2941,7 @@ body::after{
 
   /* Expande o app quando config está ativa */
   #app:has(#screen-config.active) {
-    max-width: 720px;
+    max-width: 1000px;
   }
 
   .podio-header {
@@ -2958,14 +2958,40 @@ body::after{
     gap: 20px; padding: 20px 32px; align-items: start;
   }
 
-  /* Config usa coluna única centralizada no desktop */
+  /* Config: duas colunas no desktop */
   #screen-config .perfil-body,
   #screen-config .config-body {
-    display: flex; flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
     width: 100%;
     max-width: 100%;
     padding: 0 40px 40px !important;
-    gap: 0;
+    gap: 0 28px;
+    align-items: start;
+  }
+
+  /* Seções que vão para coluna da esquerda */
+  #screen-config .config-section-title:nth-of-type(1),
+  #screen-config .config-group:nth-of-type(1),
+  #screen-config .config-section-title:nth-of-type(2),
+  #screen-config .config-group:nth-of-type(2) {
+    grid-column: 1;
+  }
+
+  /* Seções que vão para coluna da direita */
+  #screen-config .config-section-title:nth-of-type(3),
+  #screen-config .config-group:nth-of-type(3),
+  #screen-config .config-section-title:nth-of-type(4),
+  #screen-config .config-group:nth-of-type(4) {
+    grid-column: 2;
+  }
+
+  /* Versão: linha inteira abaixo */
+  #screen-config .config-version {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding-top: 24px;
   }
 
   #screen-config .config-section-title {
