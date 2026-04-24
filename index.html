@@ -998,7 +998,7 @@
 
 </div>
   <!-- ══ OVERLAY: CAIXA DE ENTRADA DO JOGADOR ══ -->
-  <div id="overlay-inbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100002;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;backdrop-filter:blur(4px)">
+  <div id="overlay-inbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100002;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;backdrop-filter:blur(4px)" onclick="if(event.target===this)BetaUI.fecharInbox()">
     <div style="background:var(--bg2,#1a1a2e);border-radius:16px;width:100%;max-width:420px;max-height:82vh;display:flex;flex-direction:column;border:1px solid var(--line2,#333)">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line2,#333)">
         <div>
@@ -1087,7 +1087,7 @@
   </div>
   
   <!-- OVERLAY: TOOLTIP INDICADOR -->
-  <div id="overlay-tooltip" class="overlay">
+  <div id="overlay-tooltip" class="overlay" onclick="if(event.target===this)BetaUI.closeTooltip()">
     <div class="overlay-card tooltip-card">
       <div class="overlay-head">
         <span class="overlay-title" id="tooltip-title">Indicador</span>
