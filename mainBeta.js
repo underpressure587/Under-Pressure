@@ -634,7 +634,16 @@ function irParaSetores() {
   const cn = document.getElementById("companyName");
   if (sh) sh.value = "";
   if (cn) cn.value = "";
+  _aplicarTemaSetor(null); // reseta tema ao entrar na tela sem setor selecionado
   mostrarTela("screen-sector");
+  // Listener para efeito pulsante no botão ao digitar o nome
+  const btn = document.getElementById("btn-assumir-mandato");
+  if (cn && btn) {
+    cn.oninput = () => {
+      if (cn.value.trim().length > 0) btn.classList.add("btn-assumir-pronto");
+      else btn.classList.remove("btn-assumir-pronto");
+    };
+  }
 }
 
 function _aplicarTemaSetor(sector) {
@@ -650,7 +659,9 @@ function selecionarSetor(sector) {
   document.querySelectorAll(".sector-card").forEach(b => b.classList.remove("selected"));
   document.querySelector(`[data-sector="${sector}"]`)?.classList.add("selected");
   document.getElementById("sector-hidden").value = sector;
-  // Tema só é aplicado quando o jogo começa
+  // Aplica tema do setor no botão e na tela de seleção imediatamente
+  const app = document.getElementById('app');
+  if (app) app.setAttribute('data-sector', sector);
 }
 
 const _NOMES_ALEATORIOS = [

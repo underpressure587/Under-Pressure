@@ -1240,6 +1240,14 @@ body::after{
 }
 .sector-cta{ padding:0 var(--sp2) calc(var(--sp3) + env(safe-area-inset-bottom,0px)); flex-shrink:0; }
 
+@keyframes mandatoPulse {
+  0%,100% { box-shadow: 0 4px 20px var(--s-glow); }
+  50%      { box-shadow: 0 4px 36px var(--s-glow), 0 0 0 4px var(--s-bd-accent); }
+}
+.btn-assumir-pronto {
+  animation: mandatoPulse 1.6s ease-in-out infinite;
+}
+
 /* ════════════════════════════════════════════════════
    INTRO — organizado e elegante
 ════════════════════════════════════════════════════ */
