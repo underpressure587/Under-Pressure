@@ -312,6 +312,7 @@ function mostrarTela(id, goBack) {
   // Atualiza botão admin ao entrar na home
   if (id === 'screen-home') {
     _mostrarBotaoAdmin();
+    _verificarSessaoSalva(); // garante banner visível após boot assíncrono
     // Registra presença no RTDB se jogador autenticado
     if (_player?.uid) _registrarPresencaHome();
     // Exibe mensagem global se houver
@@ -438,7 +439,7 @@ function _verificarSessaoSalva() {
     const mins  = Math.round((Date.now() - sess.ts) / 60000);
     const tempo = mins < 60 ? `${mins} min atrás` : `${Math.round(mins/60)}h atrás`;
     texto.textContent = `Jogo em andamento: ${sess.companyName} (${sess.sector}) — Rodada ${sess.currentRound + 1}/${sess.totalRounds} · salvo ${tempo}`;
-    banner.style.display = "";
+    banner.style.display = "block";
   } else if (banner) {
     banner.style.display = "none";
   }

@@ -773,7 +773,7 @@ body::after{
 /* ════════════════════════════════════════════════════
    HOME — tela principal redesenhada
 ════════════════════════════════════════════════════ */
-#screen-home{ background:var(--bg); overflow:hidden; }
+#screen-home{ background:var(--bg); overflow-y:auto; }
 
 .home-header{
   display:flex; align-items:center; justify-content:space-between;
