@@ -269,7 +269,17 @@ function _sincronizarFirebaseBackground(player) {
     if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) })));
     // Sempre sincroniza o localStorage com o Firestore — mesmo se vier vazio
     LS.set(SK.PODIO, (podioFS || []).map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
-    if (sessFS) LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
+    // FIX: só sobrescreve a sessão local se o Firestore tiver uma sessão válida
+    // E mais recente que a salva localmente — evita apagar sessão ativa do jogador
+    if (sessFS && sessFS.sector && sessFS.currentRound !== undefined) {
+      const sessLocal = LS.get(SK.SESSION);
+      const tsFS    = sessFS.ts?.toMillis ? sessFS.ts.toMillis() : (sessFS.ts || 0);
+      const tsLocal = sessLocal?.ts || 0;
+      // Só atualiza se Firestore for mais recente que o local (ou não houver local)
+      if (!sessLocal || tsFS > tsLocal) {
+        LS.set(SK.SESSION, { ...sessFS, ts: tsFS || Date.now() });
+      }
+    }
   }).catch(() => {});
 }
 
