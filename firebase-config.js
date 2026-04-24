@@ -399,6 +399,7 @@ window.GSPSync = {
       totalJogos:    { integerValue: String(totalJogos) },
       ultimaPartida: { timestampValue: new Date().toISOString() },
       melhorPorSetor: { mapValue: { fields: melhorPorSetorFields } },
+      photoURL:      { stringValue: entrada.photoURL || '' },
     }};
 
     const patchRes = await fetch(url, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -450,6 +451,7 @@ window.GSPSync = {
             totalJogos:    _pi(f.totalJogos) || 1,
             ultimaPartida: f.ultimaPartida?.timestampValue || null,
             melhorPorSetor,
+            photoURL:      f.photoURL?.stringValue || null,
           };
         })
         .filter(p => p.uid && p.melhorScore > 0);

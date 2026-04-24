@@ -2797,12 +2797,20 @@ async function _loginOk(player) {
   _restaurarSala();
   _restaurarGrupo();
   _verificarSessaoSalva();
+  // Garantir photoURL e tipo google antes de renderizar
+  if (window.GSPAuth?.isGoogleUser?.()) {
+    _player.tipo = 'google';
+    if (!_player.photoURL) _player.photoURL = window.GSPAuth.getPhotoURL?.() || null;
+    LS.set(SK.PLAYER, _player);
+  }
   _atualizarHome();
   if (!localStorage.getItem('gsp_tutorial_done')) {
     mostrarTela('screen-tutorial');
   } else {
     mostrarTela("screen-home");
   }
+  // Segunda chamada com pequeno delay — garante que o avatar já está no DOM
+  setTimeout(_aplicarFotoAvatar, 100);
 
   // Sincroniza dados em background (não bloqueia a UI)
   _sincronizarFirebaseBackground(player);
