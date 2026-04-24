@@ -2939,6 +2939,11 @@ body::after{
     align-items: stretch;
   }
 
+  /* Expande o app quando config está ativa */
+  #app:has(#screen-config.active) {
+    max-width: 720px;
+  }
+
   .podio-header {
     width: 100%; max-width: 820px; padding: 20px 32px;
   }
