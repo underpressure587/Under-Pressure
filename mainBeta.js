@@ -3340,7 +3340,7 @@ async function _buscarMensagens(uid) {
   try {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return;
-    const r = await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens:runQuery`, {
+    const r = await fetch(`${_FS_BASE}/usuarios/${uid}:runQuery`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'mensagens' }], limit: 100 } })
@@ -3627,7 +3627,7 @@ async function _enviarBoasVindas(uid, nome) {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return;
     // Verifica se já tem alguma mensagem (evita duplicar boas-vindas)
-    const check = await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens:runQuery`, { method: 'POST', headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'mensagens' }], limit: 1 } }) });
+    const check = await fetch(`${_FS_BASE}/usuarios/${uid}:runQuery`, { method: 'POST', headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'mensagens' }], limit: 1 } }) });
     if (check.ok) {
       const rows2 = await check.json();
       if (rows2.filter(r => r.document).length > 0) return; // já tem mensagens
