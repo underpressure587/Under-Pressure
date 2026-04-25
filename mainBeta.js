@@ -136,7 +136,11 @@ function _fecharOverlay(id) {
 
 /* _verificarManutencaoInicial → maintenance.js */
 
+let _bootRodando = false;
 async function _boot() {
+  // FIX: guard contra dupla execução simultânea de _boot()
+  if (_bootRodando) { console.warn('[Boot] _boot() já em execução — chamada ignorada.'); return; }
+  _bootRodando = true;
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
   _carregarVersaoAtual(); // carrega versão atual em background
@@ -269,13 +273,12 @@ function _sincronizarFirebaseBackground(player) {
     if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) })));
     // Sempre sincroniza o localStorage com o Firestore — mesmo se vier vazio
     LS.set(SK.PODIO, (podioFS || []).map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
-    // FIX: só sobrescreve a sessão local se o Firestore tiver uma sessão válida
-    // E mais recente que a salva localmente — evita apagar sessão ativa do jogador
+    // FIX: só sobrescreve gsp_session se o Firestore tiver sessão válida E mais recente que a local
+    // Evita que dados desatualizados do Firestore apaguem sessão ativa do jogador
     if (sessFS && sessFS.sector && sessFS.currentRound !== undefined) {
       const sessLocal = LS.get(SK.SESSION);
       const tsFS    = sessFS.ts?.toMillis ? sessFS.ts.toMillis() : (sessFS.ts || 0);
       const tsLocal = sessLocal?.ts || 0;
-      // Só atualiza se Firestore for mais recente que o local (ou não houver local)
       if (!sessLocal || tsFS > tsLocal) {
         LS.set(SK.SESSION, { ...sessFS, ts: tsFS || Date.now() });
       }
@@ -3716,10 +3719,6 @@ window.BetaUI = {
   removerMembroGrupo:    (g,u) => SalaMode._removerGrupo && SalaMode._removerGrupo(g,u),
 };
 
-// Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando
-(function() {
-  if (document.readyState === 'loading') {
-    
 /* ════════════════════════════════════════════════════
    BOTÃO VOLTAR — popstate
 ════════════════════════════════════════════════════ */
@@ -3786,8 +3785,27 @@ function _iniciarPopstate() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', function() { _iniciarPopstate(); _boot(); });
+// FIX: guard contra dupla chamada de _boot()
+// (readyState !== 'loading' no IIFE + DOMContentLoaded listener)
+let _bootChamado = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (_bootChamado) return; // já iniciado pelo else (readyState !== 'loading')
+  _bootChamado = true;
+  _iniciarPopstate();
+  _boot();
+});
+
+// Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando
+(function() {
+  if (document.readyState === 'loading') {
+    // DOMContentLoaded listener acima vai chamar _boot() — não faz nada aqui
   } else {
-    _boot();
+    // DOM já carregado — chama diretamente só se o listener ainda não disparou
+    if (!_bootChamado) {
+      _bootChamado = true;
+      _iniciarPopstate();
+      _boot();
+    }
   }
 })();
