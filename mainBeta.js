@@ -389,7 +389,7 @@ function _atualizarHome() {
   if (el) el.textContent = `OLÁ, ${(_player?.nome || "JOGADOR").toUpperCase()}`;
   const av = document.getElementById("home-avatar-icon");
   if (av) {
-    const photoURL = window.GSPAuth?.currentUser?.photoURL || _cachedAuthUser?.photoURL;
+    const photoURL = window.GSPAuth?.currentUser?.photoURL;
     const fotoOn = LS.get(SK.SETTINGS)?.fotoPerfil === true;
     if (photoURL && fotoOn) {
       av.innerHTML = `<img src="${photoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
