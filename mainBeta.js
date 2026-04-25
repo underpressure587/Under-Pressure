@@ -407,9 +407,7 @@ function _atualizarHome() {
 ════════════════════════════════════════════════════ */
 function _salvarSessao() {
   const state = BetaState.get();
-  // Se state for null (jogo ainda não iniciado ou em transição), preserva sessão salva — não apaga nada
-  if (!state) return;
-  if (state.phase === "result") { LS.remove(SK.SESSION); LS.remove('gsp_session_state'); return; }
+  if (!state || state.phase === "result") { LS.remove(SK.SESSION); LS.remove('gsp_session_state'); return; }
   LS.set(SK.SESSION, {
     sector: state.sector, companyName: state.companyName,
     currentRound: state.currentRound, totalRounds: state.totalRounds,
@@ -434,11 +432,23 @@ function _salvarSessao() {
 }
 
 function _verificarSessaoSalva() {
-  const sess   = LS.get(SK.SESSION);
+  // Usa gsp_session; se não existir, reconstrói a partir do gsp_session_state
+  let sess = LS.get(SK.SESSION);
+  if (!sess) {
+    const estado = LS.get('gsp_session_state');
+    if (estado && estado.sector && estado.companyName) {
+      LS.set(SK.SESSION, {
+        sector: estado.sector, companyName: estado.companyName,
+        currentRound: estado.currentRound, totalRounds: estado.totalRounds,
+        ts: estado.ts || Date.now()
+      });
+      sess = LS.get(SK.SESSION);
+    }
+  }
   const banner = document.getElementById("session-restore-banner");
   const texto  = document.getElementById("session-restore-text");
   if (sess && banner && texto && _player) {
-    const mins  = Math.round((Date.now() - sess.ts) / 60000);
+    const mins  = Math.round((Date.now() - (sess.ts || Date.now())) / 60000);
     const tempo = mins < 60 ? `${mins} min atrás` : `${Math.round(mins/60)}h atrás`;
     texto.textContent = `Jogo em andamento: ${sess.companyName} (${sess.sector}) — Rodada ${sess.currentRound + 1}/${sess.totalRounds} · salvo ${tempo}`;
     banner.style.display = "block";
@@ -483,6 +493,7 @@ function restaurarSessao() {
 
 function descartarSessao() {
   LS.remove(SK.SESSION);
+  LS.remove('gsp_session_state');
   const banner = document.getElementById("session-restore-banner");
   if (banner) banner.style.display = "none";
 }
@@ -1684,7 +1695,7 @@ function reverTutorial() {
   mostrarTela('screen-tutorial');
 }
 
-function reiniciar() { _pararVerificacaoManutencao(); LS.remove(SK.SESSION); _aplicarTemaSetor(null); mostrarTela("screen-home"); }
+function reiniciar() { _pararVerificacaoManutencao(); LS.remove(SK.SESSION); LS.remove('gsp_session_state'); _aplicarTemaSetor(null); mostrarTela("screen-home"); }
 
 function _showToast(msg, tipo = "info", duracao = 3200) {
   const container = document.getElementById("toast");
@@ -2238,6 +2249,7 @@ function abandonarJogo() {
   _pararTimer();
   _pararVerificacaoManutencao();
   LS.remove(SK.SESSION);
+  LS.remove('gsp_session_state');
   _aplicarTemaSetor(null);
   mostrarTela('screen-home');
 }
