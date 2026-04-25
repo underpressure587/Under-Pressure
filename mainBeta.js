@@ -84,7 +84,6 @@ function _iniciarListenerAuth() {
   if (!window.GSPAuth?.isReady()) return;
   window.GSPAuth.onAuthChange((user) => {
     if (user && !_player) {
-      // Mostra loading breve antes de entrar
       const telaAtual = document.querySelector('.screen.active')?.id;
       if (telaAtual === 'screen-login' || telaAtual === 'screen-auth') {
         mostrarTela('screen-loading');
@@ -93,40 +92,13 @@ function _iniciarListenerAuth() {
       // IIFE async: onAuthChange nao suporta callback async,
       // mas _loginOk precisa de await para verificar admin antes de checar manutencao
       (async () => { await _loginOk(user); })();
+    } else if (user && _player) {
+      // Firebase confirmou user — atualiza avatar que pode ter ficado sem foto no boot
+      _atualizarHome();
     }
   });
 }
 
-
-/* ── HELPER: força overlay a cobrir a viewport real ── */
-function _abrirOverlay(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  ['overlay-pause','overlay-tooltip','overlay-glossary','overlay-settings'].forEach(function(oid) {
-    if (oid !== id) { var o = document.getElementById(oid); if (o) o.style.display = 'none'; }
-  });
-  if (el.parentNode !== document.body) document.body.appendChild(el);
-  // Herda o tema do setor atual do #app (pause, tooltip, glossário, settings ficam
-  // com as cores do jogo). Ao sair da partida _aplicarTemaSetor(null) remove o
-  // data-sector do #app, e _fecharOverlay limpa o atributo no overlay também.
-  const app = document.getElementById('app');
-  const sector = app ? app.getAttribute('data-sector') : null;
-  if (sector) el.setAttribute('data-sector', sector);
-  else el.removeAttribute('data-sector');
-  // Alinha com o #app para centralizar corretamente
-  const rect = app ? app.getBoundingClientRect() : {left:0, top:0, width:window.innerWidth, height:window.innerHeight};
-  el.style.position        = 'fixed';
-  el.style.left            = rect.left + 'px';
-  el.style.top             = rect.top  + 'px';
-  el.style.width           = rect.width  + 'px';
-  el.style.height          = rect.height + 'px';
-  el.style.display         = 'flex';
-  el.style.alignItems      = 'center';
-  el.style.justifyContent  = 'center';
-  el.style.padding         = '20px';
-  el.style.boxSizing       = 'border-box';
-  el.style.zIndex          = '99999';
-}
 function _fecharOverlay(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -2761,6 +2733,8 @@ async function _loginOk(player) {
     } catch(e) { /* usa nome do Google mesmo */ }
   }
 
+  // Atualizar avatar agora que Firebase Auth está resolvido
+  _atualizarHome();
   // Verifica se é admin antes de qualquer outra coisa
   await _atualizarBotaoAdmin(player.uid);
 
