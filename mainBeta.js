@@ -18,14 +18,8 @@
 ════════════════════════════════════════════════════ */
 const LS = {
   get:    k      => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-  set:    (k, v) => {
-    if (k === 'gsp_session') console.trace('[LS.set gsp_session]', typeof v === 'object' ? JSON.stringify(v).slice(0,120) : v);
-    try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
-  },
-  remove: k      => {
-    if (k === 'gsp_session') console.trace('[LS.remove gsp_session] ← AQUI ESTÁ O CULPADO');
-    try { localStorage.removeItem(k); } catch {}
-  },
+  set:    (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  remove: k      => { try { localStorage.removeItem(k); } catch {} },
 };
 const SK = {
   PLAYER:"gsp_player", PODIO:"gsp_podio",
@@ -143,12 +137,15 @@ function _fecharOverlay(id) {
 /* _verificarManutencaoInicial → maintenance.js */
 
 async function _boot() {
+  console.log('[BOOT] 🚀 Iniciando. readyState:', document.readyState);
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
   _carregarVersaoAtual(); // carrega versão atual em background
 
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
+  console.log('[BOOT] gsp_player:', saved ? 'EXISTE ('+saved.nome+')' : 'NULL');
+  console.log('[BOOT] gsp_session:', LS.get(SK.SESSION) ? 'EXISTE' : 'NULL');
   if (saved) {
     _player = saved;
     window._player = _player;
@@ -178,9 +175,12 @@ async function _boot() {
     }
     _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     if (!localStorage.getItem('gsp_tutorial_done')) {
+      console.log('[BOOT] → mostrarTela(screen-tutorial)');
       mostrarTela('screen-tutorial');
     } else {
+      console.log('[BOOT] → mostrarTela(screen-home). session agora:', LS.get(SK.SESSION) ? 'EXISTE' : 'NULL');
       mostrarTela('screen-home');
+      console.log('[BOOT] ✅ screen-home exibida. session após mostrarTela:', LS.get(SK.SESSION) ? 'EXISTE' : 'NULL');
     }
     _sincronizarFirebaseBackground(saved);
     return;
@@ -292,6 +292,7 @@ function _setLoadingMsg(msg, sub, progress) {
    NAVEGAÇÃO
 ════════════════════════════════════════════════════ */
 function mostrarTela(id, goBack) {
+  console.log('[NAV] mostrarTela →', id, '| session:', localStorage.getItem('gsp_session') ? 'existe' : 'NULL', '| stack:', new Error().stack.split('\n')[2]?.trim());
   document.querySelectorAll(".screen").forEach(s => {
     s.classList.remove("active", "go-back");
     // Não resetar display aqui: o CSS já define display:none para .screen sem .active.
@@ -369,7 +370,7 @@ function confirmarNome() {
 }
 
 function sair() {
-  _pararPollingGlobal();
+  console.error('[SAIR] 🚪 Chamado!', new Error().stack);
   _pararInbox();
   window.Maintenance.pararPolling();
   window.Maintenance.pararPollingConvidado();
@@ -821,6 +822,7 @@ function _iniciarPollingGlobal(uid) { window.Maintenance.iniciarPolling(uid); }
 function _pararPollingGlobal() { window.Maintenance.pararPolling(); }
 
 function _forcarSaida(msg) {
+  console.error('[FORCAR_SAIDA] 🚨 Chamado! msg:', msg, new Error().stack);
   _pararPollingGlobal();
   _pararTimer();
   LS.remove(SK.SESSION);
