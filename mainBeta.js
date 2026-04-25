@@ -171,6 +171,7 @@ async function _boot() {
       if (cfg) _atualizarModoSala(cfg);
     }
     _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
+    _iniciarInbox(saved.uid); // inicia polling do inbox
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
     } else {
