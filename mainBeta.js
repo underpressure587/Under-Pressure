@@ -3340,11 +3340,14 @@ async function _buscarMensagens(uid) {
   try {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return;
-    const r = await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens`, {
-      headers: { Authorization: `Bearer ${tok}` }
+    const r = await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens:runQuery`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'mensagens' }], limit: 100 } })
     });
     if (!r.ok) return;
-    const data = await r.json();
+    const rows = await r.json();
+    const data = { documents: rows.map(row => row.document).filter(Boolean) };
     const agora = Date.now();
     const docs = (data.documents || []).map(doc => {
       const f = doc.fields || {};
@@ -3624,10 +3627,10 @@ async function _enviarBoasVindas(uid, nome) {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return;
     // Verifica se já tem alguma mensagem (evita duplicar boas-vindas)
-    const check = await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens`, { headers: { Authorization: `Bearer ${tok}` } });
+    const check = await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens:runQuery`, { method: 'POST', headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'mensagens' }], limit: 1 } }) });
     if (check.ok) {
-      const d = await check.json();
-      if ((d.documents || []).length > 0) return; // já tem mensagens
+      const rows2 = await check.json();
+      if (rows2.filter(r => r.document).length > 0) return; // já tem mensagens
     }
     const msgId = `bv_${Date.now()}`;
     await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens/${msgId}?updateMask.fieldPaths=texto&updateMask.fieldPaths=de&updateMask.fieldPaths=ts&updateMask.fieldPaths=lida&updateMask.fieldPaths=confirmada&updateMask.fieldPaths=categoria&updateMask.fieldPaths=fixada&updateMask.fieldPaths=exigirConfirmacao&updateMask.fieldPaths=expiraEm`, {
