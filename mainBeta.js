@@ -3706,10 +3706,7 @@ window.BetaUI = {
   removerMembroGrupo:    (g,u) => SalaMode._removerGrupo && SalaMode._removerGrupo(g,u),
 };
 
-// Inicializa o jogo — funciona tanto se DOM já carregou quanto se ainda está carregando
-(function() {
-  if (document.readyState === 'loading') {
-    
+// Inicializa o jogo
 /* ════════════════════════════════════════════════════
    BOTÃO VOLTAR — popstate
 ════════════════════════════════════════════════════ */
@@ -3777,7 +3774,3 @@ function _iniciarPopstate() {
 }
 
 document.addEventListener('DOMContentLoaded', function() { _iniciarPopstate(); _boot(); });
-  } else {
-    _boot();
-  }
-})();
