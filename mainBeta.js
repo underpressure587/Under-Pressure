@@ -3305,7 +3305,7 @@ function _iniciarInbox(uid) {
   if (!uid) return;
   _pararInbox();
   _buscarMensagens(uid);
-  _inboxUnsubscribe = setInterval(() => _buscarMensagens(uid), 15000);
+  _inboxUnsubscribe = setInterval(() => _buscarMensagens(uid), 5000);
 }
 
 function _pararInbox() {
