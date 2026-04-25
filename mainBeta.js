@@ -753,6 +753,7 @@ async function _carregarVersaoAtual() {
     if (!r.ok) return;
     const v = await r.json();
     _versaoAtual = v.hash || null;
+    window._versaoAtual = _versaoAtual;
   } catch(e) {}
 }
 
@@ -3304,7 +3305,7 @@ function _iniciarInbox(uid) {
   if (!uid) return;
   _pararInbox();
   _buscarMensagens(uid);
-  _inboxUnsubscribe = setInterval(() => _buscarMensagens(uid), 5000);
+  _inboxUnsubscribe = setInterval(() => _buscarMensagens(uid), 15000);
 }
 
 function _pararInbox() {
