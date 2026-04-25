@@ -149,34 +149,38 @@ async function _boot() {
     _verificarSessaoSalva();
     _atualizarHome();
 
-    // Espera o Firebase resolver o auth antes de qualquer chamada ao Firestore
-    if (window.GSPAuth) {
-      let t = 0;
-      while (!window.GSPAuth.isReady() && t < 50) {
-        await new Promise(r => setTimeout(r, 100));
-        t++;
-      }
-      await window.GSPAuth.waitForAuthReady().catch(() => null);
-    }
-
-    await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
-    if (window.ADMIN) {
-      // Espera GSPAuth ficar pronto (módulo ES6 carrega depois dos scripts normais)
-      let t = 0;
-      while (!window.GSPAuth?.isReady() && t < 30) {
-        await new Promise(r => setTimeout(r, 100));
-        t++;
-      }
-      const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
-      if (cfg) _atualizarModoSala(cfg);
-    }
-    _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
+    // Vai para home IMEDIATAMENTE — sem bloquear na espera do Firebase
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
     } else {
       mostrarTela('screen-home');
     }
-    _sincronizarFirebaseBackground(saved);
+
+    // Firebase, adminCheck e polling rodam em background sem travar a UI
+    (async () => {
+      if (window.GSPAuth) {
+        let t = 0;
+        while (!window.GSPAuth.isReady() && t < 50) {
+          await new Promise(r => setTimeout(r, 100));
+          t++;
+        }
+        await window.GSPAuth.waitForAuthReady().catch(() => null);
+      }
+      await _atualizarBotaoAdmin(saved.uid);
+      if (window.ADMIN) {
+        let t = 0;
+        while (!window.GSPAuth?.isReady() && t < 30) {
+          await new Promise(r => setTimeout(r, 100));
+          t++;
+        }
+        const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
+        if (cfg) _atualizarModoSala(cfg);
+      }
+      _iniciarPollingGlobal(saved.uid);
+      _sincronizarFirebaseBackground(saved);
+      _verificarSessaoSalva(); // re-verifica banner após sincronização
+    })();
+
     return;
   }
 
