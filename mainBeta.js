@@ -137,15 +137,12 @@ function _fecharOverlay(id) {
 /* _verificarManutencaoInicial → maintenance.js */
 
 async function _boot() {
-  console.log('[BOOT] 🚀 Iniciando. readyState:', document.readyState);
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
   document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
   _carregarVersaoAtual(); // carrega versão atual em background
 
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
-  console.log('[BOOT] gsp_player:', saved ? 'EXISTE ('+saved.nome+')' : 'NULL');
-  console.log('[BOOT] gsp_session:', LS.get(SK.SESSION) ? 'EXISTE' : 'NULL');
   if (saved) {
     _player = saved;
     window._player = _player;
@@ -175,12 +172,9 @@ async function _boot() {
     }
     _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     if (!localStorage.getItem('gsp_tutorial_done')) {
-      console.log('[BOOT] → mostrarTela(screen-tutorial)');
       mostrarTela('screen-tutorial');
     } else {
-      console.log('[BOOT] → mostrarTela(screen-home). session agora:', LS.get(SK.SESSION) ? 'EXISTE' : 'NULL');
       mostrarTela('screen-home');
-      console.log('[BOOT] ✅ screen-home exibida. session após mostrarTela:', LS.get(SK.SESSION) ? 'EXISTE' : 'NULL');
     }
     _sincronizarFirebaseBackground(saved);
     return;
@@ -292,7 +286,6 @@ function _setLoadingMsg(msg, sub, progress) {
    NAVEGAÇÃO
 ════════════════════════════════════════════════════ */
 function mostrarTela(id, goBack) {
-  console.log('[NAV] mostrarTela →', id, '| session:', localStorage.getItem('gsp_session') ? 'existe' : 'NULL', '| stack:', new Error().stack.split('\n')[2]?.trim());
   document.querySelectorAll(".screen").forEach(s => {
     s.classList.remove("active", "go-back");
     // Não resetar display aqui: o CSS já define display:none para .screen sem .active.
@@ -370,7 +363,7 @@ function confirmarNome() {
 }
 
 function sair() {
-  console.error('[SAIR] 🚪 Chamado!', new Error().stack);
+  _pararPollingGlobal();
   _pararInbox();
   window.Maintenance.pararPolling();
   window.Maintenance.pararPollingConvidado();
@@ -414,7 +407,9 @@ function _atualizarHome() {
 ════════════════════════════════════════════════════ */
 function _salvarSessao() {
   const state = BetaState.get();
-  if (!state || state.phase === "result") { LS.remove(SK.SESSION); LS.remove('gsp_session_state'); return; }
+  // Se state for null (jogo ainda não iniciado ou em transição), preserva sessão salva — não apaga nada
+  if (!state) return;
+  if (state.phase === "result") { LS.remove(SK.SESSION); LS.remove('gsp_session_state'); return; }
   LS.set(SK.SESSION, {
     sector: state.sector, companyName: state.companyName,
     currentRound: state.currentRound, totalRounds: state.totalRounds,
@@ -822,7 +817,6 @@ function _iniciarPollingGlobal(uid) { window.Maintenance.iniciarPolling(uid); }
 function _pararPollingGlobal() { window.Maintenance.pararPolling(); }
 
 function _forcarSaida(msg) {
-  console.error('[FORCAR_SAIDA] 🚨 Chamado! msg:', msg, new Error().stack);
   _pararPollingGlobal();
   _pararTimer();
   LS.remove(SK.SESSION);
