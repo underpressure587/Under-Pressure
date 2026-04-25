@@ -149,38 +149,35 @@ async function _boot() {
     _verificarSessaoSalva();
     _atualizarHome();
 
-    // Vai para home IMEDIATAMENTE — sem bloquear na espera do Firebase
+    // Espera o Firebase resolver o auth antes de qualquer chamada ao Firestore
+    if (window.GSPAuth) {
+      let t = 0;
+      while (!window.GSPAuth.isReady() && t < 50) {
+        await new Promise(r => setTimeout(r, 100));
+        t++;
+      }
+      await window.GSPAuth.waitForAuthReady().catch(() => null);
+    }
+
+    await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
+    if (window.ADMIN) {
+      // Espera GSPAuth ficar pronto (módulo ES6 carrega depois dos scripts normais)
+      let t = 0;
+      while (!window.GSPAuth?.isReady() && t < 30) {
+        await new Promise(r => setTimeout(r, 100));
+        t++;
+      }
+      const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
+      if (cfg) _atualizarModoSala(cfg);
+    }
+    _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
     } else {
       mostrarTela('screen-home');
+      _verificarSessaoSalva(); // re-verificar após tela estar visível
     }
-
-    // Firebase, adminCheck e polling rodam em background sem travar a UI
-    (async () => {
-      if (window.GSPAuth) {
-        let t = 0;
-        while (!window.GSPAuth.isReady() && t < 50) {
-          await new Promise(r => setTimeout(r, 100));
-          t++;
-        }
-        await window.GSPAuth.waitForAuthReady().catch(() => null);
-      }
-      await _atualizarBotaoAdmin(saved.uid);
-      if (window.ADMIN) {
-        let t = 0;
-        while (!window.GSPAuth?.isReady() && t < 30) {
-          await new Promise(r => setTimeout(r, 100));
-          t++;
-        }
-        const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
-        if (cfg) _atualizarModoSala(cfg);
-      }
-      _iniciarPollingGlobal(saved.uid);
-      _sincronizarFirebaseBackground(saved);
-      _verificarSessaoSalva(); // re-verifica banner após sincronização
-    })();
-
+    _sincronizarFirebaseBackground(saved);
     return;
   }
 
@@ -316,7 +313,6 @@ function mostrarTela(id, goBack) {
   // Atualiza botão admin ao entrar na home
   if (id === 'screen-home') {
     _mostrarBotaoAdmin();
-    _verificarSessaoSalva(); // garante banner visível após boot assíncrono
     // Registra presença no RTDB se jogador autenticado
     if (_player?.uid) _registrarPresencaHome();
     // Exibe mensagem global se houver
@@ -361,9 +357,9 @@ function confirmarNome() {
   if (input) input.value = "";
   _restaurarSala();
   _restaurarGrupo();
-  _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela("screen-home");
+  _verificarSessaoSalva();
 }
 
 function sair() {
@@ -436,23 +432,11 @@ function _salvarSessao() {
 }
 
 function _verificarSessaoSalva() {
-  // Usa gsp_session; se não existir, reconstrói a partir do gsp_session_state
-  let sess = LS.get(SK.SESSION);
-  if (!sess) {
-    const estado = LS.get('gsp_session_state');
-    if (estado && estado.sector && estado.companyName) {
-      LS.set(SK.SESSION, {
-        sector: estado.sector, companyName: estado.companyName,
-        currentRound: estado.currentRound, totalRounds: estado.totalRounds,
-        ts: estado.ts || Date.now()
-      });
-      sess = LS.get(SK.SESSION);
-    }
-  }
+  const sess   = LS.get(SK.SESSION);
   const banner = document.getElementById("session-restore-banner");
   const texto  = document.getElementById("session-restore-text");
   if (sess && banner && texto && _player) {
-    const mins  = Math.round((Date.now() - (sess.ts || Date.now())) / 60000);
+    const mins  = Math.round((Date.now() - sess.ts) / 60000);
     const tempo = mins < 60 ? `${mins} min atrás` : `${Math.round(mins/60)}h atrás`;
     texto.textContent = `Jogo em andamento: ${sess.companyName} (${sess.sector}) — Rodada ${sess.currentRound + 1}/${sess.totalRounds} · salvo ${tempo}`;
     banner.style.display = "block";
@@ -497,7 +481,6 @@ function restaurarSessao() {
 
 function descartarSessao() {
   LS.remove(SK.SESSION);
-  LS.remove('gsp_session_state');
   const banner = document.getElementById("session-restore-banner");
   if (banner) banner.style.display = "none";
 }
@@ -1699,7 +1682,7 @@ function reverTutorial() {
   mostrarTela('screen-tutorial');
 }
 
-function reiniciar() { _pararVerificacaoManutencao(); LS.remove(SK.SESSION); LS.remove('gsp_session_state'); _aplicarTemaSetor(null); mostrarTela("screen-home"); }
+function reiniciar() { _pararVerificacaoManutencao(); LS.remove(SK.SESSION); _aplicarTemaSetor(null); mostrarTela("screen-home"); }
 
 function _showToast(msg, tipo = "info", duracao = 3200) {
   const container = document.getElementById("toast");
@@ -1764,9 +1747,9 @@ function pularTutorial() {
     mostrarTela(origem);
     return;
   }
-  _verificarSessaoSalva();
   _atualizarHome();
   mostrarTela('screen-home');
+  _verificarSessaoSalva();
 }
 
 function tutorialStep(dir) {
@@ -2253,7 +2236,6 @@ function abandonarJogo() {
   _pararTimer();
   _pararVerificacaoManutencao();
   LS.remove(SK.SESSION);
-  LS.remove('gsp_session_state');
   _aplicarTemaSetor(null);
   mostrarTela('screen-home');
 }
@@ -2793,12 +2775,12 @@ async function _loginOk(player) {
   // Entra no painel imediatamente — sem esperar Firestore
   _restaurarSala();
   _restaurarGrupo();
-  _verificarSessaoSalva();
   _atualizarHome();
   if (!localStorage.getItem('gsp_tutorial_done')) {
     mostrarTela('screen-tutorial');
   } else {
     mostrarTela("screen-home");
+    _verificarSessaoSalva();
   }
 
   // Sincroniza dados em background (não bloqueia a UI)
