@@ -1136,8 +1136,6 @@ const ADMIN = (() => {
     let totalApagadas = 0;
     let erros = 0;
     try {
-      const tok = await _token();
-
       // 1. Busca todos os usuários
       const res = await _query({
         structuredQuery: {
@@ -1147,21 +1145,27 @@ const ADMIN = (() => {
       });
       const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
 
-      // 2. Para cada usuário, busca e apaga suas mensagens
+      // 2. Para cada usuário, busca e apaga suas mensagens via _query (evita 403 em banco regional)
       for (const uid of uids) {
         try {
-          const r = await fetch(`${FS}/usuarios/${uid}/mensagens`, {
-            headers: { Authorization: `Bearer ${tok}` }
+          const r = await _query({
+            structuredQuery: {
+              from: [{ collectionId: 'mensagens', allDescendants: true }],
+              where: {
+                fieldFilter: {
+                  field: { fieldPath: '__name__' },
+                  op: 'GREATER_THAN_OR_EQUAL',
+                  value: { referenceValue: `${FS}/usuarios/${uid}` }
+                }
+              }
+            }
           });
-          if (!r.ok) continue;
-          const data = await r.json();
-          const docs = data.documents || [];
+          const docs = (r || []).filter(d => d.document && d.document.name.includes(`/usuarios/${uid}/mensagens/`));
           for (const doc of docs) {
             try {
-              await fetch(doc.name.replace('https://firestore.googleapis.com/v1/', 'https://firestore.googleapis.com/v1/'), {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${tok}` }
-              });
+              const name = doc.document.name;
+              const path = name.split('/documents/')[1];
+              await _delete(path);
               totalApagadas++;
             } catch(e) { erros++; }
           }
@@ -1179,10 +1183,8 @@ const ADMIN = (() => {
       for (const doc of logDocs) {
         try {
           const name = doc.document.name;
-          await fetch(`https://firestore.googleapis.com/v1/${name}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${tok}` }
-          });
+          const path = name.split('/documents/')[1];
+          await _delete(path);
         } catch(e) { /* continua */ }
       }
 
@@ -1370,7 +1372,7 @@ const ADMIN = (() => {
       document.getElementById('versao-deploy-atual').textContent = v.deployedAt ? _formatarData(v.deployedAt) : '—';
 
       // Carrega changelog do Firestore
-      const snap = await _fsGet(`versoes/${v.hash}`);
+      const snap = await _get(`versoes/${v.hash}`);
       if (snap?.fields) {
         const cl = snap.fields.changelog?.stringValue || '';
         const cr = snap.fields.critica?.booleanValue  || false;
@@ -1399,7 +1401,7 @@ const ADMIN = (() => {
     const btn       = document.querySelector('[onclick="ADMIN.salvarChangelog()"]');
     if (btn) btn.textContent = 'Salvando...';
     try {
-      await _fsPatch(`versoes/${_versaoAtual.hash}`, {
+      await _patch(`versoes/${_versaoAtual.hash}`, {
         changelog:  { stringValue: changelog },
         critica:    { booleanValue: critica },
         versao:     { stringValue: _versaoAtual.versao || _versaoAtual.hash?.slice(0,7) },
@@ -1419,7 +1421,7 @@ const ADMIN = (() => {
   async function forcarAtualizacaoGlobal() {
     if (!confirm('Forçar atualização em TODOS os usuários conectados?')) return;
     try {
-      await _fsPatch('config/global', {
+      await _patch('config/global', {
         forcarAtualizacao: { stringValue: (_versaoAtual?.hash || Date.now().toString()) },
         forcarAtualizacaoTs: { stringValue: new Date().toISOString() },
       });
@@ -1432,8 +1434,8 @@ const ADMIN = (() => {
   async function _carregarStatsVersao(hashAtual) {
     try {
       // Conta sessões ativas com versão registrada
-      const snap = await _fsList('sessoes_ativas');
-      const docs = snap?.documents || [];
+      const snapRaw = await _query({ structuredQuery: { from: [{ collectionId: 'sessoes_ativas' }] } });
+      const docs = (snapRaw || []).filter(r => r.document).map(r => r.document);
       let atuais = 0, antigos = 0;
       docs.forEach(d => {
         const h = d.fields?.versao?.stringValue;
@@ -1452,8 +1454,8 @@ const ADMIN = (() => {
     if (!lista) return;
     lista.innerHTML = '<span style="color:var(--t3);font-size:.78rem">Carregando...</span>';
     try {
-      const snap = await _fsList('versoes');
-      const docs = (snap?.documents || []).sort((a, b) => {
+      const snapRaw = await _query({ structuredQuery: { from: [{ collectionId: 'versoes' }] } });
+      const docs = (snapRaw || []).filter(r => r.document).map(r => r.document).sort((a, b) => {
         const tA = a.fields?.savedAt?.stringValue || '';
         const tB = b.fields?.savedAt?.stringValue || '';
         return tB.localeCompare(tA);
@@ -1481,43 +1483,7 @@ const ADMIN = (() => {
     }
   }
 
-  // Helper: busca documento Firestore
-  async function _fsGet(path) {
-    const token = await _getToken();
-    if (!token) return null;
-    const r = await fetch(`${FS}/${path}`, { headers: { Authorization: 'Bearer ' + token } });
-    if (!r.ok) return null;
-    return r.json();
-  }
-
-  // Helper: lista coleção Firestore
-  async function _fsList(collection) {
-    const token = await _getToken();
-    if (!token) return null;
-    const r = await fetch(`${FS}/${collection}`, { headers: { Authorization: 'Bearer ' + token } });
-    if (!r.ok) return null;
-    return r.json();
-  }
-
-  // Helper: cria/atualiza documento Firestore (PATCH)
-  async function _fsPatch(path, fields) {
-    const token = await _getToken();
-    if (!token) throw new Error('Não autenticado');
-    const updateMask = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
-    const r = await fetch(`${FS}/${path}?${updateMask}`, {
-      method: 'PATCH',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields }),
-    });
-    if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || r.status); }
-    return r.json();
-  }
-
-  async function _getToken() {
-    try {
-      return await _token();
-    } catch(e) { return null; }
-  }
+  // Aliases removidos — usar _get, _patch, _token diretamente (já definidos no topo)
 
   function _formatarData(iso) {
     try {
