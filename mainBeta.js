@@ -106,6 +106,12 @@ function _fecharOverlay(id) {
   el.removeAttribute('data-sector');
 }
 
+function _abrirOverlay(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'flex';
+}
+
 /* _verificarManutencaoInicial → maintenance.js */
 
 async function _boot() {
