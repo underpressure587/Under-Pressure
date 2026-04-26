@@ -1372,6 +1372,23 @@ const ADMIN = (() => {
       document.getElementById('versao-hash-atual').textContent   = v.hash  || '';
       document.getElementById('versao-deploy-atual').textContent = v.deployedAt ? _formatarData(v.deployedAt) : '—';
 
+      // Mensagem do commit
+      const commitEl = document.getElementById('versao-commit-msg');
+      if (commitEl && v.commitMsg) {
+        commitEl.textContent = '💬 ' + v.commitMsg;
+        commitEl.style.display = 'block';
+      }
+
+      // Arquivos alterados
+      const arquivosEl = document.getElementById('versao-arquivos-lista');
+      const tagsEl = document.getElementById('versao-arquivos-tags');
+      if (arquivosEl && tagsEl && v.arquivosAlterados?.length) {
+        tagsEl.innerHTML = v.arquivosAlterados.map(f =>
+          `<span style="background:var(--bg3);color:var(--t2);font-size:.7rem;padding:2px 8px;border-radius:20px;font-family:monospace">${f}</span>`
+        ).join('');
+        arquivosEl.style.display = 'block';
+      }
+
       // Carrega changelog do Firestore
       const snap = await _get(`versoes/${v.hash}`);
       if (snap?.fields) {
