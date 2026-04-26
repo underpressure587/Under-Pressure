@@ -109,7 +109,12 @@ function _fecharOverlay(id) {
 function _abrirOverlay(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  if (el.parentElement !== document.body) document.body.appendChild(el);
+  if (el.parentElement !== document.body) {
+    document.body.appendChild(el);
+    el.style.position = 'fixed';
+    el.style.inset = '0';
+    el.style.zIndex = '99999';
+  }
   el.style.display = 'flex';
 }
 
@@ -121,7 +126,12 @@ async function _boot() {
   // O overlay-confirmar-saida (z-index:100001) deve vir por último para ficar na frente
   const confirmar = document.getElementById('overlay-confirmar-saida');
   document.querySelectorAll('.overlay').forEach(o => {
-    if (o.parentElement !== document.body) document.body.appendChild(o);
+    if (o.parentElement !== document.body) {
+      document.body.appendChild(o);
+      o.style.position = 'fixed';
+      o.style.inset = '0';
+      o.style.zIndex = '99999';
+    }
     _fecharOverlay(o.id);
   });
   // Garante que confirmar-saida é o último no body (maior prioridade visual)
