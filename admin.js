@@ -1405,8 +1405,9 @@ const ADMIN = (() => {
         }
       }
 
-      // Carrega changelog do Firestore
-      const snap = await _get(`versoes/${v.hash}`);
+      // Carrega changelog do Firestore (404 = ainda não salvo, não é erro)
+      let snap = null;
+      try { snap = await _get(`versoes/${v.hash}`); } catch(e) { if (!e.message.includes('404')) throw e; }
       if (snap?.fields) {
         const cl = snap.fields.changelog?.stringValue || '';
         const cr = snap.fields.critica?.booleanValue  || false;
