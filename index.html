@@ -1210,10 +1210,7 @@
       <div class="ban-unban-status" id="ban-unban-status" style="display:none">
         <span style="color:var(--ok)">✓</span> Suspensão encerrada — você já pode entrar
       </div>
-    </div>
-  </div>
-
-  <!-- ══ OVERLAYS (fora do #app para evitar conflito de stacking context) ══ -->
+  <!-- ══ OVERLAYS (dentro do #app, position:fixed cobre a viewport inteira) ══ -->
   
   <!-- OVERLAY: PAUSA -->
   <div id="overlay-pause" class="overlay" onclick="if(event.target===this)BetaUI.continuarJogo()">
@@ -1717,6 +1714,9 @@
       <div class="modal-foot">
         <button class="btn-primary" onclick="BetaUI.irParaSalaAposCriar()">Entrar na sala →</button>
       </div>
+    </div>
+  </div>
+
     </div>
   </div>
 
