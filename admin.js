@@ -1136,6 +1136,8 @@ const ADMIN = (() => {
     let totalApagadas = 0;
     let erros = 0;
     try {
+      const tok = await _token();
+
       // 1. Busca todos os usuários
       const res = await _query({
         structuredQuery: {
@@ -1145,26 +1147,26 @@ const ADMIN = (() => {
       });
       const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
 
-      // 2. Para cada usuário, busca e apaga suas mensagens via _query (evita 403 em banco regional)
+      // 2. Para cada usuário, busca mensagens via runQuery scoped ao documento do usuário
       for (const uid of uids) {
         try {
-          const r = await _query({
-            structuredQuery: {
-              from: [{ collectionId: 'mensagens', allDescendants: true }],
-              where: {
-                fieldFilter: {
-                  field: { fieldPath: '__name__' },
-                  op: 'GREATER_THAN_OR_EQUAL',
-                  value: { referenceValue: `${FS}/usuarios/${uid}` }
-                }
+          // runQuery no path do doc do usuário retorna apenas sua subcoleção 'mensagens'
+          const r = await fetch(`${FS}/usuarios/${uid}:runQuery`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              structuredQuery: {
+                from: [{ collectionId: 'mensagens' }],
+                select: { fields: [{ fieldPath: 'ts' }] }
               }
-            }
+            })
           });
-          const docs = (r || []).filter(d => d.document && d.document.name.includes(`/usuarios/${uid}/mensagens/`));
-          for (const doc of docs) {
+          if (!r.ok) continue;
+          const rows = await r.json();
+          const msgDocs = (rows || []).filter(d => d.document);
+          for (const doc of msgDocs) {
             try {
-              const name = doc.document.name;
-              const path = name.split('/documents/')[1];
+              const path = doc.document.name.split('/documents/')[1];
               await _delete(path);
               totalApagadas++;
             } catch(e) { erros++; }
@@ -1172,7 +1174,7 @@ const ADMIN = (() => {
         } catch(e) { erros++; }
       }
 
-      // 3. Apaga todo o mensagens_log
+      // 3. Apaga todo o mensagens_log via _query + _delete
       const logRes = await _query({
         structuredQuery: {
           from: [{ collectionId: 'mensagens_log' }],
@@ -1182,8 +1184,7 @@ const ADMIN = (() => {
       const logDocs = logRes.filter(r => r.document);
       for (const doc of logDocs) {
         try {
-          const name = doc.document.name;
-          const path = name.split('/documents/')[1];
+          const path = doc.document.name.split('/documents/')[1];
           await _delete(path);
         } catch(e) { /* continua */ }
       }
@@ -1483,7 +1484,7 @@ const ADMIN = (() => {
     }
   }
 
-  // Aliases removidos — usar _get, _patch, _token diretamente (já definidos no topo)
+  // Aliases removidos — usar _get, _patch, _token diretamente (definidos no topo)
 
   function _formatarData(iso) {
     try {
