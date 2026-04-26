@@ -116,7 +116,12 @@ function _abrirOverlay(id) {
 
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
-  document.querySelectorAll('.overlay').forEach(o => { _fecharOverlay(o.id); });
+  // Garante que todos os overlays estão direto no body (fora do #app)
+  // para evitar problemas de stacking context
+  document.querySelectorAll('.overlay').forEach(o => {
+    if (o.parentElement !== document.body) document.body.appendChild(o);
+    _fecharOverlay(o.id);
+  });
   _carregarVersaoAtual(); // carrega versão atual em background
 
   // Sempre sai da screen-loading imediatamente
