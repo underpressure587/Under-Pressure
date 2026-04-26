@@ -737,6 +737,7 @@ function comecaJogo() {
   _renderEmpresaTab();
   _iniciarVerificacaoManutencao();
   _atualizarSessaoAtiva(); // registra presença imediatamente ao iniciar o jogo
+  _gravarStatsDiario('inicio'); // contabiliza partida iniciada para dashboard
 }
 
 // ─── POLLING UNIVERSAL ─────────────────────────────────────────
@@ -780,6 +781,63 @@ function _mostrarToastAtualizacao(forcado) {
     });
   }
   document.body.appendChild(toast);
+}
+
+// ─── STATS DIÁRIO (dashboard admin) ────────────────────────────────────────
+// Grava em stats/diario: totalIniciadas e abandonos por rodada
+// tipo: 'inicio' | 'abandono'  rodada: índice 0-based (só usado em 'abandono')
+async function _gravarStatsDiario(tipo, rodada) {
+  if (!_player?.uid || _player?.tipo === 'guest') return;
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return;
+    const hoje = new Date().toISOString().slice(0, 10);
+    const mesAtual = hoje.slice(0, 7); // ex: "2025-01"
+    const FS = 'https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents';
+
+    // Lê estado atual — guarda o doc para reusar na limpeza de meses
+    const getRes = await fetch(`${FS}/stats/diario`, { headers: { Authorization: `Bearer ${tok}` } });
+    let doc = {};
+    let campos = {};
+    if (getRes.ok) {
+      doc = await getRes.json();
+      const raw = doc.fields?.[hoje]?.stringValue;
+      if (raw) try { campos = JSON.parse(raw); } catch(e) {}
+    }
+
+    // Atualiza contadores do dia
+    if (tipo === 'inicio') {
+      campos.totalIniciadas = (campos.totalIniciadas || 0) + 1;
+    } else if (tipo === 'abandono' && rodada !== undefined) {
+      campos.totalAbandonos = (campos.totalAbandonos || 0) + 1;
+      const contadores = campos.contadoresPorRodada || {};
+      contadores[rodada] = (contadores[rodada] || 0) + 1;
+      campos.contadoresPorRodada = contadores;
+      // Recalcula percentuais em relação ao total de partidas iniciadas hoje
+      const total = campos.totalIniciadas || 1;
+      const abandonoPorRodada = {};
+      for (const [r, c] of Object.entries(contadores)) {
+        abandonoPorRodada[r] = Math.round((c / total) * 100);
+      }
+      campos.abandonoPorRodada = abandonoPorRodada;
+    }
+
+    // Monta patch: grava dia atual + apaga dias de meses anteriores
+    const fieldsParaGravar = { [hoje]: { stringValue: JSON.stringify(campos) } };
+    for (const campo of Object.keys(doc.fields || {})) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(campo) && campo.slice(0, 7) !== mesAtual) {
+        fieldsParaGravar[campo] = { nullValue: null }; // remove campo do Firestore
+      }
+    }
+    const updateMask = Object.keys(fieldsParaGravar)
+      .map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join('&');
+
+    await fetch(`${FS}/stats/diario?${updateMask}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: fieldsParaGravar })
+    });
+  } catch(e) { /* silencioso — não interrompe o fluxo */ }
 }
 
 // _iniciarPollingGlobal → window.Maintenance.iniciarPolling(uid)
@@ -2209,6 +2267,13 @@ function abandonarJogo() {
   _fecharOverlay('overlay-pause');
   _pararTimer();
   _pararVerificacaoManutencao();
+  // Grava rodada de abandono para dashboard antes de limpar sessão
+  try {
+    const _stateAbandono = BetaState.get();
+    if (_stateAbandono?.currentRound !== undefined) {
+      _gravarStatsDiario('abandono', _stateAbandono.currentRound);
+    }
+  } catch(e) {}
   LS.remove(SK.SESSION);
   _aplicarTemaSetor(null);
   mostrarTela('screen-home');

@@ -1597,6 +1597,7 @@ const ADMIN = (() => {
         const d = _parseFields(r.document.fields);
         return `"${d.nome||''}","${d.email||''}","${d.mandatos||0}","${d.melhorScore||0}","${d.banido?'Banido':'Ativo'}"`;
       });
+      if (!rows.length) { _showAdminToast('Nenhum jogador encontrado para exportar.', true); return; }
       const csv = 'Nome,E-mail,Mandatos,Score,Status\n' + rows.join('\n');
       _downloadCSV(csv, 'jogadores.csv');
     } catch(e) { _showAdminToast('Erro ao exportar: ' + e.message, true); }
@@ -1616,6 +1617,7 @@ const ADMIN = (() => {
       const items = res.filter(r => r.document)
         .map(r => _parseFields(r.document.fields))
         .sort((a,b) => (b.melhorScore||0) - (a.melhorScore||0));
+      if (!items.length) { _showAdminToast('Pódio vazio, nada para exportar.', true); return; }
       const rows = items.map((p, i) =>
         `"${i+1}","${p.player||''}","${p.melhorScore||0}","${p.sector||''}","${p.totalJogos||0}","${p.ultimaPartida ? new Date(p.ultimaPartida).toLocaleDateString('pt-BR') : ''}"`
       );
@@ -1685,9 +1687,10 @@ const ADMIN = (() => {
       // Abandono por rodada (baseado em stats/diario)
       try {
         const stats = await _get('stats/diario');
-        const campos = _parseFields(stats.fields || {});
         const hoje = new Date().toISOString().slice(0,10);
-        const dadosHoje = campos[hoje] || {};
+        // Campo do dia é gravado como stringValue com JSON
+        const rawHoje = stats.fields?.[hoje]?.stringValue;
+        const dadosHoje = rawHoje ? JSON.parse(rawHoje) : {};
         const abandono = dadosHoje.abandonoPorRodada || {};
         const abEl = document.getElementById('dash-abandono-lista');
         const entradas = Object.entries(abandono).sort((a,b) => Number(a[0])-Number(b[0]));
