@@ -127,7 +127,7 @@ function _abrirOverlay(id) {
   const TELAS_JOGO = ['screen-intro','screen-game','screen-feedback','screen-result'];
   const telaAtiva = document.querySelector('.screen.active');
   const emJogo = telaAtiva && TELAS_JOGO.includes(telaAtiva.id);
-  const sector = emJogo ? (_setorSelecionado || (_player && _player.sector) || null) : null;
+  const sector = emJogo ? (document.getElementById('app')?.getAttribute('data-sector') || null) : null;
   if (sector) el.setAttribute('data-sector', sector);
   else el.removeAttribute('data-sector');
 }
