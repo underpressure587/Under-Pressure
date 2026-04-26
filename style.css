@@ -249,7 +249,7 @@ body::after{
 /* ── APP ────────────────────────────────────────────── */
 #app{
   position:relative; z-index:1; width:100%; max-width:430px;
-  height:100dvh; margin:0 auto; background:var(--bg); overflow:hidden;
+  height:100dvh; margin:0 auto; background:var(--bg);
   box-shadow:var(--sh3), 0 0 80px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.06);
   transition: background .5s ease;
 }
