@@ -485,6 +485,7 @@ function restaurarSessao() {
       }
       state.companyInfo = COMPANY_INFO[state.sector] || null;
       window._initPrevIndicators?.(state.indicators);
+      _aplicarTemaSetor(state.sector);
       _preparaRodada(state);
       mostrarTela("screen-game");
       renderSidebar(state, empresa);
