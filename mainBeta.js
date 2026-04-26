@@ -1667,15 +1667,31 @@ function toggleCloudStatus() {
 }
 
 function toggleFotoPerfil() {
-  _settings.fotoPerfil = !(_settings.fotoPerfil === true);
+  const fotoOn = _settings.fotoPerfil === true;
+  if (!fotoOn) {
+    // Vai ativar — pede confirmação
+    _abrirOverlay('overlay-confirmar-foto');
+  } else {
+    // Vai desativar — faz direto
+    _settings.fotoPerfil = false;
+    LS.set(SK.SETTINGS, _settings);
+    const btn = document.getElementById('toggle-foto-btn');
+    if (btn) { btn.textContent = 'OFF'; btn.className = 'toggle-btn off'; }
+    _atualizarHome();
+  }
+}
+
+function confirmarFotoPerfil() {
+  _fecharOverlay('overlay-confirmar-foto');
+  _settings.fotoPerfil = true;
   LS.set(SK.SETTINGS, _settings);
   const btn = document.getElementById('toggle-foto-btn');
-  if (btn) {
-    btn.textContent = _settings.fotoPerfil ? 'ON' : 'OFF';
-    btn.className = `toggle-btn ${_settings.fotoPerfil ? 'on' : 'off'}`;
-  }
-  // Atualiza avatar da home imediatamente
+  if (btn) { btn.textContent = 'ON'; btn.className = 'toggle-btn on'; }
   _atualizarHome();
+}
+
+function cancelarFotoPerfil() {
+  _fecharOverlay('overlay-confirmar-foto');
 }
 
 function abrirEditarNome() {
@@ -3753,7 +3769,7 @@ window.BetaUI = {
   mudarTab, escolher, avancar, reiniciar,
   openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus,
   toggleFullscreen, voltar,
-  irParaConfig, toggleFotoPerfil, abrirEditarNome, fecharEditarNome, salvarNome,
+  irParaConfig, toggleFotoPerfil, confirmarFotoPerfil, cancelarFotoPerfil, abrirEditarNome, fecharEditarNome, salvarNome,
   // Novos
   pularTutorial, tutorialStep, irParaSlide, reverTutorial,
   pausarJogo, continuarJogo, abandonarJogo,
