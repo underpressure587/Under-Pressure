@@ -109,23 +109,27 @@ function _fecharOverlay(id) {
 function _abrirOverlay(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  if (el.parentElement !== document.body) {
-    document.body.appendChild(el);
-    el.style.position = 'fixed';
-    el.style.inset = '0';
-    el.style.zIndex = '99999';
-    el.style.display = 'none';
-    el.style.alignItems = 'center';
-    el.style.justifyContent = 'center';
-    el.style.padding = '20px';
-    el.style.boxSizing = 'border-box';
-    el.style.background = 'rgba(0,0,0,0.75)';
-  }
-  // Aplica tema do setor atual
-  const sector = _setorSelecionado || (_player && _player.sector) || null;
+  if (el.parentElement !== document.body) document.body.appendChild(el);
+  // Força estilos inline sempre (garante centralização independente do contexto)
+  el.style.position = 'fixed';
+  el.style.top = '0';
+  el.style.left = '0';
+  el.style.right = '0';
+  el.style.bottom = '0';
+  el.style.zIndex = '99999';
+  el.style.display = 'flex';
+  el.style.alignItems = 'center';
+  el.style.justifyContent = 'center';
+  el.style.padding = '20px';
+  el.style.boxSizing = 'border-box';
+  el.style.background = 'rgba(0,0,0,0.75)';
+  // Aplica cor do setor só se estiver numa tela de jogo
+  const TELAS_JOGO = ['screen-intro','screen-game','screen-feedback','screen-result'];
+  const telaAtiva = document.querySelector('.screen.active');
+  const emJogo = telaAtiva && TELAS_JOGO.includes(telaAtiva.id);
+  const sector = emJogo ? (_setorSelecionado || (_player && _player.sector) || null) : null;
   if (sector) el.setAttribute('data-sector', sector);
   else el.removeAttribute('data-sector');
-  el.style.display = 'flex';
 }
 
 /* _verificarManutencaoInicial → maintenance.js */
@@ -139,8 +143,16 @@ async function _boot() {
     if (o.parentElement !== document.body) {
       document.body.appendChild(o);
       o.style.position = 'fixed';
-      o.style.inset = '0';
+      o.style.top = '0';
+      o.style.left = '0';
+      o.style.right = '0';
+      o.style.bottom = '0';
       o.style.zIndex = '99999';
+      o.style.alignItems = 'center';
+      o.style.justifyContent = 'center';
+      o.style.padding = '20px';
+      o.style.boxSizing = 'border-box';
+      o.style.background = 'rgba(0,0,0,0.75)';
     }
     _fecharOverlay(o.id);
   });
