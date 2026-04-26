@@ -109,6 +109,7 @@ function _fecharOverlay(id) {
 function _abrirOverlay(id) {
   const el = document.getElementById(id);
   if (!el) return;
+  if (el.parentElement !== document.body) document.body.appendChild(el);
   el.style.display = 'flex';
 }
 
@@ -116,12 +117,17 @@ function _abrirOverlay(id) {
 
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
-  // Garante que todos os overlays estão direto no body (fora do #app)
-  // para evitar problemas de stacking context
+  // Move todos os .overlay para o body para evitar stacking context do #app
+  // O overlay-confirmar-saida (z-index:100001) deve vir por último para ficar na frente
+  const confirmar = document.getElementById('overlay-confirmar-saida');
   document.querySelectorAll('.overlay').forEach(o => {
     if (o.parentElement !== document.body) document.body.appendChild(o);
     _fecharOverlay(o.id);
   });
+  // Garante que confirmar-saida é o último no body (maior prioridade visual)
+  if (confirmar && confirmar.parentElement === document.body) {
+    document.body.appendChild(confirmar);
+  }
   _carregarVersaoAtual(); // carrega versão atual em background
 
   // Sempre sai da screen-loading imediatamente
