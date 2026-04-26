@@ -464,26 +464,6 @@
     </div>
   </div>
 
-  <!-- ══ MODAL: EDITAR NOME ══ -->
-  <div id="overlay-editar-nome" class="overlay" onclick="if(event.target===this)BetaUI.fecharEditarNome()">
-    <div class="overlay-card">
-      <div class="overlay-head">
-        <span class="overlay-title">Editar nome</span>
-        <button class="overlay-close" onclick="BetaUI.fecharEditarNome()">✕</button>
-      </div>
-      <div class="overlay-body">
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
-          <span class="settings-row-label">Novo nome de exibição</span>
-          <input id="input-novo-nome" type="text" class="input-field" maxlength="30" placeholder="Seu nome aqui" style="width:100%;box-sizing:border-box" autocomplete="off">
-        </div>
-        <div style="display:flex;gap:8px;margin-top:16px">
-          <button class="btn btn-secondary" style="flex:1" onclick="BetaUI.fecharEditarNome()">Cancelar</button>
-          <button class="btn btn-primary" style="flex:1" onclick="BetaUI.salvarNome()">Salvar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ══ PÓDIO ══ -->
   <div id="screen-podio" class="screen">
     <div class="podio-header">
@@ -1139,6 +1119,92 @@
 
 
 </div>
+  <!-- ══ MODAL: EDITAR NOME ══ -->
+  <div id="overlay-editar-nome" class="overlay" onclick="if(event.target===this)BetaUI.fecharEditarNome()">
+    <div class="overlay-card">
+      <div class="overlay-head">
+        <span class="overlay-title">Editar nome</span>
+        <button class="overlay-close" onclick="BetaUI.fecharEditarNome()">✕</button>
+      </div>
+      <div class="overlay-body">
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <span class="settings-row-label">Novo nome de exibição</span>
+          <input id="input-novo-nome" type="text" class="input-field" maxlength="30" placeholder="Seu nome aqui" style="width:100%;box-sizing:border-box" autocomplete="off">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn btn-secondary" style="flex:1" onclick="BetaUI.fecharEditarNome()">Cancelar</button>
+          <button class="btn btn-primary" style="flex:1" onclick="BetaUI.salvarNome()">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: PAUSA -->
+  <div id="overlay-pause" class="overlay" onclick="if(event.target===this)BetaUI.continuarJogo()">
+    <div class="overlay-card pause-card">
+      <div class="pause-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
+      <div class="pause-title">Jogo Pausado</div>
+      <div class="pause-info" id="pause-info"></div>
+      <div class="pause-btns">
+        <button class="btn btn-primary" onclick="BetaUI.continuarJogo()">▶ Continuar</button>
+        <button class="btn btn-secondary" onclick="BetaUI.pedirConfirmacaoSaida('partida')">Abandonar Mandato</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: TOOLTIP INDICADOR -->
+  <div id="overlay-tooltip" class="overlay" onclick="if(event.target===this)BetaUI.closeTooltip()">
+    <div class="overlay-card tooltip-card">
+      <div class="overlay-head">
+        <span class="overlay-title" id="tooltip-title">Indicador</span>
+        <button class="overlay-close" onclick="BetaUI.closeTooltip()">✕</button>
+      </div>
+      <div class="overlay-body" id="tooltip-body"></div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: GLOSSÁRIO -->
+  <div id="overlay-glossary" class="overlay" onclick="if(event.target===this)BetaUI.closeGlossary()">
+    <div class="overlay-card">
+      <div class="overlay-head">
+        <span class="overlay-title">Glossário</span>
+        <button class="overlay-close" onclick="BetaUI.closeGlossary()">✕</button>
+      </div>
+      <div class="overlay-body" id="glossary-content"></div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: CONFIGURAÇÕES -->
+  <div id="overlay-settings" class="overlay" onclick="if(event.target===this)BetaUI.closeSettings()">
+    <div class="overlay-card">
+      <div class="overlay-head">
+        <span class="overlay-title">Configurações</span>
+        <button class="overlay-close" onclick="BetaUI.closeSettings()">✕</button>
+      </div>
+      <div class="overlay-body">
+        <div class="settings-row">
+          <span class="settings-row-label">Timer por rodada (90 segundos)</span>
+          <button id="toggle-timer-btn" class="toggle-btn off" onclick="BetaUI.toggleTimerSetting()">OFF</button>
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">Status de salvamento na nuvem</span>
+          <button id="toggle-cloud-btn" class="toggle-btn off" onclick="BetaUI.toggleCloudStatus()">OFF</button>
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">Tela Cheia</span>
+          <button class="btn-settings-fullscreen" onclick="BetaUI.toggleFullscreen()" id="settings-fs-btn">⛶ Ativar</button>
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">Rever Tutorial</span>
+          <button class="btn-settings-fullscreen" onclick="BetaUI.reverTutorial()">▶ Ver</button>
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label" style="font-size:.74rem;color:var(--t3)">v6.0 · Under Pressure · Beta</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ OVERLAY: CAIXA DE ENTRADA DO JOGADOR ══ -->
   <div id="overlay-inbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100002;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;backdrop-filter:blur(4px)" onclick="if(event.target===this)BetaUI.fecharInbox()">
     <div style="background:var(--bg2,#1a1a2e);border-radius:16px;width:100%;max-width:420px;max-height:82vh;display:flex;flex-direction:column;border:1px solid var(--line2,#333)">
@@ -1210,73 +1276,7 @@
       <div class="ban-unban-status" id="ban-unban-status" style="display:none">
         <span style="color:var(--ok)">✓</span> Suspensão encerrada — você já pode entrar
       </div>
-  <!-- ══ OVERLAYS (dentro do #app, position:fixed cobre a viewport inteira) ══ -->
-  
-  <!-- OVERLAY: PAUSA -->
-  <div id="overlay-pause" class="overlay" onclick="if(event.target===this)BetaUI.continuarJogo()">
-    <div class="overlay-card pause-card">
-      <div class="pause-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
-      <div class="pause-title">Jogo Pausado</div>
-      <div class="pause-info" id="pause-info"></div>
-      <div class="pause-btns">
-        <button class="btn btn-primary" onclick="BetaUI.continuarJogo()">▶ Continuar</button>
-        <button class="btn btn-secondary" onclick="BetaUI.pedirConfirmacaoSaida('partida')">Abandonar Mandato</button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- OVERLAY: TOOLTIP INDICADOR -->
-  <div id="overlay-tooltip" class="overlay" onclick="if(event.target===this)BetaUI.closeTooltip()">
-    <div class="overlay-card tooltip-card">
-      <div class="overlay-head">
-        <span class="overlay-title" id="tooltip-title">Indicador</span>
-        <button class="overlay-close" onclick="BetaUI.closeTooltip()">✕</button>
-      </div>
-      <div class="overlay-body" id="tooltip-body"></div>
-    </div>
-  </div>
-  
-  <!-- OVERLAY: GLOSSÁRIO -->
-  <div id="overlay-glossary" class="overlay" onclick="if(event.target===this)BetaUI.closeGlossary()">
-    <div class="overlay-card">
-      <div class="overlay-head">
-        <span class="overlay-title">Glossário</span>
-        <button class="overlay-close" onclick="BetaUI.closeGlossary()">✕</button>
-      </div>
-      <div class="overlay-body" id="glossary-content"></div>
-    </div>
-  </div>
-  
-  <!-- OVERLAY: CONFIGURAÇÕES -->
-  <div id="overlay-settings" class="overlay" onclick="if(event.target===this)BetaUI.closeSettings()">
-    <div class="overlay-card">
-      <div class="overlay-head">
-        <span class="overlay-title">Configurações</span>
-        <button class="overlay-close" onclick="BetaUI.closeSettings()">✕</button>
-      </div>
-      <div class="overlay-body">
-        <div class="settings-row">
-          <span class="settings-row-label">Timer por rodada (90 segundos)</span>
-          <button id="toggle-timer-btn" class="toggle-btn off" onclick="BetaUI.toggleTimerSetting()">OFF</button>
-        </div>
-        <div class="settings-row">
-          <span class="settings-row-label">Status de salvamento na nuvem</span>
-          <button id="toggle-cloud-btn" class="toggle-btn off" onclick="BetaUI.toggleCloudStatus()">OFF</button>
-        </div>
-        <div class="settings-row">
-          <span class="settings-row-label">Tela Cheia</span>
-          <button class="btn-settings-fullscreen" onclick="BetaUI.toggleFullscreen()" id="settings-fs-btn">⛶ Ativar</button>
-        </div>
-        <div class="settings-row">
-          <span class="settings-row-label">Rever Tutorial</span>
-          <button class="btn-settings-fullscreen" onclick="BetaUI.reverTutorial()">▶ Ver</button>
-        </div>
-        <div class="settings-row">
-          <span class="settings-row-label" style="font-size:.74rem;color:var(--t3)">v6.0 · Under Pressure · Beta</span>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
 
 <script src="./admin.js?v=bb11891"></script>
