@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'visao_geral_screen.dart';
 import 'jogadores_screen.dart';
+import 'mensagens_screen.dart';
 import 'podio_screen.dart';
 import 'sessoes_screen.dart';
 import 'config_screen.dart';
@@ -24,17 +25,18 @@ class _HomeScreenState extends State<HomeScreen> {
   int _secaoAtual = 0;
 
   final _secoes = const [
-    {'label': 'Visão Geral',  'icon': Icons.dashboard,        'widget': VisaoGeralScreen()},
-    {'label': 'Jogadores',    'icon': Icons.people,            'widget': JogadoresScreen()},
-    {'label': 'Pódio',        'icon': Icons.emoji_events,      'widget': PodioScreen()},
-    {'label': 'Sessões',      'icon': Icons.computer,          'widget': SessoesScreen()},
-    {'label': 'Dashboard',    'icon': Icons.bar_chart,         'widget': DashboardScreen()},
-    {'label': 'Histórias',    'icon': Icons.menu_book,         'widget': HistoriasScreen()},
-    {'label': 'Feedback',     'icon': Icons.star,              'widget': FeedbackScreen()},
-    {'label': 'Logs',         'icon': Icons.list_alt,          'widget': LogsScreen()},
-    {'label': 'Versão',       'icon': Icons.system_update,     'widget': VersaoScreen()},
-    {'label': 'Config',       'icon': Icons.settings,          'widget': ConfigScreen()},
-    {'label': 'Auditoria',    'icon': Icons.security,          'widget': AuditoriaScreen()},
+    {'label': 'Visão Geral',  'icon': Icons.dashboard,             'widget': VisaoGeralScreen()},
+    {'label': 'Jogadores',    'icon': Icons.people,                'widget': JogadoresScreen()},
+    {'label': 'Mensagens',    'icon': Icons.mark_email_unread,     'widget': MensagensScreen()},
+    {'label': 'Pódio',        'icon': Icons.emoji_events,          'widget': PodioScreen()},
+    {'label': 'Sessões',      'icon': Icons.computer,              'widget': SessoesScreen()},
+    {'label': 'Dashboard',    'icon': Icons.bar_chart,             'widget': DashboardScreen()},
+    {'label': 'Histórias',    'icon': Icons.menu_book,             'widget': HistoriasScreen()},
+    {'label': 'Feedback',     'icon': Icons.star,                  'widget': FeedbackScreen()},
+    {'label': 'Logs',         'icon': Icons.list_alt,              'widget': LogsScreen()},
+    {'label': 'Versão',       'icon': Icons.system_update,         'widget': VersaoScreen()},
+    {'label': 'Config',       'icon': Icons.settings,              'widget': ConfigScreen()},
+    {'label': 'Auditoria',    'icon': Icons.security,              'widget': AuditoriaScreen()},
   ];
 
   Future<void> _sair() async {

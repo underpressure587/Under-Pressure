@@ -12,27 +12,52 @@ class _VersaoScreenState extends State<VersaoScreen> {
   List<Map<String, dynamic>> _versoes = [];
   bool _loading = true;
   String? _erro;
+  // Campos de edição para a versão mais recente
+  final _changelogCtrl = TextEditingController();
+  bool _critica = false;
+  Map<String, dynamic>? _versaoAtual;
 
   @override
   void initState() { super.initState(); _carregar(); }
+
+  @override
+  void dispose() { _changelogCtrl.dispose(); super.dispose(); }
 
   Future<void> _carregar() async {
     setState(() { _loading = true; _erro = null; });
     try {
       final v = await _fs.getVersoes();
       v.sort((a, b) => ((b['savedAt'] ?? '') as String).compareTo((a['savedAt'] ?? '') as String));
-      setState(() { _versoes = v; _loading = false; });
+      final atual = v.isNotEmpty ? v.first : null;
+      setState(() {
+        _versoes = v;
+        _versaoAtual = atual;
+        if (atual != null) {
+          _changelogCtrl.text = atual['changelog'] as String? ?? '';
+          _critica = atual['critica'] == true;
+        }
+        _loading = false;
+      });
     } catch (e) {
       setState(() { _erro = e.toString(); _loading = false; });
     }
   }
 
-  String _formatarData(String? iso) {
-    if (iso == null || iso.isEmpty) return '—';
+  Future<void> _salvarChangelog() async {
+    if (_versaoAtual == null) return;
     try {
-      final d = DateTime.parse(iso).toLocal();
-      return '${d.day.toString().padLeft(2,'0')}/${d.month.toString().padLeft(2,'0')}/${d.year} ${d.hour.toString().padLeft(2,'0')}:${d.minute.toString().padLeft(2,'0')}';
-    } catch (_) { return iso; }
+      await _fs.salvarChangelog(
+        _versaoAtual!['hash'] as String? ?? '',
+        _versaoAtual!['versao'] as String? ?? '',
+        _versaoAtual!['deployedAt'] as String? ?? '',
+        _changelogCtrl.text.trim(),
+        _critica,
+      );
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Changelog salvo!')));
+      _carregar();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e')));
+    }
   }
 
   Future<void> _forcarAtualizacao() async {
@@ -47,11 +72,19 @@ class _VersaoScreenState extends State<VersaoScreen> {
     ));
     if (ok != true) return;
     try {
-      await _fs.salvarMensagemGlobal('🔄 Nova versão disponível! Atualize a página.');
+      await _fs.forcarAtualizacaoGlobal(_versaoAtual?['hash'] as String? ?? '');
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('📢 Atualização forçada enviada!')));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e')));
     }
+  }
+
+  String _formatarData(String? iso) {
+    if (iso == null || iso.isEmpty) return '—';
+    try {
+      final d = DateTime.parse(iso).toLocal();
+      return '${d.day.toString().padLeft(2,'0')}/${d.month.toString().padLeft(2,'0')}/${d.year} ${d.hour.toString().padLeft(2,'0')}:${d.minute.toString().padLeft(2,'0')}';
+    } catch (_) { return iso; }
   }
 
   @override
@@ -70,6 +103,7 @@ class _VersaoScreenState extends State<VersaoScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Forçar atualização
           ElevatedButton.icon(
             onPressed: _forcarAtualizacao,
             icon: const Icon(Icons.refresh, color: Colors.black),
@@ -77,6 +111,39 @@ class _VersaoScreenState extends State<VersaoScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE8A838), minimumSize: const Size.fromHeight(44)),
           ),
           const SizedBox(height: 20),
+
+          // Editar changelog da versão atual
+          if (_versaoAtual != null) ...[
+            const Text('Editar versão atual', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            const SizedBox(height: 8),
+            Card(color: const Color(0xFF1A1A1A), child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Text(_versaoAtual!['versao'] as String? ?? '—', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const Spacer(),
+                Text(_formatarData(_versaoAtual!['deployedAt'] as String?), style: const TextStyle(color: Colors.grey, fontSize: 11)),
+              ]),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _changelogCtrl,
+                maxLines: 4,
+                decoration: const InputDecoration(labelText: 'Changelog', border: OutlineInputBorder(), hintText: 'Descreva as alterações desta versão...'),
+              ),
+              const SizedBox(height: 10),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                const Text('Atualização crítica', style: TextStyle(fontSize: 13)),
+                Switch(value: _critica, activeColor: Colors.red, onChanged: (v) => setState(() => _critica = v)),
+              ]),
+              const SizedBox(height: 8),
+              SizedBox(width: double.infinity, child: ElevatedButton(
+                onPressed: _salvarChangelog,
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE8A838)),
+                child: const Text('💾 Salvar Changelog', style: TextStyle(color: Colors.black)),
+              )),
+            ]))),
+            const SizedBox(height: 20),
+          ],
+
+          // Histórico
           const Text('Histórico de versões', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 8),
           if (_versoes.isEmpty)
@@ -84,7 +151,8 @@ class _VersaoScreenState extends State<VersaoScreen> {
           else
             ..._versoes.map((v) {
               final critica = v['critica'] == true;
-              final hash = (v['hash'] as String? ?? '').length > 7 ? (v['hash'] as String).substring(0, 7) : (v['hash'] ?? '—');
+              final hash = (v['hash'] as String? ?? '');
+              final hashCurto = hash.length > 7 ? hash.substring(0, 7) : (hash.isEmpty ? '—' : hash);
               return Card(
                 color: const Color(0xFF1A1A1A),
                 margin: const EdgeInsets.only(bottom: 10),
@@ -96,7 +164,7 @@ class _VersaoScreenState extends State<VersaoScreen> {
                         color: critica ? Colors.red.withOpacity(0.2) : const Color(0xFF2A2A2A),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text('${critica ? '⚠️ ' : ''}${v['versao'] ?? hash}',
+                      child: Text('${critica ? '⚠️ ' : ''}${v['versao'] ?? hashCurto}',
                         style: TextStyle(color: critica ? Colors.red : Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                     const Spacer(),
@@ -106,9 +174,9 @@ class _VersaoScreenState extends State<VersaoScreen> {
                     const SizedBox(height: 8),
                     Text(v['changelog'] as String, style: const TextStyle(color: Colors.grey, fontSize: 13)),
                   ],
-                  if (hash.isNotEmpty) ...[
+                  if (hashCurto.isNotEmpty && hashCurto != '—') ...[
                     const SizedBox(height: 6),
-                    Text(hash, style: const TextStyle(color: Color(0xFF444444), fontSize: 10, fontFamily: 'monospace')),
+                    Text(hashCurto, style: const TextStyle(color: Color(0xFF444444), fontSize: 10, fontFamily: 'monospace')),
                   ],
                 ])),
               );

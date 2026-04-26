@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/firestore_service.dart';
 
@@ -11,18 +12,34 @@ class _VisaoGeralScreenState extends State<VisaoGeralScreen> {
   final _fs = FirestoreService();
   Map<String, dynamic>? _dados;
   List<Map<String, dynamic>> _sessoes = [];
+  StreamSubscription? _sub;
   bool _loading = true;
   String? _erro;
 
+  static const _emojiSetor = {'tecnologia': '🚀', 'varejo': '🛒', 'logistica': '🚛', 'industria': '🏭'};
+
   @override
-  void initState() { super.initState(); _carregar(); }
+  void initState() {
+    super.initState();
+    _carregar();
+    // Sessões ao vivo via RTDB stream
+    _sub = _fs.getSessoesStream().listen(
+      (s) => setState(() => _sessoes = s),
+      onError: (_) {},
+    );
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 
   Future<void> _carregar() async {
     setState(() { _loading = true; _erro = null; });
     try {
       final dados = await _fs.getVisaoGeral();
-      final sessoes = await _fs.getSessoesAoVivo();
-      setState(() { _dados = dados; _sessoes = sessoes; _loading = false; });
+      setState(() { _dados = dados; _loading = false; });
     } catch (e) {
       setState(() { _erro = e.toString(); _loading = false; });
     }
@@ -48,6 +65,18 @@ class _VisaoGeralScreenState extends State<VisaoGeralScreen> {
     return '${diff ~/ 3600}h atrás';
   }
 
+  String _detalhe(Map<String, dynamic> s) {
+    final status = s['status'] as String? ?? '';
+    final setor = s['setor'] as String? ?? '';
+    if (status != 'home' && setor.isNotEmpty) {
+      final emoji = _emojiSetor[setor] ?? '🏢';
+      final nome = setor[0].toUpperCase() + setor.substring(1);
+      final rodada = ((s['rodada'] as num?)?.toInt() ?? 0) + 1;
+      return '$emoji $nome · Rodada $rodada';
+    }
+    return '🏠 Na tela inicial';
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
@@ -60,8 +89,6 @@ class _VisaoGeralScreenState extends State<VisaoGeralScreen> {
     ]));
 
     final d = _dados!;
-    final agora = DateTime.now().millisecondsSinceEpoch;
-    final ativas = _sessoes.where((s) => agora - ((s['ts'] as num?)?.toInt() ?? 0) < 300000).toList();
 
     return RefreshIndicator(
       onRefresh: _carregar,
@@ -77,23 +104,32 @@ class _VisaoGeralScreenState extends State<VisaoGeralScreen> {
               _card('Jogadores', '${d['totalJogadores']}', Icons.people),
               _card('Partidas', '${d['totalPartidas']}', Icons.sports_esports),
               _card('Ativos hoje', '${d['ativosDia']}', Icons.today),
-              _card('Ativos semana', '${d['ativosSemana']}', Icons.date_range),
+              _card('Score médio', '${d['mediaScore']}', Icons.bar_chart),
             ],
           ),
           const SizedBox(height: 16),
-          const Text('🟢 Ao Vivo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          // Online ao vivo via RTDB
+          Row(children: [
+            Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+            const SizedBox(width: 8),
+            Text('Ao Vivo (${_sessoes.length})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ]),
           const SizedBox(height: 8),
-          if (ativas.isEmpty)
-            const Card(color: Color(0xFF1A1A1A), child: Padding(padding: EdgeInsets.all(16), child: Center(child: Text('Sem sessões ativas agora.', style: TextStyle(color: Colors.grey))))),
-          ...ativas.map((s) => Card(
-            color: const Color(0xFF1A1A1A),
-            child: ListTile(
-              leading: const CircleAvatar(backgroundColor: Colors.green, radius: 6),
-              title: Text(s['nome'] ?? 'Jogador'),
-              subtitle: Text('${s['setor'] ?? '—'} · Rodada ${((s['rodada'] as num?)?.toInt() ?? 0) + 1}'),
-              trailing: Text(_tempoRelativo((s['ts'] as num?)?.toInt() ?? 0), style: const TextStyle(color: Colors.grey, fontSize: 12)),
-            ),
-          )),
+          if (_sessoes.isEmpty)
+            const Card(color: Color(0xFF1A1A1A), child: Padding(padding: EdgeInsets.all(16), child: Center(child: Text('Sem jogadores online agora.', style: TextStyle(color: Colors.grey)))))
+          else
+            ..._sessoes.take(10).map((s) => Card(
+              color: const Color(0xFF1A1A1A),
+              child: ListTile(
+                leading: const CircleAvatar(backgroundColor: Colors.green, radius: 6),
+                title: Text(s['nome'] as String? ?? 'Jogador'),
+                subtitle: Text(_detalhe(s), style: const TextStyle(fontSize: 12)),
+                trailing: Text(
+                  _tempoRelativo((s['ts'] as num?)?.toInt() ?? 0),
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ),
+            )),
         ]),
       ),
     );
