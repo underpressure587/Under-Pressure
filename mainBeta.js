@@ -114,7 +114,17 @@ function _abrirOverlay(id) {
     el.style.position = 'fixed';
     el.style.inset = '0';
     el.style.zIndex = '99999';
+    el.style.display = 'none';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'center';
+    el.style.padding = '20px';
+    el.style.boxSizing = 'border-box';
+    el.style.background = 'rgba(0,0,0,0.75)';
   }
+  // Aplica tema do setor atual
+  const sector = _setorSelecionado || (_player && _player.sector) || null;
+  if (sector) el.setAttribute('data-sector', sector);
+  else el.removeAttribute('data-sector');
   el.style.display = 'flex';
 }
 
