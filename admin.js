@@ -1372,21 +1372,37 @@ const ADMIN = (() => {
       document.getElementById('versao-hash-atual').textContent   = v.hash  || '';
       document.getElementById('versao-deploy-atual').textContent = v.deployedAt ? _formatarData(v.deployedAt) : '—';
 
-      // Mensagem do commit
-      const commitEl = document.getElementById('versao-commit-msg');
-      if (commitEl && v.commitMsg) {
+      // Mensagem do commit — injeta dinamicamente se elemento não existir
+      const hashEl = document.getElementById('versao-hash-atual');
+      if (hashEl && v.commitMsg) {
+        let commitEl = document.getElementById('versao-commit-msg');
+        if (!commitEl) {
+          commitEl = document.createElement('div');
+          commitEl.id = 'versao-commit-msg';
+          commitEl.style.cssText = 'font-size:.78rem;color:var(--t3);margin-top:4px';
+          hashEl.parentNode.insertBefore(commitEl, hashEl.nextSibling);
+        }
         commitEl.textContent = '💬 ' + v.commitMsg;
         commitEl.style.display = 'block';
       }
 
-      // Arquivos alterados
-      const arquivosEl = document.getElementById('versao-arquivos-lista');
-      const tagsEl = document.getElementById('versao-arquivos-tags');
-      if (arquivosEl && tagsEl && v.arquivosAlterados?.length) {
-        tagsEl.innerHTML = v.arquivosAlterados.map(f =>
-          `<span style="background:var(--bg3);color:var(--t2);font-size:.7rem;padding:2px 8px;border-radius:20px;font-family:monospace">${f}</span>`
-        ).join('');
-        arquivosEl.style.display = 'block';
+      // Arquivos alterados — injeta dinamicamente se elemento não existir
+      if (v.arquivosAlterados?.length) {
+        let arquivosEl = document.getElementById('versao-arquivos-lista');
+        if (!arquivosEl) {
+          arquivosEl = document.createElement('div');
+          arquivosEl.id = 'versao-arquivos-lista';
+          arquivosEl.style.cssText = 'margin-top:8px';
+          arquivosEl.innerHTML = '<div style="font-size:.72rem;color:var(--t3);margin-bottom:4px">📁 Arquivos alterados:</div><div id="versao-arquivos-tags" style="display:flex;flex-wrap:wrap;gap:4px"></div>';
+          const hashCard = document.getElementById('versao-hash-atual');
+          if (hashCard) hashCard.parentNode.appendChild(arquivosEl);
+        }
+        const tagsEl = document.getElementById('versao-arquivos-tags');
+        if (tagsEl) {
+          tagsEl.innerHTML = v.arquivosAlterados.map(f =>
+            `<span style="background:var(--bg3);color:var(--t2);font-size:.7rem;padding:2px 8px;border-radius:20px;font-family:monospace">${f}</span>`
+          ).join('');
+        }
       }
 
       // Carrega changelog do Firestore
@@ -1404,7 +1420,7 @@ const ADMIN = (() => {
       // Histórico
       _carregarHistoricoVersoes();
 
-    } catch(e) { _renderVersaoSemDados(); }
+    } catch(e) { console.error('[Versao] erro:', e); _renderVersaoSemDados(); }
   }
 
   function _renderVersaoSemDados() {
