@@ -397,8 +397,7 @@ const FIREBASE = {
   appId:"1:240438805750:web:9e090a1be367fea18f58d7",
 };
 
-// Banco regional — REST direto, sem SDK Firestore (que aponta para "(default)" por padrão)
-const FS_BASE = 'https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/southamerica-east1/documents';
+const FS_BASE = 'https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents';
 const API_KEY = FIREBASE.apiKey;
 
 const app  = initializeApp(FIREBASE);
@@ -438,10 +437,17 @@ let _editMode   = false;
 // ── AUTH ──────────────────────────────────────────────────────
 async function verificarAdmin(uid) {
   try {
-    // REST direto ao banco regional — sem SDK Firestore (que usa "(default)")
-    const token = await auth.currentUser?.getIdToken().catch(() => null);
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const res = await fetch(`${FS_BASE}/config/admins?key=${API_KEY}`, { headers });
+    // Aguarda token ficar disponível (até 3s) — igual firebase-config.js do jogo
+    let token = null;
+    for (let i = 0; i < 6; i++) {
+      token = await auth.currentUser?.getIdToken().catch(() => null);
+      if (token) break;
+      await new Promise(r => setTimeout(r, 500));
+    }
+    if (!token) { console.warn('[Studio] sem token após espera'); return false; }
+    const res = await fetch(`${FS_BASE}/config/admins`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     if (!res.ok) { console.warn('[Studio] config/admins HTTP', res.status); return false; }
     const doc = await res.json();
     const f = doc.fields || {};
