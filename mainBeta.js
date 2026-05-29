@@ -334,7 +334,7 @@ function mostrarTela(id, goBack) {
   window.scrollTo(0, 0);
   // Atualiza botão admin ao entrar na home
   if (id === 'screen-home') {
-    _mostrarBotaoAdmin();
+
     // Registra presença no RTDB se jogador autenticado
     if (_player?.uid) _registrarPresencaHome();
     // Exibe mensagem global se houver
@@ -389,7 +389,7 @@ function sair() {
   _pararInbox();
   window.Maintenance.pararPolling();
   window.Maintenance.pararPollingConvidado();
-  window.Maintenance.setAdminCheckPending(true);
+
   _removerPresenca();
   LS.remove(SK.PLAYER);
   LS.remove(SK.SESSION);
@@ -2916,8 +2916,8 @@ async function _atualizarBotaoAdmin(uid) {
   if (!_tok) {
     console.warn('[AdminCheck] ❌ Token não disponível — _isAdmin permanece false.');
     _isAdmin = false; window._isAdmin = false;
-    window.Maintenance.setAdminCheckPending(false);
-    _mostrarBotaoAdmin(); return;
+
+ return;
   }
 
   // ── Passo 2: verificação via window.ADMIN (aguarda até 5s) ───────────────
@@ -2973,8 +2973,8 @@ async function _atualizarBotaoAdmin(uid) {
     console.log('[AdminCheck] 🏁 Resultado final (via REST fallback):', resultado, '→ _isAdmin =', _isAdmin);
   }
 
-  window.Maintenance.setAdminCheckPending(false); // verificação concluída
-  _mostrarBotaoAdmin();
+
+
   if (_isAdmin) {
     console.log('[AdminCheck] 🛡️ Admin confirmado — escondendo overlay de manutenção se visível.');
     _esconderOverlayManutencao();
@@ -2983,10 +2983,6 @@ async function _atualizarBotaoAdmin(uid) {
   }
 }
 
-function _mostrarBotaoAdmin() {
-  const btn = document.getElementById('btn-admin-home');
-  if (btn) btn.style.display = _isAdmin ? 'inline-flex' : 'none';
-}
 
 let _adminHoldTimer = null;
 
@@ -3002,8 +2998,7 @@ async function irParaAdmin() {
   if (!_player?.uid) return;
   const isAdmin = await window.ADMIN?.verificarAdmin(_player.uid);
   if (isAdmin) {
-    mostrarTela('screen-admin');
-    window.ADMIN.irParaSecao('visao-geral');
+    window.open('/admin-studio.html', '_blank');
   }
 }
 
@@ -3858,7 +3853,7 @@ function _iniciarPopstate() {
     }
 
     // 3. Telas que voltam para home
-    if (['screen-perfil','screen-podio','screen-historico-jogos','screen-admin','screen-sector'].includes(tela)) {
+    if (['screen-perfil','screen-podio','screen-historico-jogos','screen-sector'].includes(tela)) {
       voltar('screen-home');
       return;
     }

@@ -45,7 +45,7 @@ const BetaState = (() => {
             indicators: _indicadoresBase(sector, 0), // introIndex=0 como padrão; engine chama aplicarIndicadoresHistoria() logo após
 
             currentRound:  0,
-            totalRounds:   10,
+            totalRounds:   15,
             gameRounds:    [],
             situacaoAtual: null,
             companyInfo:   null,
@@ -59,7 +59,7 @@ const BetaState = (() => {
             gestor: {
                 reputacaoInterna: 5,
                 capitalPolitico:  7,
-                esgotamento:      0,
+                esgotamento:      2,
             },
 
             // Evolução da crise inicial: null | "melhorando" | "resolvida" | "piorando"
