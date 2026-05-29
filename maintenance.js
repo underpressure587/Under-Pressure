@@ -122,14 +122,17 @@
         return;
       }
 
-      /* 6. Nova versão via version.json */
-      if (window._versaoAtual) {
-        const rv = await fetch('/version.json?t=' + Date.now());
-        if (rv.ok) {
-          const v = await rv.json();
-          if (v.hash && v.hash !== window._versaoAtual)
-            if (typeof _mostrarToastAtualizacao === 'function') _mostrarToastAtualizacao(false);
-        }
+      /* 6. Nova versão via version.json — só verifica se ainda não mostrou o toast */
+      if (window._versaoAtual && !window._updateToastVisible) {
+        try {
+          const rv = await fetch('/version.json?t=' + Date.now());
+          if (rv.ok) {
+            const v = await rv.json();
+            if (v.hash && v.hash !== window._versaoAtual) {
+              if (typeof _mostrarToastAtualizacao === 'function') _mostrarToastAtualizacao(false);
+            }
+          }
+        } catch(e) { /* ignora erros de rede */ }
       }
 
     } catch(e) { /* ignora erros de rede temporários */ }

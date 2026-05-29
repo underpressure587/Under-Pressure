@@ -388,9 +388,6 @@ import {
   getAuth, signInWithPopup, signInWithRedirect, getRedirectResult,
   GoogleAuthProvider, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 const FIREBASE = {
   apiKey:"AIzaSyB_Zkl12AyT5RMfg9eJ68QFTakdBKSioVU",
   authDomain:"under-pressure-49320.firebaseapp.com",
@@ -400,9 +397,12 @@ const FIREBASE = {
   appId:"1:240438805750:web:9e090a1be367fea18f58d7",
 };
 
+// Banco regional — REST direto, sem SDK Firestore (que aponta para "(default)" por padrão)
+const FS_BASE = 'https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/southamerica-east1/documents';
+const API_KEY = FIREBASE.apiKey;
+
 const app  = initializeApp(FIREBASE);
 const auth = getAuth(app);
-const db   = getFirestore(app);
 const gp   = new GoogleAuthProvider();
 
 // ── DADOS ────────────────────────────────────────────────────
@@ -438,20 +438,17 @@ let _editMode   = false;
 // ── AUTH ──────────────────────────────────────────────────────
 async function verificarAdmin(uid) {
   try {
-    const snap = await getDoc(doc(db,'config','admins'));
-    if (snap.exists()) {
-      const d = snap.data();
-      const uids  = Array.isArray(d.uids) ? d.uids : [];
-      const owner = typeof d.owner==='string' ? d.owner : '';
-      return uids.includes(uid)||uid===owner;
-    }
-    const token = await auth.currentUser?.getIdToken();
-    const res = await fetch(`https://under-pressure-49320-default-rtdb.firebaseio.com/config/admins.json${token?`?auth=${token}`:''}`);
-    const j = await res.json();
-    if (j) {
-      return (Array.isArray(j.uids)&&j.uids.includes(uid))||(j.owner===uid);
-    }
-  } catch(e){console.warn('[Studio]',e);}
+    // REST direto ao banco regional — sem SDK Firestore (que usa "(default)")
+    const token = await auth.currentUser?.getIdToken().catch(() => null);
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${FS_BASE}/config/admins?key=${API_KEY}`, { headers });
+    if (!res.ok) { console.warn('[Studio] config/admins HTTP', res.status); return false; }
+    const doc = await res.json();
+    const f = doc.fields || {};
+    const uids  = (f.uids?.arrayValue?.values || []).map(v => v.stringValue || '');
+    const owner = f.owner?.stringValue || '';
+    return uids.includes(uid) || uid === owner;
+  } catch(e) { console.warn('[Studio] verificarAdmin erro:', e); }
   return false;
 }
 
@@ -461,7 +458,7 @@ onAuthStateChanged(auth, async u => {
   if (!u) { showAuth(); return; }
   _user = u;
   const ok = await verificarAdmin(u.uid);
-  if (!ok) { await signOut(auth); showAuthError('Acesso restrito a administradores.'); return; }
+  if (!ok) { showAuth(); showAuthError('Acesso restrito a administradores.'); return; }
   showApp(u);
 });
 

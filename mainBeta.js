@@ -811,6 +811,7 @@ async function _carregarVersaoAtual() {
 function _mostrarToastAtualizacao(forcado) {
   if (_updateToastVisible && !forcado) return;
   _updateToastVisible = true;
+  window._updateToastVisible = true;
   // Remove toast anterior se existir
   document.getElementById('update-toast')?.remove();
   const toast = document.createElement('div');
@@ -827,6 +828,7 @@ function _mostrarToastAtualizacao(forcado) {
       if (!e.target.classList.contains('update-toast-btn')) {
         toast.remove();
         _updateToastVisible = false;
+        window._updateToastVisible = false;
       }
     });
   }
