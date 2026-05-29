@@ -2999,7 +2999,7 @@ async function irParaAdmin() {
   // Usa _isAdmin já calculado no boot — evita nova verificação que pode falhar por RTDB vazio
   const isAdmin = _isAdmin || (await window.ADMIN?.verificarAdmin(_player.uid).catch(() => null));
   if (isAdmin) {
-    window.open('/admin-studio.html', '_blank');
+    location.href = '/admin-studio.html';
   }
 }
 
