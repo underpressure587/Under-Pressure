@@ -811,7 +811,6 @@ async function _carregarVersaoAtual() {
 function _mostrarToastAtualizacao(forcado) {
   if (_updateToastVisible && !forcado) return;
   _updateToastVisible = true;
-  window._updateToastVisible = true;
   // Remove toast anterior se existir
   document.getElementById('update-toast')?.remove();
   const toast = document.createElement('div');
@@ -828,7 +827,6 @@ function _mostrarToastAtualizacao(forcado) {
       if (!e.target.classList.contains('update-toast-btn')) {
         toast.remove();
         _updateToastVisible = false;
-        window._updateToastVisible = false;
       }
     });
   }
@@ -2998,7 +2996,8 @@ function _cancelarHoldAdmin() {
 
 async function irParaAdmin() {
   if (!_player?.uid) return;
-  const isAdmin = await window.ADMIN?.verificarAdmin(_player.uid);
+  // Usa _isAdmin já calculado no boot — evita nova verificação que pode falhar por RTDB vazio
+  const isAdmin = _isAdmin || (await window.ADMIN?.verificarAdmin(_player.uid).catch(() => null));
   if (isAdmin) {
     window.open('/admin-studio.html', '_blank');
   }
