@@ -1453,19 +1453,6 @@ const ADMIN = (() => {
     }
   }
 
-  async function forcarAtualizacaoGlobal() {
-    if (!confirm('Forçar atualização em TODOS os usuários conectados?')) return;
-    try {
-      await _patch('config/global', {
-        forcarAtualizacao: { stringValue: (_versaoAtual?.hash || Date.now().toString()) },
-        forcarAtualizacaoTs: { stringValue: new Date().toISOString() },
-      });
-      _showAdminToast('📢 Atualização forçada enviada!');
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    }
-  }
-
   async function _carregarStatsVersao(hashAtual) {
     try {
       // Conta sessões ativas com versão registrada
@@ -2269,7 +2256,7 @@ const ADMIN = (() => {
     toggleDropdown, selecionarSetor,
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
     abrirModalBan, fecharModalBan, confirmarBan, selecionarMotivo, _atualizarContadorDetalhe,
-    carregarVersao, salvarChangelog, forcarAtualizacaoGlobal,
+    carregarVersao, salvarChangelog,
     carregarDashboard, mudarPeriodoDash,
     carregarHistorias, toggleHistoria,
     carregarFeedback,

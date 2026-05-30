@@ -37,7 +37,6 @@
       return {
         manutencao:       !!_v(f.manutencao),
         mensagem:         _v(f.mensagem)         || '',
-        forcarAtualizacao:_v(f.forcarAtualizacao) || '',
         liberados:        [],
       };
     } catch(e) { return null; }
@@ -116,11 +115,6 @@
         if (typeof mostrarSucesso === 'function') mostrarSucesso(cfg.mensagem);
       }
 
-      /* 5. Forçar atualização */
-      if (cfg.forcarAtualizacao && cfg.forcarAtualizacao !== window._versaoAtual) {
-        if (typeof _mostrarToastAtualizacao === 'function') _mostrarToastAtualizacao(true);
-        return;
-      }
 
       /* 6. Nova versão via version.json — só verifica se ainda não mostrou o toast */
       if (window._versaoAtual && !window._updateToastVisible) {
