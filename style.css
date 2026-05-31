@@ -2529,47 +2529,54 @@ body::after{
 ══════════════════════════════════════════════════ */
 .perfil-body {
   flex: 1; overflow-y: auto;
-  padding: 0 0 calc(var(--sp3) + env(safe-area-inset-bottom, 0px));
+  padding: 0;
   display: flex; flex-direction: column; gap: 0;
+  /* Fundo com gradiente que continua para baixo do hero */
+  background: linear-gradient(180deg,
+    var(--s-glow) 0%,
+    rgba(0,0,0,0) 280px
+  );
 }
 
-/* ── Bloco hero do perfil ── */
+/* ── Hero: avatar + nome + meta ── */
 .perfil-avatar-block {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
-  padding: 8px var(--sp3) 24px;
-  background: linear-gradient(180deg, var(--s-glow) 0%, transparent 100%);
+  padding: 20px var(--sp3) 28px;
   position: relative; overflow: hidden;
+  /* Sem background próprio — usa o do body */
 }
+/* Glow radial centralizado atrás do avatar */
 .perfil-avatar-block::before {
   content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--s-glow) 0%, transparent 70%);
-  pointer-events: none; opacity: .6;
+  background: radial-gradient(ellipse 90% 80% at 50% 20%, var(--s-glow) 0%, transparent 70%);
+  pointer-events: none; opacity: .7;
 }
 
 .perfil-avatar {
-  width: 88px; height: 88px; min-width: 88px; min-height: 88px;
+  width: 92px; height: 92px; min-width: 92px; min-height: 92px;
   border-radius: 50%; aspect-ratio: 1;
   background: var(--s-bg-accent);
   border: 3px solid var(--s-bd-accent);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--serif); font-size: 2.2rem; font-weight: 700; color: var(--s-text);
   box-shadow:
-    0 0 0 5px rgba(0,0,0,.4),
-    0 0 48px var(--s-glow),
+    0 0 0 4px var(--bg),
+    0 0 0 6px var(--s-bd-accent),
+    0 0 40px var(--s-glow),
     0 8px 24px rgba(0,0,0,.6);
   flex-shrink: 0; overflow: hidden; position: relative; z-index: 1;
   animation: avatarPop .5s cubic-bezier(.22,.68,0,1.2) both;
 }
-@keyframes avatarPop { from { transform: scale(.6); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+@keyframes avatarPop { from { transform: scale(.65); opacity: 0 } to { transform: scale(1); opacity: 1 } }
 
 .perfil-nome {
-  font-family: var(--serif); font-size: 1.5rem; font-weight: 800;
+  font-family: var(--serif); font-size: 1.55rem; font-weight: 800;
   color: var(--t1); letter-spacing: -.02em; text-align: center;
-  position: relative; z-index: 1;
+  position: relative; z-index: 1; line-height: 1.1;
 }
 .perfil-subtitulo {
-  font-size: .72rem; color: var(--s-text); opacity: .7;
-  letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+  font-size: .68rem; color: var(--s-text); opacity: .65;
+  letter-spacing: .14em; text-transform: uppercase; font-weight: 700;
   position: relative; z-index: 1;
 }
 .perfil-meta-row {
@@ -2577,15 +2584,15 @@ body::after{
   gap: 5px; margin-top: 2px; position: relative; z-index: 1;
 }
 .perfil-id-badge {
-  font-family: monospace; font-size: .68rem; font-weight: 700; letter-spacing: .1em;
+  font-family: monospace; font-size: .66rem; font-weight: 700; letter-spacing: .08em;
   color: var(--s-text); background: var(--s-bg-accent); border: 1px solid var(--s-bd-accent);
-  padding: 4px 16px; border-radius: var(--rpill); cursor: pointer;
+  padding: 4px 14px; border-radius: var(--rpill); cursor: pointer;
   transition: box-shadow .18s, background .18s;
 }
 .perfil-id-badge:hover { box-shadow: 0 0 16px var(--s-glow); background: var(--bg4); }
-.perfil-email { font-size: .68rem; color: var(--t3); }
+.perfil-email { font-size: .66rem; color: var(--t3); }
 
-/* Botão logout alinhado ao header */
+/* Botão logout */
 .perfil-logout-btn {
   margin-left: auto; font-size: .7rem; font-weight: 700; color: var(--err);
   background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2);
@@ -2594,42 +2601,66 @@ body::after{
 }
 .perfil-logout-btn:hover { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.5); }
 
-/* ── Stats grid ── */
+/* ── Separador suave entre hero e stats ── */
 .perfil-stats {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  padding: var(--sp3);
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  padding: 0 var(--sp2) var(--sp2);
+  /* continua no mesmo fluxo do gradiente do body */
 }
 .perfil-stat {
-  background: var(--bg2); border: 1px solid var(--line);
-  border-radius: var(--r2); padding: 16px 14px;
-  display: flex; flex-direction: column; gap: 4px;
-  transition: border-color .2s, box-shadow .2s;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--line2);
+  border-radius: var(--r2); padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 5px;
+  transition: border-color .2s, background .2s;
   position: relative; overflow: hidden;
+  backdrop-filter: blur(8px);
 }
 .perfil-stat::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: var(--s-gradient); opacity: 0;
-  transition: opacity .2s;
+  background: var(--s-gradient); opacity: 0; transition: opacity .2s;
 }
-.perfil-stat:hover { border-color: var(--s-bd-accent); box-shadow: 0 4px 20px rgba(0,0,0,.3); }
+.perfil-stat:hover { border-color: var(--s-bd-accent); background: var(--s-bg-accent); }
 .perfil-stat:hover::before { opacity: 1; }
+
+/* Valor numérico grande */
 .perfil-stat-val {
-  font-family: var(--serif); font-size: 1.7rem; font-weight: 800;
-  line-height: 1; margin-bottom: 2px;
+  font-family: var(--serif); font-size: 1.6rem; font-weight: 800;
+  line-height: 1;
   background: var(--s-gradient); -webkit-background-clip: text;
   -webkit-text-fill-color: transparent; background-clip: text;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  /* Sem nowrap — deixa quebrar em vez de cortar */
+  overflow: visible; white-space: normal;
 }
 .perfil-stat-label {
-  font-size: .6rem; font-weight: 700; letter-spacing: .1em;
+  font-size: .58rem; font-weight: 700; letter-spacing: .1em;
   text-transform: uppercase; color: var(--t3);
 }
 
-/* Seção conquistas dentro do body do perfil */
+/* Setor favorito: texto em linha única com emoji inline */
+.perfil-stat.setor-card .perfil-stat-val {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 1rem; font-weight: 800;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: var(--s-text) !important;
+  background-clip: unset !important;
+  white-space: normal; overflow: visible;
+}
+
+/* Divisor visual entre hero e conteúdo */
+.perfil-stats::before {
+  content: ''; display: block;
+  grid-column: 1 / -1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line2), transparent);
+  margin-bottom: 8px;
+}
+
+/* Seção conquistas + gráfico */
 .perfil-grafico-section,
 .perfil-conquistas-title,
 .perfil-conquistas,
-.conquistas-guest-lock { padding-left: var(--sp3); padding-right: var(--sp3); }
+.conquistas-guest-lock { padding-left: var(--sp2); padding-right: var(--sp2); }
 
 /* Gráfico de evolução */
 .perfil-grafico-section{}
@@ -3264,9 +3295,10 @@ body::after{
   }
 
   .perfil-body {
-    width: 100%; max-width: 820px;
-    display: grid; grid-template-columns: 240px 1fr;
-    gap: 20px; padding: 20px 32px; align-items: start;
+    width: 100%; max-width: 860px;
+    display: grid; grid-template-columns: 260px 1fr;
+    gap: 24px; padding: 24px 32px 40px; align-items: start;
+    background: none; /* gradiente do hero fica só no card lateral */
   }
 
   /* Config usa coluna única centralizada no desktop */
@@ -3296,23 +3328,38 @@ body::after{
 
   .perfil-avatar-block {
     grid-column: 1; grid-row: 1 / 3;
-    background: var(--bg2); border: 1px solid var(--line);
+    /* No desktop: card lateral com gradiente do setor */
+    background: linear-gradient(180deg, var(--s-glow) 0%, var(--bg2) 60%);
+    border: 1px solid var(--s-bd-accent);
     border-radius: var(--r3); padding: var(--sp3);
     display: flex; flex-direction: column;
-    align-items: center; gap: 10px;
+    align-items: center; gap: 12px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 0 40px var(--s-glow);
+  }
+  .perfil-avatar-block::before {
+    opacity: .5;
   }
 
-  .perfil-avatar { width: 80px; height: 80px; font-size: 2rem; }
+  .perfil-avatar {
+    width: 90px; height: 90px; font-size: 2rem;
+    box-shadow:
+      0 0 0 4px var(--bg2),
+      0 0 0 6px var(--s-bd-accent),
+      0 0 32px var(--s-glow);
+  }
 
   .perfil-stats {
     grid-column: 2; grid-row: 1;
     display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    padding: 0;
   }
+  .perfil-stats::before { display: none; }
 
-  .perfil-grafico-section { grid-column: 2; grid-row: 2; }
+  .perfil-grafico-section { grid-column: 2; grid-row: 2; padding: 0; }
 
   .perfil-conquistas-title:not(:first-child),
-  #perfil-conquistas { grid-column: 1 / -1; }
+  #perfil-conquistas { grid-column: 1 / -1; padding: 0; }
 
   .perfil-conquistas {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
@@ -4598,24 +4645,7 @@ body::after{
   border-color: var(--line3);
 }
 
-/* Card setor favorito com cor temática */
-.perfil-stat.setor-card {
-  background: var(--s-bg-accent);
-  border-color: var(--s-bd-accent);
-}
-.perfil-stat.setor-card .perfil-stat-val {
-  /* Limpa background-clip do valor padrão para o texto não ser cortado */
-  background: none !important;
-  -webkit-background-clip: unset !important;
-  -webkit-text-fill-color: var(--s-text) !important;
-  background-clip: unset !important;
-  color: var(--s-text);
-  font-size: 1.1rem;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* Card setor favorito — override consolidado no bloco principal do perfil */
 
 /* ════════════════════════════════════════════════════
    PÓDIO — ESTADO ESPARSO
