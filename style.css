@@ -684,12 +684,19 @@ body::after{
 }
 
 .auth-guest-btn {
-  width: 100%; display: block; font-size: .82rem;
-  opacity: .55; border-color: rgba(255,255,255,.06);
-  color: var(--t3); margin-top: 2px; padding: 12px; text-align: center;
-  transition: opacity .18s, border-color .18s, color .18s;
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--bg2); border: 1px solid var(--line2);
+  color: var(--t2); font-size: .86rem; font-weight: 600;
+  padding: 13px; border-radius: var(--r);
+  cursor: pointer; font-family: var(--sans);
+  transition: background .18s, border-color .18s, color .18s;
+  margin-top: 0;
+  box-sizing: border-box;
 }
-.auth-guest-btn:hover { opacity: .8; border-color: var(--line2); color: var(--t2); }
+.auth-guest-btn:hover {
+  background: var(--bg3); border-color: var(--line3); color: var(--t1);
+}
 
 /* Recuperar senha */
 .auth-recover-head { text-align: center; margin-bottom: 8px; }
@@ -712,6 +719,7 @@ body::after{
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 /* Gradiente atmosférico de fundo — respira com o setor */
