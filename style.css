@@ -2011,12 +2011,13 @@ body::after{
 .overlay-card {
   width: 100%; max-width: 480px; max-height: 85vh;
   background: var(--bg1);
-  border-radius: var(--r3) var(--r3) 0 0;
-  border: 1px solid var(--line2); border-bottom: none;
+  border-radius: var(--r3);
+  border: 1px solid var(--line2);
   overflow: hidden; display: flex; flex-direction: column;
   box-shadow: 0 -8px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
   animation: sheetUp .3s cubic-bezier(.22,.68,0,1.2);
   box-sizing: border-box;
+  margin-bottom: 16px;
 }
 @keyframes popIn {
   from { opacity: 0; transform: scale(.93); }
@@ -2028,14 +2029,7 @@ body::after{
 }
 @keyframes slideUp { from { transform: translateY(60px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 
-/* Handle de arraste (decorativo) */
-.overlay-card::before {
-  content: '';
-  display: block; flex-shrink: 0;
-  width: 36px; height: 4px; border-radius: 2px;
-  background: var(--line3);
-  margin: 12px auto 0;
-}
+/* Handle removido — overlay com bordas arredondadas */
 
 .overlay-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -2525,57 +2519,106 @@ body::after{
 ══════════════════════════════════════════════════ */
 .perfil-body {
   flex: 1; overflow-y: auto;
-  padding: var(--sp3) var(--sp3) calc(var(--sp3) + env(safe-area-inset-bottom, 0px));
-  display: flex; flex-direction: column; gap: var(--sp3);
+  padding: 0 0 calc(var(--sp3) + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 0;
 }
-.perfil-avatar-block { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+/* ── Bloco hero do perfil ── */
+.perfil-avatar-block {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 32px var(--sp3) 24px;
+  background: linear-gradient(180deg, var(--s-glow) 0%, transparent 100%);
+  position: relative; overflow: hidden;
+}
+.perfil-avatar-block::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--s-glow) 0%, transparent 70%);
+  pointer-events: none; opacity: .6;
+}
+
 .perfil-avatar {
-  width: 84px; height: 84px; min-width: 84px; min-height: 84px;
+  width: 88px; height: 88px; min-width: 88px; min-height: 88px;
   border-radius: 50%; aspect-ratio: 1;
   background: var(--s-bg-accent);
-  border: 2.5px solid var(--s-bd-accent);
+  border: 3px solid var(--s-bd-accent);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--serif); font-size: 2rem; font-weight: 700; color: var(--s-text);
-  box-shadow: 0 0 40px var(--s-glow), 0 4px 20px rgba(0,0,0,.5);
-  flex-shrink: 0; overflow: hidden;
-  animation: avatarPop .4s cubic-bezier(.22,.68,0,1.2) both;
+  font-family: var(--serif); font-size: 2.2rem; font-weight: 700; color: var(--s-text);
+  box-shadow:
+    0 0 0 5px rgba(0,0,0,.4),
+    0 0 48px var(--s-glow),
+    0 8px 24px rgba(0,0,0,.6);
+  flex-shrink: 0; overflow: hidden; position: relative; z-index: 1;
+  animation: avatarPop .5s cubic-bezier(.22,.68,0,1.2) both;
 }
-@keyframes avatarPop { from { transform: scale(.7); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+@keyframes avatarPop { from { transform: scale(.6); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+
 .perfil-nome {
-  font-family: var(--serif); font-size: 1.45rem; font-weight: 800; color: var(--t1);
-  letter-spacing: -.01em;
+  font-family: var(--serif); font-size: 1.5rem; font-weight: 800;
+  color: var(--t1); letter-spacing: -.02em; text-align: center;
+  position: relative; z-index: 1;
 }
-.perfil-subtitulo { font-size: .78rem; color: var(--t3); }
-.perfil-meta-row { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 2px; }
+.perfil-subtitulo {
+  font-size: .72rem; color: var(--s-text); opacity: .7;
+  letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+  position: relative; z-index: 1;
+}
+.perfil-meta-row {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 5px; margin-top: 2px; position: relative; z-index: 1;
+}
 .perfil-id-badge {
-  font-family: monospace; font-size: .7rem; font-weight: 700; letter-spacing: .12em;
+  font-family: monospace; font-size: .68rem; font-weight: 700; letter-spacing: .1em;
   color: var(--s-text); background: var(--s-bg-accent); border: 1px solid var(--s-bd-accent);
-  padding: 4px 14px; border-radius: var(--rpill); cursor: pointer;
-  transition: background .15s, box-shadow .15s;
+  padding: 4px 16px; border-radius: var(--rpill); cursor: pointer;
+  transition: box-shadow .18s, background .18s;
 }
-.perfil-id-badge:hover { background: var(--bg4); box-shadow: 0 0 12px var(--s-glow); }
-.perfil-email { font-size: .7rem; color: var(--t3); }
+.perfil-id-badge:hover { box-shadow: 0 0 16px var(--s-glow); background: var(--bg4); }
+.perfil-email { font-size: .68rem; color: var(--t3); }
+
+/* Botão logout alinhado ao header */
 .perfil-logout-btn {
-  margin-left: auto; font-size: .72rem; font-weight: 600; color: var(--err);
-  background: rgba(231,76,60,.07); border: 1px solid rgba(231,76,60,.22);
+  margin-left: auto; font-size: .7rem; font-weight: 700; color: var(--err);
+  background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2);
   padding: 5px 14px; border-radius: var(--rpill); cursor: pointer;
-  font-family: var(--sans); transition: background .18s, border-color .18s;
+  font-family: var(--sans); transition: all .18s;
 }
-.perfil-logout-btn:hover { background: rgba(231,76,60,.16); border-color: rgba(231,76,60,.45); }
-.perfil-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.perfil-logout-btn:hover { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.5); }
+
+/* ── Stats grid ── */
+.perfil-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: var(--sp3);
+}
 .perfil-stat {
   background: var(--bg2); border: 1px solid var(--line);
-  border-radius: var(--r2); padding: 16px;
-  transition: border-color .18s;
+  border-radius: var(--r2); padding: 16px 14px;
+  display: flex; flex-direction: column; gap: 4px;
+  transition: border-color .2s, box-shadow .2s;
+  position: relative; overflow: hidden;
 }
-.perfil-stat:hover { border-color: var(--s-bd-accent); }
+.perfil-stat::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--s-gradient); opacity: 0;
+  transition: opacity .2s;
+}
+.perfil-stat:hover { border-color: var(--s-bd-accent); box-shadow: 0 4px 20px rgba(0,0,0,.3); }
+.perfil-stat:hover::before { opacity: 1; }
 .perfil-stat-val {
-  font-family: var(--serif); font-size: 1.6rem; font-weight: 800;
-  line-height: 1; margin-bottom: 4px;
+  font-family: var(--serif); font-size: 1.7rem; font-weight: 800;
+  line-height: 1;
   background: var(--s-gradient); -webkit-background-clip: text;
   -webkit-text-fill-color: transparent; background-clip: text;
 }
-.perfil-stat-label { font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--t3); }
+.perfil-stat-label {
+  font-size: .6rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--t3);
+}
+
+/* Seção conquistas dentro do body do perfil */
+.perfil-grafico-section,
+.perfil-conquistas-title,
+.perfil-conquistas,
+.conquistas-guest-lock { padding-left: var(--sp3); padding-right: var(--sp3); }
 
 /* Gráfico de evolução */
 .perfil-grafico-section{}
@@ -2637,7 +2680,7 @@ body::after{
 .pause-card {
   width: 100%; align-items: center; text-align: center;
   padding: var(--sp4) var(--sp3);
-  background: var(--bg1); border-radius: var(--r3) var(--r3) 0 0;
+  background: var(--bg1); border-radius: var(--r3);
   animation: sheetUp .3s cubic-bezier(.22,.68,0,1.2);
   border-top: 1px solid var(--s-bd-accent);
 }
