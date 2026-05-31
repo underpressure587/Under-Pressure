@@ -708,8 +708,10 @@ body::after{
 ════════════════════════════════════════════════════ */
 #screen-home {
   background: var(--bg);
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Gradiente atmosférico de fundo — respira com o setor */
@@ -798,6 +800,12 @@ body::after{
   background: var(--err);
   box-shadow: 0 0 6px rgba(239,68,68,.5);
 }
+.firebase-ping {
+  font-size: .58rem; font-weight: 700;
+  letter-spacing: .04em; font-family: var(--mono, monospace);
+  margin-left: 1px; transition: color .4s;
+  opacity: .8;
+}
 @keyframes dotPulse {
   0%,100% { opacity: .35; transform: scale(.85); }
   50%      { opacity: 1;   transform: scale(1.15); }
@@ -860,6 +868,7 @@ body::after{
   align-items: center; justify-content: center;
   padding: var(--sp3); position: relative; z-index: 1;
   gap: 28px;
+  min-height: 0; /* permite flex shrink correto */
 }
 
 /* Subtítulo acima do botão */
@@ -2950,14 +2959,14 @@ body::after{
   #screen-home {
     display: grid !important;
     grid-template-columns: 220px 1fr;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-rows: auto auto 1fr;
     grid-template-areas:
       "sidebar header"
       "sidebar banner"
-      "sidebar center"
       "sidebar center";
     overflow: hidden;
-    background: #0d0f14;
+    height: 100%;
+    background: var(--bg);
   }
 
   /* Header do jogador — área superior direita */
@@ -2982,6 +2991,7 @@ body::after{
       radial-gradient(ellipse 65% 60% at 50% 50%, var(--s-glow) 0%, transparent 65%),
       var(--bg);
     position: relative; overflow: hidden;
+    min-height: 0; height: 100%;
   }
 
   /* Círculos decorativos concêntricos no centro */

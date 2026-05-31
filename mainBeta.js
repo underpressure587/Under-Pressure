@@ -52,27 +52,65 @@ let _sala             = null; // sala ativa: { codigo, nome, ... } | null
 /* ════════════════════════════════════════════════════
    BOOT
 ════════════════════════════════════════════════════ */
-function _setFirebaseStatus(estado) {
+function _setFirebaseStatus(estado, pingMs) {
   // estados: 'connecting' | 'online' | 'offline'
   const dot   = document.getElementById('firebase-status-dot');
   const label = document.getElementById('firebase-status-label');
+  const ping  = document.getElementById('firebase-ping');
   if (!dot || !label) return;
+
   dot.className = 'firebase-dot firebase-dot--' + estado;
-  const textos = { connecting: 'Conectando', online: 'Online', offline: 'Offline' };
-  label.textContent = textos[estado] || estado;
-  label.style.color = estado === 'online' ? '#2ecc71' : estado === 'offline' ? '#e74c3c' : 'var(--t3)';
+
+  if (estado === 'online') {
+    label.textContent = 'Online';
+    label.style.color = '#22c55e';
+    if (ping) {
+      ping.style.display = 'inline';
+      ping.textContent   = pingMs != null ? pingMs + 'ms' : '';
+      // Cor por qualidade
+      ping.style.color =
+        pingMs == null   ? 'var(--t3)' :
+        pingMs < 120     ? '#22c55e'   :
+        pingMs < 350     ? '#f59e0b'   : '#ef4444';
+    }
+  } else if (estado === 'offline') {
+    label.textContent = 'Offline';
+    label.style.color = '#ef4444';
+    if (ping) { ping.style.display = 'none'; ping.textContent = ''; }
+  } else {
+    label.textContent = 'Conectando';
+    label.style.color = 'var(--t3)';
+    if (ping) { ping.style.display = 'none'; ping.textContent = ''; }
+  }
+}
+
+// Mede ping via fetch do próprio domínio
+async function _medirPing() {
+  try {
+    const t0 = performance.now();
+    await fetch('/version.json?ping=' + Date.now(), { cache: 'no-store', method: 'HEAD' });
+    return Math.round(performance.now() - t0);
+  } catch { return null; }
 }
 
 // Inicia polling do Firebase só após DOM pronto
 window.addEventListener('DOMContentLoaded', function _pollFirebase() {
   let tentativas = 0;
-  const intervalo = setInterval(() => {
+  const intervalo = setInterval(async () => {
     tentativas++;
     if (window.GSPSync && window.GSPAuth?.isReady()) {
       clearInterval(intervalo);
-      _setFirebaseStatus('online');
+      const ms = await _medirPing();
+      _setFirebaseStatus('online', ms);
+      // Atualiza ping a cada 30s enquanto online
+      setInterval(async () => {
+        const dot = document.getElementById('firebase-status-dot');
+        if (dot?.classList.contains('firebase-dot--online')) {
+          const ms2 = await _medirPing();
+          _setFirebaseStatus('online', ms2);
+        }
+      }, 30000);
     } else if (tentativas >= 80) {
-      // Timeout de 6s sem resposta
       clearInterval(intervalo);
       _setFirebaseStatus('offline');
     }
@@ -2999,7 +3037,7 @@ async function irParaAdmin() {
   // Usa _isAdmin já calculado no boot — evita nova verificação que pode falhar por RTDB vazio
   const isAdmin = _isAdmin || (await window.ADMIN?.verificarAdmin(_player.uid).catch(() => null));
   if (isAdmin) {
-    window.open('/admin/painel-admin.html', '_blank');
+    location.href = '/admin-studio.html';
   }
 }
 
