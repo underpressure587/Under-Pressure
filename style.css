@@ -2537,26 +2537,26 @@ body::after{
 .perfil-body {
   flex: 1; overflow-y: auto;
   padding: 0;
+  /* Fluxo normal em coluna — nada de position absolute ou overlap */
   display: flex; flex-direction: column; gap: 0;
-  /* Fundo com gradiente que continua para baixo do hero */
-  background: linear-gradient(180deg,
-    var(--s-glow) 0%,
-    rgba(0,0,0,0) 280px
-  );
+  background: linear-gradient(180deg, var(--s-glow) 0%, rgba(0,0,0,0) 300px);
 }
 
-/* ── Hero: avatar + nome + meta ── */
+/* ── Hero: avatar + nome + uid ─────────────────────── */
 .perfil-avatar-block {
+  /* Altura mínima fixa garante que os cards NUNCA sobem para cima */
+  min-height: 220px;
+  flex-shrink: 0; /* nunca comprime */
   display: flex; flex-direction: column; align-items: center; gap: 10px;
-  padding: 28px var(--sp3) 20px;
-  position: relative; overflow: hidden;
-  /* Sem background próprio — usa o do body */
+  padding: 28px var(--sp3) 24px;
+  position: relative;
+  overflow: visible; /* sem clip que esconde conteúdo */
 }
-/* Glow radial centralizado atrás do avatar */
 .perfil-avatar-block::before {
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(ellipse 90% 80% at 50% 20%, var(--s-glow) 0%, transparent 70%);
   pointer-events: none; opacity: .7;
+  overflow: hidden;
 }
 
 .perfil-avatar {
@@ -2571,7 +2571,8 @@ body::after{
     0 0 0 6px var(--s-bd-accent),
     0 0 40px var(--s-glow),
     0 8px 24px rgba(0,0,0,.6);
-  flex-shrink: 0; overflow: hidden; position: relative; z-index: 1;
+  flex-shrink: 0; overflow: hidden;
+  position: relative; z-index: 1;
   animation: avatarPop .5s cubic-bezier(.22,.68,0,1.2) both;
 }
 @keyframes avatarPop { from { transform: scale(.65); opacity: 0 } to { transform: scale(1); opacity: 1 } }
@@ -2580,22 +2581,27 @@ body::after{
   font-family: var(--serif); font-size: 1.55rem; font-weight: 800;
   color: var(--t1); letter-spacing: -.02em; text-align: center;
   position: relative; z-index: 1; line-height: 1.1;
+  flex-shrink: 0;
 }
 .perfil-subtitulo {
   font-size: .68rem; color: var(--s-text); opacity: .65;
   letter-spacing: .14em; text-transform: uppercase; font-weight: 700;
-  position: relative; z-index: 1;
+  position: relative; z-index: 1; flex-shrink: 0;
 }
+/* UID badge — sempre visível abaixo do nome */
 .perfil-meta-row {
   display: flex; flex-direction: column; align-items: center;
-  gap: 5px; margin-top: 4px; position: relative; z-index: 1;
-  min-height: 24px; /* garante espaço mesmo antes do JS popular */
+  gap: 5px; margin-top: 4px;
+  position: relative; z-index: 1;
+  flex-shrink: 0;
+  min-height: 28px;
 }
 .perfil-id-badge {
   font-family: monospace; font-size: .66rem; font-weight: 700; letter-spacing: .08em;
   color: var(--s-text); background: var(--s-bg-accent); border: 1px solid var(--s-bd-accent);
   padding: 4px 14px; border-radius: var(--rpill); cursor: pointer;
   transition: box-shadow .18s, background .18s;
+  display: inline-block;
 }
 .perfil-id-badge:hover { box-shadow: 0 0 16px var(--s-glow); background: var(--bg4); }
 .perfil-email { font-size: .66rem; color: var(--t3); }
@@ -2609,11 +2615,12 @@ body::after{
 }
 .perfil-logout-btn:hover { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.5); }
 
-/* ── Separador suave entre hero e stats ── */
+/* ── Stats: sempre depois do hero no fluxo normal ───── */
 .perfil-stats {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  padding: 16px var(--sp2) var(--sp2);
-  /* continua no mesmo fluxo do gradiente do body */
+  padding: 8px var(--sp2) var(--sp2);
+  flex-shrink: 0;
+  /* position: static implícito — nunca flutua sobre o hero */
 }
 .perfil-stat {
   background: rgba(255,255,255,.04);
@@ -2621,31 +2628,31 @@ body::after{
   border-radius: var(--r2); padding: 14px 12px;
   display: flex; flex-direction: column; gap: 5px;
   transition: border-color .2s, background .2s;
-  position: relative; overflow: hidden;
-  backdrop-filter: blur(8px);
+  position: static; /* explícito: nunca vira relative/absolute */
+  overflow: hidden;
 }
-.perfil-stat::before {
+.perfil-stat::after {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
   background: var(--s-gradient); opacity: 0; transition: opacity .2s;
+  pointer-events: none;
 }
 .perfil-stat:hover { border-color: var(--s-bd-accent); background: var(--s-bg-accent); }
-.perfil-stat:hover::before { opacity: 1; }
+.perfil-stat:hover::after { opacity: 1; }
 
-/* Valor numérico grande */
+/* Valor dos cards */
 .perfil-stat-val {
   font-family: var(--serif); font-size: 1.6rem; font-weight: 800;
   line-height: 1;
   background: var(--s-gradient); -webkit-background-clip: text;
   -webkit-text-fill-color: transparent; background-clip: text;
-  /* Sem nowrap — deixa quebrar em vez de cortar */
-  overflow: visible; white-space: normal;
+  white-space: normal; overflow: visible;
 }
 .perfil-stat-label {
   font-size: .58rem; font-weight: 700; letter-spacing: .1em;
   text-transform: uppercase; color: var(--t3);
 }
 
-/* Setor favorito: texto em linha única com emoji inline */
+/* Setor favorito — sem background-clip para não cortar o texto */
 .perfil-stat.setor-card .perfil-stat-val {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   font-size: 1rem; font-weight: 800;
@@ -2656,7 +2663,7 @@ body::after{
   white-space: normal; overflow: visible;
 }
 
-/* Divisor visual entre hero e conteúdo */
+/* Divisor entre stats e gráfico */
 .perfil-stats::before {
   content: ''; display: block;
   grid-column: 1 / -1; height: 1px;
@@ -2664,18 +2671,21 @@ body::after{
   margin-bottom: 8px;
 }
 
-/* Seção conquistas + gráfico */
+/* ── Gráfico e conquistas ──────────────────────────── */
 .perfil-grafico-section {
   padding: 0 var(--sp2) 8px;
+  flex-shrink: 0;
 }
 .perfil-conquistas-title {
   padding: 20px var(--sp2) 8px;
   border-top: 1px solid var(--line);
   margin-top: 8px;
+  flex-shrink: 0;
 }
 .perfil-conquistas,
 .conquistas-guest-lock {
   padding: 0 var(--sp2) var(--sp3);
+  flex-shrink: 0;
 }
 
 /* Gráfico de evolução */
