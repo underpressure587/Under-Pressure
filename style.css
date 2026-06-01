@@ -2082,12 +2082,6 @@ body::after{
 }
 .settings-row:last-child { border-bottom: none; }
 .settings-row-label { font-size: .87rem; color: var(--t2); flex: 1; margin-right: 12px; }
-.toggle-btn {
-  padding: 7px 18px; border-radius: var(--rpill); font-size: .75rem; font-weight: 700;
-  font-family: var(--sans); cursor: pointer; transition: all .2s; border: none; letter-spacing: .06em;
-}
-.toggle-btn.on  { background: var(--ok2); color: #fff; box-shadow: 0 2px 10px rgba(46,204,113,.3); }
-.toggle-btn.off { background: var(--bg3); color: var(--t3); border: 1px solid var(--line2); }
 
 /* ════════════════════════════════════════════════════
    TOAST
@@ -2134,124 +2128,203 @@ body::after{
 ════════════════════════════════════════════════════ */
 
 /* Wrapper principal — independente do perfil */
+/* ════════════════════════════════════════════════════
+   CONFIGURAÇÕES — Command Panel (redesign completo)
+════════════════════════════════════════════════════ */
+
+/* ── Container principal ── */
 .config-body {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 0 16px calc(32px + env(safe-area-inset-bottom, 0px));
+  gap: 12px;
+  padding: 16px 14px calc(40px + env(safe-area-inset-bottom, 0px));
   background: var(--bg);
-  /* Sem herança de gradiente do perfil */
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg3) transparent;
 }
 
-/* Títulos de seção */
+/* ── Título de seção: integrado no card como header ── */
 .config-section-title {
-  font-size: .58rem; font-weight: 800;
-  letter-spacing: .16em; text-transform: uppercase;
-  color: var(--t3); padding: 24px 4px 8px;
-  flex-shrink: 0;
+  /* Oculto — o design novo usa o group header integrado */
+  display: none;
 }
-.config-section-title:first-child { padding-top: 16px; }
 
-/* Grupo de itens — card com bordas arredondadas */
+/* ── Card de seção ── */
 .config-group {
   background: var(--bg2);
   border: 1px solid var(--line);
-  border-radius: var(--r2);
+  border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 4px;
   flex-shrink: 0;
-  /* Sem position relativa — layout estático */
+  box-shadow: 0 2px 16px rgba(0,0,0,.3);
+  transition: border-color .2s;
+}
+.config-group:hover {
+  border-color: var(--line2);
 }
 
-/* Item individual */
+/* ── Item dentro do card ── */
 .config-item {
-  display: flex; align-items: center; gap: 14px;
-  padding: 15px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
   border-bottom: 1px solid var(--line);
-  transition: background .15s;
-  min-height: 58px; /* altura mínima fixa para não quebrar */
+  transition: background .18s;
+  min-height: 64px;
+  position: static;
 }
-.config-item:active { background: var(--bg3); }
-.config-item:hover  { background: rgba(255,255,255,.025); }
+.config-item:last-child,
 .config-item.config-item-last { border-bottom: none; }
-.config-item.config-item-soon { opacity: .45; pointer-events: none; }
+.config-item:active { background: rgba(255,255,255,.04); }
+.config-item:hover  { background: rgba(255,255,255,.03); }
+.config-item.config-item-soon {
+  opacity: .4;
+  pointer-events: none;
+  filter: grayscale(.4);
+}
 
-/* Ícone colorido */
+/* ── Ícone: quadrado arredondado maior ── */
 .config-item-icon {
-  width: 38px; height: 38px; border-radius: 11px;
+  width: 44px; height: 44px;
+  border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,.35);
 }
 
-/* Texto do item */
+/* ── Textos ── */
 .config-item-info {
   display: flex; flex-direction: column; gap: 3px;
   flex: 1; min-width: 0;
 }
 .config-item-label {
-  font-size: .85rem; color: var(--t1); font-weight: 600;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: .88rem; color: var(--t1); font-weight: 600;
+  line-height: 1.25;
 }
 .config-item-desc {
-  font-size: .72rem; color: var(--t3);
+  font-size: .72rem; color: var(--t3); line-height: 1.4;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* Botão de ação */
+/* ── Seta chevron (decorativa para itens com ação) ── */
 .config-item-btn {
-  background: var(--bg3); border: 1px solid var(--line2);
-  color: var(--t2); font-size: .75rem; font-weight: 700;
-  padding: 7px 16px; border-radius: var(--r);
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  color: var(--t2);
+  font-size: .75rem; font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 12px;
   cursor: pointer; font-family: var(--sans);
-  white-space: nowrap; transition: all .2s; flex-shrink: 0;
-  letter-spacing: .03em;
+  white-space: nowrap; flex-shrink: 0;
+  letter-spacing: .04em;
+  transition: all .2s;
 }
 .config-item-btn:hover {
+  background: var(--s-bg-accent);
   border-color: var(--s-bd-accent);
   color: var(--s-text);
-  background: var(--s-bg-accent);
-  box-shadow: 0 0 12px var(--s-glow);
+  box-shadow: 0 0 16px var(--s-glow);
 }
-.config-item-btn:active { transform: scale(.97); }
+.config-item-btn:active { transform: scale(.96); }
 
-/* Toggle ON/OFF */
+/* ── Toggle switch visual ── */
 .toggle-btn {
-  padding: 7px 16px; border-radius: var(--rpill);
-  font-size: .72rem; font-weight: 800;
-  font-family: var(--sans); cursor: pointer;
-  transition: all .2s; border: none;
-  letter-spacing: .06em; flex-shrink: 0;
-  min-width: 52px; text-align: center;
+  position: relative;
+  width: 52px; height: 28px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .25s, box-shadow .25s;
+  font-size: 0; /* texto escondido — só visual */
+}
+.toggle-btn::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.4);
+  transition: transform .25s cubic-bezier(.22,.68,0,1.4);
 }
 .toggle-btn.on {
-  background: var(--ok2); color: #fff;
-  box-shadow: 0 2px 10px rgba(34,197,94,.35);
+  background: var(--ok2);
+  box-shadow: 0 0 16px rgba(34,197,94,.4);
+}
+.toggle-btn.on::after {
+  transform: translateX(24px);
 }
 .toggle-btn.off {
-  background: var(--bg4); color: var(--t3);
+  background: var(--bg4);
   border: 1px solid var(--line2);
 }
 
-/* Badge Em breve */
+/* ── Badge Em breve ── */
 .config-soon-badge {
   flex-shrink: 0;
-  background: var(--bg3); border: 1px solid var(--line2);
-  color: var(--t3); font-size: .58rem; font-weight: 700;
-  letter-spacing: .1em; text-transform: uppercase;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--line2);
+  color: var(--t3);
+  font-size: .58rem; font-weight: 800;
+  letter-spacing: .12em; text-transform: uppercase;
   padding: 5px 10px; border-radius: 20px;
 }
 
-/* Versão rodapé */
+/* ── Rodapé versão ── */
 .config-version {
-  text-align: center; font-size: .68rem; color: var(--t3);
-  padding: 28px 0 8px; letter-spacing: .06em;
+  text-align: center;
+  font-size: .66rem; color: var(--t4);
+  padding: 8px 0 4px;
+  letter-spacing: .08em;
   flex-shrink: 0;
 }
 
-/* Grupo que cresce — não usado no novo layout mas mantido por compatibilidade */
 .config-group-grow { flex: 1; }
+
+
+/* ════════════════════════════════════════════════════
+   CONFIG — Labels visuais por grupo (nth-of-type)
+   Como os section-title estão ocultos, cada grupo
+   recebe um label via data-section no HTML ou via
+   seletor por posição — aqui usamos border-top accent
+   para criar identidade visual por grupo
+════════════════════════════════════════════════════ */
+
+/* Grupo 1: Perfil/Conta — borda topo roxa */
+.config-body .config-group:nth-child(2) {
+  border-top: 2px solid rgba(139,92,246,.5);
+}
+/* Grupo 2: Visual — borda topo amarela */
+.config-body .config-group:nth-child(4) {
+  border-top: 2px solid rgba(234,179,8,.5);
+}
+/* Grupo 3: Jogo — borda topo vermelha */
+.config-body .config-group:nth-child(6) {
+  border-top: 2px solid rgba(239,68,68,.5);
+}
+/* Grupo 4: Sistema — borda topo indigo */
+.config-body .config-group:nth-child(8) {
+  border-top: 2px solid rgba(99,102,241,.5);
+}
+
+/* Header do screen-config — mais espaçoso e limpo */
+#screen-config .podio-header {
+  padding: 16px var(--sp2);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+#screen-config .podio-header::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--s-bd-accent), transparent);
+  opacity: .4;
+}
 
 /* ════════════════════════════════════════════════════
    RESPONSIVE
@@ -3351,14 +3424,64 @@ body::after{
     background: var(--bg);
   }
 
-  /* Config ocupa largura total — sem centralização */
+  /* ── Config desktop — Command Panel ── */
   #screen-config {
-    align-items: stretch;
+    align-items: center;
+    overflow-y: auto;
+    background: var(--bg);
   }
 
-  /* Expande o app quando config está ativa */
-  #app:has(#screen-config.active) {
-    max-width: 720px;
+  #screen-config .podio-header {
+    width: 100%;
+    max-width: 780px;
+    padding: 20px 32px;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  #screen-config .config-body {
+    /* Duas colunas de cards, espaçadas generosamente */
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: min-content;
+    gap: 12px;
+    width: 100%;
+    max-width: 780px;
+    padding: 4px 32px 56px !important;
+    align-items: start;
+    background: var(--bg) !important;
+  }
+
+  /* Títulos de seção: ocultos no desktop também */
+  #screen-config .config-section-title {
+    display: none;
+  }
+
+  /* Cards com cantos mais arredondados no desktop */
+  #screen-config .config-group {
+    border-radius: 22px;
+    grid-column: auto;
+  }
+
+  /* Items mais espaçosos no desktop */
+  #screen-config .config-item {
+    padding: 18px 20px;
+    min-height: 68px;
+  }
+
+  /* Versão rodapé span completo */
+  #screen-config .config-version {
+    grid-column: 1 / -1;
+    padding: 16px 0 8px;
+  }
+
+  /* Hover dourado no desktop */
+  #screen-config .config-item:hover {
+    background: var(--s-bg-accent);
+  }
+  #screen-config .config-group:hover {
+    border-color: var(--s-bd-accent);
+    box-shadow: 0 4px 32px var(--s-glow);
   }
 
   .podio-header {
@@ -3373,54 +3496,7 @@ body::after{
     width: 100%; max-width: 860px;
     display: grid; grid-template-columns: 260px 1fr;
     gap: 24px; padding: 24px 32px 40px; align-items: start;
-    background: none; /* gradiente do hero fica só no card lateral */
-  }
-
-  /* ── Config desktop: duas colunas simétricas ── */
-  #screen-config {
-    align-items: center !important;
-    overflow-y: auto !important;
-  }
-
-  #screen-config .podio-header {
-    width: 100%; max-width: 860px;
-    padding: 20px 32px;
-    margin: 0 auto;
-    box-sizing: border-box;
-  }
-
-  #screen-config .config-body {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    grid-auto-rows: min-content;
-    gap: 0 28px;
-    width: 100%; max-width: 860px;
-    padding: 8px 32px 48px !important;
-    align-items: start;
-    background: var(--bg) !important;
-  }
-
-  /* Títulos de seção ocupam a coluna onde estão */
-  #screen-config .config-section-title {
-    grid-column: auto;
-    padding-left: 0; padding-right: 0;
-  }
-
-  /* Grupos ficam na mesma coluna do título acima */
-  #screen-config .config-group {
-    grid-column: auto;
-    border-radius: var(--r2);
-  }
-
-  /* Versão span nas duas colunas */
-  #screen-config .config-version {
-    grid-column: 1 / -1;
-    padding-top: 32px;
-  }
-
-  /* Hover mais expressivo no desktop */
-  #screen-config .config-item:hover {
-    background: var(--s-bg-accent);
+    background: none;
   }
 
   .perfil-avatar-block {
