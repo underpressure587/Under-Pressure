@@ -2690,7 +2690,7 @@ body::after{
 
 /* Valor dos cards */
 .perfil-stat-val {
-  font-family: var(--serif); font-size: 1.6rem; font-weight: 800;
+  font-family: var(--serif); font-size: .75rem; font-weight: 800;
   line-height: 1;
   background: var(--s-gradient); -webkit-background-clip: text;
   -webkit-text-fill-color: transparent; background-clip: text;
@@ -2704,7 +2704,7 @@ body::after{
 /* Setor favorito — sem background-clip para não cortar o texto */
 .perfil-stat.setor-card .perfil-stat-val {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  font-size: 1rem; font-weight: 800;
+  font-size: .75rem; font-weight: 800;
   background: none !important;
   -webkit-background-clip: unset !important;
   -webkit-text-fill-color: var(--s-text) !important;
