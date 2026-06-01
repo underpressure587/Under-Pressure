@@ -1019,15 +1019,22 @@ body::after{
   opacity: .5;
 }
 
-/* No perfil o header funde com o bloco hero */
+/* Header do perfil — fundo sólido com separador dourado */
 #screen-perfil .podio-header {
-  background: transparent;
+  background: var(--bg);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border-bottom: none;
-  padding-bottom: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 16px var(--sp2);
+  min-height: 58px;
 }
-#screen-perfil .podio-header::after { display: none; }
+#screen-perfil .podio-header::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--s-bd-accent), transparent);
+  opacity: .55;
+  display: block;
+}
 .podio-title {
   font-family: var(--serif); font-size: 1rem; font-weight: 700; color: var(--t1);
 }
@@ -2541,7 +2548,7 @@ body::after{
 /* ── Hero: avatar + nome + meta ── */
 .perfil-avatar-block {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
-  padding: 20px var(--sp3) 28px;
+  padding: 28px var(--sp3) 20px;
   position: relative; overflow: hidden;
   /* Sem background próprio — usa o do body */
 }
@@ -2581,7 +2588,8 @@ body::after{
 }
 .perfil-meta-row {
   display: flex; flex-direction: column; align-items: center;
-  gap: 5px; margin-top: 2px; position: relative; z-index: 1;
+  gap: 5px; margin-top: 4px; position: relative; z-index: 1;
+  min-height: 24px; /* garante espaço mesmo antes do JS popular */
 }
 .perfil-id-badge {
   font-family: monospace; font-size: .66rem; font-weight: 700; letter-spacing: .08em;
@@ -2604,7 +2612,7 @@ body::after{
 /* ── Separador suave entre hero e stats ── */
 .perfil-stats {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  padding: 0 var(--sp2) var(--sp2);
+  padding: 16px var(--sp2) var(--sp2);
   /* continua no mesmo fluxo do gradiente do body */
 }
 .perfil-stat {
@@ -2657,10 +2665,18 @@ body::after{
 }
 
 /* Seção conquistas + gráfico */
-.perfil-grafico-section,
-.perfil-conquistas-title,
+.perfil-grafico-section {
+  padding: 0 var(--sp2) 8px;
+}
+.perfil-conquistas-title {
+  padding: 20px var(--sp2) 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+}
 .perfil-conquistas,
-.conquistas-guest-lock { padding-left: var(--sp2); padding-right: var(--sp2); }
+.conquistas-guest-lock {
+  padding: 0 var(--sp2) var(--sp3);
+}
 
 /* Gráfico de evolução */
 .perfil-grafico-section{}
