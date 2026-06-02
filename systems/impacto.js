@@ -6,13 +6,21 @@
 
 const BetaImpacto = (() => {
 
+    /* Limite máximo de amplificação por imprevisto (Bug #6 FIX).
+       Sem cap, rotatividade(2.5) × choice rh:-8 = -20 → colapso numa rodada.
+       Cap em 2.0 garante no máximo ±16 num indicador antes do clamp [0,20]. */
+    const MULT_CAP = 2.0;
+
     function calcular(baseEffects, activeEvents) {
         const final = { ...baseEffects };
         activeEvents.forEach(ev => {
             if (!ev.modifier) return;
             Object.entries(ev.modifier).forEach(([k, mult]) => {
-                if (final[k] !== undefined)
-                    final[k] = Math.round(final[k] * mult);
+                if (final[k] !== undefined) {
+                    // Aplica cap: multiplicador nunca excede MULT_CAP em valor absoluto
+                    const multSafe = Math.sign(mult) * Math.min(Math.abs(mult), MULT_CAP);
+                    final[k] = Math.round(final[k] * multSafe);
+                }
             });
         });
         return final;

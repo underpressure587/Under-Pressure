@@ -59,7 +59,7 @@ const BetaState = (() => {
             gestor: {
                 reputacaoInterna: 5,
                 capitalPolitico:  7,
-                esgotamento:      2,
+                esgotamento:      0,  // FIX: gestor inicia sem esgotamento — mandato começa fresco
             },
 
             // Evolução da crise inicial: null | "melhorando" | "resolvida" | "piorando"

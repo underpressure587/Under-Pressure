@@ -211,12 +211,20 @@ function iniciar(sectorId, groupName, companyName, modoSala) {
         // Se as rodadas têm campo "fase", sorteia candidatas por fase
         const _temFase = _todasRounds.some(r => r.fase);
         if (_temFase) {
+            /* BUG E FIX: Fisher-Yates shuffle — Array.sort(Math.random) é enviesado em V8:
+               elementos no início/fim têm probabilidade desproporcional de ser selecionados,
+               tornando alguns rounds muito mais frequentes que outros entre partidas. */
+            const _fisherYates = (arr) => {
+                const a = arr.slice(); // não muta o original
+                for (let i = a.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [a[i], a[j]] = [a[j], a[i]];
+                }
+                return a;
+            };
             const _sortearFase = (fase, candidatas, selecionar) => {
                 const pool = _todasRounds.filter(r => r.fase === fase);
-                // Embaralha e pega as candidatas
-                const embaralhado = pool.sort(() => Math.random() - 0.5).slice(0, candidatas);
-                // Seleciona as definitivas
-                return embaralhado.sort(() => Math.random() - 0.5).slice(0, selecionar);
+                return _fisherYates(_fisherYates(pool).slice(0, candidatas)).slice(0, selecionar);
             };
             const diagnostico = _sortearFase('diagnostico', 5, 3);
             const pressao     = _sortearFase('pressao', 5, 4);
@@ -375,8 +383,16 @@ function processarEscolha(choiceIndex) {
         : _calcularEfeitosGestorAutomatico(efeitosFinais, avaliacao, state);
     BetaState.applyGestorEffects(efeitosGestor);
 
+    // BUG B FIX: gestorEffects do imprevisto só aplicados na PRIMEIRA rodada ativa.
+    // Antes: aplicava em cada rodada enquanto o evento estava ativo → duplicava/triplicava efeitos.
+    // Detecção da primeira rodada: quando currentRound === expiresAt - duracao + 1
+    // (com a fórmula corrigida expiresAt = currentRound_criacao + duracao - 1,
+    //  firstRound = expiresAt - duracao + 1 = currentRound_criacao ✓)
     if (eventoAtivo?.gestorEffects) {
-        BetaState.applyGestorEffects(eventoAtivo.gestorEffects);
+        const firstRound = eventoAtivo.expiresAt - (eventoAtivo.duracao ?? 1) + 1;
+        if (state.currentRound === firstRound) {
+            BetaState.applyGestorEffects(eventoAtivo.gestorEffects);
+        }
     }
 
     _ui.renderSidebar?.(state, EMPRESAS[state.sector]);
@@ -458,7 +474,7 @@ function _avancarRodada() {
     const state = BetaState.get();
 
     // BUG 15: BetaImprevisto.sortear já controla repetição internamente via _usedIds
-    const novoEv = BetaImprevisto.sortear(state.currentRound, state.storyState, state.gestor);
+    const novoEv = BetaImprevisto.sortear(state.currentRound, state.storyState, state.gestor, state.sector);
     if (novoEv) BetaState.addEvent(novoEv);
 
     if (state.currentRound >= state.totalRounds) {

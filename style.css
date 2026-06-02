@@ -1717,6 +1717,14 @@ body::after{
   margin-bottom:var(--sp2); display:none;
 }
 .hist-event.visible{ display:block; animation:slideDown .25s ease; }
+.ev-detail-ind{
+  display:block; margin-top:5px; font-size:.78rem;
+  color:var(--warn); opacity:.9; font-weight:600;
+}
+.ev-detail-gestor{
+  display:block; margin-top:2px; font-size:.76rem;
+  color:var(--t3); opacity:.85;
+}
 .hist-cta{ margin-top:var(--sp2); }
 .btn-to-choices{
   background:var(--s-bg-accent); border:1px solid var(--s-bd-accent);

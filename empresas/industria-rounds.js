@@ -133,7 +133,7 @@ const IndustriaRounds = [
         text: "Contestar as não-conformidades junto ao organismo certificador — algumas delas são interpretações discutíveis da norma",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { conformidade: -3, clientes: -3, reputacao: -2, processos: -1 },
+        effects: { clientes: -5, processos: -1, conformidade: -3 },
         avaliacao: "ruim",
         ensinamento: "Contestar não-conformidades identificadas por auditor acreditado raramente é vencido e sempre tem custo de relacionamento. O organismo certificador tem poder para acelerar a suspensão se perceber postura de não cooperação. Energia gasta contestando é energia que não foi usada para corrigir."
       },
@@ -166,21 +166,21 @@ const IndustriaRounds = [
       {
         text: "Comprar e instalar a peça imediatamente e, em paralelo, fazer um levantamento completo de todos os componentes críticos da planta com desgaste acima de 70%",
         risco: "baixo",
-        effects: { manutencao: +5, producao: +4, qualidade: +2, financeiro: -3 },
+        effects: { financeiro: -3, processos: +4, manutencao: +5, qualidade: +2 },
         avaliacao: "boa",
         ensinamento: "Resolver o imediato e diagnosticar o sistêmico ao mesmo tempo é a resposta certa a falhas repetidas. A prensa parada custa muito mais por hora do que a peça importada custaria por mês. E o levantamento de componentes críticos transforma um problema recorrente em um cronograma de manutenção preventiva que a empresa consegue planejar."
       },
       {
         text: "Fazer reparo provisório para retomar a produção hoje e planejar a substituição definitiva para o próximo trimestre — minimizar o impacto financeiro imediato",
         risco: "alto",
-        effects: { manutencao: -2, producao: +1, seguranca: -3, qualidade: -2, financeiro: +1 },
+        effects: { financeiro: +1, processos: +1, seguranca: -3, manutencao: -2, qualidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Reparo provisório em componente crítico que já falhou duas vezes é aceitar um terceiro evento — provavelmente pior. O custo da próxima falha não é mais R$87k: é parada mais longa, possível dano estrutural à máquina e risco de acidente com operadores próximos ao equipamento."
       },
       {
         text: "Aproveitar a parada para fazer uma revisão geral completa da prensa — transformar a crise em uma manutenção programada abrangente",
         risco: "medio",
-        effects: { manutencao: +6, producao: -2, qualidade: +3, processos: +3, financeiro: -4 },
+        effects: { financeiro: -4, processos: +1, manutencao: +6, qualidade: +3 },
         avaliacao: "boa",
         ensinamento: "Parada não planejada transformada em revisão geral é uma das formas mais eficientes de manutenção: o equipamento já está aberto, o técnico já está no local e o custo marginal de fazer a revisão completa é uma fração do custo de parar de novo em duas semanas. O custo de produção parada por 2 dias extra é menor que o de uma quarta falha."
       },
@@ -221,14 +221,14 @@ const IndustriaRounds = [
       {
         text: "Priorizar apenas a regularização da NR-12 para evitar a interdição da linha 2 — as outras duas pendências têm prazo mais confortável",
         risco: "medio",
-        effects: { conformidade: +3, producao: +3, seguranca: +2, rh: +1, financeiro: -1 },
+        effects: { financeiro: -1, rh: +1, processos: +3, seguranca: +2, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Triage por impacto operacional é correto aqui: a NR-12 é o que pode interditar a linha. PPRA e laudo de insalubridade têm consequências de conformidade importantes, mas não implicam interdição imediata. Focar o que protege a produção primeiro, sem abandonar o restante, é gestão de prioridade com clareza."
       },
       {
         text: "Comunicar ao maior cliente sobre as pendências antes que ele descubra por outro canal — demonstrar transparência proativa",
         risco: "baixo",
-        effects: { clientes: +3, conformidade: +1, rh: +1, reputacao: +2 },
+        effects: { rh: +1, clientes: +5, conformidade: +1 },
         avaliacao: "boa",
         ensinamento: "Clientes que dependem de fornecedores com certificação e conformidade regulatória preferem receber notícias difíceis de quem gera a notícia — não da imprensa ou de um concorrente. A transparência proativa constrói o tipo de confiança que não se compra: a de que o parceiro vai falar a verdade quando é difícil."
       }
@@ -270,7 +270,7 @@ const IndustriaRounds = [
         text: "Paralisar toda a fábrica imediatamente para revisão de segurança em todas as linhas antes de qualquer retomada",
         risco: "medio",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { seguranca: +5, producao: -5, clientes: -3, financeiro: -3 },
+        effects: { financeiro: -3, clientes: -3, processos: -5, seguranca: +5 },
         avaliacao: "media",
         ensinamento: "Paralisia total demonstra seriedade com segurança — mas em uma metalúrgica com contratos de prazo, parar todas as linhas por revisão pode gerar multas contratuais que a empresa não comporta. A resposta proporcional é paralisar a linha afetada e fazer a revisão das demais em turnos, sem interromper a produção completa."
       }
@@ -296,7 +296,7 @@ const IndustriaRounds = [
       {
         text: "Entrar em contato com o gerente de conta da Montadora Horizonte e ser transparente sobre os desafios em andamento — pedir uma visita de pré-auditoria informal antes da data oficial",
         risco: "baixo",
-        effects: { clientes: +5, conformidade: +3, reputacao: +3, processos: +2 },
+        effects: { clientes: +8, processos: +2, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Transparência proativa com o cliente antes de uma auditoria transforma a dinâmica de adversarial para colaborativa. O gerente de conta que sabe dos desafios antes do auditor pode ser um aliado interno. Clientes de longa data frequentemente preferem ajudar o fornecedor a corrigir do que substituí-lo — se a honestidade vier antes da crise."
       },
@@ -311,7 +311,7 @@ const IndustriaRounds = [
         text: "Solicitar adiamento da auditoria por 60 dias — a empresa está em processo de melhoria e precisa de mais tempo",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { clientes: -4, conformidade: -2, reputacao: -3, financeiro: -2 },
+        effects: { financeiro: -2, clientes: -7, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Pedir adiamento de auditoria de cliente estratégico é um sinal vermelho imediato. A montadora que concede o adiamento vai chegar com nível de escrutínio muito maior — e o fornecedor que pediu tempo será avaliado com o dobro da atenção. O adiamento raramente resolve o problema; apenas aumenta a pressão do momento seguinte."
       }
@@ -345,14 +345,14 @@ const IndustriaRounds = [
       {
         text: "Aprovar o projeto condicionado ao reposicionamento dos dois operadores em novas funções — nenhuma demissão por automação",
         risco: "baixo",
-        effects: { rh: +4, seguranca: +5, producao: +4, financeiro: -3, conformidade: +2 },
+        effects: { financeiro: -3, rh: +4, processos: +4, seguranca: +5, conformidade: +2 },
         avaliacao: "boa",
         ensinamento: "Automação com garantia de reposicionamento é a fórmula que reduz a resistência sindical e mantém o moral do time. Os dois operadores reposicionados viram os maiores defensores do novo equipamento — porque viram que a empresa os protegeu. Esse tipo de confiança tem valor que não aparece no payback financeiro da proposta."
       },
       {
         text: "Adiar a decisão de automação para depois de resolver as não-conformidades ISO e o acidente — não sobrecarregar a organização com muitas mudanças simultâneas",
         risco: "medio",
-        effects: { processos: +1, financeiro: +1, seguranca: -1, producao: -1 },
+        effects: { financeiro: +1, processos: 0, seguranca: -1 },
         avaliacao: "media",
         ensinamento: "Sequenciar mudanças para não sobrecarregar a organização é uma leitura válida de capacidade de absorção. O risco é que o 'depois' nunca chegue — e a automação que poderia reduzir acidentes em 85% naqueles pontos fica esperando a janela certa que nunca abre."
       }
@@ -385,14 +385,14 @@ const IndustriaRounds = [
       {
         text: "Revisar o mix de produção priorizando os produtos de maior margem e reduzindo volume dos contratos menos rentáveis",
         risco: "medio",
-        effects: { financeiro: +3, producao: -2, clientes: -2, processos: +2 },
+        effects: { financeiro: +3, clientes: -2, processos: 0 },
         avaliacao: "media",
         ensinamento: "Revisão de mix por margem é uma estratégia legítima em contexto de alta de matéria-prima — mas reduzir volume de contratos ativos pode acionar cláusulas de penalidade e criar precedente ruim com clientes que consideravam a empresa um parceiro confiável de abastecimento."
       },
       {
         text: "Fazer hedge cambial e comprar estoque de aço acima do necessário agora, antes de nova alta — travar o custo atual",
         risco: "medio",
-        effects: { financeiro: -3, producao: +3, processos: +2, manutencao: +1 },
+        effects: { financeiro: -3, processos: +5, manutencao: +1 },
         avaliacao: "boa",
         ensinamento: "Hedge de matéria-prima e compra antecipada de estoque estratégico são ferramentas legítimas de gestão de risco em indústrias intensivas em commodity. O risco é o capital imobilizado em estoque — mas em um contexto de alta acelerada de 31%, travar o custo atual pode gerar economia significativa nos próximos dois trimestres."
       }
@@ -426,7 +426,7 @@ const IndustriaRounds = [
         text: "Ser honesto com a Montadora Horizonte sobre o estado atual e propor um cronograma de 90 dias — melhor perder essa janela do que prometer o que não entregará",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { clientes: -3, financeiro: -4, reputacao: -2 },
+        effects: { financeiro: -4, clientes: -5 },
         avaliacao: "ruim",
         ensinamento: "Honestidade é sempre um valor — mas a janela de 45 dias da montadora não vai esperar pela honestidade que poderia ter sido demonstrada no trabalho feito antes. Recusar uma oportunidade de R$41M por impossibilidade que nunca foi testada é uma decisão prematura. O certo é tentar e medir o progresso real antes de desistir."
       },
@@ -452,7 +452,7 @@ const IndustriaRounds = [
       {
         text: "Opção A: automação da linha 2 — capacidade adicional é o que a Montadora Horizonte mais valoriza para justificar o contrato de longo prazo",
         risco: "medio",
-        effects: { producao: +6, clientes: +4, seguranca: +3, financeiro: -4, rh: +1 },
+        effects: { financeiro: -4, rh: +1, clientes: +4, processos: +6, seguranca: +3 },
         avaliacao: "media",
         ensinamento: "Automação aumenta capacidade — mas a Montadora Horizonte pediu explicitamente redução de acidentes e rastreabilidade, não apenas capacidade. Um plano de automação sem MES apresenta o investimento mais visível, mas resolve apenas parcialmente os critérios que a auditoria vai avaliar."
       },
@@ -466,7 +466,7 @@ const IndustriaRounds = [
       {
         text: "Opção C: renovação da linha 1 — eliminar o risco de paradas é o que mais impacta a confiabilidade de entrega que o contrato de 5 anos exige",
         risco: "medio",
-        effects: { manutencao: +7, seguranca: +4, producao: +3, qualidade: +3, financeiro: -5 },
+        effects: { financeiro: -5, processos: +3, seguranca: +4, manutencao: +7, qualidade: +3 },
         avaliacao: "media",
         ensinamento: "Renovação do parque elimina risco de parada — mas o R$3,2M compromete quase todo o capital disponível sem resolver rastreabilidade e conformidade documental que a auditoria vai avaliar. É o investimento mais operacionalmente correto, mas estrategicamente incompleto para o objetivo de curto prazo."
       },
@@ -507,14 +507,14 @@ const IndustriaRounds = [
         text: "Aceitar a suspensão preventiva — transparência total é melhor do que certificação com pendência",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { conformidade: -2, clientes: -4, financeiro: -3, reputacao: -2 },
+        effects: { financeiro: -3, clientes: -6, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Aceitar a suspensão quando há opção de manutenção com não-conformidade menor é uma decisão de custo desnecessário. Os dois clientes com exigência de ISO ativa precisarão ser comunicados da suspensão — o que pode acionar cláusulas contratuais. Certificação com não-conformidade menor registrada é muito melhor do que certificação suspensa."
       },
       {
         text: "Comunicar proativamente os dois clientes com exigência de ISO sobre a situação antes que eles descubram pela suspensão",
         risco: "baixo",
-        effects: { clientes: +5, conformidade: +2, reputacao: +4, processos: +1 },
+        effects: { clientes: +8, processos: +1, conformidade: +2 },
         avaliacao: "boa",
         ensinamento: "Comunicação proativa antes de uma decisão formal é uma das estratégias mais eficazes de gestão de relacionamento com clientes. O cliente que descobre a situação por você — com contexto, trajetória de melhoria e prazo de resolução — tem uma reação completamente diferente do cliente que descobre pela suspensão do certificado no banco de dados do organismo."
       }
@@ -533,14 +533,14 @@ const IndustriaRounds = [
       {
         text: "Criar um programa de formação próprio: parceria com SENAI para formação de 80 operadores em 5 meses — a empresa que forma tem mais retenção do que a que apenas contrata",
         risco: "baixo",
-        effects: { rh: +6, processos: +4, producao: +3, financeiro: -2, clientes: +2 },
+        effects: { financeiro: -2, rh: +6, clientes: +2, processos: +7 },
         avaliacao: "boa",
         ensinamento: "Empresa que forma o próprio operador tem vantagem de retenção comprovada: o colaborador que foi contratado como aprendiz e foi capacitado pela empresa tem taxa de permanência 40% maior do que o que foi contratado pronto. Em mercado apertado de mão de obra qualificada, a formação própria é vantagem competitiva real."
       },
       {
         text: "Contratar imediatamente pelo salário mais alto do mercado — atrair os melhores disponíveis antes que a concorrência feche as vagas",
         risco: "medio",
-        effects: { rh: +3, producao: +3, financeiro: -4, processos: +1 },
+        effects: { financeiro: -4, rh: +3, processos: +4 },
         avaliacao: "media",
         ensinamento: "Contratação a preço premium funciona no curto prazo — mas cria uma estrutura de custo de pessoal que vai comprimir a margem do novo contrato. Além disso, profissionais contratados pelo maior salário saem pelo próximo salário maior: não há vínculo além do financeiro."
       },
@@ -554,7 +554,7 @@ const IndustriaRounds = [
       {
         text: "Terceirizar parte da expansão com uma empresa de mão de obra temporária para os primeiros 12 meses — reduzir o risco de contratação prematura",
         risco: "medio",
-        effects: { producao: +3, rh: -2, qualidade: -2, conformidade: -2, financeiro: -1 },
+        effects: { financeiro: -1, rh: -2, processos: +3, qualidade: -2, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Mão de obra temporária em linha de produção que acabou de passar em auditoria automotiva de qualidade é um risco de conformidade real. A Montadora Horizonte vai auditar periodicamente — e alta rotatividade de pessoal de produção cria inconsistência nos processos e rastreabilidade que a empresa acabou de construir."
       }
@@ -573,7 +573,7 @@ const IndustriaRounds = [
       {
         text: "Competir por qualidade técnica e conformidade: posicionar a empresa como o fornecedor de maior confiabilidade e rastreabilidade do setor — o que asiáticos não conseguem entregar com a mesma velocidade",
         risco: "baixo",
-        effects: { clientes: +5, qualidade: +5, conformidade: +4, reputacao: +4, financeiro: +3 },
+        effects: { financeiro: +3, clientes: +8, qualidade: +5, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Competir por qualidade e conformidade contra custo asiático é a estratégia correta para metalúrgicas médias brasileiras. Peças de precisão para automotivo exigem rastreabilidade, qualidade certificada e proximidade logística que uma planta recém-inaugurada não consegue demonstrar nos primeiros anos. A confiabilidade construída em décadas não se replica em 12 meses."
       },
@@ -581,21 +581,21 @@ const IndustriaRounds = [
         text: "Competir por custo: reduzir estrutura, automatizar ao máximo e tentar igualar o custo por peça do concorrente em 18 meses",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { financeiro: -3, rh: -4, producao: +2, qualidade: -2, seguranca: -2 },
+        effects: { financeiro: -3, rh: -4, processos: +2, seguranca: -2, qualidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Tentar igualar custo asiático é uma guerra que metalúrgicas de médio porte raramente vencem. A vantagem de custo estrutural de uma planta de capital estrangeiro com escala 2,5x maior não se elimina com corte de estrutura local. Competir na mesma dimensão do concorrente mais forte é a receita para perder nos próprios termos."
       },
       {
         text: "Focar em nichos de alta complexidade técnica: peças de precisão extrema que exigem certificações específicas que o concorrente não tem — e cobrar o prêmio correspondente",
         risco: "baixo",
-        effects: { qualidade: +5, clientes: +3, financeiro: +4, conformidade: +4, producao: -1 },
+        effects: { financeiro: +4, clientes: +3, processos: -1, qualidade: +5, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Especialização em nichos de alta complexidade é a estratégia de diferenciação mais sustentável para médias indústrias diante de concorrentes de maior escala. Certificações específicas, tolerâncias apertadas e histórico de conformidade são barreiras de entrada reais que protegem margens — mesmo contra competidores com custo significativamente menor."
       },
       {
         text: "Buscar fusão ou parceria estratégica com outra metalúrgica nacional para ganhar escala suficiente para competir",
         risco: "medio",
-        effects: { financeiro: +3, producao: +3, clientes: +2, rh: -2, processos: -2 },
+        effects: { financeiro: +3, rh: -2, clientes: +2, processos: +1 },
         avaliacao: "media",
         ensinamento: "Fusão para ganho de escala é estrategicamente válido — mas integrar duas culturas industriais enquanto se prepara para um concorrente de alta velocidade é arriscado. A integração pós-fusão em indústria geralmente leva 18 a 24 meses antes de gerar qualquer ganho real de eficiência — e esse é exatamente o tempo em que o concorrente vai estar conquistando clientes."
       }
@@ -619,7 +619,7 @@ const IndustriaRounds = [
       },
       {
         text: "Diversificação setorial: expandir para infraestrutura, energia renovável e defesa — reduzir dependência do ciclo automotivo",
-        effects: { clientes: +4, financeiro: +4, producao: +3, conformidade: +2, rh: +2 },
+        effects: { financeiro: +4, rh: +2, clientes: +4, processos: +3, conformidade: +2 },
         avaliacao: "boa",
         ensinamento: "Diversificação setorial para infraestrutura e energia renovável é uma estratégia de crescimento com timing favorável: ambos os setores estão em expansão acelerada e demandam componentes metálicos de precisão com as mesmas certificações que a empresa já tem ou está construindo. Reduzir dependência do automotivo — setor com ciclos de baixa acentuados — é gestão de risco inteligente."
       },
@@ -632,7 +632,7 @@ const IndustriaRounds = [
       {
         text: "Expansão geográfica: abrir segunda planta em outro estado aproveitando incentivos fiscais regionais e a reputação construída com a Montadora Horizonte",
         requisitos: { indicadorMinimo: { financeiro: 12, conformidade: 12 } },
-        effects: { producao: +4, clientes: +3, financeiro: +2, rh: -3, processos: -2, manutencao: -2 },
+        effects: { financeiro: +2, rh: -3, clientes: +3, processos: +2, manutencao: -2 },
         avaliacao: "media",
         ensinamento: "Segunda planta antes de ter a primeira operando com excelência replica os problemas em escala maior. A lição mais cara da indústria manufatureira é que crescimento geográfico antes de maturidade operacional dobra o problema, não a capacidade. A planta que acabou de resolver ISO e acidentes precisa de pelo menos 12 meses de estabilidade antes de exportar o modelo."
       }
@@ -669,14 +669,14 @@ const IndustriaRounds = [
       {
         text: "Iniciar imediatamente o processo de seleção de fornecedor de resina reciclada — sem matéria-prima garantida, a conversão não adianta",
         risco: "baixo",
-        effects: { processos: +4, conformidade: +3, financeiro: -1, producao: +2 },
+        effects: { financeiro: -1, processos: +6, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Resina reciclada pós-consumo de qualidade para embalagens alimentícias é escassa e tem lista de espera em fornecedores certificados. Garantir o fornecimento de insumo antes de converter a linha é o passo que a maioria das empresas esquece — e que torna a conversão inútil quando o equipamento está pronto mas o insumo não chega."
       },
       {
         text: "Contratar imediatamente a empresa de engenharia para iniciar a conversão da linha mais rentável — maximizar o retorno do investimento",
         risco: "alto",
-        effects: { producao: -2, conformidade: +2, financeiro: -4, clientes: -1, rh: -1 },
+        effects: { financeiro: -4, rh: -1, clientes: -1, processos: -2, conformidade: +2 },
         avaliacao: "ruim",
         ensinamento: "Converter a linha mais rentável sem saber qual produto o cliente precisa primeiro é uma aposta que pode usar o capital disponível no ponto errado. A linha mais rentável com o insumo reciclado pode não ser o produto que o Grupo Alimentar Nacional precisa em 8 meses — e você terá gasto R$8-12M fora do alvo."
       },
@@ -702,14 +702,14 @@ const IndustriaRounds = [
       {
         text: "Priorizar a linha A — menor prazo, menor custo e é a que consegue atender o Grupo Alimentar Nacional dentro dos 8 meses",
         risco: "baixo",
-        effects: { conformidade: +4, producao: +3, financeiro: -3, clientes: +4 },
+        effects: { financeiro: -3, clientes: +4, processos: +3, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Linha A em 5 meses por R$6,8M atende o cliente prioritário dentro do prazo com investimento gerenciável. A lógica é correta: converter o que resolve o problema mais urgente primeiro, e usar o aprendizado operacional com resina reciclada na linha A para fazer uma conversão melhor na linha B depois."
       },
       {
         text: "Investigar fornecedores de resina reciclada de maior consistência antes de iniciar qualquer conversão — o risco de 18% de rejeição pode comprometer a qualidade das embalagens alimentícias",
         risco: "baixo",
-        effects: { qualidade: +4, conformidade: +3, processos: +3, clientes: +2, producao: +1 },
+        effects: { clientes: +2, processos: +4, qualidade: +4, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Para embalagens alimentícias, variabilidade de insumo não é só um problema de custo — é um problema de segurança do produto final. Um lote de embalagens fora da especificação em contato com alimento pode gerar recall e comprometer certificações. Investir 3 semanas em validação de fornecedor de resina antes de converter a linha é o mais barato seguro de qualidade disponível."
       },
@@ -717,14 +717,14 @@ const IndustriaRounds = [
         text: "Converter as duas linhas simultaneamente com financiamento — o prazo dos clientes não permite sequenciamento",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { financeiro: -7, producao: -3, rh: -3, conformidade: +2, clientes: +2 },
+        effects: { financeiro: -7, rh: -3, clientes: +2, processos: -3, conformidade: +2 },
         avaliacao: "ruim",
         ensinamento: "Converter duas linhas simultaneamente por R$18M de uma vez, sem experiência prévia com resina reciclada, é triplicar o risco operacional. Se o problema de variabilidade de qualidade aparecer, aparece nas duas plantas ao mesmo tempo. Sequenciamento inteligente — com aprendizado da primeira conversão aplicado na segunda — é sempre mais seguro em transformação industrial."
       },
       {
         text: "Apresentar ao engenheiro uma proposta de teste piloto em pequena escala antes da conversão — validar a resina reciclada em produção real antes de investir R$6,8M",
         risco: "baixo",
-        effects: { qualidade: +5, processos: +4, financeiro: +1, conformidade: +3, producao: +1 },
+        effects: { financeiro: +1, processos: +5, qualidade: +5, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Piloto de produção com resina reciclada antes da conversão da linha inteira é o investimento mais inteligente possível: revela os problemas de variabilidade em escala controlada, permite ajuste dos parâmetros de processo e dá ao engenheiro os dados reais que vão tornar a conversão definitiva muito mais eficiente."
       }
@@ -757,14 +757,14 @@ const IndustriaRounds = [
       {
         text: "Antecipar a conformidade para a regulamentação: converter para 25% de reciclado (acima dos 15% exigidos) e usar isso como diferencial comercial com clientes que exigem mais do que a lei pede",
         risco: "baixo",
-        effects: { clientes: +5, conformidade: +5, reputacao: +4, qualidade: +3, financeiro: -3 },
+        effects: { financeiro: -3, clientes: +8, qualidade: +3, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "Superar o mínimo regulatório e usar isso como diferencial é a estratégia que transforma compliance em vantagem competitiva. O cliente que exige 30% de reciclado não vai para o concorrente que faz 15% — e a empresa que já está em 25% tem vantagem real sobre quem está correndo para chegar ao mínimo."
       },
       {
         text: "Calcular o valor de pagar a taxa regulatória nos primeiros 2 anos e usar o período para fazer a conversão com mais calma e melhor tecnologia",
         risco: "alto",
-        effects: { financeiro: -5, clientes: -3, conformidade: -3, reputacao: -2 },
+        effects: { financeiro: -5, clientes: -5, conformidade: -3 },
         avaliacao: "ruim",
         ensinamento: "Pagar R$14,4M/ano em taxa regulatória enquanto posta a conversão é destruir o mesmo valor que financiaria a mudança — duas vezes. E os clientes que exigem ESG interpretam a escolha de pagar a taxa como declaração de que a empresa não tem intenção real de se adequar. O contrato cai antes de chegar ao segundo ano."
       }
@@ -790,14 +790,14 @@ const IndustriaRounds = [
       {
         text: "Ajustar os parâmetros de processo da linha para absorver a variação do fornecedor — adaptar a máquina à resina disponível",
         risco: "medio",
-        effects: { producao: +2, qualidade: -2, processos: +2, conformidade: -2, financeiro: +1 },
+        effects: { financeiro: +1, processos: +4, qualidade: -2, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Adaptar o processo para compensar variação de insumo fora de especificação é aceitar a degradação de qualidade como solução. Em embalagens alimentícias, espessura irregular não é apenas um problema estético — é um risco de contaminação e integridade do produto que os clientes alimentícios não toleram e que pode acionar recall."
       },
       {
         text: "Paralisar a linha convertida até que o fornecedor entregue material conforme especificação — zero tolerância com não-conformidade em insumo crítico",
         risco: "medio",
-        effects: { qualidade: +4, producao: -3, clientes: -2, financeiro: -3 },
+        effects: { financeiro: -3, clientes: -2, processos: -3, qualidade: +4 },
         avaliacao: "media",
         ensinamento: "Paralisia por não-conformidade de insumo é a decisão correta de qualidade — mas em contexto de prazo com cliente, parar a linha enquanto aguarda fornecedor gera atraso que pode acionar cláusula contratual. A paralisação é mais defensável quando acompanhada de um plano ativo de resolução, não de espera passiva."
       },
@@ -823,21 +823,21 @@ const IndustriaRounds = [
       {
         text: "Apresentar dados reais: o que foi feito na linha A, o que está em andamento, os desafios técnicos encontrados e um cronograma realista para os produtos restantes — com evidência de comprometimento, não de perfeição",
         risco: "baixo",
-        effects: { clientes: +5, conformidade: +4, reputacao: +3, processos: +2 },
+        effects: { clientes: +8, processos: +2, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Apresentação de progresso real com honestidade sobre desafios é muito mais convincente para um conselho do que um plano perfeito no papel. Empresas que mostram o que aprenderam na prática — incluindo os problemas que encontraram e como estão resolvendo — demonstram capacidade de execução que clientes de longo prazo valorizam."
       },
       {
         text: "Contratar uma certificadora independente para validar o conteúdo reciclado já implementado e apresentar o certificado na reunião do conselho",
         risco: "baixo",
-        effects: { conformidade: +5, clientes: +4, reputacao: +4, qualidade: +3 },
+        effects: { clientes: +8, qualidade: +3, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "Certificação independente de conteúdo reciclado transforma uma afirmação interna em evidência verificável. Para um conselho que vai decidir a base de fornecedores para 3 anos, um certificado de terceira parte é uma ancoragem que nenhum slide de apresentação substitui."
       },
       {
         text: "Apresentar um plano de conversão das duas plantas completo nos próximos 18 meses — mostrar ambição para tranquilizar o cliente",
         risco: "medio",
-        effects: { clientes: +3, conformidade: +2, financeiro: -2, producao: -1 },
+        effects: { financeiro: -2, clientes: +3, processos: -1, conformidade: +2 },
         avaliacao: "media",
         ensinamento: "Planos ambiciosos apresentados a clientes sem o histórico de execução para sustentá-los criam expectativa que dificulta a negociação posterior. O cliente que ouviu '18 meses para 100%' e depois recebe '24 meses para 70%' tem uma percepção de falha que não existiria se o plano original fosse mais conservador e honesto."
       },
@@ -870,14 +870,14 @@ const IndustriaRounds = [
       {
         text: "Antecipar a conversão da linha B e buscar financiamento — os dois clientes juntos representam 41% da receita e merecem o investimento",
         risco: "medio",
-        effects: { clientes: +4, conformidade: +3, financeiro: -5, producao: -2, rh: -2 },
+        effects: { financeiro: -5, rh: -2, clientes: +4, processos: -2, conformidade: +3 },
         avaliacao: "media",
         ensinamento: "41% da receita em dois clientes com exigência simultânea é um argumento forte para antecipar o investimento. O risco é executar duas conversões em paralelo com a empresa ainda aprendendo a lidar com resina reciclada. O aprendizado da linha A ainda não foi completamente absorvido — e a linha B vai ter os mesmos desafios, possivelmente amplificados."
       },
       {
         text: "Ser honesto com a Higiene Brasil: a capacidade atual não suporta os dois clientes — propor início em 7 meses com ramp-up gradual dos 3 produtos",
         risco: "baixo",
-        effects: { clientes: +3, conformidade: +2, processos: +2, financeiro: +1, producao: +1 },
+        effects: { financeiro: +1, clientes: +3, processos: +3, conformidade: +2 },
         avaliacao: "boa",
         ensinamento: "Honestidade sobre capacidade com prazo alternativo é mais respeitada do que promessa impossível seguida de falha. O cliente que aceita 7 meses com entrega real confia mais no fornecedor do que o cliente a quem foi prometido 5 meses e recebeu 8 meses com desculpas."
       },
@@ -911,21 +911,21 @@ const IndustriaRounds = [
         text: "Retomar a operação em 24 horas com supervisão adicional — o processo produtivo não pode parar por mais de 48 horas sem comprometer o prazo do cliente",
         risco: "alto",
         gestorEffects: { reputacaoInterna: -3 },
-        effects: { seguranca: -4, rh: -4, conformidade: -3, producao: +1, clientes: -1 },
+        effects: { rh: -4, clientes: -1, processos: +1, seguranca: -4, conformidade: -3 },
         avaliacao: "ruim",
         ensinamento: "Retomar a operação sem atualizar o procedimento de segurança que causou o incidente é aceitar que o próximo operador vai ser exposto da mesma forma. O prazo do cliente não é argumento aceitável para operar em condição de risco documentado — e se houver um segundo incidente, o custo para o operador e para a empresa será muito maior do que o atraso de entrega."
       },
       {
         text: "Suspender temporariamente o uso do aditivo problemático e buscar formulação alternativa — segurança acima da produção",
         risco: "medio",
-        effects: { seguranca: +4, producao: -3, conformidade: +2, financeiro: -2, clientes: -2 },
+        effects: { financeiro: -2, clientes: -2, processos: -3, seguranca: +4, conformidade: +2 },
         avaliacao: "media",
         ensinamento: "Buscar formulação alternativa é a resposta mais estrutural — mas leva tempo que a empresa pode não ter no contexto de prazo com clientes. A solução mais eficiente é a combinação: atualizar o procedimento de segurança imediatamente (48 horas) e iniciar em paralelo a busca de alternativa menos crítica para uso futuro."
       },
       {
         text: "Comunicar proativamente o incidente ao MTE e aos clientes afetados antes de ser acionado — transparência como postura institucional",
         risco: "baixo",
-        effects: { conformidade: +4, seguranca: +3, clientes: +3, reputacao: +3 },
+        effects: { clientes: +6, seguranca: +3, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Comunicação proativa de incidente ao MTE antes de ser fiscalizado e aos clientes antes de vazar pela mídia é uma postura de maturidade institucional rara em indústrias de médio porte. Empresas que reportam voluntariamente constroem uma relação com o regulador e com o cliente que nenhuma empresa que espera ser cobrada consegue ter."
       }
@@ -944,7 +944,7 @@ const IndustriaRounds = [
       {
         text: "Contratar imediatamente uma auditoria ESG — o relatório que o banco exige é o mesmo que vai diferenciar a empresa com os clientes que exigem sustentabilidade",
         risco: "baixo",
-        effects: { conformidade: +5, financeiro: +3, clientes: +4, reputacao: +4 },
+        effects: { financeiro: +3, clientes: +8, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "O relatório ESG auditado que o banco exige é o mesmo documento que abre contratos com empresas que fazem due diligence de sustentabilidade em fornecedores. O custo da auditoria é justificado não só pela manutenção do limite de crédito — é um investimento com retorno em múltiplos frentes simultâneos."
       },
@@ -959,14 +959,14 @@ const IndustriaRounds = [
         text: "Buscar uma segunda linha de crédito em outro banco que ainda não exige ESG — diversificar o financiamento e reduzir a dependência",
         risco: "medio",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { financeiro: +2, conformidade: -1, clientes: -1, reputacao: -1 },
+        effects: { financeiro: +2, clientes: -2, conformidade: -1 },
         avaliacao: "ruim",
         ensinamento: "Fugir da exigência ESG do banco buscando financiamento em instituição sem critério de sustentabilidade é a decisão que vai custar mais caro em 24 meses. Todos os bancos de médio e grande porte estão convergindo para políticas similares — e a empresa que adiou vai ter que se adequar de qualquer forma, mas agora sem relacionamento com o banco principal."
       },
       {
         text: "Usar a exigência do banco como argumento para o conselho aprovar o orçamento da auditoria ESG e do relatório de sustentabilidade — transformar pressão externa em decisão interna",
         risco: "baixo",
-        effects: { conformidade: +4, financeiro: +4, clientes: +3, processos: +2, reputacao: +3 },
+        effects: { financeiro: +4, clientes: +6, processos: +2, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "A exigência do banco é o argumento mais forte para aprovação de orçamento de sustentabilidade em um conselho resistente. 'O banco vai cortar 30% do capital de giro se não fizermos' é uma tradução financeira da agenda ESG que qualquer conselheiro entende — independentemente de quantos acreditam na causa."
       }
@@ -985,14 +985,14 @@ const IndustriaRounds = [
       {
         text: "Iniciar imediatamente o processo de certificação ISCC — se o concorrente chegou lá, o caminho está mapeado e a empresa não pode ficar sem a mesma credencial",
         risco: "baixo",
-        effects: { conformidade: +5, clientes: +4, reputacao: +5, financeiro: -2 },
+        effects: { financeiro: -2, clientes: +8, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "Certificação ISCC é um diferencial que vai se tornar requisito de mercado em 12 a 24 meses. O concorrente que chegou primeiro abriu o caminho — e entrar no processo agora, com o benchmark já estabelecido, é mais fácil do que ser o primeiro a tentar. O timing é ruim emocionalmente mas bom tecnicamente."
       },
       {
         text: "Comunicar ao Grupo Alimentar Nacional o progresso real da conversão da linha A e o cronograma da linha B — não deixar que o anúncio do concorrente defina a narrativa sobre a empresa",
         risco: "baixo",
-        effects: { clientes: +4, reputacao: +3, conformidade: +2, processos: +2 },
+        effects: { clientes: +7, processos: +2, conformidade: +2 },
         avaliacao: "boa",
         ensinamento: "Comunicação proativa após o anúncio do concorrente é mais eficaz do que silêncio ou reação defensiva. O cliente que recebe uma atualização de progresso da sua empresa no mesmo dia em que leu sobre o concorrente tem um ponto de comparação real — e a empresa que comunica com fatos constrói credibilidade que o release do concorrente não destrói."
       },
@@ -1006,7 +1006,7 @@ const IndustriaRounds = [
       {
         text: "Usar o anúncio do concorrente para urgenciar a aprovação do orçamento de conversão da linha B junto ao conselho — o mercado não vai esperar",
         risco: "baixo",
-        effects: { conformidade: +3, producao: +2, financeiro: -3, clientes: +2 },
+        effects: { financeiro: -3, clientes: +2, processos: +2, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "O anúncio do concorrente é o melhor argumento de urgência para aprovação de investimento em um conselho cauteloso. 'A Embal Sul acaba de certificar 100% — nossos clientes vão comparar' é uma frase que move orçamento de forma que meses de apresentação estratégica não conseguem."
       }
@@ -1025,7 +1025,7 @@ const IndustriaRounds = [
       {
         text: "Aceitar as condições e propor co-construção das metas de carbono com o time técnico do cliente — as metas definidas em conjunto têm mais chance de serem realistas e de serem cumpridas",
         risco: "baixo",
-        effects: { clientes: +6, conformidade: +4, processos: +3, reputacao: +4 },
+        effects: { clientes: +8, processos: +3, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Metas de carbono co-construídas com o cliente são duplamente estratégicas: são mais realistas do que metas impostas unilateralmente, e criam um nível de comprometimento do cliente com o sucesso da empresa que nenhum contrato padrão cria. O cliente que ajudou a definir a meta vai trabalhar junto para que ela seja atingida."
       },
@@ -1066,21 +1066,21 @@ const IndustriaRounds = [
       {
         text: "Opção A: financiamento bancário — total controle do ativo e flexibilidade de alocação de capacidade entre clientes",
         risco: "medio",
-        effects: { producao: +4, conformidade: +3, clientes: +3, financeiro: -4 },
+        effects: { financeiro: -4, clientes: +3, processos: +4, conformidade: +3 },
         avaliacao: "media",
         ensinamento: "Financiamento bancário com 48 meses é a opção de maior custo financeiro mas maior flexibilidade operacional. A pergunta é se a empresa tem capacidade de serviço da dívida sem comprometer investimentos em segurança e manutenção que também estão na agenda. Crescimento financiado por dívida em ambiente de câmbio volátil exige margem de segurança no fluxo de caixa."
       },
       {
         text: "Opção B: leasing — preservar caixa e transformar custo de capital em custo operacional previsível",
         risco: "baixo",
-        effects: { producao: +4, conformidade: +3, financeiro: -2, clientes: +3 },
+        effects: { financeiro: -2, clientes: +3, processos: +4, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Leasing industrial com opção de compra é o modelo que melhor preserva caixa para investimentos operacionais simultâneos. A previsibilidade do custo mensal facilita o planejamento — e a opção de compra ao final garante que o ativo pode virar patrimônio quando a situação financeira estiver mais confortável."
       },
       {
         text: "Opção C: co-investimento com o cliente — capital externo sem dívida bancária e cliente garantido para 40% da capacidade",
         risco: "baixo",
-        effects: { producao: +5, conformidade: +4, clientes: +5, financeiro: +2 },
+        effects: { financeiro: +2, clientes: +5, processos: +5, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Co-investimento do cliente principal na infraestrutura do fornecedor é um modelo de parceria estratégica que alinha incentivos de forma poderosa: o cliente que investiu quer que a linha funcione bem, que a qualidade seja excelente e que o fornecedor sobreviva. É capital sem dívida e com um cliente âncora garantido por 3 anos."
       },
@@ -1088,7 +1088,7 @@ const IndustriaRounds = [
         text: "Adiar a conversão da linha B por 6 meses — estabilizar a operação da linha A e o fluxo de caixa antes de um segundo investimento de grande escala",
         risco: "medio",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { financeiro: +2, clientes: -3, conformidade: -2, producao: -1 },
+        effects: { financeiro: +2, clientes: -3, processos: -1, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Seis meses de adiamento no contexto de dois clientes aguardando solução ESG e um concorrente que já certificou 100% das linhas é um risco de perda de contrato real. O tempo que parece de estabilização financeira é o mesmo tempo em que a Higiene Brasil vai para a Embal Sul."
       }
@@ -1107,28 +1107,28 @@ const IndustriaRounds = [
       {
         text: "Opção A: energia solar — o único caminho de redução real que vai resistir a auditorias mais rigorosas no futuro",
         risco: "medio",
-        effects: { conformidade: +5, reputacao: +5, financeiro: -4, producao: +2, clientes: +4 },
+        effects: { financeiro: -4, clientes: +8, processos: +2, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "Energia solar é a única opção que reduz emissão na fonte — não apenas na contabilidade. À medida que metodologias de carbono evoluem, créditos de compensação estão sendo questionados por grandes clientes e reguladores. A empresa que fez a redução real tem uma posição defensável que a que comprou crédito não tem."
       },
       {
         text: "Opção B: créditos de carbono — a solução mais rápida para cumprir a cláusula de performance ESG do contrato",
         risco: "alto",
-        effects: { conformidade: +2, financeiro: -2, reputacao: -2, clientes: +1 },
+        effects: { financeiro: -2, clientes: -1, conformidade: +2 },
         avaliacao: "ruim",
         ensinamento: "Créditos de carbono como estratégia principal de descarbonização estão sendo progressivamente rejeitados por clientes com metas ESG sérias. Empresas que usam compensação em vez de redução real são frequentemente criticadas por 'greenwashing' — e clientes como o Grupo Alimentar, que co-investiu na linha B, vão exigir redução real antes do próximo ciclo de contrato."
       },
       {
         text: "Opção C: energia renovável certificada — redução real de emissão a custo acessível, sem comprometer caixa para outras prioridades",
         risco: "baixo",
-        effects: { conformidade: +4, reputacao: +3, financeiro: -1, clientes: +3, producao: +1 },
+        effects: { financeiro: -1, clientes: +6, processos: +1, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Contrato de energia renovável certificada com a concessionária é a opção de melhor custo-benefício imediato: redução real de emissão por R$120k/ano, contra R$380k em créditos sem redução real. Não tem o impacto de longo prazo da solar — mas pode ser a solução do curto prazo enquanto o planejamento de solar é estruturado."
       },
       {
         text: "Combinar C agora e planejar A para o próximo ciclo de investimento — solução imediata com roadmap de longo prazo",
         risco: "baixo",
-        effects: { conformidade: +5, reputacao: +4, financeiro: -2, clientes: +4, producao: +2 },
+        effects: { financeiro: -2, clientes: +8, processos: +2, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "Estratégia de curto prazo com energia renovável certificada + roadmap de solar é o posicionamento mais crível para clientes com agenda ESG de longo prazo. Demonstra compromisso real (redução agora) e visão estrutural (investimento em solar planejado) — sem comprometer o caixa que ainda está sendo usado na conversão da linha B."
       }
@@ -1147,7 +1147,7 @@ const IndustriaRounds = [
       {
         text: "Aceitar a oportunidade de exportação e expandir a capacidade da linha A em 15% — o investimento em expansão é justificado pela margem europeia",
         risco: "medio",
-        effects: { financeiro: +5, clientes: +3, conformidade: +4, reputacao: +5, producao: +3 },
+        effects: { financeiro: +5, clientes: +8, processos: +3, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Expansão de capacidade em 15% para absorver exportação com margem 35% maior é um investimento com ROI claro. O mercado europeu de embalagens sustentáveis está crescendo e o diferencial de margem tende a aumentar com as novas regulamentações de embalagem da UE. Entrar agora com capacidade adicional é construir posição antes que o mercado fique mais competitivo."
       },
@@ -1155,21 +1155,21 @@ const IndustriaRounds = [
         text: "Aceitar a exportação realocando 15% da capacidade atual — a margem europeia compensa a redução de volume doméstico",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { financeiro: +3, clientes: -3, conformidade: +3, producao: -1 },
+        effects: { financeiro: +3, clientes: -3, processos: -1, conformidade: +3 },
         avaliacao: "ruim",
         ensinamento: "Realocar 15% da capacidade doméstica para exportação sem reposição vai apertar o atendimento a clientes como Grupo Alimentar e Higiene Brasil — que acabaram de ser reconquistados com esforço considerável. Perder espaço com cliente nacional por ganho de margem internacional é trocar relacionamento construído por receita nova, sem garantia de continuidade."
       },
       {
         text: "Completar primeiro a certificação ISCC e fazer um piloto de exportação com volume pequeno — validar o processo antes de comprometer capacidade",
         risco: "baixo",
-        effects: { conformidade: +4, financeiro: +2, clientes: +2, producao: +1 },
+        effects: { financeiro: +2, clientes: +2, processos: +1, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Piloto de exportação com volume controlado é a forma inteligente de entrar em um mercado novo sem comprometer a operação que está sendo construída. A certificação ISCC em andamento abre a porta — e o piloto com o distribuidor europeu permite aprender as exigências específicas do mercado sem os riscos de um contrato em escala."
       },
       {
         text: "Recusar a exportação por ora — a empresa ainda está estabilizando a operação ESG doméstica e não tem capacidade gerencial para dois mercados simultâneos",
         risco: "medio",
-        effects: { producao: +2, conformidade: +2, clientes: +1, financeiro: -1, reputacao: -2 },
+        effects: { financeiro: -1, clientes: -1, processos: +2, conformidade: +2 },
         avaliacao: "media",
         ensinamento: "Recusar uma oportunidade de exportação com margem 35% maior por limitação gerencial é uma decisão honesta sobre capacidade — mas tem custo de oportunidade real. O distribuidor europeu que foi ao Brasil para fechar o negócio vai para um concorrente que está na mesma posição ESG mas diz sim. E oportunidades de exportação não costumam voltar com as mesmas condições."
       }
@@ -1188,28 +1188,28 @@ const IndustriaRounds = [
       {
         text: "Implementar reajuste de preço justificado pelo custo adicional do insumo reciclado — o cliente que exigiu ESG deve pagar pelo ESG",
         risco: "medio",
-        effects: { financeiro: +5, clientes: +2, conformidade: +2, reputacao: +3 },
+        effects: { financeiro: +5, clientes: +5, conformidade: +2 },
         avaliacao: "boa",
         ensinamento: "Reajuste de preço por custo de insumo reciclado é defensável — especialmente para clientes que explicitamente exigiram a adequação. A negociação transparente de preço com dados de custo abertos é mais respeitada do que a margem comprimida silenciosa. O cliente que exigiu ESG sem pagar pela embalagem ESG tem responsabilidade compartilhada com a decisão de converter."
       },
       {
         text: "Absorver o custo adicional e usar a certificação ISCC como argumento para conquistar novos clientes com maior margem — crescimento compensa a compressão",
         risco: "medio",
-        effects: { clientes: +4, conformidade: +3, reputacao: +4, financeiro: -1 },
+        effects: { financeiro: -1, clientes: +8, conformidade: +3 },
         avaliacao: "media",
         ensinamento: "Absorver o custo de conversão para ganhar novos clientes é uma aposta de crescimento — que funciona se os novos clientes chegarem rápido o suficiente para compensar a margem comprimida. O risco é que a conquista de novos clientes leva de 6 a 12 meses enquanto a margem está sendo consumida desde já."
       },
       {
         text: "Criar dois SKUs: embalagem padrão (preço atual) e embalagem ESG certificada (preço com prêmio) — deixar o cliente escolher e precificar o valor da sustentabilidade",
         risco: "baixo",
-        effects: { financeiro: +4, clientes: +4, conformidade: +4, reputacao: +4, processos: +2 },
+        effects: { financeiro: +4, clientes: +8, processos: +2, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Dupla precificação com SKU ESG diferenciado é uma estratégia elegante que deixa o mercado revelar o valor que atribui à sustentabilidade. Clientes que exigem ESG por regulação vão ao SKU ESG. Clientes que não têm exigência formal mas querem se posicionar também. E a empresa recupera a margem sem impor o custo a quem não precisa do diferencial."
       },
       {
         text: "Buscar redução de custo na operação para compensar o aumento do insumo reciclado — a empresa não pode repassar indefinidamente custos de adequação ao cliente",
         risco: "baixo",
-        effects: { financeiro: +3, processos: +4, producao: +2, qualidade: +2, conformidade: +1 },
+        effects: { financeiro: +3, processos: +6, qualidade: +2, conformidade: +1 },
         avaliacao: "boa",
         ensinamento: "Eficiência operacional para absorver custo de insumo mais caro é uma estratégia legítima — mas tem limite. O custo adicional de R$0,043 por embalagem representa uma decisão permanente de operação com insumo mais caro. Reduzir rejeição, aumentar produtividade e eliminar desperdício podem compensar parte — mas dificilmente compensam o total sem algum reajuste de preço."
       }
@@ -1227,26 +1227,26 @@ const IndustriaRounds = [
     choices: [
       {
         text: "Liderança em embalagem circular: fechar o ciclo com coleta e reprocessamento do próprio resíduo pós-consumo — criar o insumo reciclado que a empresa usa",
-        effects: { conformidade: +6, reputacao: +6, clientes: +5, financeiro: +3, processos: +4 },
+        effects: { financeiro: +3, clientes: +8, processos: +4, conformidade: +6 },
         avaliacao: "boa",
         ensinamento: "Economia circular fechada — onde a empresa coleta, reprocessa e usa o próprio resíduo pós-consumo — é o modelo que vai diferenciar fornecedores no longo prazo. Eliminar a dependência de fornecedores de resina reciclada (com toda a variabilidade que já foi vivida) e controlar a cadeia do insumo é uma vantagem estrutural que poucos players de médio porte conseguem construir."
       },
       {
         text: "Expansão para embalagens biodegradáveis: complementar o portfólio reciclado com materiais que se degradam em compostagagem industrial",
-        effects: { reputacao: +5, clientes: +4, conformidade: +4, financeiro: +3, producao: +2 },
+        effects: { financeiro: +3, clientes: +8, processos: +2, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Embalagens biodegradáveis para uso em alimentação e saúde são o próximo segmento de crescimento acelerado em embalagens sustentáveis. Empresas que chegaram primeiro no reciclado têm vantagem de processo e de relacionamento com clientes para liderar também nessa próxima onda — especialmente com clientes que já investiram no relacionamento ESG."
       },
       {
         text: "Plataforma de rastreabilidade de embalagem: tecnologia de QR code e blockchain para rastrear a cadeia completa da embalagem — do insumo reciclado ao descarte pelo consumidor final",
-        effects: { conformidade: +5, reputacao: +5, clientes: +4, processos: +5, financeiro: +3 },
+        effects: { financeiro: +3, clientes: +8, processos: +5, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "Rastreabilidade blockchain de embalagem é o próximo requisito de grandes varejistas e fabricantes de alimentos que precisam provar a cadeia ESG ao consumidor final. A empresa que oferece QR code com histórico verificável do insumo reciclado ao destino final da embalagem entrega um diferencial que o marketing de sustentabilidade do cliente não consegue replicar com outro fornecedor."
       },
       {
         text: "Crescimento por aquisição: comprar um concorrente menor que não conseguiu fazer a conversão ESG — ganhar market share e capacidade ao mesmo tempo",
         requisitos: { indicadorMinimo: { financeiro: 12, conformidade: 11 } },
-        effects: { producao: +4, clientes: +3, financeiro: -3, rh: -3, processos: -3, qualidade: -2 },
+        effects: { financeiro: -3, rh: -3, clientes: +3, processos: +1, qualidade: -2 },
         avaliacao: "media",
         ensinamento: "Aquisição de concorrente em dificuldade ESG pode ser uma oportunidade de mercado — mas integrar uma planta sem maturidade de conformidade enquanto a própria empresa ainda está consolidando a conversão é multiplicar os desafios sem multiplicar a capacidade de gestão. Crescimento por aquisição funciona quando a empresa compradora tem excesso de capacidade de gestão — não quando está usando toda ela."
       }
@@ -1276,21 +1276,21 @@ const IndustriaRounds = [
       {
         text: "Contratar um consultor ambiental sênior em regime de urgência para assumir a gestão de conformidade imediatamente — não há decisão de retomada possível sem expertise técnica",
         risco: "baixo",
-        effects: { conformidade: +5, producao: +3, processos: +3, financeiro: -2 },
+        effects: { financeiro: -2, processos: +6, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "A contratação emergencial de expertise ambiental técnica é o pré-requisito para qualquer outra decisão. Sem saber o que é permitido e o que está sob interdição, qualquer retomada de produção é um segundo risco de autuação. O consultor sênior que conhece o IBAMA e a legislação aplicável ao setor químico resolve em dias o que levaria semanas de aprendizado interno."
       },
       {
         text: "Convocar toda a liderança para mapear o que a empresa sabe sobre o processo de descarte antes de contratar alguém de fora",
         risco: "alto",
-        effects: { processos: +1, producao: -2, conformidade: -2, financeiro: -1 },
+        effects: { financeiro: -1, processos: -1, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Mapeamento interno de processo de descarte em empresa que acabou de ser autuada por descarte irregular é como pedir ao paciente que diagnostique a própria doença. O conhecimento fragmentado que a equipe tem não substitui expertise regulatória — e o tempo de levantamento interno atrasa a retomada sem adicionar segurança."
       },
       {
         text: "Entrar em contato com o IBAMA imediatamente para entender o escopo exato da autuação e o que é necessário para retomar a operação plena",
         risco: "baixo",
-        effects: { conformidade: +4, producao: +2, reputacao: +3, processos: +2 },
+        effects: { clientes: +3, processos: +4, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Contato proativo com o IBAMA logo após a autuação é a postura que mais diferencia empresas que regularizam rapidamente das que ficam meses em limbo. O fiscal que recebe uma ligação do novo gestor pedindo entender o caminho de retomada tem um interlocutor diferente do fiscal que precisa cobrar. Isso acelera o processo e muda o tom da relação."
       },
@@ -1298,7 +1298,7 @@ const IndustriaRounds = [
         text: "Priorizar a retomada da produção das linhas que não estão relacionadas ao descarte autuado — recuperar receita enquanto o problema ambiental é resolvido",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { producao: +2, conformidade: -3, financeiro: +1, reputacao: -3 },
+        effects: { financeiro: +1, clientes: -3, processos: +2, conformidade: -3 },
         avaliacao: "ruim",
         ensinamento: "Retomar produção sem mapear o que exatamente está sob interdição é correr o risco de uma segunda autuação que pode elevar a multa e, pior, resultar em embargo total. O IBAMA monitora empresas autuadas com atenção redobrada nas semanas seguintes — qualquer irregularidade adicional muda completamente o perfil do processo."
       }
@@ -1317,7 +1317,7 @@ const IndustriaRounds = [
       {
         text: "Comunicar voluntariamente ao IBAMA o diagnóstico completo e propor um Termo de Ajuste de Conduta (TAC) com cronograma de restauração — transparência total como estratégia de regularização",
         risco: "baixo",
-        effects: { conformidade: +6, reputacao: +4, financeiro: -2, clientes: +2 },
+        effects: { financeiro: -2, clientes: +6, conformidade: +6 },
         avaliacao: "boa",
         ensinamento: "TAC com o IBAMA é o instrumento que transforma uma relação adversarial em um processo de regularização monitorado. Empresas que propõem o TAC voluntariamente — com diagnóstico completo e cronograma realista — frequentemente conseguem redução da multa original e suspensão das restrições operacionais enquanto cumprem o cronograma. É a estratégia com melhor custo-benefício disponível."
       },
@@ -1325,21 +1325,21 @@ const IndustriaRounds = [
         text: "Contratar advogado ambiental para avaliar se a prática de 18 meses pode ser contestada — talvez o IBAMA não consiga provar a sistemática",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { conformidade: -3, reputacao: -4, financeiro: -2, clientes: -3 },
+        effects: { financeiro: -2, clientes: -7, conformidade: -3 },
         avaliacao: "ruim",
         ensinamento: "Contestar uma prática documentada de 18 meses em vez de propor regularização é a estratégia que transforma um processo administrativo em um processo criminal. O IBAMA tem poder de lavrar autuação penal — que responsabiliza gestores pessoalmente — e a empresa que tenta contestar o óbvio enquanto a área de proteção continua afetada é a candidata natural a esse escalonamento."
       },
       {
         text: "Propor um cronograma de restauração mais agressivo — 8 meses em vez de 18 — para demonstrar comprometimento e negociar redução da multa",
         risco: "medio",
-        effects: { conformidade: +4, reputacao: +3, financeiro: +1, processos: -1 },
+        effects: { financeiro: +1, clientes: +3, processos: -1, conformidade: +4 },
         avaliacao: "media",
         ensinamento: "Proposta de cronograma mais agressivo demonstra urgência — mas prometer restauração em 8 meses quando o consultor avalia 12 a 18 é criar um novo risco de descumprimento. IBAMA que vê empresa prometer 8 meses e entregar 14 tem uma percepção muito pior do que se a empresa tivesse prometido 16 e entregado 14."
       },
       {
         text: "Comunicar aos dois clientes que sinalizaram revisão de contrato o diagnóstico e o plano de regularização antes que eles descubram por outro canal",
         risco: "baixo",
-        effects: { clientes: +4, reputacao: +4, conformidade: +2, processos: +2 },
+        effects: { clientes: +8, processos: +2, conformidade: +2 },
         avaliacao: "boa",
         ensinamento: "Clientes que dependem de fornecedor químico em contexto de autuação ambiental têm próprio risco de reputação — eles precisam saber o que está acontecendo com o fornecedor antes que apareça na imprensa. A empresa que conta antes de ser cobrada coloca os clientes na posição de aliados no processo de regularização, não de fiscais."
       }
@@ -1358,14 +1358,14 @@ const IndustriaRounds = [
       {
         text: "Publicar uma nota oficial imediatamente: reconhecer o problema, comunicar as ações já iniciadas e anunciar o compromisso de restauração — com prazo e evidência",
         risco: "baixo",
-        effects: { reputacao: +4, clientes: +3, conformidade: +2, rh: +2 },
+        effects: { rh: +2, clientes: +7, conformidade: +2 },
         avaliacao: "boa",
         ensinamento: "A nota que reconhece o problema e anuncia ações concretas já em andamento é o único tipo de comunicação que interrompe a escalada de uma crise de reputação. Silêncio após publicação em imprensa regional com 340 compartilhamentos vai dobrar os compartilhamentos em 24 horas. A nota que chega antes do segundo dia de cobertura define a narrativa."
       },
       {
         text: "Contratar uma agência de relações públicas de crise — a empresa não tem capacidade de gestão de mídia e precisa de especialistas",
         risco: "medio",
-        effects: { reputacao: +3, financeiro: -2, clientes: +2, conformidade: +1 },
+        effects: { financeiro: -2, clientes: +5, conformidade: +1 },
         avaliacao: "boa",
         ensinamento: "Agência de RP de crise tem valor real — mas o gap entre contratar a agência e ela produzir a primeira nota é de horas que a cobertura vai usar para escalar. A decisão correta é emitir uma nota própria imediatamente — simples, honesta e com prazo — e usar a agência para a estratégia de médio prazo, não para o primeiro dia."
       },
@@ -1373,14 +1373,14 @@ const IndustriaRounds = [
         text: "Não responder à imprensa — qualquer declaração pode ser usada contra a empresa no processo do IBAMA",
         risco: "alto",
         gestorEffects: { reputacaoInterna: -2 },
-        effects: { reputacao: -5, clientes: -4, rh: -3, conformidade: -2 },
+        effects: { rh: -3, clientes: -8, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Silêncio de empresa em crise ambiental com cobertura de imprensa ativa é interpretado como confirmação de culpa. O argumento jurídico de 'não declarar para não prejudicar o processo' é correto para o processo do IBAMA — mas há uma diferença entre não fazer declaração jurídica e não ter nenhuma comunicação pública. A nota que reconhece e anuncia ação não precisa ser uma confissão legal."
       },
       {
         text: "Pedir ao IBAMA que faça uma declaração conjunta com a empresa sobre o plano de regularização — usar a autoridade do órgão para gerenciar a narrativa",
         risco: "medio",
-        effects: { reputacao: +3, conformidade: +3, clientes: +2, processos: +2 },
+        effects: { clientes: +5, processos: +2, conformidade: +3 },
         avaliacao: "media",
         ensinamento: "Declaração conjunta com o IBAMA é uma estratégia criativa que funciona quando o órgão já está em modo de regularização colaborativa — ou seja, quando a empresa já propôs o TAC. Pedir isso antes de ter estabelecido a postura de cooperação é improvável que o IBAMA aceite — e pode ser interpretado como tentativa de usar o órgão como escudo."
       }
@@ -1399,7 +1399,7 @@ const IndustriaRounds = [
       {
         text: "Fazer uma assembleia com todos os funcionários: apresentar o diagnóstico honesto, o plano de regularização com o IBAMA e o comprometimento da empresa com a restauração — sem minimizar nem catastrofizar",
         risco: "baixo",
-        effects: { rh: +6, reputacao: +3, processos: +3, conformidade: +2 },
+        effects: { rh: +6, clientes: +3, processos: +3, conformidade: +2 },
         avaliacao: "boa",
         ensinamento: "Trabalhadores de empresa em crise ambiental pública têm duas necessidades básicas: entender o que aconteceu de verdade e saber que a empresa vai continuar. A assembleia que entrega ambas — com honestidade sobre o erro e clareza sobre o plano — é o que transforma funcionários prestes a sair em pessoas que decidem ficar e contribuir para a virada."
       },
@@ -1421,7 +1421,7 @@ const IndustriaRounds = [
         text: "Demitir o gerente de produção que supervisionava os processos de descarte irregulares — demonstrar que há responsabilização interna",
         risco: "alto",
         gestorEffects: { reputacaoInterna: -3 },
-        effects: { rh: -4, processos: -3, conformidade: -1, producao: -2 },
+        effects: { rh: -4, processos: -5, conformidade: -1 },
         avaliacao: "ruim",
         ensinamento: "Demitir o gerente de produção como gesto de responsabilização pública quando o problema era sistêmico cria um precedente de bode expiatório que destrói a segurança psicológica da liderança inteira. O time de gestão que vê um colega ser demitido por um problema que todos conheciam e ninguém reportou vai se fechar — exatamente o oposto do que a empresa precisa para reconstruir sua cultura."
       }
@@ -1440,28 +1440,28 @@ const IndustriaRounds = [
       {
         text: "Apresentar o diagnóstico completo, o TAC em negociação com o IBAMA, o plano de retomada da produção plena e o cronograma de restauração — dados reais, sem eufemismo nem catastrophismo",
         risco: "baixo",
-        effects: { clientes: +5, reputacao: +4, conformidade: +3, processos: +2 },
+        effects: { clientes: +8, processos: +2, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Clientes B2B em reunião formal de avaliação de risco de fornecedor querem dados, não emoção. A empresa que chega com o TAC em negociação, o cronograma de restauração e o plano de retomada documentado demonstra que tem controle do processo — e controle é exatamente o que o cliente precisa ver para não substituir o fornecedor."
       },
       {
         text: "Trazer o consultor ambiental para a reunião como testemunha técnica — a credibilidade do especialista pode compensar a vulnerabilidade da empresa",
         risco: "baixo",
-        effects: { clientes: +4, conformidade: +3, reputacao: +3, processos: +2 },
+        effects: { clientes: +7, processos: +2, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "A presença do consultor ambiental sênior na reunião com clientes transforma o perfil da empresa: de empresa que causou o problema para empresa que contratou a melhor expertise disponível para resolvê-lo. O cliente que vê quem está gerenciando a crise fica mais tranquilo do que o cliente que só ouve o gestor descrever o que o consultor disse."
       },
       {
         text: "Oferecer desconto de 8% nos contratos durante o período de regularização — manter os clientes com incentivo financeiro",
         risco: "medio",
-        effects: { clientes: +2, financeiro: -3, conformidade: -1, reputacao: -1 },
+        effects: { financeiro: -3, clientes: +1, conformidade: -1 },
         avaliacao: "media",
         ensinamento: "Desconto em crise de reputação é lido como admissão de que a empresa tem algo a compensar — o que pode aumentar a percepção de risco em vez de reduzir. Clientes que ficam pelo desconto são clientes que estão dispostos a substituir o fornecedor assim que encontrarem preço equivalente em empresa sem o histórico de autuação."
       },
       {
         text: "Propor visita dos clientes à planta para ver o processo de regularização em andamento — transparência radical como argumento de retenção",
         risco: "baixo",
-        effects: { clientes: +6, reputacao: +5, conformidade: +3, processos: +2 },
+        effects: { clientes: +8, processos: +2, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Visita à planta durante processo de regularização é a transparência mais convincente possível: o cliente que vê os tambores de resíduo devidamente acondicionados, o consultor ambiental presente e os processos em revisão percebe uma empresa que está enfrentando o problema de frente. É muito mais poderoso do que qualquer apresentação de slides."
       }
@@ -1480,21 +1480,21 @@ const IndustriaRounds = [
       {
         text: "Comunicar imediatamente todos os clientes impactados com o novo cronograma e a justificativa — e identificar quais dos quatro contratos com penalidade têm mais risco",
         risco: "baixo",
-        effects: { clientes: +4, conformidade: +3, processos: +3, reputacao: +2 },
+        effects: { clientes: +6, processos: +3, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Comunicação antecipada de atraso em contexto de embargo regulatório tem tratamento diferente do atraso por falha operacional. A maioria dos contratos tem cláusula de força maior que cobre interdição por órgão regulador — mas essa proteção só vale se a empresa comunicar antes do atraso acontecer, não depois."
       },
       {
         text: "Realocar a capacidade dos 62% restantes para priorizar os contratos com penalidade de atraso — minimizar o risco financeiro imediato",
         risco: "medio",
-        effects: { financeiro: +3, clientes: +3, producao: +2, processos: +2 },
+        effects: { financeiro: +3, clientes: +3, processos: +4 },
         avaliacao: "boa",
         ensinamento: "Priorização de capacidade por risco contratual é a resposta operacional correta a uma redução forçada de capacidade. Os contratos com penalidade precisam ser atendidos primeiro — e os clientes que ficam em segundo plano precisam ser comunicados com antecedência. A decisão de prioridade precisa ser transparente, não silenciosa."
       },
       {
         text: "Subcontratar os três processos embargados para uma empresa química parceira durante o período do TAC — manter a entrega sem comprometer o embargo",
         risco: "medio",
-        effects: { clientes: +3, producao: +2, financeiro: -3, conformidade: +1 },
+        effects: { financeiro: -3, clientes: +3, processos: +2, conformidade: +1 },
         avaliacao: "media",
         ensinamento: "Subcontratação de processos embargados é tecnicamente possível — mas precisa ser comunicada ao IBAMA para que não seja interpretada como tentativa de contornar o embargo. A empresa que subcontrata sem informar o órgão pode ter o embargo transformado em embargo total. Transparência com o IBAMA é o padrão em TAC, não a exceção."
       },
@@ -1502,7 +1502,7 @@ const IndustriaRounds = [
         text: "Reavaliar o portfólio de produtos e descontinuar os menos rentáveis produzidos pelos processos embargados — usar a crise para simplificar o mix",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { financeiro: +2, clientes: -3, producao: -2, rh: -2 },
+        effects: { financeiro: +2, rh: -2, clientes: -3, processos: -2 },
         avaliacao: "ruim",
         ensinamento: "Descontinuar produtos em resposta a embargo, sem consultar os clientes que dependem desses produtos, é adicionar uma crise comercial a uma crise regulatória. O cliente que comprava o produto descontinuado vai para o concorrente — e quando o embargo terminar, o processo de reconquistar esse cliente vai custar muito mais do que manter o produto no portfólio durante a crise."
       }
@@ -1521,7 +1521,7 @@ const IndustriaRounds = [
       {
         text: "Aceitar o laudo independente e contratar a empresa de auditoria antes mesmo de ser exigido formalmente — proatividade como demonstração de seriedade com a saúde dos trabalhadores",
         risco: "baixo",
-        effects: { seguranca: +5, rh: +5, conformidade: +4, reputacao: +3 },
+        effects: { rh: +5, clientes: +3, seguranca: +5, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Aceitar laudo independente antes de ser obrigado é o gesto que mais rapidamente restaura a confiança do sindicato e dos trabalhadores. O laudo que revela irregularidades adicionais é difícil de receber — mas é sempre melhor descobrir agora, com a empresa no controle do processo, do que em uma segunda fiscalização do IBAMA ou do MTE."
       },
@@ -1529,7 +1529,7 @@ const IndustriaRounds = [
         text: "Negociar o escopo do laudo com o sindicato: restringir ao setores que usavam os processos de descarte embargados — limitar o alcance para controlar o risco de novas descobertas",
         risco: "alto",
         gestorEffects: { reputacaoInterna: -2 },
-        effects: { rh: -3, seguranca: -2, conformidade: -2, reputacao: -3 },
+        effects: { rh: -3, clientes: -3, seguranca: -2, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Tentar restringir o escopo do laudo independente em um contexto onde os trabalhadores já desconfiam da gestão ambiental vai ser interpretado como tentativa de esconder algo. O sindicato que aceitar um laudo restrito vai usar exatamente essa restrição como argumento em qualquer negociação futura. O custo de aceitar o laudo amplo é menor do que o custo de parecer que está escondendo."
       },
@@ -1543,7 +1543,7 @@ const IndustriaRounds = [
       {
         text: "Antecipar o laudo de saúde ocupacional como iniciativa própria da empresa — realizando os exames antes mesmo da reunião formal com o sindicato",
         risco: "baixo",
-        effects: { seguranca: +5, rh: +5, reputacao: +4, conformidade: +3 },
+        effects: { rh: +5, clientes: +4, seguranca: +5, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Antecipar os exames ocupacionais como iniciativa da empresa — antes de ser exigido pelo sindicato — é a resposta de uma gestão que coloca a saúde dos trabalhadores à frente da gestão de risco institucional. E o sindicato que chega à reunião formal e descobre que a empresa já iniciou o processo tem uma posição completamente diferente."
       }
@@ -1562,28 +1562,28 @@ const IndustriaRounds = [
       {
         text: "Apresentar aos clientes os dados de custo abertamente e propor reajuste graduado de 15% em 60 dias — transparência sobre a margem como base da negociação",
         risco: "medio",
-        effects: { financeiro: +4, clientes: +2, reputacao: +2, processos: +1 },
+        effects: { financeiro: +4, clientes: +4, processos: +1 },
         avaliacao: "boa",
         ensinamento: "Reajuste transparente baseado em dados reais de custo cambial é a única negociação defensável com clientes B2B sofisticados. A empresa que abre os números do impacto cambial transforma uma conversa de preço em uma conversa de parceria — e o cliente que entende o custo tem mais disposição para negociar do que o que recebe uma carta de reajuste sem contexto."
       },
       {
         text: "Buscar fornecedores de insumos nacionais como substitutos — reduzir a exposição cambial em vez de repassar ao cliente",
         risco: "medio",
-        effects: { financeiro: +2, processos: +3, producao: +1, qualidade: -2 },
+        effects: { financeiro: +2, processos: +4, qualidade: -2 },
         avaliacao: "media",
         ensinamento: "Substituição de insumos importados por nacionais é estratégia de longo prazo válida — mas a qualidade técnica dos solventes nacionais pode ser diferente dos importados, impactando as formulações dos produtos finais. Em indústria química de especialidades, qualidade de insumo é parte do produto — e o cliente que compra pela especificação vai perceber a mudança."
       },
       {
         text: "Absorver o impacto cambial por 60 dias e usar o período para fechar novos contratos que compensem a margem — crescimento de receita como solução",
         risco: "alto",
-        effects: { financeiro: -5, clientes: +2, producao: -1, rh: -1 },
+        effects: { financeiro: -5, rh: -1, clientes: +2, processos: -1 },
         avaliacao: "ruim",
         ensinamento: "Absorver 31% de aumento de insumo com 62% de capacidade por 60 dias enquanto tenta fechar novos contratos é consumir reserva financeira que a empresa não tem em um cenário já pressionado pela multa do IBAMA. Crescimento de receita em momento de crise regulatória e câmbio alto é uma aposta de baixíssima probabilidade."
       },
       {
         text: "Revisitar o mix de produtos e descontinuar os de menor margem — focar nos produtos de maior valor onde o impacto do câmbio é proporcionalmente menor",
         risco: "baixo",
-        effects: { financeiro: +3, producao: -1, clientes: -1, processos: +3, qualidade: +2 },
+        effects: { financeiro: +3, clientes: -1, processos: +2, qualidade: +2 },
         avaliacao: "boa",
         ensinamento: "Foco em produtos de maior margem como resposta a pressão cambial é uma estratégia de mix que melhora o resultado sem precisar de reajuste imediato. A descontinuação dos produtos menos rentáveis, quando comunicada com antecedência e com indicação de alternativas, tem custo de relacionamento menor do que um reajuste generalizado."
       }
@@ -1602,7 +1602,7 @@ const IndustriaRounds = [
       {
         text: "Aceitar as condições integralmente: reconhecer formalmente o episódio e criar o poder de veto ambiental — a empresa precisa dele e ele está certo",
         risco: "baixo",
-        effects: { conformidade: +6, rh: +5, reputacao: +4, processos: +4 },
+        effects: { rh: +5, clientes: +4, processos: +4, conformidade: +6 },
         avaliacao: "boa",
         ensinamento: "Aceitar as condições de quem alertou e foi ignorado é o ato de governança mais importante disponível: cria o mecanismo que teria evitado a autuação e traz de volta a pessoa com mais conhecimento do processo de regularização. O poder de veto ambiental que ele pede é exatamente o que faltou nos 11 meses em que o alerta foi ignorado."
       },
@@ -1617,7 +1617,7 @@ const IndustriaRounds = [
         text: "Aceitar o retorno sem as condições — ele está pedindo mudanças de governança que precisam de aprovação do conselho e não podem ser decididas agora",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { rh: -2, conformidade: -2, reputacao: -2 },
+        effects: { rh: -2, clientes: -2, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Trazer de volta quem alertou sem reconhecer que o alerta foi correto e sem mudar o sistema que o ignorou é um gesto vazio. Ele vai perceber imediatamente que a estrutura não mudou — e a saída seguinte vai ser mais definitiva e mais pública. A governança que ele pede é exatamente o que o IBAMA vai exigir no TAC de qualquer forma."
       },
@@ -1625,7 +1625,7 @@ const IndustriaRounds = [
         text: "Usar os e-mails que ele tem como base para um processo interno de responsabilização da diretoria anterior — a empresa precisa mostrar que lida com omissão gerencial",
         risco: "alto",
         gestorEffects: { capitalPolitico: -3, esgotamento: +2 },
-        effects: { rh: -4, reputacao: -2, conformidade: -1, processos: -2 },
+        effects: { rh: -4, clientes: -2, processos: -2, conformidade: -1 },
         avaliacao: "ruim",
         ensinamento: "Processo interno de responsabilização da diretoria anterior em momento de crise externa vai consumir energia gerencial que a empresa não tem disponível, criar conflito institucional e possivelmente escalar para o domínio público — com os e-mails que ele tem podendo virar matéria de imprensa antes de virar processo interno. A responsabilização vem depois da regularização, não durante."
       }
@@ -1644,14 +1644,14 @@ const IndustriaRounds = [
       {
         text: "Anunciar a criação de um Comitê de Conformidade Ambiental com reunião mensal, relatório público trimestral e o responsável ambiental retornado como presidente com poder de veto — tornar a mudança de governança pública e verificável",
         risco: "baixo",
-        effects: { conformidade: +6, reputacao: +5, clientes: +5, rh: +4 },
+        effects: { rh: +4, clientes: +8, conformidade: +6 },
         avaliacao: "boa",
         ensinamento: "A assinatura do TAC é o fim do começo — não o fim. O anúncio de uma estrutura de governança ambiental verificável e pública é o que transforma uma crise em uma mudança real. Clientes, reguladores e imprensa observam o que acontece depois da regularização para decidir se a empresa mudou de verdade."
       },
       {
         text: "Comunicar ao mercado o TAC assinado e o cronograma de retomada — o trabalho de relações externas é prioridade agora",
         risco: "medio",
-        effects: { reputacao: +3, clientes: +4, conformidade: +2, processos: +1 },
+        effects: { clientes: +7, processos: +1, conformidade: +2 },
         avaliacao: "media",
         ensinamento: "Comunicação do TAC é necessária — mas sem anúncio de mudança estrutural interna, o mercado vai interpretar como o fim de um capítulo difícil, não como o início de uma empresa diferente. A notícia do TAC sem a notícia da governança nova não constrói a confiança de longo prazo que os clientes e o regulador precisam ver."
       },
@@ -1659,14 +1659,14 @@ const IndustriaRounds = [
         text: "Focar internamente nos 3 meses de retomada gradual — a comunicação externa vem depois, quando a operação plena estiver reestabelecida",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { producao: +2, conformidade: +2, clientes: -2, reputacao: -2 },
+        effects: { clientes: -4, processos: +2, conformidade: +2 },
         avaliacao: "ruim",
         ensinamento: "Silêncio externo durante os 3 meses de retomada vai ser preenchido pelas narrativas dos outros — imprensa, clientes, concorrentes. A empresa que assinou o TAC e sumiu da comunicação pública perde a janela de ouro para contar a história da sua transformação nos próprios termos."
       },
       {
         text: "Propor aos dois clientes que mantiveram o contrato uma visita guiada à planta nos primeiros 30 dias após o TAC — mostrar as mudanças antes de pedir o voto de confiança",
         risco: "baixo",
-        effects: { clientes: +6, reputacao: +4, conformidade: +3, processos: +2 },
+        effects: { clientes: +8, processos: +2, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Visita guiada após o TAC para os clientes que ficaram é o gesto de parceria mais eficaz disponível: eles viram a crise de perto, suportaram a restrição de capacidade e merecem ver a transformação antes de qualquer outro público. A empresa que mostra o novo sistema de descarte, o responsável ambiental no cargo e o comitê funcionando cria o tipo de lealdade que não se compra com desconto."
       }
@@ -1685,7 +1685,7 @@ const IndustriaRounds = [
       {
         text: "Opção A: ISO 14001 — o padrão mais reconhecido pelo mercado nacional, viável em 12 meses e com custo dentro do possível",
         risco: "baixo",
-        effects: { conformidade: +6, clientes: +5, reputacao: +5, financeiro: -3 },
+        effects: { financeiro: -3, clientes: +8, conformidade: +6 },
         avaliacao: "boa",
         ensinamento: "ISO 14001 é o certificado que clientes nacionais reconhecem e que reguladores respeitam. Para uma empresa que acabou de regularizar uma autuação ambiental, a certificação ISO 14001 é a demonstração mais clara disponível de que o sistema de gestão mudou — não apenas o evento pontual. É o diferencial que transforma um histórico negativo em evidência de evolução."
       },
@@ -1699,14 +1699,14 @@ const IndustriaRounds = [
       {
         text: "Opção C: EMAS — ser o primeiro no setor a ter a certificação europeia é um diferencial de mercado que justifica o custo maior e o prazo mais longo",
         risco: "medio",
-        effects: { conformidade: +5, reputacao: +6, clientes: +4, financeiro: -4 },
+        effects: { financeiro: -4, clientes: +8, conformidade: +5 },
         avaliacao: "media",
         ensinamento: "EMAS é o posicionamento de longo prazo mais diferenciado — mas 18 meses e R$420k em uma empresa que acabou de pagar R$2,6M de multa e está retomando gradualmente a operação é um investimento que o caixa pode não suportar. O diferencial de ser o primeiro no setor vale mais quando a empresa está em posição financeira mais robusta."
       },
       {
         text: "Combinar A imediatamente com planejamento para C em 3 anos — construir a certificação progressivamente, com ISO 14001 como base e EMAS como destino",
         risco: "baixo",
-        effects: { conformidade: +6, reputacao: +5, clientes: +5, processos: +4, financeiro: -3 },
+        effects: { financeiro: -3, clientes: +8, processos: +4, conformidade: +6 },
         avaliacao: "boa",
         ensinamento: "Roadmap de certificação progressiva — ISO 14001 agora, EMAS como objetivo de médio prazo — é a estratégia que equilibra urgência, custo e diferenciação. A ISO 14001 resolve a credibilidade imediata; o caminho para EMAS serve como argumento de longo prazo para clientes europeus e como estrutura de melhoria contínua que o sistema exige."
       }
@@ -1725,14 +1725,14 @@ const IndustriaRounds = [
       {
         text: "Aprovar o investimento imediatamente — a tecnologia resolve o problema que causou a autuação de forma estrutural e com ROI positivo",
         risco: "baixo",
-        effects: { conformidade: +6, financeiro: +4, processos: +5, reputacao: +4, producao: +3 },
+        effects: { financeiro: +4, clientes: +4, processos: +8, conformidade: +6 },
         avaliacao: "boa",
         ensinamento: "Tecnologia que transforma resíduo em matéria-prima é o tipo raro de investimento em compliance que tem ROI financeiro positivo além do ROI regulatório. A empresa que apresenta essa tecnologia ao IBAMA nas próximas vistorias do TAC demonstra que não está apenas cumprindo a obrigação — está inovando para eliminar o problema na fonte."
       },
       {
         text: "Fazer um piloto com escala de 30% antes de investir os R$1,8M completos — validar o retorno projetado antes de comprometer o capital",
         risco: "baixo",
-        effects: { financeiro: +2, processos: +3, conformidade: +3, producao: +2 },
+        effects: { financeiro: +2, processos: +5, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Piloto antes do investimento completo é uma gestão de risco prudente em tecnologia nova. A diferença entre piloto e postergação é que o piloto tem cronograma definido e critérios de decisão claros — enquanto a postergação é uma espera indefinida. Piloto de 30% em 90 dias com métrica de aprovação é a forma correta de validar sem atrasar."
       },
@@ -1740,14 +1740,14 @@ const IndustriaRounds = [
         text: "Adiar o investimento para o próximo ciclo orçamentário — a empresa ainda está pagando a multa do IBAMA e não tem capital para novos investimentos",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { financeiro: +1, conformidade: -2, reputacao: -2, processos: -1 },
+        effects: { financeiro: +1, clientes: -2, processos: -1, conformidade: -2 },
         avaliacao: "ruim",
         ensinamento: "Adiar a tecnologia que elimina o resíduo que causou a autuação, por restrição de caixa, enquanto o IBAMA realiza vistorias trimestrais do TAC é criar um risco de percepção grave. O IBAMA que vê a empresa sem tecnologia de destinação adequada 6 meses após o TAC pode questionar o comprometimento com o cronograma de adequação."
       },
       {
         text: "Usar o ROI da tecnologia como argumento para captação de financiamento verde com banco de desenvolvimento — projetos de recuperação de solvente são elegíveis a linhas especiais",
         risco: "baixo",
-        effects: { financeiro: +3, conformidade: +4, reputacao: +4, processos: +4 },
+        effects: { financeiro: +3, clientes: +4, processos: +4, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Financiamento verde para tecnologia de recuperação de solvente é elegível em linhas do BNDES e de bancos privados com carteira ESG. O custo do financiamento é menor do que o crédito convencional, e a aprovação do projeto demonstra ao banco — e indiretamente ao IBAMA — que a empresa está investindo estruturalmente na solução, não apenas pagando a multa."
       }
@@ -1773,21 +1773,21 @@ const IndustriaRounds = [
       {
         text: "Abordar os 4 clientes potenciais que recusaram por falta de certificação — a ISO 14001 em andamento é o argumento que faltava",
         risco: "medio",
-        effects: { clientes: +4, financeiro: +4, reputacao: +3, conformidade: +3 },
+        effects: { financeiro: +4, clientes: +7, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Clientes que recusaram por falta de certificação são os de mais rápida conversão quando a certificação chega — porque o motivo de recusa se tornou o motivo de atração. A abordagem desses 4 no momento em que a ISO 14001 está em andamento é o timing ideal: antes de ter o certificado, para que eles participem do processo de construção da relação."
       },
       {
         text: "Focar na reconquista do ex-cliente — recuperar quem saiu é a maior prova de que a mudança foi real",
         risco: "medio",
-        effects: { clientes: +3, reputacao: +4, conformidade: +2, financeiro: +2 },
+        effects: { financeiro: +2, clientes: +7, conformidade: +2 },
         avaliacao: "media",
         ensinamento: "Reconquistar um ex-cliente que saiu por crise de reputação é possível — mas é a venda mais complexa disponível porque exige convencer alguém que já formou uma opinião negativa. A janela existe porque ele indicou abertura — mas o argumento precisa ser evidência verificável de mudança, não promessa de mudança."
       },
       {
         text: "Criar uma estratégia de marketing de conteúdo sobre a jornada ESG da empresa — transformar a história da crise e da recuperação em diferencial de marca",
         risco: "baixo",
-        effects: { reputacao: +5, clientes: +3, conformidade: +3, processos: +2 },
+        effects: { clientes: +8, processos: +2, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "A história de uma empresa que foi autuada, reconheceu o problema e transformou a operação é genuinamente mais convincente do que a de uma empresa que nunca teve problemas — porque demonstra capacidade de autocrítica e de execução em condições adversas. Esse tipo de narrativa em B2B industrial gera credibilidade com clientes que sabem que toda empresa tem crise em algum momento."
       }
@@ -1806,7 +1806,7 @@ const IndustriaRounds = [
       {
         text: "Recomendar aceitar com negociação: propor que 30% da diferença de valuation seja em earnout atrelado ao resultado dos próximos 3 anos — compartilhar o upside da recuperação",
         risco: "baixo",
-        effects: { financeiro: +6, clientes: +4, conformidade: +4, reputacao: +4 },
+        effects: { financeiro: +6, clientes: +8, conformidade: +4 },
         avaliacao: "boa",
         ensinamento: "Earnout atrelado à recuperação é o mecanismo mais inteligente disponível quando o vendedor acredita que o negócio vale mais do que a oferta atual. O grupo europeu que aceita earnout está dizendo implicitamente que também acredita na recuperação — e o acordo de earnout cria alinhamento entre acquirer e vendedor em vez de adversarialidade sobre o valuation presente."
       },
@@ -1822,7 +1822,7 @@ const IndustriaRounds = [
         text: "Recomendar aceitar as condições como estão — o acesso à tecnologia europeia e às certificações vale mais do que os R$8M de diferença de valuation",
         risco: "medio",
         gestorEffects: { capitalPolitico: +1 },
-        effects: { financeiro: +4, conformidade: +5, clientes: +4, reputacao: +3 },
+        effects: { financeiro: +4, clientes: +7, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "Aceitar a oferta considerando o valor estratégico — tecnologia, certificações, carteira de multinacionais — em vez de apenas o valuation financeiro é uma leitura madura da situação. Para uma empresa que acabou de sair de autuação ambiental, ser adquirida por um grupo europeu com padrões ESG elevados é também uma prova pública de que a empresa é investível — o que vale mais do que os R$8M de diferença."
       },
@@ -1847,26 +1847,26 @@ const IndustriaRounds = [
     choices: [
       {
         text: "Química sustentável: pioneirismo em formulações de baixo impacto ambiental com certificação de ciclo de vida — transformar a crise em identidade de marca",
-        effects: { conformidade: +6, reputacao: +6, clientes: +5, financeiro: +4, processos: +4 },
+        effects: { financeiro: +4, clientes: +8, processos: +4, conformidade: +6 },
         avaliacao: "boa",
         ensinamento: "A empresa que foi autuada e transformou sua operação tem uma credibilidade em sustentabilidade química que uma empresa sem histórico não consegue ter: demonstrou que o compromisso foi testado em condições reais. Pioneirismo em formulações de baixo impacto ambiental aproveita exatamente essa credibilidade como diferencial comercial."
       },
       {
         text: "Especialização em química para construção civil de alta performance: aditivos e solventes para tintas ESG e sistemas de vedação de nova geração",
-        effects: { clientes: +5, financeiro: +4, processos: +4, reputacao: +4, conformidade: +3 },
+        effects: { financeiro: +4, clientes: +8, processos: +4, conformidade: +3 },
         avaliacao: "boa",
         ensinamento: "Especialização em nicho de construção civil com crescimento acelerado de demanda por produtos sustentáveis combina o histórico técnico da empresa com a agenda ESG do setor imobiliário. Construtores e fabricantes de tinta que precisam de produtos de baixo VOC e certificados por ciclo de vida são exatamente o cliente que valoriza um fornecedor com ISO 14001 e histórico de transparência ambiental."
       },
       {
         text: "Serviços de gestão de resíduos químicos: usar a tecnologia de destilação a vácuo para recuperar solventes de outras empresas do setor — transformar competência interna em serviço",
-        effects: { financeiro: +5, reputacao: +5, conformidade: +5, processos: +5, clientes: +3 },
+        effects: { financeiro: +5, clientes: +8, processos: +5, conformidade: +5 },
         avaliacao: "boa",
         ensinamento: "Transformar a tecnologia de recuperação de solventes em um serviço para outras indústrias químicas é um modelo de negócio com crescimento acelerado à medida que a regulamentação de resíduos endurece. A empresa que domina o processo de destinação adequada de solventes — e tem a credibilidade de quem resolveu o próprio problema — é a mais confiável prestadora desse serviço para o mercado."
       },
       {
         text: "Expansão de capacidade: dobrar a planta nos próximos 3 anos aproveitando que o setor ainda tem poucos concorrentes com certificação ambiental",
         requisitos: { indicadorMinimo: { financeiro: 12, conformidade: 13 } },
-        effects: { producao: +4, financeiro: +3, clientes: +3, rh: -2, conformidade: -1, processos: -2 },
+        effects: { financeiro: +3, rh: -2, clientes: +3, processos: +2, conformidade: -1 },
         avaliacao: "media",
         ensinamento: "Expansão de capacidade antes de ter a operação em regime de excelência durante pelo menos 12 meses é repetir o padrão que levou à autuação: crescimento sem a base de conformidade solidificada. A empresa que dobra a planta carrega todos os novos processos para dentro de uma gestão ambiental que ainda está sendo construída."
       }

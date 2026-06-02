@@ -217,7 +217,7 @@ const LogisticaRounds = [
       {
         text: "Apresentar na sexta o diagnóstico completo das causas-raiz + plano estruturado de 90 dias com métricas semanais de SLA monitoradas por eles em tempo real",
         risco: "baixo",
-        effects: { clientes: +6, sla: +2, processos: +3, reputacao: +3 },
+        effects: { clientes: +8, processos: +3, sla: +2 },
         avaliacao: "boa",
         ensinamento: "Clientes em risco de churn não querem promessas — querem evidência de que o problema foi compreendido com profundidade e que há um sistema de monitoramento que os protege no futuro. Visibilidade em tempo real do SLA é uma das ferramentas mais eficazes de reconquista de confiança em logística."
       },
@@ -231,7 +231,7 @@ const LogisticaRounds = [
       {
         text: "Pedir ao CEO que vá pessoalmente à GrandeMart antes da reunião de sexta para demonstrar comprometimento do nível executivo",
         risco: "baixo",
-        effects: { clientes: +5, reputacao: +3, processos: +1, sla: +1 },
+        effects: { clientes: +8, processos: +1, sla: +1 },
         avaliacao: "boa",
         ensinamento: "Atenção executiva em crise de conta estratégica tem um valor de sinal que nenhuma proposta formal substitui. A presença do CEO diz ao cliente: 'Você é importante o suficiente para eu sair da minha cadeira.' Isso frequentemente muda a dinâmica da reunião antes mesmo de uma palavra ser dita."
       },
@@ -239,7 +239,7 @@ const LogisticaRounds = [
         text: "Deixar a reunião fluir sem apresentar proposta formal — ouvir as exigências deles antes de comprometer qualquer coisa",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { clientes: -4, sla: -1, reputacao: -3, processos: -1 },
+        effects: { clientes: -7, processos: -1, sla: -1 },
         avaliacao: "ruim",
         ensinamento: "Chegar a uma reunião de rescisão iminente sem proposta concreta é uma postura que os clientes interpretam como despreparo ou descaso. A janela de reconquista nesse momento é estreita — e quem não apresenta um plano perde a iniciativa para quem pede a rescisão."
       }
@@ -260,21 +260,21 @@ const LogisticaRounds = [
       {
         text: "Acionar o jurídico, o seguro e o responsável de comunicação simultaneamente — cuidar do acidentado e ter uma nota oficial pronta antes que o repórter publique",
         risco: "baixo",
-        effects: { seguranca: +3, reputacao: +3, financeiro: -2, clientes: +1 },
+        effects: { financeiro: -2, clientes: +4, seguranca: +3 },
         avaliacao: "boa",
         ensinamento: "Gestão de crise eficaz exige paralelismo: jurídico, seguro, comunicação e cuidado humano devem acontecer ao mesmo tempo. A nota proativa antes da publicação da notícia é determinante para a narrativa. Empresas que falam primeiro controlam o enquadramento — as que reagem perdem esse poder."
       },
       {
         text: "Aguardar a conclusão da perícia antes de emitir qualquer comunicado — não assumir responsabilidade antes de ter os fatos confirmados",
         risco: "alto",
-        effects: { reputacao: -4, seguranca: -2, clientes: -3, financeiro: -2 },
+        effects: { financeiro: -2, clientes: -7, seguranca: -2 },
         avaliacao: "ruim",
         ensinamento: "Silêncio em crise de segurança é interpretado como culpa. A nota não precisa admitir responsabilidade antes da perícia — mas precisa demonstrar que a empresa está presente, cooperando e cuidando das pessoas. O vácuo de comunicação é preenchido por quem tem interesse em construir a pior narrativa possível."
       },
       {
         text: "Visitar pessoalmente o acidentado no hospital e garantir que todos os custos médicos serão cobertos pela empresa, independente do resultado da perícia",
         risco: "baixo",
-        effects: { reputacao: +4, seguranca: +2, financeiro: -3, rh: +3 },
+        effects: { financeiro: -3, rh: +3, clientes: +4, seguranca: +2 },
         avaliacao: "boa",
         ensinamento: "O gesto humano de ir pessoalmente ao hospital transforma a crise em narrativa de responsabilidade. Não é uma admissão legal de culpa — é uma demonstração de caráter que repórteres, clientes e colaboradores percebem e que nenhuma nota de assessoria substitui."
       },
@@ -311,7 +311,7 @@ const LogisticaRounds = [
         text: "Rejeitar a pauta e contratar assessoria jurídica especializada para avaliar a legalidade de uma eventual greve",
         risco: "alto",
         gestorEffects: { reputacaoInterna: -3 },
-        effects: { rh: -6, seguranca: -2, sla: -3, reputacao: -3, clientes: -3 },
+        effects: { rh: -6, clientes: -6, sla: -3, seguranca: -2 },
         avaliacao: "ruim",
         ensinamento: "Postura adversarial com sindicato em empresa com pauta legítima quase sempre piora o desfecho. Quando o jurídico confirma vulnerabilidade real, a batalha legal é cara, lenta e destrói o clima. O custo de uma greve de 3 dias em logística supera qualquer concessão salarial do primeiro ano."
       },
@@ -346,7 +346,7 @@ const LogisticaRounds = [
       {
         text: "Ser honesto: 'Levamos 90 dias para entregar o padrão que vocês precisam. Podemos assinar hoje com data de início no dia 91 e cronograma transparente das entregas parciais.'",
         risco: "baixo",
-        effects: { clientes: +4, reputacao: +4, processos: +3, sla: +2 },
+        effects: { clientes: +8, processos: +3, sla: +2 },
         avaliacao: "boa",
         ensinamento: "Transparência sobre prazo real é uma das melhores estratégias de venda em mercado B2B. Clientes sofisticados sabem que quem promete o impossível não vai entregar. A empresa que diz 'leva 90 dias porque vamos fazer certo' diferencia-se da concorrente que promete 60 dias e entrega mal."
       },
@@ -410,7 +410,7 @@ const LogisticaRounds = [
       {
         text: "Comunicar proativamente ao Detran a situação e solicitar um prazo de 30 dias para regularização com cronograma formal",
         risco: "baixo",
-        effects: { seguranca: +4, reputacao: +3, financeiro: -1, frota: +3 },
+        effects: { financeiro: -1, clientes: +3, frota: +3, seguranca: +4 },
         avaliacao: "boa",
         ensinamento: "Transparência proativa com órgão regulador frequentemente resulta em tratamento diferenciado. Empresas que se autodeclaram em processo de regularização com cronograma formal têm probabilidade significativamente menor de sofrer autuação máxima — e constroem relacionamento institucional que vale muito em futuras interações."
       }
@@ -645,7 +645,7 @@ const LogisticaRounds = [
     choices: [
       {
         text: "Especialização vertical em last-mile para e-commerce premium: SLA de 4 horas, entregadores certificados, experiência de entrega como diferencial de marca",
-        effects: { sla: +5, clientes: +5, reputacao: +4, financeiro: +3, tecnologia: +3 },
+        effects: { financeiro: +3, clientes: +8, sla: +5, tecnologia: +3 },
         avaliacao: "boa",
         ensinamento: "Especialização vertical em segmento premium é a estratégia mais defensável contra concorrentes de baixo custo. Entregar em 4 horas com entregador certificado para e-commerce de luxo não compete com o mesmo mercado que a startup de motoboys. São propostas de valor diferentes para clientes diferentes."
       },
@@ -664,7 +664,7 @@ const LogisticaRounds = [
       },
       {
         text: "Logística reversa e sustentabilidade: especialização em retorno de produtos e frota elétrica como posicionamento ESG para grandes corporações",
-        effects: { reputacao: +5, clientes: +3, tecnologia: +3, financeiro: +2, frota: +3 },
+        effects: { financeiro: +2, clientes: +8, frota: +3, tecnologia: +3 },
         avaliacao: "boa",
         ensinamento: "Logística reversa é um segmento de alto crescimento e margens melhores do que o last-mile tradicional. Combinado com posicionamento ESG via frota elétrica, cria um diferencial que grandes corporações com metas de ESG valorizam e pagam mais — e que startups de baixo custo não conseguem replicar rapidamente."
       }
@@ -693,7 +693,7 @@ const LogisticaRounds = [
       {
         text: "Solicitar reunião urgente com a FarmaPlus antes dos 15 dias — ir até eles com o diagnóstico do problema e os primeiros passos já iniciados",
         risco: "baixo",
-        effects: { clientes: +5, seguranca: +2, reputacao: +3, processos: +2 },
+        effects: { clientes: +8, processos: +2, seguranca: +2 },
         avaliacao: "boa",
         ensinamento: "Em contratos farmacêuticos, velocidade de resposta à falha é tão importante quanto a solução técnica. Ir ao cliente antes do prazo com diagnóstico e ações iniciais demonstra que a empresa leva compliance a sério — e muda a dinâmica da auditoria de adversarial para colaborativa."
       },
@@ -707,7 +707,7 @@ const LogisticaRounds = [
       {
         text: "Fazer um diagnóstico interno completo antes de qualquer comunicação externa — entender tudo antes de falar",
         risco: "alto",
-        effects: { processos: +2, seguranca: +1, clientes: -3, reputacao: -2 },
+        effects: { clientes: -5, processos: +2, seguranca: +1 },
         avaliacao: "ruim",
         ensinamento: "Silêncio de 7 dias para diagnóstico interno em contexto de auditoria farmacêutica é interpretado pelo cliente como omissão ou falta de urgência. O cliente precisa ver movimento imediato — não um plano perfeito depois de uma semana. Ação visível com diagnóstico parcial é melhor do que resposta perfeita tardia."
       },
@@ -715,7 +715,7 @@ const LogisticaRounds = [
         text: "Acionar o seguro de transporte de cargas para cobrir os R$620 mil e focar em proteger o fluxo de caixa",
         risco: "medio",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { financeiro: +3, clientes: -4, seguranca: -1, reputacao: -3 },
+        effects: { financeiro: +3, clientes: -7, seguranca: -1 },
         avaliacao: "ruim",
         ensinamento: "Acionar seguro sem primeiro correr para reconquistar o cliente é uma leitura errada das prioridades. O cliente farmacêutico não quer o reembolso — quer a garantia de que o problema não vai se repetir. Focar no seguro antes da relação sinaliza que a empresa coloca o caixa acima da confiança."
       }
@@ -775,7 +775,7 @@ const LogisticaRounds = [
       {
         text: "Ser honesto com o auditor: 'O protocolo formal não existia. Estamos criando e implementando nos próximos 10 dias e podemos compartilhar com vocês antes da próxima visita.'",
         risco: "baixo",
-        effects: { clientes: +4, seguranca: +3, reputacao: +3, processos: +4 },
+        effects: { clientes: +7, processos: +4, seguranca: +3 },
         avaliacao: "boa",
         ensinamento: "Transparência com auditores farmacêuticos é mais valorizada do que a narrativa de que tudo estava certo. Auditores experientes sabem quando estão recebendo resposta ensaiada — e a empresa que admite a lacuna e apresenta prazo de correção constrói muito mais credibilidade do que a que tenta justificar o que não existia."
       },
@@ -783,14 +783,14 @@ const LogisticaRounds = [
         text: "Apresentar o protocolo que será criado como se já fosse um rascunho em desenvolvimento — comprar tempo sem admitir que não existia nada",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2, esgotamento: +2 },
-        effects: { clientes: -4, seguranca: -2, reputacao: -4, processos: -1 },
+        effects: { clientes: -8, processos: -1, seguranca: -2 },
         avaliacao: "ruim",
         ensinamento: "Enganar um auditor farmacêutico é arriscado em qualquer circunstância — e auditores experientes costumam detectar protocolos criados às pressas com inconsistências que revelam a data real de criação. Se a farsa for descoberta, a empresa perde toda a credibilidade construída e a rescisão vira quase certa."
       },
       {
         text: "Pedir ao jurídico para acompanhar a reunião com o auditor antes de responder a qualquer pergunta sobre protocolos",
         risco: "alto",
-        effects: { clientes: -3, reputacao: -3, processos: -1, seguranca: -1 },
+        effects: { clientes: -6, processos: -1, seguranca: -1 },
         avaliacao: "ruim",
         ensinamento: "Trazer o jurídico para um processo de auditoria de qualidade transforma uma conversa de melhoria em uma negociação de defesa — e os auditores percebem a mudança. Na cadeia farmacêutica, transparência e colaboração são as moedas de troca que mantêm contratos."
       },
@@ -816,21 +816,21 @@ const LogisticaRounds = [
       {
         text: "Iniciar o processo de certificação agora — é um investimento que se paga com a abertura de novos contratos e é mais barato do que uma rescisão da FarmaPlus",
         risco: "medio",
-        effects: { seguranca: +4, clientes: +5, reputacao: +5, financeiro: -3, processos: +3 },
+        effects: { financeiro: -3, clientes: +8, processos: +3, seguranca: +4 },
         avaliacao: "boa",
         ensinamento: "Certificação em cadeia do frio é um ativo que abre mercados inteiros fechados a não certificados. Hospitais públicos, laboratórios e exportação de alimentos exigem certificação. O custo de R$280k tem ROI calculável — um único contrato com hospital de médio porte paga o investimento em menos de 12 meses."
       },
       {
         text: "Adiar a certificação e focar os recursos na atualização dos sensores e criação dos protocolos que a FarmaPlus está exigindo agora",
         risco: "baixo",
-        effects: { seguranca: +3, financeiro: +1, clientes: +2, processos: +2, reputacao: -1 },
+        effects: { financeiro: +1, clientes: +1, processos: +2, seguranca: +3 },
         avaliacao: "boa",
         ensinamento: "Priorizar as exigências imediatas da FarmaPlus sobre a certificação de longo prazo é uma leitura correta de urgência vs. importância. A certificação é importante — mas não urgente. A auditoria em curso é urgente. Recursos escassos devem ir para onde o risco está mais imediato."
       },
       {
         text: "Buscar uma linha de crédito específica para a certificação — não usar o caixa operacional para um investimento de longo prazo",
         risco: "baixo",
-        effects: { financeiro: +2, seguranca: +3, clientes: +3, reputacao: +2, processos: +2 },
+        effects: { financeiro: +2, clientes: +5, processos: +2, seguranca: +3 },
         avaliacao: "boa",
         ensinamento: "Separar o financiamento de investimentos estratégicos do caixa operacional é uma prática de gestão financeira correta. Certificações têm ROI claro e são elegíveis a linhas do BNDES para qualidade e compliance — que têm custo menor do que crédito convencional."
       },
@@ -838,7 +838,7 @@ const LogisticaRounds = [
         text: "Substituir a certificação por uma autodeclaração de conformidade interna — tem o mesmo efeito prático por uma fração do custo",
         risco: "alto",
         gestorEffects: { reputacaoInterna: -1 },
-        effects: { seguranca: -2, clientes: -3, reputacao: -3, financeiro: +1 },
+        effects: { financeiro: +1, clientes: -6, seguranca: -2 },
         avaliacao: "ruim",
         ensinamento: "No setor farmacêutico e hospitalar, autodeclaração não tem valor legal nem comercial. Clientes que exigem certificação de terceira parte não aceitam declarações internas como equivalente. Tentar substituir uma certificação independente por uma autoevaluação é um atalho que fecha portas em vez de abrir."
       }
@@ -864,7 +864,7 @@ const LogisticaRounds = [
       {
         text: "Apresentar uma proposta de SLA de temperatura como aditivo contratual imediato — aceitar a exigência legal antes mesmo de ter o dashboard pronto",
         risco: "medio",
-        effects: { clientes: +4, financeiro: -2, sla: +2, seguranca: +2, reputacao: +3 },
+        effects: { financeiro: -2, clientes: +7, sla: +2, seguranca: +2 },
         avaliacao: "boa",
         ensinamento: "Aditivo contratual de SLA de temperatura demonstra comprometimento jurídico com a qualidade. O dashboard pode vir depois — o compromisso formal primeiro. Clientes que confiam no parceiro com um SLA escrito têm muito mais paciência para aguardar as implementações tecnológicas que acompanham o compromisso."
       },
@@ -872,7 +872,7 @@ const LogisticaRounds = [
         text: "Pedir mais 30 dias de prazo antes de responder às exigências — as ações já tomadas merecem reconhecimento antes de novas demandas",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { clientes: -4, reputacao: -3, sla: -1, financeiro: -2 },
+        effects: { financeiro: -2, clientes: -7, sla: -1 },
         avaliacao: "ruim",
         ensinamento: "No 15º dia de uma auditoria farmacêutica, pedir mais prazo para avaliar as exigências do cliente é sinalizar que o problema não foi totalmente compreendido. O cliente está te dando o que precisa para continuar — e pedir tempo para pensar sobre isso é uma resposta que pode transformar a decisão de 'continuar monitorando' em 'rescindir'."
       },
@@ -905,14 +905,14 @@ const LogisticaRounds = [
       {
         text: "Solicitar à ANVISA um reagendamento de 30 dias para estar completamente preparado",
         risco: "alto",
-        effects: { seguranca: -2, reputacao: -3, clientes: -3, processos: +1 },
+        effects: { clientes: -6, processos: +1, seguranca: -2 },
         avaliacao: "ruim",
         ensinamento: "Pedir reagendamento de vistoria da ANVISA após um incidente reportado é quase sempre indeferido — e quando concedido, gera um nível de escrutínio muito maior. O fiscal que aguarda 30 dias chega com uma hipótese muito mais negativa do que o fiscal que faz a vistoria imediata."
       },
       {
         text: "Fazer a vistoria nas condições atuais com total transparência — apresentar o plano de correção para cada não conformidade encontrada",
         risco: "baixo",
-        effects: { seguranca: +3, reputacao: +4, clientes: +3, processos: +4 },
+        effects: { clientes: +7, processos: +4, seguranca: +3 },
         avaliacao: "boa",
         ensinamento: "Transparência com a ANVISA combinada com plano de correção documentado é a postura que transforma um processo de auto em um processo de adequação. A ANVISA tem poderes punitivos severos — mas usa a punição máxima para quem esconde, não para quem demonstra comprometimento genuíno com a correção."
       },
@@ -920,7 +920,7 @@ const LogisticaRounds = [
         text: "Consultar o jurídico para entender os limites das obrigações de informação durante a vistoria — não fornecer mais do que o obrigatório por lei",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { seguranca: -3, reputacao: -4, clientes: -2, processos: -1 },
+        effects: { clientes: -6, processos: -1, seguranca: -3 },
         avaliacao: "ruim",
         ensinamento: "Postura defensiva com a ANVISA em contexto de incidente farmacêutico é a receita para o pior desfecho possível. O fiscal que percebe resistência ou obstrução tem todos os incentivos para elevar o nível do processo. Transparência e cooperação não são ingenuidade — são a estratégia mais inteligente disponível."
       }
@@ -939,7 +939,7 @@ const LogisticaRounds = [
       {
         text: "Paralisar as 3 câmaras imediatamente, acionar o armazém de Campinas para absorver o volume e comunicar os 12 clientes com transparência e novo cronograma",
         risco: "baixo",
-        effects: { seguranca: +5, clientes: +2, sla: -2, processos: +3, reputacao: +3 },
+        effects: { clientes: +5, processos: +3, sla: -2, seguranca: +5 },
         avaliacao: "boa",
         ensinamento: "Conformidade imediata com a ANVISA protege a empresa da penalidade máxima e demonstra cultura de qualidade real. Comunicar os clientes antecipadamente com plano alternativo é o que diferencia uma interrupção gerenciada de uma crise operacional. Clientes que recebem aviso com antecedência raramente cancelam contratos."
       },
@@ -954,7 +954,7 @@ const LogisticaRounds = [
         text: "Continuar operando as câmaras em temperatura fora do parâmetro nos próximos 3 dias para cumprir as entregas — priorizar os clientes antes da regularização",
         risco: "alto",
         gestorEffects: { capitalPolitico: -3, esgotamento: +2 },
-        effects: { seguranca: -6, clientes: -4, reputacao: -5, financeiro: -4 },
+        effects: { financeiro: -4, clientes: -8, seguranca: -6 },
         avaliacao: "ruim",
         ensinamento: "Continuar operando câmaras fora de parâmetro após notificação da ANVISA é uma infração administrativa grave — com risco de interdição total, não só das câmaras. Na cadeia farmacêutica, uma segunda falha após notificação equivale a declarar que a empresa não tem cultura de qualidade e pode custar a licença de operação."
       },
@@ -1002,7 +1002,7 @@ const LogisticaRounds = [
         text: "Sair do seguro de carga perecível e criar uma reserva interna equivalente ao prêmio anual",
         risco: "alto",
         gestorEffects: { capitalPolitico: -1 },
-        effects: { financeiro: +2, seguranca: -4, clientes: -3, reputacao: -2 },
+        effects: { financeiro: +2, clientes: -5, seguranca: -4 },
         avaliacao: "ruim",
         ensinamento: "Autossegurar carga farmacêutica é inviável para uma empresa de médio porte com caixa apertado: o evento que tornou o seguro caro é exatamente o tipo de evento que pode se repetir. Além disso, muitos contratos no setor farmacêutico exigem apólice de seguro ativa como cláusula contratual."
       }
@@ -1021,14 +1021,14 @@ const LogisticaRounds = [
       {
         text: "Reconhecer publicamente que ele agiu corretamente e que a falha foi da gestão que não atuou no seu alerta — e apresentar uma contraproposta de retenção com papel de liderança formal",
         risco: "baixo",
-        effects: { rh: +6, seguranca: +4, reputacao: +3, processos: +3 },
+        effects: { rh: +6, clientes: +3, processos: +3, seguranca: +4 },
         avaliacao: "boa",
         ensinamento: "Reconhecimento público do erro de gestão e reparação da injustiça são os únicos argumentos que têm chance de reter alguém que saiu por uma questão de princípio. O técnico não quer só dinheiro — quer que a empresa demonstre que aprendeu. E o time que assiste a esse reconhecimento aprende que alertar problemas é seguro."
       },
       {
         text: "Oferecer aumento de 30% e promoção formal sem reconhecer publicamente o episódio anterior — focar na solução sem reabrir o passado",
         risco: "medio",
-        effects: { rh: +2, financeiro: -2, seguranca: +1, reputacao: -1 },
+        effects: { financeiro: -2, rh: +2, clientes: -1, seguranca: +1 },
         avaliacao: "media",
         ensinamento: "Reconhecimento financeiro sem reconhecimento moral raramente retém alguém que saiu por princípio. Rogério sabe que a empresa sabe que ele tinha razão — e oferecer dinheiro sem admitir isso vai parecer uma tentativa de comprar o silêncio, não de reparar a injustiça. O dinheiro precisa vir acompanhado do reconhecimento."
       },
@@ -1062,7 +1062,7 @@ const LogisticaRounds = [
       {
         text: "Participar do processo seletivo com honestidade: apresentar o estado atual, o plano de certificação e propor que o contrato inicie em 90 dias — quando a empresa estará pronta",
         risco: "baixo",
-        effects: { clientes: +4, reputacao: +4, seguranca: +3, processos: +3 },
+        effects: { clientes: +8, processos: +3, seguranca: +3 },
         avaliacao: "boa",
         ensinamento: "Propostas honestas sobre capacidade atual ganham mais contratos de longo prazo do que propostas infladas. Uma rede hospitalar que negocia com inteligência prefere um parceiro que sabe o que pode entregar a um que promete tudo e falha na execução — especialmente quando insumos cirúrgicos estão em jogo."
       },
@@ -1077,7 +1077,7 @@ const LogisticaRounds = [
       {
         text: "Propor uma parceria de transição: no primeiro ano, operar como subcontratado de outro operador certificado para construir o track record exigido",
         risco: "baixo",
-        effects: { clientes: +3, seguranca: +3, reputacao: +2, processos: +4, financeiro: +1 },
+        effects: { financeiro: +1, clientes: +5, processos: +4, seguranca: +3 },
         avaliacao: "boa",
         ensinamento: "Subcontratação como modelo de entrada em um mercado que exige certificação é uma estratégia de crescimento inteligente. A rede hospitalar fica satisfeita com um operador qualificado, a empresa constrói track record e aprende os requisitos com a operação real — e no contrato seguinte está pronta para ser a titular."
       },
@@ -1110,14 +1110,14 @@ const LogisticaRounds = [
       {
         text: "Opção B: iniciar a certificação — é o que abre os contratos de maior valor e o processo vai exigir a atualização dos sensores de qualquer forma",
         risco: "medio",
-        effects: { reputacao: +4, clientes: +3, processos: +3, seguranca: +2, financeiro: -3 },
+        effects: { financeiro: -3, clientes: +7, processos: +3, seguranca: +2 },
         avaliacao: "media",
         ensinamento: "Iniciar a certificação antes de resolver todos os gaps técnicos é possível — o processo tem 9 meses e pode absorver as correções. O risco é que a auditoria de pré-certificação aponte não conformidades que atrasam o processo e geram custo adicional. É uma corrida onde os checkpoints intermediários importam tanto quanto o destino."
       },
       {
         text: "Dividir os R$400k: R$250k nos sensores mais críticos (os que atendem hospitais e farmácias) e R$150k no início do processo de certificação",
         risco: "baixo",
-        effects: { seguranca: +4, reputacao: +3, clientes: +4, processos: +3, financeiro: -3 },
+        effects: { financeiro: -3, clientes: +7, processos: +3, seguranca: +4 },
         avaliacao: "boa",
         ensinamento: "Alocação híbrida que resolve o risco imediato mais crítico e inicia o investimento de longo prazo é uma estratégia de portfólio clássica. Completar os sensores dos veículos que atendem farmácias e hospitais elimina 80% do risco com 60% do investimento — e o processo de certificação já começa a rodar em paralelo."
       },
@@ -1143,14 +1143,14 @@ const LogisticaRounds = [
       {
         text: "Propor reajuste transparente e individualizado para cada cliente — apresentar os dados reais de custo e o impacto no serviço se os preços não subirem",
         risco: "medio",
-        effects: { financeiro: +5, clientes: +2, reputacao: +3, processos: +2 },
+        effects: { financeiro: +5, clientes: +5, processos: +2 },
         avaliacao: "boa",
         ensinamento: "Reajuste com transparência sobre os fundamentos é muito mais eficaz do que reajuste por decreto. Clientes B2B entendem que energia subiu 22% — eles mesmos sentiram o impacto. A empresa que explica os números antes de pedir o aumento tem taxa de aceitação muito maior do que a que comunica o reajuste como fato consumado."
       },
       {
         text: "Criar dois níveis de serviço: standard (preço atual, sem dashboard de monitoramento) e premium (reajuste de 18%, com dashboard, SLA garantido e protocolo de resposta a falhas)",
         risco: "baixo",
-        effects: { financeiro: +4, clientes: +4, tecnologia: +3, processos: +3, reputacao: +3 },
+        effects: { financeiro: +4, clientes: +7, processos: +3, tecnologia: +3 },
         avaliacao: "boa",
         ensinamento: "Tiering de serviço é uma estratégia de precificação que deixa o cliente escolher o nível de risco que aceita — e frequentemente migra para o premium quando percebe o valor real do monitoramento contínuo. Para o operador, o premium tem margem melhor e cria diferenciação competitiva real."
       },
@@ -1198,7 +1198,7 @@ const LogisticaRounds = [
       {
         text: "Opção C: recusar e indicar um parceiro referenciado — preservar a qualidade da operação atual",
         risco: "medio",
-        effects: { reputacao: +2, clientes: -1, financeiro: -1, processos: +2 },
+        effects: { financeiro: -1, clientes: +1, processos: +2 },
         avaliacao: "media",
         ensinamento: "Recusar crescimento para preservar qualidade é uma postura respeitável — mas a indicação de parceiro sem nenhum retorno comercial perde uma oportunidade. Um modelo de parceria com comissão de indicação mantém a empresa no relacionamento com o cliente e cria uma receita marginal sem risco operacional."
       },
@@ -1224,14 +1224,14 @@ const LogisticaRounds = [
       {
         text: "Recomendar aceitar o contrato com início em 120 dias — os 20 a 60 dias de gap entre a certificação provável e o início do contrato são gerenciáveis com transparência",
         risco: "medio",
-        effects: { clientes: +5, financeiro: +6, reputacao: +4, seguranca: +2, processos: +2 },
+        effects: { financeiro: +6, clientes: +8, processos: +2, seguranca: +2 },
         avaliacao: "boa",
         ensinamento: "Aceitar um contrato estratégico com gap de certificação de 20-60 dias é defensável quando há transparência com o cliente e caminho claro de certificação documentado. A rede hospitalar que ajustou o SLA para 99% já demonstrou que quer fechar negócio — e adiamentos de certificação são parte normal do processo para quem avalia empresas em evolução."
       },
       {
         text: "Recomendar assinar condicionado à certificação — contrato em vigor somente após emissão do certificado ISO",
         risco: "baixo",
-        effects: { clientes: +3, seguranca: +5, reputacao: +3, financeiro: +4, processos: +3 },
+        effects: { financeiro: +4, clientes: +6, processos: +3, seguranca: +5 },
         avaliacao: "boa",
         ensinamento: "Contrato condicional à certificação é uma postura de integridade que o cliente hospitalar vai respeitar — e que elimina o risco jurídico de operar em não conformidade. O processo de assinatura pode ocorrer antes; a vigência, após a certificação. É uma cláusula padrão em contratos farmacêuticos que o setor conhece bem."
       },
@@ -1239,14 +1239,14 @@ const LogisticaRounds = [
         text: "Recomendar não assinar — 120 dias com 70% de certificação e incerteza de prazo é risco demais com um cliente tão exigente",
         risco: "medio",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { financeiro: -3, clientes: -2, reputacao: -1 },
+        effects: { financeiro: -3, clientes: -3 },
         avaliacao: "ruim",
         ensinamento: "Recusar R$14M quando a empresa está a 60 dias da certificação e o cliente ajustou as condições é uma decisão difícil de defender interna e externamente. A rede hospitalar que voltou com condições flexibilizadas é um sinal claro de que quer fechar — e esse tipo de sinal raramente aparece duas vezes."
       },
       {
         text: "Recomendar aceitar e contratar uma segunda consultoria para acelerar a certificação para 45 dias — garantir o prazo com recurso adicional",
         risco: "baixo",
-        effects: { clientes: +5, financeiro: +4, seguranca: +4, processos: +4, reputacao: +4 },
+        effects: { financeiro: +4, clientes: +8, processos: +4, seguranca: +4 },
         avaliacao: "boa",
         ensinamento: "Investimento adicional em consultoria para acelerar certificação quando há um contrato de R$14M na mesa é um ROI extremamente claro. Uma consultoria adicional de R$80k que abrevia o prazo em 3 semanas enquanto fecha um contrato de R$14M é uma das melhores alocações de recurso possíveis."
       }
@@ -1264,19 +1264,19 @@ const LogisticaRounds = [
     choices: [
       {
         text: "Especialização em logística farmacêutica e hospitalar: ser o operador de referência em compliance e rastreabilidade para o setor de saúde",
-        effects: { seguranca: +5, reputacao: +5, clientes: +4, financeiro: +3, tecnologia: +3 },
+        effects: { financeiro: +3, clientes: +8, seguranca: +5, tecnologia: +3 },
         avaliacao: "boa",
         ensinamento: "Especialização em saúde é o nicho de maior crescimento e maior barreira de entrada em logística refrigerada. Compliance rigoroso, rastreabilidade e certificações não são custos — são o produto que o setor de saúde compra. A empresa que se tornar referência nesse nicho vai competir em condições completamente diferentes do mercado geral."
       },
       {
         text: "Expansão na cadeia alimentar premium: supermercados premium, exportação de proteínas e hortifrutigranjeiros de alta rastreabilidade",
-        effects: { clientes: +4, financeiro: +4, frota: +3, processos: +3, reputacao: +3 },
+        effects: { financeiro: +4, clientes: +7, processos: +3, frota: +3 },
         avaliacao: "boa",
         ensinamento: "O segmento alimentar premium tem crescimento acelerado com a expansão do e-commerce de alimentos frescos e supermercados de alto padrão. Os requisitos de rastreabilidade e cadeia do frio são similares ao farmacêutico — a certificação já em andamento é diretamente aplicável a esse mercado também."
       },
       {
         text: "Plataforma de cadeia do frio como serviço: tecnologia própria de monitoramento licenciada para pequenos operadores refrigerados",
-        effects: { tecnologia: +5, financeiro: +3, reputacao: +4, processos: +4, clientes: +2 },
+        effects: { financeiro: +3, clientes: +6, processos: +4, tecnologia: +5 },
         avaliacao: "boa",
         ensinamento: "Transformar o problema técnico que quase destruiu a empresa em um produto de tecnologia que outros operadores precisam é uma estratégia de pivô elegante. O dashboard de monitoramento que a FarmaPlus exigiu pode ser licenciado para operadores que não têm capacidade de desenvolver internamente — criando uma receita recorrente além da operação física."
       },
@@ -1475,7 +1475,7 @@ const LogisticaRounds = [
       {
         text: "Apresentar a trajetória: de 4,7% para 2,8% em 21 dias com as ações específicas que geraram cada melhoria — e propor mais 14 dias com metas semanais",
         risco: "baixo",
-        effects: { clientes: +5, processos: +3, sla: +2, reputacao: +3 },
+        effects: { clientes: +8, processos: +3, sla: +2 },
         avaliacao: "boa",
         ensinamento: "Narrativa de trajetória com evidência de causalidade é muito mais persuasiva do que um número isolado. A queda de 4,7% para 2,8% em 21 dias com ações documentadas demonstra que a empresa entende o problema e tem capacidade de correção. O gerente de contas que vê isso sabe que 2% em 14 dias é crível — e vai defender internamente."
       },
@@ -1483,21 +1483,21 @@ const LogisticaRounds = [
         text: "Pedir uma revisão do limite contratual de 2% — o padrão atual é mais exigente do que a média do setor",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { clientes: -4, reputacao: -3, sla: -1 },
+        effects: { clientes: -7, sla: -1 },
         avaliacao: "ruim",
         ensinamento: "Pedir revisão de SLA no dia do prazo de um contrato em avaliação de rescisão é uma das piores estratégias possíveis. O marketplace interpreta como admissão de que a empresa não consegue atingir o padrão — e que vai continuar não conseguindo. A negociação de limite deve acontecer antes do incidente, não no dia da auditoria."
       },
       {
         text: "Compartilhar acesso ao painel interno de monitoramento em tempo real — dar visibilidade completa da operação para o gerente de contas",
         risco: "baixo",
-        effects: { clientes: +4, tecnologia: +2, reputacao: +4, processos: +2 },
+        effects: { clientes: +8, processos: +2, tecnologia: +2 },
         avaliacao: "boa",
         ensinamento: "Dar acesso de visibilidade ao cliente é um gesto de parceria que poucos operadores fazem — e que transforma a dinâmica de uma relação de cobrança em uma relação de colaboração. O gerente de contas que monitora junto com você tem todos os incentivos para ser um aliado interno, não um adversário."
       },
       {
         text: "Não ir à reunião — enviar relatório por e-mail e pedir reagendamento para quando o índice estiver abaixo de 2%",
         risco: "alto",
-        effects: { clientes: -6, reputacao: -5, sla: -2, financeiro: -3 },
+        effects: { financeiro: -3, clientes: -8, sla: -2 },
         avaliacao: "ruim",
         ensinamento: "Não comparecer à reunião convocada pelo cliente no prazo acordado é uma das piores decisões possíveis em gestão de relacionamento B2B. O marketplace vai interpretar como abandono da relação — e processar a rescisão antes mesmo de receber o relatório por e-mail. Em momentos críticos, a presença é insubstituível."
       }
@@ -1538,7 +1538,7 @@ const LogisticaRounds = [
         text: "Usar a proposta do segundo marketplace como alavanca para renegociar os termos do primeiro — mostrar que a empresa tem alternativas",
         risco: "alto",
         gestorEffects: { capitalPolitico: -2 },
-        effects: { clientes: -4, reputacao: -3, processos: -1 },
+        effects: { clientes: -7, processos: -1 },
         avaliacao: "ruim",
         ensinamento: "Usar uma proposta externa como ameaça para renegociar com um cliente que está avaliando rescisão é um erro estratégico grave. O marketplace em avaliação vai interpretar como sinal de que a empresa está mais interessada em negociar do que em resolver o problema operacional — e vai acelerar o processo de rescisão."
       }
@@ -1557,7 +1557,7 @@ const LogisticaRounds = [
       {
         text: "Cuidar dos 3 operadores feridos imediatamente, acionar o seguro e comunicar o marketplace com transparência sobre o impacto nas próximas 72 horas",
         risco: "baixo",
-        effects: { seguranca: +3, clientes: +2, rh: +3, reputacao: +3 },
+        effects: { rh: +3, clientes: +5, seguranca: +3 },
         avaliacao: "boa",
         ensinamento: "Em sinistros com lesionados, o cuidado com as pessoas é a prioridade absoluta — não a logística. Clientes B2B maduros compreendem eventos de força maior quando comunicados com transparência e rapidez. A empresa que cuida dos seus colaboradores publicamente também demonstra ao cliente como vai tratar os problemas que ele tiver."
       },
@@ -1620,7 +1620,7 @@ const LogisticaRounds = [
       {
         text: "Realizar uma conversa honesta com toda a liderança sobre a cultura de resposta a alertas — usar o caso dele para mudar o padrão antes de tentar reter",
         risco: "baixo",
-        effects: { rh: +5, processos: +3, reputacao: +3, clientes: +2 },
+        effects: { rh: +5, clientes: +5, processos: +3 },
         avaliacao: "boa",
         ensinamento: "A conversa sistêmica sobre cultura de resposta a alertas é o que diferencia uma empresa que aprende de uma que apenas retém. Mudar o sistema antes de pedir para o colaborador ficar demonstra que a empresa não quer apenas a pessoa — quer se tornar o lugar onde alertas são ouvidos."
       }
@@ -1639,7 +1639,7 @@ const LogisticaRounds = [
       {
         text: "Ser transparente com o marketplace: a empresa tem capacidade de 22 mil pedidos/dia com qualidade — propor um quota de pico de 28 mil com planejamento detalhado de recursos",
         risco: "baixo",
-        effects: { clientes: +4, processos: +4, sla: +3, reputacao: +3 },
+        effects: { clientes: +7, processos: +4, sla: +3 },
         avaliacao: "boa",
         ensinamento: "Transparência sobre capacidade real com um plano concreto de esforço é muito mais defensável do que prometer 57 mil e entregar 30 mil com qualidade ruim. O marketplace que recebe honestidade antes do evento pode redistribuir o volume — o que é muito melhor para todos do que uma crise durante a data mais importante do varejo."
       },
@@ -1702,7 +1702,7 @@ const LogisticaRounds = [
       {
         text: "Responder com entusiasmo e propor uma parceria de co-desenvolvimento do novo vertical — modelar a operação junto com o marketplace antes do lançamento",
         risco: "baixo",
-        effects: { clientes: +6, processos: +4, reputacao: +4, tecnologia: +3, financeiro: +2 },
+        effects: { financeiro: +2, clientes: +8, processos: +4, tecnologia: +3 },
         avaliacao: "boa",
         ensinamento: "Co-desenvolvimento com o marketplace transforma a relação de fornecedor-cliente em parceria estratégica. Um operador que ajuda a modelar o processo do novo vertical antes do lançamento tem vantagem competitiva que nenhum outro operador pode replicar — e cria dependência mútua que é muito mais valiosa do que qualquer cláusula contratual."
       }
@@ -1742,7 +1742,7 @@ const LogisticaRounds = [
       {
         text: "Propor ao marketplace co-investimento no terceiro CD em troca de contrato exclusivo de 5 anos — transformar a necessidade em parceria estratégica",
         risco: "baixo",
-        effects: { clientes: +5, financeiro: +3, processos: +4, sla: +3, reputacao: +4 },
+        effects: { financeiro: +3, clientes: +8, processos: +4, sla: +3 },
         avaliacao: "boa",
         ensinamento: "Co-investimento em infraestrutura logística é um modelo de parceria cada vez mais comum entre marketplaces e operadores de alto performance. Para o marketplace, garante capacidade dedicada e exclusividade. Para o operador, transforma o capital do cliente em ativo da operação — e o exclusivo de 5 anos é a âncora financeira que viabiliza o investimento."
       }
@@ -1822,7 +1822,7 @@ const LogisticaRounds = [
       },
       {
         text: "Criar um produto de fulfillment-as-a-service: plataforma digital que permite a lojistas individuais contratar capacidade por demanda, sem passar pelo marketplace",
-        effects: { tecnologia: +4, clientes: +4, financeiro: +3, reputacao: +4, processos: +2 },
+        effects: { financeiro: +3, clientes: +8, processos: +2, tecnologia: +4 },
         avaliacao: "boa",
         ensinamento: "Fulfillment-as-a-service é o modelo que empresas como ShipBob e Fulfillment by Amazon construíram para criar mercado B2C sem intermediário de marketplace. Democratizar o acesso a fulfillment de qualidade para lojistas pequenos é uma oportunidade de mercado enorme — e usa a infraestrutura já construída para um segmento que os marketplaces não atendem diretamente."
       }
@@ -1864,7 +1864,7 @@ const LogisticaRounds = [
       {
         text: "Recomendar usar a oferta como alavanca para uma rodada de investimento próprio — provar ao mercado de PE que a empresa vale esse valuation sem precisar vender o controle",
         risco: "medio",
-        effects: { financeiro: +4, clientes: +3, processos: +2, reputacao: +3 },
+        effects: { financeiro: +4, clientes: +6, processos: +2 },
         avaliacao: "boa",
         ensinamento: "Uma oferta de aquisição com múltiplo alto é o melhor argumento de pitch para investidores de PE. 'Temos uma oferta de 8x e preferimos crescer com parceiro financeiro sem ceder o controle' é uma posição de força. A janela entre receber a oferta e decidir é o momento ideal para uma captação competitiva."
       }
@@ -1882,13 +1882,13 @@ const LogisticaRounds = [
     choices: [
       {
         text: "Fulfillment tech: ser o operador com maior sofisticação tecnológica — IA para previsão, automação máxima, analytics em tempo real compartilhado com o cliente",
-        effects: { tecnologia: +6, processos: +5, clientes: +4, reputacao: +4, financeiro: +3 },
+        effects: { financeiro: +3, clientes: +8, processos: +5, tecnologia: +6 },
         avaliacao: "boa",
         ensinamento: "Liderança tecnológica em fulfillment é uma vantagem competitiva crescente à medida que o mercado amadurece. A empresa que entrega dados preditivos ao cliente — 'seu pico de Black Friday vai ser 2,3x o ano anterior' com 85% de acurácia — não é apenas um operador logístico: é um parceiro de inteligência de negócios."
       },
       {
         text: "Especialização em social commerce: ser o operador preferencial para marcas que vendem por Instagram, TikTok e WhatsApp — volumes menores, margens maiores",
-        effects: { clientes: +5, financeiro: +4, reputacao: +4, processos: +3, tecnologia: +3 },
+        effects: { financeiro: +4, clientes: +8, processos: +3, tecnologia: +3 },
         avaliacao: "boa",
         ensinamento: "Social commerce está crescendo 3x mais rápido do que o e-commerce tradicional e tem perfil de pedido completamente diferente: menos volume, mais personalização, mais exigência de embalagem e apresentação. Operadores especializados nesse segmento têm margens melhores e competem em dimensões onde os grandes operadores não se adaptam facilmente."
       },
@@ -1901,7 +1901,7 @@ const LogisticaRounds = [
       },
       {
         text: "Plataforma de fulfillment colaborativo: rede de operadores independentes compartilhando tecnologia, precificação e padrão de qualidade unificados",
-        effects: { tecnologia: +5, clientes: +4, financeiro: +4, reputacao: +5, processos: +4 },
+        effects: { financeiro: +4, clientes: +8, processos: +4, tecnologia: +5 },
         avaliacao: "boa",
         ensinamento: "Plataforma colaborativa multiplica o alcance sem multiplicar o investimento de capital. A empresa que criou o WMS, o dashboard de monitoramento e os processos que salvaram o contrato do marketplace pode licenciar esse sistema para outros operadores regionais — criando uma rede com padrão unificado e competindo em escala contra os gigantes do setor."
       }

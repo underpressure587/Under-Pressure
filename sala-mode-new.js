@@ -669,7 +669,9 @@ function _atribuirPapeis(membros) {
   papeis[lider] = 'CEO';
   const resto = membros.filter(u => u !== lider);
   // Shuffle papeis restantes
-  const outros = list.filter(p => p !== 'CEO').sort(() => Math.random() - .5);
+  // BUG E FIX: Fisher-Yates no sorteio de papéis
+  const _fy = (arr) => { const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; };
+  const outros = _fy(list.filter(p => p !== 'CEO'));
   resto.forEach((uid, i) => { papeis[uid] = outros[i % outros.length]; });
   return papeis;
 }

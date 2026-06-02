@@ -115,8 +115,11 @@ const BetaIndicadores = (() => {
     }
 
     function isGameOver(indicators) {
-        // BUG #6 FIX: threshold <= 1 para game over ser alcançável
-        return Object.values(indicators).some(v => v <= 1);
+        // FIX: threshold <= 0 — game over apenas quando indicador realmente zera,
+        // consistente com o tutorial ("Se um indicador zerar, é game over") e
+        // com a mensagem de resultado ("Um indicador zerou").
+        // Antes era <= 1, o que encerrava o jogo com indicador ainda visível em 1.
+        return Object.values(indicators).some(v => v <= 0);
     }
 
     function scoreTotal(indicators, sector = null) {

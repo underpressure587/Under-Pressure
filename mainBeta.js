@@ -476,16 +476,23 @@ function _salvarSessao() {
   // BUG #3 FIX: salvar estado completo para restaurarSessao não recomeçar do zero
   try {
     LS.set('gsp_session_state', {
-      sector:       state.sector,
-      companyName:  state.companyName,
-      currentRound: state.currentRound,
-      totalRounds:  state.totalRounds,
-      introIndex:   state.introIndex,
-      indicators:   { ...state.indicators },
-      gestor:       { ...state.gestor },
-      history:      [...(state.history || [])],
-      storyState:   JSON.parse(JSON.stringify(state.storyState || {})),
-      activeEvents: JSON.parse(JSON.stringify(state.activeEvents || [])),
+      sector:          state.sector,
+      groupName:       state.groupName  || "",
+      companyName:     state.companyName,
+      currentRound:    state.currentRound,
+      totalRounds:     state.totalRounds,
+      introIndex:      state.introIndex,
+      indicators:      { ...state.indicators },
+      gestor:          { ...state.gestor },
+      history:         [...(state.history || [])],
+      storyState:      JSON.parse(JSON.stringify(state.storyState || {})),
+      activeEvents:    JSON.parse(JSON.stringify(state.activeEvents || [])),
+      // FIX: campos que estavam faltando e tornavam o restore incompleto
+      situacaoAtual:   state.situacaoAtual  ? JSON.parse(JSON.stringify(state.situacaoAtual))  : null,
+      situacaoStatus:  state.situacaoStatus || null,
+      stakeholderLog:  JSON.parse(JSON.stringify(state.stakeholderLog || [])),
+      // FIX: salvar títulos dos 10 rounds sorteados para restore determinístico
+      gameRoundTitles: (state.gameRounds || []).map(r => r.title).filter(Boolean),
       ts: Date.now(),
     });
   } catch(e) { console.warn('_salvarSessao: falha ao salvar estado completo', e); }
@@ -509,18 +516,47 @@ function restaurarSessao() {
   const sess = LS.get(SK.SESSION);
   if (!sess) return;
   const estadoCompleto = LS.get('gsp_session_state');
-  // BUG #3 FIX: restaurar estado real em vez de recomeçar do zero
   if (estadoCompleto && estadoCompleto.sector === sess.sector && estadoCompleto.currentRound > 0) {
     try {
       const state   = BetaState.restore(estadoCompleto);
       const empresa = EMPRESAS[state.sector];
-      // Re-carrega os rounds do setor e posiciona na rodada correta
       const introIdx = state.introIndex || 0;
-      const rounds   = empresa?.rounds?.[introIdx];
-      if (rounds) {
-        state.gameRounds  = rounds;
-        state.totalRounds = rounds.length;
+      const todasRounds = empresa?.rounds?.[introIdx] || [];
+
+      // FIX: restaurar os rounds EXATOS usando títulos salvos (determinístico)
+      const titulos = estadoCompleto.gameRoundTitles;
+      if (titulos && titulos.length > 0) {
+        // Reconstrói a lista de rounds na ordem original usando os títulos salvos
+        const mapaRounds = {};
+        todasRounds.forEach(r => { if (r.title) mapaRounds[r.title] = r; });
+        const roundsRestaurados = titulos.map(t => mapaRounds[t]).filter(Boolean);
+        state.gameRounds  = roundsRestaurados.length > 0 ? roundsRestaurados : todasRounds;
+        state.totalRounds = state.gameRounds.length;
+      } else if (todasRounds.length > 0) {
+        // Fallback para sessões antigas sem gameRoundTitles: re-sorteia por fase
+        const temFase = todasRounds.some(r => r.fase);
+        if (temFase) {
+          /* BUG E FIX: Fisher-Yates no fallback do restaurarSessao */
+          const _fisherYates = (arr) => {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+          };
+          const _sortearFase = (fase, n) => {
+            const pool = todasRounds.filter(r => r.fase === fase);
+            return _fisherYates(pool).slice(0, n);
+          };
+          state.gameRounds  = [..._sortearFase('diagnostico', 3), ..._sortearFase('pressao', 4), ..._sortearFase('decisao', 3)];
+          state.totalRounds = state.gameRounds.length;
+        } else {
+          state.gameRounds  = todasRounds;
+          state.totalRounds = todasRounds.length;
+        }
       }
+
       state.companyInfo = COMPANY_INFO[state.sector] || null;
       window._initPrevIndicators?.(state.indicators);
       _aplicarTemaSetor(state.sector);
@@ -528,7 +564,7 @@ function restaurarSessao() {
       mostrarTela("screen-game");
       renderSidebar(state, empresa);
       renderRodada(state);
-      _atualizarSessaoAtiva(); // registra presença ao restaurar sessão
+      _atualizarSessaoAtiva();
       setTimeout(() => mostrarSucesso(`Sessão restaurada: ${state.companyName} · Rodada ${state.currentRound + 1}`), 500);
       return;
     } catch(e) {
@@ -1128,8 +1164,16 @@ function renderRodada(state) {
   const ev     = state.activeEvents?.find(e => e.expiresAt >= state.currentRound);
   const banner = document.getElementById("hist-event-banner");
   const evTxt  = document.getElementById("hist-event-text");
-  if (ev && banner && evTxt) { banner.classList.add("visible"); evTxt.textContent = `${ev.titulo} — ${ev.descricao}`; }
-  else if (banner) banner.classList.remove("visible");
+  if (ev && banner && evTxt) {
+    banner.classList.add("visible");
+    // Mostra quais indicadores do setor atual são amplificados e efeitos no gestor
+    const indAfetados = BetaImprevisto.descricaoIndicadores(ev, state.sector);
+    const gestorAf    = BetaImprevisto.descricaoGestor(ev);
+    let detalhes = ev.descricao;
+    if (indAfetados) detalhes += `<br><span class="ev-detail-ind">📊 Amplifica: ${indAfetados}</span>`;
+    if (gestorAf)    detalhes += `<br><span class="ev-detail-gestor">👔 Gestor: ${gestorAf}</span>`;
+    evTxt.innerHTML = `<strong>${ev.titulo}</strong> — ${detalhes}`;
+  } else if (banner) banner.classList.remove("visible");
 
   // Choices
   const choices = state.choicesAtivas || round.choices;
@@ -1473,7 +1517,7 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
   mostrarTela("screen-result");
   _registrarResultado(score, scoreGestor, sector, companyName);
   const titulos={fim:score>=70?"Mandato Concluído com Êxito":score>=45?"Mandato Concluído":"Mandato com Dificuldades",gameover:"Colapso Operacional",mandato_conselho:"Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};
-  const subs={fim:"Você completou as 15 rodadas. Veja o balanço do seu mandato.",gameover:"Um indicador zerou. A empresa entrou em colapso.",mandato_conselho:"Seu capital político se esgotou e o conselho encerrou seu mandato.",mandato_burnout:"O esgotamento chegou ao limite e você precisou se afastar."};
+  const subs={fim:`Você completou as ${state?.totalRounds||10} rodadas. Veja o balanço do seu mandato.`,gameover:"Um indicador zerou. A empresa entrou em colapso.",mandato_conselho:"Seu capital político se esgotou e o conselho encerrou seu mandato.",mandato_burnout:"O esgotamento chegou ao limite e você precisou se afastar."};
   const motivoLabels = {fim:"Relatório Final",gameover:"Colapso Operacional",
     mandato_conselho:"Mandato Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};
   document.getElementById("result-motivo-label").textContent = motivoLabels[motivo] || motivo.replace(/_/g," ").toUpperCase();
@@ -1546,7 +1590,7 @@ const GLOSSARIO_TERMOS = [
   { termo:"Flag", def:"Padrão de comportamento registrado ao longo do mandato. Influencia quais eventos aparecem e o desfecho final. Ex: Liderança Tóxica, Crescimento sem Caixa." },
   { termo:"Imprevisto", def:"Evento inesperado que altera os efeitos das decisões durante aquela rodada. Pode ser positivo ou negativo, e é influenciado pelo estado atual dos indicadores." },
   { termo:"Margem Operacional", def:"Quanto de cada real de receita sobra como lucro operacional. Ex: margem de 8% significa que a empresa lucra R$8 para cada R$100 vendidos." },
-  { termo:"Mandato", def:"Uma partida completa do jogo, com 15 rodadas de decisões. O gestor conduz a empresa do início ao fim e recebe uma pontuação pelo resultado." },
+  { termo:"Mandato", def:"Uma partida completa do jogo, com 10 rodadas de decisões organizadas em três fases (Diagnóstico, Pressão e Decisão Crítica). O gestor conduz a empresa do início ao fim e recebe uma pontuação pelo resultado." },
 
   /* ── Finanças e Investimento ── */
   { termo:"ARR", def:"Receita Recorrente Anual (Annual Recurring Revenue). Total de contratos ativos que a empresa recebe por ano. Principal métrica de saúde de empresas SaaS." },

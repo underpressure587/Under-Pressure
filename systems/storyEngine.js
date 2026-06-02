@@ -10,25 +10,30 @@ const StoryEngine = (() => {
     /* ══════════════════════════════════════════════════
        1. AVALIAÇÃO DE FASE
     ══════════════════════════════════════════════════ */
+    /* BUG C FIX: thresholds recalibrados para 10 rodadas (índices 0–9).
+       O bloco "else" (round > 11) era inalcançável — o jogo encerra no round 9.
+       Nova distribuição:
+         Rounds 0–3 → fundacao    (fase diagnóstico)
+         Rounds 4–6 → crescimento / crise (fase pressão)
+         Rounds 7–9 → consolidacao / expansao / crise (fase decisão crítica)
+       "expansao" agora alcançável na reta final com média >= 14 e sem críticos. */
     function avaliarFase(state) {
-        const round   = state.currentRound;
-        const vals    = Object.values(state.indicators);
-        const media   = vals.reduce((a, b) => a + b, 0) / vals.length;
+        const round    = state.currentRound;
+        const vals     = Object.values(state.indicators);
+        const media    = vals.reduce((a, b) => a + b, 0) / vals.length;
         const criticos = vals.filter(v => v <= 3).length;
 
         let fase;
-        if (round <= 4) {
+        if (round <= 3) {
             fase = "fundacao";
-        } else if (round <= 8) {
+        } else if (round <= 6) {
             fase = (criticos >= 2 || media <= 5) ? "crise" : "crescimento";
-        } else if (round <= 11) {
-            if (criticos >= 2 || media <= 5)    fase = "crise";
-            else if (media >= 13)               fase = "consolidacao";
-            else                                fase = "crescimento";
         } else {
-            if (criticos >= 1 || media <= 5)    fase = "crise";
-            else if (media >= 15)               fase = "expansao";
-            else                                fase = "consolidacao";
+            // Fase de decisão crítica (rounds 7–9)
+            if      (criticos >= 2 || media <= 5)  fase = "crise";
+            else if (media >= 14 && criticos === 0) fase = "expansao";
+            else if (media >= 11)                   fase = "consolidacao";
+            else                                    fase = "crescimento";
         }
 
         if (state.storyState.faseEmpresa !== fase) BetaState.setFase(fase);
@@ -77,13 +82,17 @@ const StoryEngine = (() => {
             BetaState.addTrauma("Demissões em massa deixaram cicatrizes na cultura.");
         }
 
-        // RH negligenciado: 5 rodadas sem nenhuma decisão boa com RH/clima
-        const boasRH = history.filter(h =>
+        // RH negligenciado: BUG D FIX — verifica as últimas 5 rodadas, não o histórico inteiro.
+        // Antes: boasRH.length === 0 sobre TODO history → se o jogador foi bom com RH na
+        // rodada 2 e negligenciou nas rodadas 3–9, a flag nunca disparava.
+        // Agora: se nas últimas 5 rodadas não houve nenhuma decisão boa com RH/clima → flag.
+        const ultimas5RH = history.slice(-5);
+        const boasRHRecentes = ultimas5RH.filter(h =>
             h.avaliacao === "boa" && (h.efeitos?.clima > 0 || h.efeitos?.rh > 0)
         );
-        if (history.length >= 5 && boasRH.length === 0) {
+        if (ultimas5RH.length >= 5 && boasRHRecentes.length === 0) {
             BetaState.addFlag("rh_negligenciado",
-                "Nenhuma decisão favoreceu o time nas últimas rodadas");
+                "Nenhuma decisão favoreceu o time nas últimas 5 rodadas");
         }
 
         // Crescimento saudável: 5 consecutivas boas
