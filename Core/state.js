@@ -159,10 +159,19 @@ const BetaState = (() => {
             gestor:        { ...saved.gestor },
             history:       [...(saved.history || [])],
             activeEvents:  JSON.parse(JSON.stringify(saved.activeEvents || [])),
-            storyState:    JSON.parse(JSON.stringify(saved.storyState || {
-                faseEmpresa: "fundacao", estiloGestao: [], reputacaoMercado: "boa",
-                flags: [], conquistas: [], traumas: [], flagMotivos: {}
-            })),
+            storyState:    (() => {
+                // BUG FIX: garante todos os campos do storyState mesmo em saves parciais/antigos
+                const ss = saved.storyState || {};
+                return JSON.parse(JSON.stringify({
+                    faseEmpresa:       ss.faseEmpresa      || "fundacao",
+                    estiloGestao:      Array.isArray(ss.estiloGestao)  ? ss.estiloGestao  : [],
+                    reputacaoMercado:  ss.reputacaoMercado || "boa",
+                    flags:             Array.isArray(ss.flags)         ? ss.flags         : [],
+                    conquistas:        Array.isArray(ss.conquistas)    ? ss.conquistas    : [],
+                    traumas:           Array.isArray(ss.traumas)       ? ss.traumas       : [],
+                    flagMotivos:       (ss.flagMotivos && typeof ss.flagMotivos === 'object') ? ss.flagMotivos : {},
+                }));
+            })(),
             situacaoAtual: saved.situacaoAtual || null,
             companyInfo:   saved.companyInfo   || null,
             situacaoStatus: saved.situacaoStatus || null,

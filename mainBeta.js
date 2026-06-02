@@ -1517,7 +1517,7 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
   mostrarTela("screen-result");
   _registrarResultado(score, scoreGestor, sector, companyName);
   const titulos={fim:score>=70?"Mandato Concluído com Êxito":score>=45?"Mandato Concluído":"Mandato com Dificuldades",gameover:"Colapso Operacional",mandato_conselho:"Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};
-  const subs={fim:`Você completou as ${state?.totalRounds||10} rodadas. Veja o balanço do seu mandato.`,gameover:"Um indicador zerou. A empresa entrou em colapso.",mandato_conselho:"Seu capital político se esgotou e o conselho encerrou seu mandato.",mandato_burnout:"O esgotamento chegou ao limite e você precisou se afastar."};
+  const subs={fim:`Você completou as ${BetaState.get()?.totalRounds||10} rodadas. Veja o balanço do seu mandato.`,gameover:"Um indicador zerou. A empresa entrou em colapso.",mandato_conselho:"Seu capital político se esgotou e o conselho encerrou seu mandato.",mandato_burnout:"O esgotamento chegou ao limite e você precisou se afastar."};
   const motivoLabels = {fim:"Relatório Final",gameover:"Colapso Operacional",
     mandato_conselho:"Mandato Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};
   document.getElementById("result-motivo-label").textContent = motivoLabels[motivo] || motivo.replace(/_/g," ").toUpperCase();

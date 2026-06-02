@@ -215,7 +215,13 @@ const StoryEngine = (() => {
        4. GERAÇÃO DE EPÍLOGO
     ══════════════════════════════════════════════════ */
     function gerarEpilogo(storyState, history, score, scoreGestor, gestor) {
-        const { flags, estiloGestao, conquistas, traumas, faseEmpresa, reputacaoMercado } = storyState;
+        // BUG FIX: garante fallback para saves antigos sem os campos do storyState
+        const flags           = storyState?.flags           || [];
+        const estiloGestao    = storyState?.estiloGestao    || [];
+        const conquistas      = storyState?.conquistas      || [];
+        const traumas         = storyState?.traumas         || [];
+        const faseEmpresa     = storyState?.faseEmpresa     || "fundacao";
+        const reputacaoMercado= storyState?.reputacaoMercado|| "boa";
 
         const contagem = { agressivo: 0, prudente: 0, caotico: 0 };
         estiloGestao.forEach(e => contagem[e]++);

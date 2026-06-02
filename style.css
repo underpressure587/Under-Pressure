@@ -1958,7 +1958,7 @@ body::after{
   font-size:.66rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--t3);
 }
 .result-body{
-  flex:1; overflow-y:auto; padding:0 var(--sp3); -webkit-overflow-scrolling:touch;
+  flex:1; overflow-y:auto; padding:var(--sp2) var(--sp3) 0; -webkit-overflow-scrolling:touch;
 }
 .result-sec{ margin-bottom:var(--sp3); }
 .result-sec-title{
@@ -1966,6 +1966,13 @@ body::after{
   color:var(--t3); margin-bottom:12px;
 }
 .result-epilogo{ font-size:.87rem; color:var(--t2); line-height:1.72; }
+.result-epilogo-titulo{
+  font-family:var(--serif); font-size:1.05rem; font-weight:700; color:var(--t1);
+  margin-bottom:6px; line-height:1.3;
+}
+.result-epilogo-desc{
+  font-size:.87rem; color:var(--t2); line-height:1.72;
+}
 .result-ind-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 /* alias antigo — mantido por compatibilidade */
 .result-ind-item,

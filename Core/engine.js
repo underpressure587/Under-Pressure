@@ -523,6 +523,15 @@ function _encerrar(motivo) {
         .sort((a, b) => b.impacto - a.impacto)
         .slice(0, 3);
 
+    let epilogo = null;
+    try {
+        epilogo = StoryEngine.gerarEpilogo(
+            state.storyState, state.history, scoreFinal, scoreGestor, state.gestor
+        );
+    } catch(e) {
+        console.warn("[Engine] gerarEpilogo falhou — epílogo omitido:", e);
+    }
+
     _ui.renderResultado?.({
         motivo,
         score:       scoreFinal,
@@ -533,9 +542,7 @@ function _encerrar(motivo) {
         companyName: state.companyName,
         empresa:     EMPRESAS[state.sector],
         sector:      state.sector,
-        epilogo:     StoryEngine.gerarEpilogo(
-            state.storyState, state.history, scoreFinal, scoreGestor, state.gestor
-        ),
+        epilogo,
         decisoesCruciais,
     });
 }
