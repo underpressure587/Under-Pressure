@@ -60,26 +60,30 @@ function _setFirebaseStatus(estado, pingMs) {
   const ping     = document.getElementById('firebase-ping');
   if (!dot || !label) return;
 
+  // SEMPRE atualiza a classe do dot — é a fonte de verdade do estado atual.
+  // Sem isso, quando o toggle ativa depois, lê 'connecting' (valor inicial do HTML)
+  // em vez do estado real.
+  dot.className = 'firebase-dot firebase-dot--' + estado;
+
   const mostrar = _settings.mostrarStatus === true;
 
-  // OFFLINE: sempre mostra, independente da configuração
+  // OFFLINE: sempre mostra, ignora configuração
   if (estado === 'offline') {
     if (statusEl) statusEl.style.display = '';
-    dot.className      = 'firebase-dot firebase-dot--offline';
-    label.textContent  = 'Offline';
-    label.style.color  = '#ef4444';
+    label.textContent = 'Offline';
+    label.style.color = '#ef4444';
     if (ping) { ping.style.display = 'none'; ping.textContent = ''; }
     return;
   }
 
-  // ONLINE/CONNECTING: só mostra se configuração estiver ativa
+  // ONLINE/CONNECTING: esconde se configuração estiver desativada
   if (!mostrar) {
     if (statusEl) statusEl.style.display = 'none';
     return;
   }
 
+  // Configuração ativa — exibe normalmente
   if (statusEl) statusEl.style.display = '';
-  dot.className = 'firebase-dot firebase-dot--' + estado;
 
   if (estado === 'online') {
     label.textContent = 'Online';
@@ -234,6 +238,8 @@ async function _boot() {
         t++;
       }
       await window.GSPAuth.waitForAuthReady().catch(() => null);
+      // Auth resolvida — re-renderiza avatar agora que currentUser está disponível
+      _atualizarHome();
     }
 
     await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
