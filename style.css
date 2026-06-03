@@ -3360,70 +3360,63 @@ body::after{
     display: none;
   }
 
-  /* Sidebar esquerda */
+  /* ── Sidebar esquerda ── */
   .home-tab-bar {
     grid-area: sidebar;
     display: flex !important;
     flex-direction: column;
     width: 220px;
     border-right: 1px solid var(--line);
-    border-top: none;
-    background: rgba(10,11,18,.85);
+    background: rgba(10,11,18,.9);
     backdrop-filter: blur(20px);
-    padding: 0;
-    gap: 0;
-    justify-content: flex-start;
+    padding: 0; gap: 0;
     overflow: hidden;
   }
 
-  /* ── Título da sidebar: zona própria, não confunde com botões ── */
+  /* ── "Under Pressure" — texto puro, mesma altura do header direito ── */
   .home-tab-bar::before {
     content: 'Under Pressure';
-    display: block;
+    /* Alinha verticalmente como o header: padding 16px top/bottom */
+    display: flex;
+    align-items: center;
+    min-height: 70px; /* mesma altura visual do home-header com padding 16px */
+    padding: 0 22px;
+    flex-shrink: 0;
+    /* Texto gradiente dourado */
     font-family: var(--serif);
-    font-size: .82rem; font-weight: 800;
-    letter-spacing: .05em;
-    /* Gradient text dourado */
+    font-size: .88rem; font-weight: 800;
+    letter-spacing: .04em;
     background: linear-gradient(135deg, var(--t1) 0%, var(--s-text) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
-    /* Fundo distinto dos botões — quebra continuidade visual */
-    background-color: var(--bg1);
-    padding: 22px 20px 18px;
-    /* Borda esquerda igual à dos botões (gutter consistente) + borda inferior separadora */
-    border-left: 3px solid transparent;
-    border-bottom: 1px solid var(--line2);
-    /* Espaço abaixo antes dos botões */
-    margin-bottom: 0;
-    flex-shrink: 0;
+    /* Separador inferior — alinhado com a borda do header */
+    border-bottom: 1px solid var(--line);
+    /* Definitivamente NÃO é um botão */
     pointer-events: none;
     user-select: none;
+    cursor: default;
   }
 
-  /* ── Três botões exatamente iguais ── */
+  /* ── Três botões: ocupam o espaço restante em partes iguais ── */
   .home-tab-btn {
+    flex: 1; /* divide o espaço restante igualmente — os 3 ficam do mesmo tamanho */
     width: 100%; border-radius: 0;
-    text-align: left;
-    padding: 0 20px;
-    height: 52px;
+    text-align: left; padding: 0 22px;
     font-size: .82rem; letter-spacing: .01em;
-    /* Borda esquerda: gutter de 3px sempre presente, cor muda no hover */
     border: none;
-    border-left: 3px solid transparent;
+    border-top: 1px solid var(--line); /* separador entre botões */
+    border-left: 3px solid transparent; /* gutter para a borda ativa */
     color: var(--t2); background: transparent;
-    transition: background .18s, border-color .18s, color .18s;
+    transition: background .18s, border-left-color .18s, color .18s;
     cursor: pointer;
     display: flex; align-items: center; gap: 10px;
     transform: none; box-shadow: none;
-    flex-shrink: 0;
   }
 
   .home-tab-btn:hover {
     background: var(--s-bg-accent);
     border-left-color: var(--s-primary);
     color: var(--s-text);
-    box-shadow: none;
-    transform: none;
   }
 
   /* Botão iniciar mandato */
