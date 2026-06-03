@@ -2153,61 +2153,86 @@ body::after{
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 14px calc(40px + env(safe-area-inset-bottom, 0px));
+  gap: 0; /* controlado por padding dos section-titles */
+  padding: 8px 0 calc(48px + env(safe-area-inset-bottom, 0px));
   background: var(--bg);
   scrollbar-width: thin;
   scrollbar-color: var(--bg3) transparent;
 }
 
-/* ── Título de seção: integrado no card como header ── */
+/* ── Título de seção — label flutuante acima do card ── */
 .config-section-title {
-  /* Oculto — o design novo usa o group header integrado */
-  display: none;
+  display: block;
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--t3);
+  padding: 22px 24px 8px;
+}
+.config-section-title:first-child {
+  padding-top: 10px;
 }
 
-/* ── Card de seção ── */
+/* ── Card de grupo ── */
 .config-group {
   background: var(--bg2);
   border: 1px solid var(--line);
   border-radius: 20px;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: 0 2px 16px rgba(0,0,0,.3);
-  transition: border-color .2s;
+  /* Margem lateral para não colar nas bordas */
+  margin: 0 14px 4px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.03) inset,
+    0 4px 20px rgba(0,0,0,.3);
+  transition: border-color .2s, box-shadow .2s;
 }
-.config-group:hover {
-  border-color: var(--line2);
+.config-group:active {
+  box-shadow: 0 2px 10px rgba(0,0,0,.25);
 }
 
-/* ── Item dentro do card ── */
+/* Accent no topo de cada grupo por posição */
+.config-body .config-group:nth-child(2) {
+  border-top: 2px solid rgba(139,92,246,.45);
+}
+.config-body .config-group:nth-child(4) {
+  border-top: 2px solid rgba(234,179,8,.45);
+}
+.config-body .config-group:nth-child(6) {
+  border-top: 2px solid rgba(239,68,68,.45);
+}
+.config-body .config-group:nth-child(8) {
+  border-top: 2px solid rgba(99,102,241,.45);
+}
+
+/* ── Item ── */
 .config-item {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 18px;
+  padding: 15px 18px;
   border-bottom: 1px solid var(--line);
-  transition: background .18s;
+  transition: background .15s;
   min-height: 64px;
   position: static;
 }
 .config-item:last-child,
 .config-item.config-item-last { border-bottom: none; }
 .config-item:active { background: rgba(255,255,255,.04); }
-.config-item:hover  { background: rgba(255,255,255,.03); }
 .config-item.config-item-soon {
-  opacity: .4;
+  opacity: .38;
   pointer-events: none;
-  filter: grayscale(.4);
+  filter: grayscale(.5);
 }
 
-/* ── Ícone: quadrado arredondado maior ── */
+/* ── Ícone ── */
 .config-item-icon {
-  width: 44px; height: 44px;
-  border-radius: 14px;
+  width: 42px; height: 42px;
+  border-radius: 13px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 10px rgba(0,0,0,.35);
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
 }
 
 /* ── Textos ── */
@@ -2216,21 +2241,21 @@ body::after{
   flex: 1; min-width: 0;
 }
 .config-item-label {
-  font-size: .88rem; color: var(--t1); font-weight: 600;
+  font-size: .87rem; color: var(--t1); font-weight: 600;
   line-height: 1.25;
 }
 .config-item-desc {
-  font-size: .72rem; color: var(--t3); line-height: 1.4;
+  font-size: .71rem; color: var(--t3); line-height: 1.4;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* ── Seta chevron (decorativa para itens com ação) ── */
+/* ── Botão de ação ── */
 .config-item-btn {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 5px;
   background: var(--bg3);
   border: 1px solid var(--line2);
   color: var(--t2);
-  font-size: .75rem; font-weight: 700;
+  font-size: .73rem; font-weight: 700;
   padding: 8px 16px;
   border-radius: 12px;
   cursor: pointer; font-family: var(--sans);
@@ -2242,20 +2267,20 @@ body::after{
   background: var(--s-bg-accent);
   border-color: var(--s-bd-accent);
   color: var(--s-text);
-  box-shadow: 0 0 16px var(--s-glow);
+  box-shadow: 0 0 14px var(--s-glow);
 }
 .config-item-btn:active { transform: scale(.96); }
 
-/* ── Toggle switch visual ── */
+/* ── Toggle switch (estilo iOS) ── */
 .toggle-btn {
   position: relative;
-  width: 52px; height: 28px;
+  width: 50px; height: 28px;
   border-radius: 14px;
   border: none;
   cursor: pointer;
   flex-shrink: 0;
   transition: background .25s, box-shadow .25s;
-  font-size: 0; /* texto escondido — só visual */
+  font-size: 0;
 }
 .toggle-btn::after {
   content: '';
@@ -2264,16 +2289,14 @@ body::after{
   width: 22px; height: 22px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0,0,0,.4);
-  transition: transform .25s cubic-bezier(.22,.68,0,1.4);
+  box-shadow: 0 1px 6px rgba(0,0,0,.45);
+  transition: transform .28s cubic-bezier(.22,.68,0,1.4);
 }
 .toggle-btn.on {
   background: var(--ok2);
-  box-shadow: 0 0 16px rgba(34,197,94,.4);
+  box-shadow: 0 0 14px rgba(34,197,94,.35);
 }
-.toggle-btn.on::after {
-  transform: translateX(24px);
-}
+.toggle-btn.on::after  { transform: translateX(22px); }
 .toggle-btn.off {
   background: var(--bg4);
   border: 1px solid var(--line2);
@@ -2282,52 +2305,25 @@ body::after{
 /* ── Badge Em breve ── */
 .config-soon-badge {
   flex-shrink: 0;
-  background: rgba(255,255,255,.05);
+  background: rgba(255,255,255,.04);
   border: 1px solid var(--line2);
   color: var(--t3);
-  font-size: .58rem; font-weight: 800;
+  font-size: .57rem; font-weight: 800;
   letter-spacing: .12em; text-transform: uppercase;
   padding: 5px 10px; border-radius: 20px;
 }
 
-/* ── Rodapé versão ── */
+/* ── Rodapé ── */
 .config-version {
   text-align: center;
-  font-size: .66rem; color: var(--t4);
-  padding: 8px 0 4px;
+  font-size: .64rem; color: var(--t4);
+  padding: 20px 0 8px;
   letter-spacing: .08em;
   flex-shrink: 0;
 }
 
 .config-group-grow { flex: 1; }
 
-
-/* ════════════════════════════════════════════════════
-   CONFIG — Labels visuais por grupo (nth-of-type)
-   Como os section-title estão ocultos, cada grupo
-   recebe um label via data-section no HTML ou via
-   seletor por posição — aqui usamos border-top accent
-   para criar identidade visual por grupo
-════════════════════════════════════════════════════ */
-
-/* Grupo 1: Perfil/Conta — borda topo roxa */
-.config-body .config-group:nth-child(2) {
-  border-top: 2px solid rgba(139,92,246,.5);
-}
-/* Grupo 2: Visual — borda topo amarela */
-.config-body .config-group:nth-child(4) {
-  border-top: 2px solid rgba(234,179,8,.5);
-}
-/* Grupo 3: Jogo — borda topo vermelha */
-.config-body .config-group:nth-child(6) {
-  border-top: 2px solid rgba(239,68,68,.5);
-}
-/* Grupo 4: Sistema — borda topo indigo */
-.config-body .config-group:nth-child(8) {
-  border-top: 2px solid rgba(99,102,241,.5);
-}
-
-/* Header do screen-config — mais espaçoso e limpo */
 #screen-config .podio-header {
   padding: 16px var(--sp2);
   background: var(--bg);
@@ -3472,10 +3468,16 @@ body::after{
     display: none;
   }
 
-  /* Cards com cantos mais arredondados no desktop */
+  /* Cards no desktop: sem margem lateral (o grid já controla) */
   #screen-config .config-group {
     border-radius: 22px;
     grid-column: auto;
+    margin: 0; /* cancela margem do mobile */
+  }
+
+  /* Títulos de seção ocultos no desktop */
+  #screen-config .config-section-title {
+    display: none;
   }
 
   /* Items mais espaçosos no desktop */
