@@ -370,7 +370,7 @@
           <button class="config-item-btn" onclick="BetaUI.abrirEditarNome()">Editar</button>
         </div>
 
-        <div class="config-item config-item-last" id="config-row-foto" style="display:none">
+        <div class="config-item" id="config-row-foto" style="display:none">
           <div class="config-item-icon" style="background:rgba(59,130,246,.12);color:#3b82f6">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </div>
@@ -379,6 +379,17 @@
             <span class="config-item-desc">Visível para outros jogadores</span>
           </div>
           <button id="toggle-foto-btn" class="toggle-btn off" onclick="BetaUI.toggleFotoPerfil()">OFF</button>
+        </div>
+
+        <div class="config-item config-item-last">
+          <div class="config-item-icon" style="background:rgba(34,197,94,.12);color:#22c55e">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          </div>
+          <div class="config-item-info">
+            <span class="config-item-label">Mostrar status online</span>
+            <span class="config-item-desc">Exibe conexão e ping no menu</span>
+          </div>
+          <button id="config-toggle-status-btn" class="toggle-btn off" onclick="BetaUI.toggleMostrarStatus()">OFF</button>
         </div>
 
       </div>

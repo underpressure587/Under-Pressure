@@ -33,7 +33,7 @@ const SK = {
 ════════════════════════════════════════════════════ */
 let _player   = null;
 let _isAdmin  = false;
-let _settings = { timer: false, cloudStatus: false };
+let _settings = { timer: false, cloudStatus: false, mostrarStatus: false };
 let _setorSelecionado = null;
 let _escolhaFeita     = false;
 let _feedbackCallback = null;
@@ -54,11 +54,31 @@ let _sala             = null; // sala ativa: { codigo, nome, ... } | null
 ════════════════════════════════════════════════════ */
 function _setFirebaseStatus(estado, pingMs) {
   // estados: 'connecting' | 'online' | 'offline'
-  const dot   = document.getElementById('firebase-status-dot');
-  const label = document.getElementById('firebase-status-label');
-  const ping  = document.getElementById('firebase-ping');
+  const statusEl = document.getElementById('firebase-status');
+  const dot      = document.getElementById('firebase-status-dot');
+  const label    = document.getElementById('firebase-status-label');
+  const ping     = document.getElementById('firebase-ping');
   if (!dot || !label) return;
 
+  const mostrar = _settings.mostrarStatus === true;
+
+  // OFFLINE: sempre mostra, independente da configuração
+  if (estado === 'offline') {
+    if (statusEl) statusEl.style.display = '';
+    dot.className      = 'firebase-dot firebase-dot--offline';
+    label.textContent  = 'Offline';
+    label.style.color  = '#ef4444';
+    if (ping) { ping.style.display = 'none'; ping.textContent = ''; }
+    return;
+  }
+
+  // ONLINE/CONNECTING: só mostra se configuração estiver ativa
+  if (!mostrar) {
+    if (statusEl) statusEl.style.display = 'none';
+    return;
+  }
+
+  if (statusEl) statusEl.style.display = '';
   dot.className = 'firebase-dot firebase-dot--' + estado;
 
   if (estado === 'online') {
@@ -67,17 +87,13 @@ function _setFirebaseStatus(estado, pingMs) {
     if (ping) {
       ping.style.display = 'inline';
       ping.textContent   = pingMs != null ? pingMs + 'ms' : '';
-      // Cor por qualidade
-      ping.style.color =
-        pingMs == null   ? 'var(--t3)' :
-        pingMs < 120     ? '#22c55e'   :
-        pingMs < 350     ? '#f59e0b'   : '#ef4444';
+      ping.style.color   =
+        pingMs == null ? 'var(--t3)' :
+        pingMs < 120   ? '#22c55e'   :
+        pingMs < 350   ? '#f59e0b'   : '#ef4444';
     }
-  } else if (estado === 'offline') {
-    label.textContent = 'Offline';
-    label.style.color = '#ef4444';
-    if (ping) { ping.style.display = 'none'; ping.textContent = ''; }
   } else {
+    // connecting
     label.textContent = 'Conectando';
     label.style.color = 'var(--t3)';
     if (ping) { ping.style.display = 'none'; ping.textContent = ''; }
@@ -173,7 +189,9 @@ function _abrirOverlay(id) {
 /* _verificarManutencaoInicial → maintenance.js */
 
 async function _boot() {
-  _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false };
+  _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false, mostrarStatus: false };
+  // Garante campo legado
+  if (_settings.mostrarStatus === undefined) _settings.mostrarStatus = false;
   // Move todos os .overlay para o body para evitar stacking context do #app
   // O overlay-confirmar-saida (z-index:100001) deve vir por último para ficar na frente
   const confirmar = document.getElementById('overlay-confirmar-saida');
@@ -1706,6 +1724,13 @@ function _atualizarTelaConfig() {
   }
   // Fullscreen
   _atualizarBotaoFullscreen();
+  // Status online
+  const statusBtn = document.getElementById('config-toggle-status-btn');
+  if (statusBtn) {
+    const on = _settings.mostrarStatus === true;
+    statusBtn.textContent = on ? 'ON' : 'OFF';
+    statusBtn.className = `toggle-btn ${on ? 'on' : 'off'}`;
+  }
   // Nome atual
   const nomeEl = document.getElementById('config-nome-atual');
   if (nomeEl) nomeEl.textContent = _player?.nome || '—';
@@ -1722,6 +1747,30 @@ function _atualizarTelaConfig() {
         fotoBtn.className = `toggle-btn ${fotoOn ? 'on' : 'off'}`;
       }
     }
+  }
+}
+
+function toggleMostrarStatus() {
+  _settings.mostrarStatus = !_settings.mostrarStatus;
+  LS.set(SK.SETTINGS, _settings);
+  const btn = document.getElementById('config-toggle-status-btn');
+  if (btn) {
+    btn.textContent = _settings.mostrarStatus ? 'ON' : 'OFF';
+    btn.className = `toggle-btn ${_settings.mostrarStatus ? 'on' : 'off'}`;
+  }
+  // Reaplicar o status atual com a nova configuração
+  const dot = document.getElementById('firebase-status-dot');
+  const isOnline = dot?.classList.contains('firebase-dot--online');
+  const isOffline = dot?.classList.contains('firebase-dot--offline');
+  if (isOffline) {
+    _setFirebaseStatus('offline');
+  } else if (isOnline) {
+    // Re-lê o ping exibido atualmente
+    const pingEl = document.getElementById('firebase-ping');
+    const pingMs = pingEl?.textContent ? parseInt(pingEl.textContent) : null;
+    _setFirebaseStatus('online', pingMs);
+  } else {
+    _setFirebaseStatus('connecting');
   }
 }
 
@@ -3845,7 +3894,7 @@ window.BetaUI = {
   restaurarSessao, descartarSessao,
   selecionarSetor, lancarJogo, comecaJogo,
   mudarTab, escolher, avancar, reiniciar,
-  openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus,
+  openGlossary, closeGlossary, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus, toggleMostrarStatus,
   toggleFullscreen, voltar,
   irParaConfig, toggleFotoPerfil, confirmarFotoPerfil, cancelarFotoPerfil, abrirEditarNome, fecharEditarNome, salvarNome,
   // Novos
