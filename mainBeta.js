@@ -476,7 +476,7 @@ function _atualizarHome() {
     const photoURL = window.GSPAuth?.currentUser?.photoURL;
     const fotoOn = LS.get(SK.SETTINGS)?.fotoPerfil === true;
     if (photoURL && fotoOn) {
-      av.innerHTML = `<img src="${photoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      av.innerHTML = `<img src="${photoURL}" alt="foto" draggable="false" oncontextmenu="return false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;-webkit-touch-callout:none;pointer-events:none;">`;
     } else if (_player?.nome) {
       av.textContent = _player.nome.charAt(0).toUpperCase();
     }
@@ -2049,7 +2049,7 @@ async function irParaPerfil() {
     const photoURL = window.GSPAuth?.currentUser?.photoURL;
     const fotoOn = LS.get(SK.SETTINGS)?.fotoPerfil === true;
     if (photoURL && fotoOn) {
-      av.innerHTML = `<img src="${photoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      av.innerHTML = `<img src="${photoURL}" alt="foto" draggable="false" oncontextmenu="return false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;-webkit-touch-callout:none;pointer-events:none;">`;
     } else {
       av.textContent = nome.charAt(0).toUpperCase();
     }
