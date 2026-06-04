@@ -2075,6 +2075,9 @@ body::after{
 
 /* Handle removido — overlay com bordas arredondadas */
 
+/* sidebar-brand: oculto no mobile, visível só no desktop */
+.sidebar-brand { display: none; }
+
 .overlay-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px var(--sp3) 12px; border-bottom: 1px solid var(--line); flex-shrink: 0;
