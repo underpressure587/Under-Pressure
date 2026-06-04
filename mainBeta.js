@@ -758,6 +758,14 @@ function _histCard(p, icones, labels) {
    SETOR / INÍCIO
 ════════════════════════════════════════════════════ */
 function irParaSetores() {
+  // Sincroniza estado do timer ao abrir seleção de setor
+  setTimeout(() => {
+    const sBtn = document.getElementById('sector-toggle-timer-btn');
+    if (sBtn) {
+      sBtn.textContent = _settings.timer ? 'ON' : 'OFF';
+      sBtn.className = `toggle-btn ${_settings.timer ? 'on' : 'off'}`;
+    }
+  }, 50);
   // Limpar estado anterior de seleção
   document.querySelectorAll(".sector-card").forEach(b => b.classList.remove("selected"));
   const sh = document.getElementById("sector-hidden");
@@ -1716,10 +1724,11 @@ function irParaConfig() {
 
 function _atualizarTelaConfig() {
   // Timer
-  const timerBtn = document.getElementById('config-toggle-timer-btn');
-  if (timerBtn) {
-    timerBtn.textContent = _settings.timer ? 'ON' : 'OFF';
-    timerBtn.className = `toggle-btn ${_settings.timer ? 'on' : 'off'}`;
+  // Timer agora está na seleção de setor (sector-toggle-timer-btn)
+  const sectorTimerBtn = document.getElementById('sector-toggle-timer-btn');
+  if (sectorTimerBtn) {
+    sectorTimerBtn.textContent = _settings.timer ? 'ON' : 'OFF';
+    sectorTimerBtn.className = `toggle-btn ${_settings.timer ? 'on' : 'off'}`;
   }
   // Cloud
   const cloudBtn = document.getElementById('config-toggle-cloud-btn');
@@ -1784,11 +1793,11 @@ function toggleTimerSetting() {
   _settings.timer = !_settings.timer;
   LS.set(SK.SETTINGS, _settings);
   _atualizarToggleTimer();
-  // Atualiza botão da tela config também
-  const configBtn = document.getElementById('config-toggle-timer-btn');
-  if (configBtn) {
-    configBtn.textContent = _settings.timer ? 'ON' : 'OFF';
-    configBtn.className = `toggle-btn ${_settings.timer ? 'on' : 'off'}`;
+  // Atualiza botão na seleção de setor (novo local)
+  const sectorBtn = document.getElementById('sector-toggle-timer-btn');
+  if (sectorBtn) {
+    sectorBtn.textContent = _settings.timer ? 'ON' : 'OFF';
+    sectorBtn.className = `toggle-btn ${_settings.timer ? 'on' : 'off'}`;
   }
 }
 
@@ -1869,8 +1878,6 @@ async function salvarNome() {
 }
 
 function _atualizarToggleTimer() {
-  const btn=document.getElementById("toggle-timer-btn"); if(!btn) return;
-  btn.textContent=_settings.timer?"ON":"OFF"; btn.className=`toggle-btn ${_settings.timer?"on":"off"}`;
 }
 
 /* ════════════════════════════════════════════════════
