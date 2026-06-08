@@ -14,6 +14,8 @@ const ADMIN = (() => {
   let _currentSection = 'visao-geral';
   let _setorSelecionado = '';  // setor ativo no dropdown do pódio
   let _banUid = '';            // uid do jogador sendo analisado no modal de ban
+  let _adminNomes = {};          // { uid: 'Nome Exibido' }
+  let _pollingAdminInterval = null;  // polling de revogação de acesso
 
   /* ── TOKEN ─────────────────────────────────────── */
   async function _token() {
@@ -317,49 +319,61 @@ const ADMIN = (() => {
   async function toggleBan(uid, estaBanido) {
     const acao = estaBanido ? 'desbanir' : 'banir';
     if (!confirm(`Tem certeza que deseja ${acao} este jogador?`)) return;
-    _showAdminToast('Processando...');
-    try {
-      const patchR = await fetch(`${FS}/usuarios/${uid}?updateMask.fieldPaths=banido`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${await _token()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: { banido: _fsBool(!estaBanido) } })
-      });
-      if (!patchR.ok) {
-        const errBody = await patchR.text();
-        let msg = `HTTP ${patchR.status}`;
-        if (patchR.status === 403) msg = 'Permissão negada — redeploy as regras do Firestore';
-        else if (patchR.status === 404) msg = 'Usuário não encontrado no Firestore';
-        else msg += ': ' + errBody.slice(0, 100);
-        throw new Error(msg);
-      }
-      _showAdminToast(estaBanido ? '✅ Jogador desbanido!' : '🚫 Jogador banido!');
-      carregarJogadores(document.getElementById('admin-busca')?.value || '');
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    }
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', `${estaBanido ? 'Removendo' : 'Aplicando'} banimento…`],
+      executar: async () => {
+        const patchR = await fetch(`${FS}/usuarios/${uid}?updateMask.fieldPaths=banido`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${await _token()}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { banido: _fsBool(!estaBanido) } })
+        });
+        if (!patchR.ok) { const b = await patchR.text(); throw new Error(`HTTP ${patchR.status}: ${b.slice(0,80)}`); }
+      },
+      sucesso: estaBanido ? 'Jogador desbanido!' : 'Jogador banido!',
+      onSucesso: () => carregarJogadores(document.getElementById('admin-busca')?.value || ''),
+    });
   }
 
   /* ── PÓDIO ──────────────────────────────────────── */
   async function carregarPodioAdmin() {
     _setLoading('admin-podio-lista', true);
     try {
-      const res = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'podio' }],
-          select: { fields: [
-            { fieldPath: 'player' }, { fieldPath: 'melhorScore' },
-            { fieldPath: 'totalJogos' }, { fieldPath: 'ultimaPartida' }
-          ]}
-        }
-      });
+      // Monta query: sem where = todos; com setor = filtrado
+      const query = {
+        from: [{ collectionId: 'podio' }],
+        select: { fields: [
+          { fieldPath: 'player' }, { fieldPath: 'melhorScore' },
+          { fieldPath: 'totalJogos' }, { fieldPath: 'ultimaPartida' },
+          { fieldPath: 'sector' }
+        ]}
+      };
+      if (_setorSelecionado) {
+        query.where = { fieldFilter: {
+          field: { fieldPath: 'sector' },
+          op: 'EQUAL',
+          value: { stringValue: _setorSelecionado }
+        }};
+      }
+
+      const res = await _query({ structuredQuery: query });
       const items = res.filter(r => r.document).map(r => {
         const uid = r.document.name.split('/').pop();
         return { uid, ..._parseFields(r.document.fields) };
       }).sort((a,b) => (b.melhorScore||0) - (a.melhorScore||0));
 
+      // Atualiza contador na toolbar
+      const countEl = document.getElementById('admin-podio-count');
+      if (countEl) {
+        const label = _setorSelecionado
+          ? `${items.length} entrada(s) em ${_setorSelecionado}`
+          : `${items.length} entrada(s) no total`;
+        countEl.textContent = label;
+      }
+
       const lista = document.getElementById('admin-podio-lista');
       if (!items.length) {
-        lista.innerHTML = '<div class="admin-empty">Pódio vazio.</div>';
+        lista.innerHTML = '<div class="admin-empty">Pódio vazio' + (_setorSelecionado ? ' para este setor' : '') + '.</div>';
         return;
       }
       lista.innerHTML = items.map((p, i) => `
@@ -367,7 +381,7 @@ const ADMIN = (() => {
           <div class="admin-podio-pos">#${i+1}</div>
           <div class="admin-podio-info">
             <div class="admin-podio-nome">${p.player || '—'}</div>
-            <div class="admin-podio-detalhe">${p.totalJogos || 0} jogos · ${p.ultimaPartida ? new Date(p.ultimaPartida).toLocaleDateString('pt-BR') : '—'}</div>
+            <div class="admin-podio-detalhe">${p.totalJogos || 0} jogos · ${p.ultimaPartida ? new Date(p.ultimaPartida).toLocaleDateString('pt-BR') : '—'}${p.sector && !_setorSelecionado ? ` · <span style="color:var(--gold2);font-weight:600">${p.sector}</span>` : ''}</div>
           </div>
           <div class="admin-podio-score">${p.melhorScore || 0}</div>
           <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerDoPodio('${p.uid}', '${(p.player||'').replace(/'/g,"\\'")}')">🗑️</button>
@@ -381,36 +395,44 @@ const ADMIN = (() => {
 
   async function removerDoPodio(uid, nome) {
     if (!confirm(`Remover ${nome} do pódio?`)) return;
-    try {
-      await _delete(`podio/${uid}`);
-      _showAdminToast('Entrada removida do pódio!');
-      carregarPodioAdmin();
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    }
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', `Removendo ${nome} do pódio…`],
+      executar: async () => { await _delete(`podio/${uid}`); },
+      sucesso: `${nome} removido do pódio.`,
+      onSucesso: () => carregarPodioAdmin(),
+    });
   }
 
   async function resetarPodioPorSetor() {
     const setor = _setorSelecionado;
-    if (!setor) { _showAdminToast('Selecione um setor.', true); return; }
-    if (!confirm(`Resetar pódio de ${setor}? Isso remove todas as entradas desse setor.`)) return;
-    try {
-      const res = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'podio' }],
-          where: { fieldFilter: { field: { fieldPath: 'sector' }, op: 'EQUAL', value: { stringValue: setor } } }
+    if (!setor) { _showAdminToast('Selecione um setor primeiro.', true); return; }
+    if (!confirm(`Resetar pódio de "${setor}"?\nIsso remove todas as entradas desse setor e não pode ser desfeito.`)) return;
+
+    let _totalDocs = 0;
+    await _opFeedback({
+      etapas: [
+        'Verificando permissões…',
+        `Buscando entradas de ${setor}…`,
+        'Removendo registros…',
+      ],
+      executar: async () => {
+        const res  = await _query({
+          structuredQuery: {
+            from: [{ collectionId: 'podio' }],
+            where: { fieldFilter: { field: { fieldPath: 'sector' }, op: 'EQUAL', value: { stringValue: setor } } }
+          }
+        });
+        const docs = res.filter(r => r.document);
+        _totalDocs = docs.length;
+        for (const d of docs) {
+          const uid = d.document.name.split('/').pop();
+          await _delete(`podio/${uid}`);
         }
-      });
-      const docs = res.filter(r => r.document);
-      for (const d of docs) {
-        const uid = d.document.name.split('/').pop();
-        await _delete(`podio/${uid}`);
-      }
-      _showAdminToast(`${docs.length} entradas de ${setor} removidas!`);
-      carregarPodioAdmin();
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    }
+      },
+      sucesso: `${_totalDocs} entrada(s) de ${setor} removidas!`,
+      onSucesso: () => carregarPodioAdmin(),
+    });
   }
 
   /* ── SETORES ────────────────────────────────────── */
@@ -471,61 +493,75 @@ const ADMIN = (() => {
   /* ── CONFIGURAÇÕES GLOBAIS ──────────────────────── */
   async function adicionarAdmin() {
     const input = document.getElementById('admin-novo-uid');
-    const uid = input?.value?.trim();
+    const uid   = input?.value?.trim();
     if (!uid) { _showAdminToast('Digite um UID válido.', true); return; }
     if (_adminUids.includes(uid)) { _showAdminToast('Já é admin.', true); return; }
-    try {
-      const uids = [..._adminUids, uid];
-      const tok = await _token();
-      const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: {
-          uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } }
-        }})
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      _adminUids = uids;
-      await _rtdbSyncAdmins(uids, _adminOwner);
-      if (input) input.value = '';
-      _showAdminToast('✅ Admin adicionado!');
-      _registrarAuditoria(`Admin adicionado: ${uid.slice(0,8)}`);
-      _renderAdminLista();
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    }
+
+    await _opFeedback({
+      etapas: [
+        'Verificando permissões…',
+        'Adicionando UID à lista…',
+        'Sincronizando banco de dados…',
+      ],
+      executar: async () => {
+        const uids = [..._adminUids, uid];
+        const tok  = await _token();
+        const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: {
+            uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } }
+          }})
+        });
+        if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
+        _adminUids = uids;
+        await _rtdbSyncAdmins(uids, _adminOwner);
+        if (input) input.value = '';
+        _registrarAuditoria(`Admin adicionado: ${uid.slice(0,8)}`);
+      },
+      sucesso: 'Admin adicionado com sucesso!',
+      onSucesso: () => _renderAdminLista(),
+    });
   }
 
   async function removerAdmin(uid) {
     if (uid === _adminOwner) { _showAdminToast('Owner não pode ser removido.', true); return; }
-    if (!confirm(`Remover ${uid.slice(0,12)}... dos admins?`)) return;
-    try {
-      const uids = _adminUids.filter(u => u !== uid);
-      const novasPermissoes = { ..._adminPermissoes };
-      delete novasPermissoes[uid];
-      const tok = await _token();
-      const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids&updateMask.fieldPaths=permissoes`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: {
-          uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } },
-          permissoes: { mapValue: { fields: Object.fromEntries(
-            Object.entries(novasPermissoes).map(([k, v]) => [k, {
-              arrayValue: { values: (Array.isArray(v) ? v : []).map(s => ({ stringValue: s })) }
-            }])
-          )}}
-        }})
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      _adminUids = uids;
-      _adminPermissoes = novasPermissoes;
-      await _rtdbSyncAdmins(uids, _adminOwner);
-      _showAdminToast('Admin removido.');
-      _registrarAuditoria(`Admin removido: ${uid.slice(0,8)}`);
-      _renderAdminLista();
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    }
+    const nomeExib = _adminNomes[uid] || uid.slice(0, 12) + '…';
+    if (!confirm(`Remover ${nomeExib} dos admins?`)) return;
+
+    await _opFeedback({
+      etapas: [
+        'Verificando permissões…',
+        `Removendo ${nomeExib}…`,
+        'Limpando permissões associadas…',
+        'Sincronizando banco de dados…',
+      ],
+      executar: async () => {
+        const uids = _adminUids.filter(u => u !== uid);
+        const novasPermissoes = { ..._adminPermissoes };
+        delete novasPermissoes[uid];
+        const tok = await _token();
+        const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids&updateMask.fieldPaths=permissoes`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: {
+            uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } },
+            permissoes: { mapValue: { fields: Object.fromEntries(
+              Object.entries(novasPermissoes).map(([k, v]) => [k, {
+                arrayValue: { values: (Array.isArray(v) ? v : []).map(s => ({ stringValue: s })) }
+              }])
+            )}}
+          }})
+        });
+        if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
+        _adminUids       = uids;
+        _adminPermissoes = novasPermissoes;
+        await _rtdbSyncAdmins(uids, _adminOwner);
+        _registrarAuditoria(`Admin removido: ${uid.slice(0,8)}`);
+      },
+      sucesso: `${nomeExib} removido dos administradores.`,
+      onSucesso: () => _renderAdminLista(),
+    });
   }
 
   /* ── DROPDOWN CUSTOMIZADO (pódio) ──────────────── */
@@ -553,15 +589,53 @@ const ADMIN = (() => {
     _setorSelecionado = valor;
     const labelEl = document.getElementById('admin-setor-label');
     if (labelEl) labelEl.textContent = label;
+
     // Destaca item ativo no menu
     document.querySelectorAll('.admin-dropdown-item').forEach(btn => {
       btn.classList.toggle('active', btn.textContent.trim() === label.trim());
     });
+
     // Fecha o menu
-    const menu = document.getElementById('admin-setor-menu');
+    const menu     = document.getElementById('admin-setor-menu');
     const dropdown = document.getElementById('admin-setor-dropdown');
     if (menu) menu.style.display = 'none';
     dropdown?.classList.remove('open');
+
+    // Atualiza estado do botão Resetar Setor (desabilitado quando "Todos")
+    const btnResetSetor = document.getElementById('btn-resetar-setor');
+    if (btnResetSetor) {
+      btnResetSetor.disabled = !valor;
+      btnResetSetor.title    = valor ? `Apagar todas as entradas de ${valor}` : 'Selecione um setor para resetar';
+    }
+
+    // Recarrega a lista com o novo filtro
+    carregarPodioAdmin();
+  }
+
+  // Reseta pódio completo (todos os setores)
+  async function resetarPodioTotal() {
+    if (!confirm('⚠️ Isso vai apagar TODO o pódio de TODOS os setores.\n\nEsta ação não pode ser desfeita.')) return;
+
+    let _total = 0;
+    await _opFeedback({
+      etapas: [
+        'Verificando permissões…',
+        'Buscando todas as entradas…',
+        'Apagando registros…',
+      ],
+      executar: async () => {
+        const res  = await _query({ structuredQuery: { from: [{ collectionId: 'podio' }] } });
+        const docs = res.filter(r => r.document);
+        _total = docs.length;
+        for (const d of docs) {
+          const uid = d.document.name.split('/').pop();
+          await _delete(`podio/${uid}`);
+        }
+        _registrarAuditoria(`Pódio completo resetado (${_total} entradas)`);
+      },
+      sucesso: `${_total} entrada(s) removidas do pódio!`,
+      onSucesso: () => carregarPodioAdmin(),
+    });
   }
 
   /* ── MODAL MENSAGEM GLOBAL ──────────────────────── */
@@ -601,26 +675,21 @@ const ADMIN = (() => {
 
   async function salvarMensagemGlobal() {
     const msg = document.getElementById('admin-msg-global')?.value || '';
-    const btn = document.getElementById('btn-salvar-msg');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
-    try {
-      const tok = await _token();
-      const r = await fetch(
-        `${FS}/config/global?updateMask.fieldPaths=mensagem`,
-        {
-          method: 'PATCH',
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Publicando mensagem global…'],
+      executar: async () => {
+        const tok = await _token();
+        const r   = await fetch(`${FS}/config/global?updateMask.fieldPaths=mensagem`, {
+          method:  'PATCH',
           headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fields: { mensagem: _fsStr(msg) }})
-        }
-      );
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      fecharModalMsg();
-      _showAdminToast(msg ? '📢 Mensagem enviada a todos os jogadores!' : '✅ Mensagem removida.');
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = '📢 Enviar'; }
-    }
+          body:    JSON.stringify({ fields: { mensagem: _fsStr(msg) }})
+        });
+        if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
+      },
+      sucesso: msg ? 'Mensagem enviada a todos os jogadores!' : 'Mensagem global removida.',
+      onSucesso: () => fecharModalMsg(),
+    });
   }
 
   async function limparMensagemGlobal() {
@@ -821,70 +890,56 @@ const ADMIN = (() => {
     const btns = foot?.querySelectorAll('button');
     btns?.forEach(b => { b.disabled = true; });
 
-    try {
-      const tok = await _token();
-
-      // Determina o motivo final (predefinido + detalhe se "Outro")
-      let motivoFinal = _banMotivoSelecionado;
-      if (motivoFinal.startsWith('Outro')) {
-        const detalhe = document.getElementById('admin-ban-detalhe')?.value?.trim();
-        if (detalhe) motivoFinal = detalhe;
-        else motivoFinal = 'Outro';
-      }
-
-      // Lê banHistory atual para append
-      let banHistory = [];
-      try {
-        const docAtual = await _get(`usuarios/${uid}`);
-        banHistory = _val(docAtual.fields?.banHistory) || [];
-      } catch(e) {}
-
-      const novaEntrada = {
-        tipo: estaBanido ? 'unban' : 'ban',
-        motivo: estaBanido ? '' : motivoFinal,
-        ts: Date.now(),
-      };
-      banHistory.push(novaEntrada);
-
-      // Campos a atualizar
-      const fieldsUpdate = {
-        banido: _fsBool(!estaBanido),
-        banHistory: { arrayValue: { values: banHistory.map(e => ({ mapValue: { fields: {
-          tipo:   { stringValue: e.tipo },
-          motivo: { stringValue: e.motivo || '' },
-          ts:     { integerValue: String(e.ts) },
-        }}})) }},
-      };
-      if (!estaBanido) {
-        fieldsUpdate.motivoBan = _fsStr(motivoFinal);
-      } else {
-        fieldsUpdate.motivoBan = _fsStr(''); // limpa o motivo ao desbanir
-      }
-
-      const mask = Object.keys(fieldsUpdate).map(k => `updateMask.fieldPaths=${k}`).join('&');
-      const patchR = await fetch(`${FS}/usuarios/${uid}?${mask}`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: fieldsUpdate })
-      });
-
-      if (!patchR.ok) {
-        const errBody = await patchR.text();
-        let msg = `HTTP ${patchR.status}`;
-        if (patchR.status === 403) msg = 'Permissão negada — redeploy as regras do Firestore';
-        else msg += ': ' + errBody.slice(0, 80);
-        throw new Error(msg);
-      }
-
-      fecharModalBan();
-      _showAdminToast(estaBanido ? 'Jogador desbanido!' : 'Jogador banido!');
-      if (_currentSection === 'jogadores') {
-        carregarJogadores(document.getElementById('admin-busca')?.value || '');
-      }
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-      btns?.forEach(b => { b.disabled = false; });
+    // Determina o motivo final antes de entrar no feedback
+    let motivoFinal = _banMotivoSelecionado;
+    if (!estaBanido) motivoFinal = '';
+    else if (motivoFinal.startsWith('Outro')) {
+      const detalhe = document.getElementById('admin-ban-detalhe')?.value?.trim();
+      motivoFinal = detalhe || 'Outro';
     }
+
+    await _opFeedback({
+      etapas: estaBanido
+        ? ['Verificando permissões…', 'Removendo banimento…', 'Atualizando histórico…']
+        : ['Verificando permissões…', 'Aplicando banimento…', 'Registrando motivo…', 'Atualizando histórico…'],
+      executar: async () => {
+        const tok = await _token();
+
+        let banHistory = [];
+        try {
+          const docAtual = await _get(`usuarios/${uid}`);
+          banHistory = _val(docAtual.fields?.banHistory) || [];
+        } catch(e) {}
+
+        banHistory.push({ tipo: estaBanido ? 'unban' : 'ban', motivo: motivoFinal, ts: Date.now() });
+
+        const fieldsUpdate = {
+          banido: _fsBool(!estaBanido),
+          banHistory: { arrayValue: { values: banHistory.map(e => ({ mapValue: { fields: {
+            tipo:   { stringValue: e.tipo },
+            motivo: { stringValue: e.motivo || '' },
+            ts:     { integerValue: String(e.ts) },
+          }}})) }},
+          motivoBan: _fsStr(estaBanido ? '' : motivoFinal),
+        };
+
+        const mask   = Object.keys(fieldsUpdate).map(k => `updateMask.fieldPaths=${k}`).join('&');
+        const patchR = await fetch(`${FS}/usuarios/${uid}?${mask}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: fieldsUpdate })
+        });
+        if (!patchR.ok) { const b = await patchR.text(); throw new Error(`HTTP ${patchR.status}: ${b.slice(0,80)}`); }
+      },
+      sucesso: estaBanido ? 'Jogador desbanido com sucesso!' : 'Jogador banido com sucesso!',
+      onSucesso: () => {
+        fecharModalBan();
+        if (_currentSection === 'jogadores')
+          carregarJogadores(document.getElementById('admin-busca')?.value || '');
+      },
+    });
+
+    btns?.forEach(b => { b.disabled = false; });
   }
 
   /* ── INBOX (MENSAGENS PARA JOGADOR) ─────────────── */
@@ -914,34 +969,39 @@ const ADMIN = (() => {
     const texto = document.getElementById('admin-inbox-texto')?.value?.trim();
     if (!texto) { _showAdminToast('Digite uma mensagem.', true); return; }
     if (!_inboxUid) { _showAdminToast('Destinatário inválido.', true); return; }
-    try {
-      const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-      const campos = {
-        texto:             { stringValue: texto },
-        de:                { stringValue: 'admin' },
-        ts:                { integerValue: String(Date.now()) },
-        lida:              { booleanValue: false },
-        confirmada:        { booleanValue: false },
-        categoria:         { stringValue: 'geral' },
-        fixada:            { booleanValue: false },
-        exigirConfirmacao: { booleanValue: false },
-        broadcast:         { booleanValue: false },
-        expiraEm:          { integerValue: String(Date.now() + 30*24*60*60*1000) },
-      };
-      await _patch(`usuarios/${_inboxUid}/mensagens/${msgId}`, campos);
-      await _patch(`mensagens_log/${msgId}`, {
-        ...campos,
-        destUid:      { stringValue: _inboxUid },
-        destNome:     { stringValue: _inboxNome },
-        lidoPor:      { integerValue: '0' },
-        totalEnviado: { integerValue: '1' },
-      });
-      _showAdminToast(`✅ Mensagem enviada para ${_inboxNome}!`);
-      fecharModalInbox();
-      if (_currentSection === 'mensagens') carregarMensagens();
-    } catch(e) {
-      _showAdminToast('Erro ao enviar: ' + e.message, true);
-    }
+    const dest = _inboxNome || _inboxUid;
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', `Enviando mensagem para ${dest}…`, 'Registrando no log…'],
+      executar: async () => {
+        const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+        const campos = {
+          texto:             { stringValue: texto },
+          de:                { stringValue: 'admin' },
+          ts:                { integerValue: String(Date.now()) },
+          lida:              { booleanValue: false },
+          confirmada:        { booleanValue: false },
+          categoria:         { stringValue: 'geral' },
+          fixada:            { booleanValue: false },
+          exigirConfirmacao: { booleanValue: false },
+          broadcast:         { booleanValue: false },
+          expiraEm:          { integerValue: String(Date.now() + 30*24*60*60*1000) },
+        };
+        await _patch(`usuarios/${_inboxUid}/mensagens/${msgId}`, campos);
+        await _patch(`mensagens_log/${msgId}`, {
+          ...campos,
+          destUid:      { stringValue: _inboxUid },
+          destNome:     { stringValue: _inboxNome },
+          lidoPor:      { integerValue: '0' },
+          totalEnviado: { integerValue: '1' },
+        });
+      },
+      sucesso: `Mensagem enviada para ${dest}!`,
+      onSucesso: () => {
+        fecharModalInbox();
+        if (_currentSection === 'mensagens') carregarMensagens();
+      },
+    });
   }
 
   async function enviarMensagemTodos(texto) {
@@ -1056,14 +1116,14 @@ const ADMIN = (() => {
           destNome: { stringValue: _novaMsgNome },
           lidoPor:  { integerValue: '0' }, totalEnviado: { integerValue: '1' },
         });
-        _showAdminToast(`✅ Mensagem enviada para ${_novaMsgNome || _novaMsgUid}!`);
-      } else {
+        } else {
         // Sem destinatário definido — abre broadcast
         fecharNovaMsg();
         abrirBroadcast();
         return;
       }
       fecharNovaMsg();
+      _showAdminToast(`✅ Mensagem enviada para ${_novaMsgNome || _novaMsgUid}!`);
       if (_currentSection === 'mensagens') carregarMensagens();
     } catch(e) {
       _showAdminToast('Erro ao enviar: ' + e.message, true);
@@ -1328,6 +1388,149 @@ const ADMIN = (() => {
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
 
+  /* ══════════════════════════════════════════════════
+     FEEDBACK DE OPERAÇÃO — tela de loading com etapas
+  ══════════════════════════════════════════════════ */
+
+  // Converte código HTTP / mensagem de erro em texto amigável
+  function _traduzirErro(e) {
+    const msg = (e?.message || String(e)).toLowerCase();
+    const status = parseInt((e?.message || '').match(/\d{3}/)?.[0] || '0');
+
+    if (status === 403 || msg.includes('permission') || msg.includes('permiss'))
+      return { titulo: 'Permissão negada', detalhe: 'Sua permissão para esta ação foi revogada. Recarregue o painel ou faça login novamente.', tipo: 'revogado' };
+    if (status === 401 || msg.includes('não autenticado') || msg.includes('unauthenticated') || msg.includes('token'))
+      return { titulo: 'Sessão expirada', detalhe: 'Seu login expirou. Saia e entre novamente para continuar.', tipo: 'auth' };
+    if (status === 404 || msg.includes('not found') || msg.includes('não encontrado'))
+      return { titulo: 'Recurso não encontrado', detalhe: 'O documento que tentou acessar não existe ou foi removido.', tipo: 'notfound' };
+    if (status >= 500 || msg.includes('unavailable') || msg.includes('internal'))
+      return { titulo: 'Falha no servidor', detalhe: 'O Firestore retornou um erro interno. Tente novamente em instantes.', tipo: 'server' };
+    if (msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('network') || msg.includes('offline') || msg.includes('conexão'))
+      return { titulo: 'Falha na conexão', detalhe: 'Não foi possível alcançar o servidor. Verifique sua internet e tente novamente.', tipo: 'network' };
+    if (status === 429 || msg.includes('quota') || msg.includes('limit'))
+      return { titulo: 'Limite atingido', detalhe: 'O Firestore atingiu o limite de requisições. Aguarde alguns segundos.', tipo: 'quota' };
+
+    return { titulo: 'Erro inesperado', detalhe: e?.message || 'Ocorreu um problema desconhecido. Tente novamente.', tipo: 'generic' };
+  }
+
+  // Ícones SVG para os estados
+  const _opIcons = {
+    loading: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+    ok:      `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    err:     `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    revoked: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  };
+
+  /**
+   * _opFeedback(config)
+   *
+   * config: {
+   *   etapas:  string[]           — ex: ['Verificando permissões…', 'Salvando dados…']
+   *   executar: async () => any   — função que faz a operação real
+   *   sucesso:  string            — mensagem de sucesso
+   *   onSucesso?: () => void      — callback pós-sucesso (fechar modal, recarregar lista…)
+   *   fecharBotao?: string        — texto do botão de fechar no estado de sucesso (default: 'Fechar')
+   * }
+   */
+  async function _opFeedback({ etapas = [], executar, sucesso, onSucesso, fecharBotao = 'Fechar' }) {
+    const ov = document.getElementById('admin-op-feedback');
+    const iconEl   = document.getElementById('aof-icon');
+    const tituloEl = document.getElementById('aof-titulo');
+    const etapaEl  = document.getElementById('aof-etapa');
+    const barraEl  = document.getElementById('aof-barra-fill');
+    const listaEl  = document.getElementById('aof-lista');
+    const footerEl = document.getElementById('aof-footer');
+    if (!ov) return;  // fallback seguro: se o HTML não tiver o overlay, ignora
+
+    // Reset
+    iconEl.innerHTML   = _opIcons.loading;
+    iconEl.className   = 'aof-icon aof-loading';
+    tituloEl.textContent = 'Aguarde…';
+    etapaEl.textContent  = etapas[0] || 'Iniciando…';
+    barraEl.style.width  = '0%';
+    listaEl.innerHTML    = '';
+    footerEl.innerHTML   = '';
+    ov.style.display     = 'flex';
+
+    // Renderiza etapas como itens pendentes
+    const itens = etapas.map((txt, i) => {
+      const li = document.createElement('div');
+      li.className = 'aof-item aof-pending';
+      li.innerHTML = `<span class="aof-item-dot"></span><span class="aof-item-txt">${txt}</span>`;
+      listaEl.appendChild(li);
+      return li;
+    });
+
+    // Avança visualmente pelas etapas com delay mínimo para o olho perceber
+    async function _avancarEtapa(i) {
+      if (i > 0 && itens[i-1]) {
+        itens[i-1].className = 'aof-item aof-done';
+        itens[i-1].querySelector('.aof-item-dot').innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      }
+      if (itens[i]) {
+        itens[i].className = 'aof-item aof-running';
+        etapaEl.textContent = etapas[i];
+      }
+      barraEl.style.width = `${Math.round(((i + 1) / (etapas.length + 1)) * 85)}%`;
+      await new Promise(r => setTimeout(r, 320));
+    }
+
+    // Executa etapas visuais antes da operação real
+    for (let i = 0; i < etapas.length - 1; i++) {
+      await _avancarEtapa(i);
+    }
+    // Última etapa visual fica "rodando" enquanto o fetch real acontece
+    if (etapas.length > 0) await _avancarEtapa(etapas.length - 1);
+
+    // ── Executa a operação real ──────────────────────
+    try {
+      await executar();
+
+      // Sucesso
+      itens.forEach(li => {
+        li.className = 'aof-item aof-done';
+        li.querySelector('.aof-item-dot').innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      });
+      barraEl.style.width = '100%';
+      barraEl.style.background = 'var(--ok)';
+      iconEl.innerHTML   = _opIcons.ok;
+      iconEl.className   = 'aof-icon aof-ok';
+      tituloEl.textContent = 'Concluído!';
+      etapaEl.textContent  = sucesso;
+      footerEl.innerHTML   = `<button class="aof-btn aof-btn-ok" onclick="document.getElementById('admin-op-feedback').style.display='none'">${fecharBotao}</button>`;
+
+      if (onSucesso) {
+        await new Promise(r => setTimeout(r, 900));
+        ov.style.display = 'none';
+        onSucesso();
+      }
+
+    } catch(e) {
+      // Marca a última etapa em execução como falha
+      const emExec = itens.find(li => li.classList.contains('aof-running'));
+      if (emExec) {
+        emExec.className = 'aof-item aof-fail';
+        emExec.querySelector('.aof-item-dot').innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      }
+
+      barraEl.style.background = 'var(--err)';
+      barraEl.style.width      = '100%';
+
+      const { titulo, detalhe, tipo } = _traduzirErro(e);
+      const isRevoked = tipo === 'revogado' || tipo === 'auth';
+
+      iconEl.innerHTML   = isRevoked ? _opIcons.revoked : _opIcons.err;
+      iconEl.className   = 'aof-icon aof-err';
+      tituloEl.textContent = titulo;
+      etapaEl.textContent  = detalhe;
+
+      footerEl.innerHTML = isRevoked
+        ? `<button class="aof-btn aof-btn-err" onclick="document.getElementById('btn-sair').click()">Sair da conta</button>
+           <button class="aof-btn aof-btn-ghost" onclick="document.getElementById('admin-op-feedback').style.display='none'">Fechar</button>`
+        : `<button class="aof-btn aof-btn-ghost" onclick="document.getElementById('admin-op-feedback').style.display='none'">Fechar</button>`;
+    }
+  }
+
   /* ── NAVEGAÇÃO ENTRE SEÇÕES ─────────────────────── */
   function irParaSecao(id) {
     _currentSection = id;
@@ -1431,26 +1634,24 @@ const ADMIN = (() => {
 
   async function salvarChangelog() {
     if (!_versaoAtual?.hash) { _showAdminToast('Versão não carregada', true); return; }
-    const changelog = document.getElementById('versao-changelog-input').value.trim();
-    const critica   = document.getElementById('versao-critica-check').checked;
-    const btn       = document.querySelector('[onclick="ADMIN.salvarChangelog()"]');
-    if (btn) btn.textContent = 'Salvando...';
-    try {
-      await _patch(`versoes/${_versaoAtual.hash}`, {
-        changelog:  { stringValue: changelog },
-        critica:    { booleanValue: critica },
-        versao:     { stringValue: _versaoAtual.versao || _versaoAtual.hash?.slice(0,7) },
-        hash:       { stringValue: _versaoAtual.hash },
-        deployedAt: { stringValue: _versaoAtual.deployedAt || '' },
-        savedAt:    { stringValue: new Date().toISOString() },
-      });
-      _showAdminToast('✅ Changelog salvo!');
-      _carregarHistoricoVersoes();
-    } catch(e) {
-      _showAdminToast('Erro ao salvar: ' + e.message, true);
-    } finally {
-      if (btn) btn.textContent = '💾 Salvar Changelog';
-    }
+    const changelog = document.getElementById('versao-changelog-input')?.value.trim() || '';
+    const critica   = document.getElementById('versao-critica-check')?.checked || false;
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Salvando changelog da versão…'],
+      executar: async () => {
+        await _patch(`versoes/${_versaoAtual.hash}`, {
+          changelog:  { stringValue: changelog },
+          critica:    { booleanValue: critica },
+          versao:     { stringValue: _versaoAtual.versao || _versaoAtual.hash?.slice(0,7) },
+          hash:       { stringValue: _versaoAtual.hash },
+          deployedAt: { stringValue: _versaoAtual.deployedAt || '' },
+          savedAt:    { stringValue: new Date().toISOString() },
+        });
+      },
+      sucesso: 'Changelog salvo!',
+      onSucesso: () => _carregarHistoricoVersoes(),
+    });
   }
 
   async function _carregarStatsVersao(hashAtual) {
@@ -1788,24 +1989,27 @@ const ADMIN = (() => {
   }
 
   async function toggleHistoria(chave, ativa) {
-    try {
-      const campos = { [chave]: _fsBool(ativa) };
-      const keys = Object.keys(campos);
-      const mask = keys.map(k => `updateMask.fieldPaths=${k}`).join('&');
-      const tok = await _token();
-      await fetch(`${FS}/config/historias?${mask}`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: campos })
-      });
-      const badge = document.getElementById(`hist-badge-${chave}`);
-      if (badge) {
-        badge.textContent = ativa ? 'Ativa' : 'Inativa';
-        badge.className = `admin-historia-badge ${ativa ? 'ativa' : 'inativa'}`;
-      }
-      _showAdminToast(ativa ? '✅ História ativada!' : '⏸ História desativada!');
-      _registrarAuditoria(ativa ? `História ${chave} ativada` : `História ${chave} desativada`);
-    } catch(e) { _showAdminToast('Erro: ' + e.message, true); }
+    await _opFeedback({
+      etapas: ['Verificando permissões…', `${ativa ? 'Ativando' : 'Desativando'} história…`],
+      executar: async () => {
+        const campos = { [chave]: _fsBool(ativa) };
+        const mask   = Object.keys(campos).map(k => `updateMask.fieldPaths=${k}`).join('&');
+        const tok    = await _token();
+        const r = await fetch(`${FS}/config/historias?${mask}`, {
+          method:  'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ fields: campos })
+        });
+        if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
+        const badge = document.getElementById(`hist-badge-${chave}`);
+        if (badge) {
+          badge.textContent = ativa ? 'Ativa' : 'Inativa';
+          badge.className   = `admin-historia-badge ${ativa ? 'ativa' : 'inativa'}`;
+        }
+        _registrarAuditoria(ativa ? `História ${chave} ativada` : `História ${chave} desativada`);
+      },
+      sucesso: ativa ? 'História ativada com sucesso!' : 'História desativada.',
+    });
   }
 
   /* ════════════════════════════════════════════════════
@@ -2041,23 +2245,28 @@ const ADMIN = (() => {
 
   async function limparAuditLog() {
     if (!confirm('Limpar todo o log de auditoria? Esta ação não pode ser desfeita.')) return;
-    try {
-      const res = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'auditoria' }],
-          limit: 100
-        }
-      });
-      const ids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
-      const tok = await _token();
-      await Promise.all(ids.map(id =>
-        fetch(`${FS}/auditoria/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } })
-      ));
-      _showAdminToast('✅ Log de auditoria limpo.');
-      carregarAuditLog();
-    } catch(e) {
-      _showAdminToast('Erro ao limpar: ' + e.message, true);
-    }
+    let _total = 0;
+
+    await _opFeedback({
+      etapas: [
+        'Verificando permissões…',
+        'Buscando registros de auditoria…',
+        'Apagando entradas…',
+      ],
+      executar: async () => {
+        const res = await _query({
+          structuredQuery: { from: [{ collectionId: 'auditoria' }], limit: 100 }
+        });
+        const ids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
+        _total = ids.length;
+        const tok = await _token();
+        await Promise.all(ids.map(id =>
+          fetch(`${FS}/auditoria/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${tok}` } })
+        ));
+      },
+      sucesso: `${_total} registro(s) de auditoria removidos.`,
+      onSucesso: () => carregarAuditLog(),
+    });
   }
 
   /* ════════════════════════════════════════════════════
@@ -2082,6 +2291,8 @@ const ADMIN = (() => {
     } catch(e) { console.warn('[ADMIN] Config:', e); }
     // Admins
     carregarAdmins();
+    // Inicia polling de revogação de acesso (30s)
+    _iniciarPollingAdmin();
   }
 
   const _SECOES = [
@@ -2101,14 +2312,41 @@ const ADMIN = (() => {
   async function carregarAdmins() {
     try {
       const doc = await _get('config/admins');
-      _adminUids      = _val(doc.fields?.uids)        || [];
-      _adminOwner     = _val(doc.fields?.owner)       || '';
-      _adminPermissoes = _val(doc.fields?.permissoes) || {};
-      // Sincroniza RTDB sempre que o painel carrega — mantém os dados atualizados para verificarAdmin rápido
+      _adminUids       = _val(doc.fields?.uids)        || [];
+      _adminOwner      = _val(doc.fields?.owner)       || '';
+      _adminPermissoes = _val(doc.fields?.permissoes)  || {};
+      _adminNomes      = _val(doc.fields?.nomes)       || {};
+
+      // Registra/atualiza o displayName do admin logado no campo nomes
+      const meUID  = window._player?.uid  || '';
+      const meNome = window._player?.nome || '';
+      if (meUID && meNome && _adminNomes[meUID] !== meNome) {
+        _gravarNomeAdmin(meUID, meNome).catch(() => {});
+      }
+
+      // Sincroniza RTDB sempre que o painel carrega
       await _rtdbSyncAdmins(_adminUids, _adminOwner);
       _renderAdminLista();
       _aplicarPermissoesNav();
     } catch(e) { console.warn('[ADMIN] carregarAdmins:', e); }
+  }
+
+  // Grava apenas o mapa "nomes" no config/admins (permitido pelas Firestore Rules para qualquer admin)
+  async function _gravarNomeAdmin(uid, nome) {
+    try {
+      const nomes = { ..._adminNomes, [uid]: nome };
+      const tok   = await _token();
+      const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=nomes`, {
+        method:  'PATCH',
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: {
+          nomes: { mapValue: { fields: Object.fromEntries(
+            Object.entries(nomes).map(([k, v]) => [k, { stringValue: v }])
+          )}}
+        }})
+      });
+      if (r.ok) _adminNomes = nomes;
+    } catch(e) { /* silencioso — não crítico */ }
   }
 
   function _renderAdminLista() {
@@ -2120,14 +2358,38 @@ const ADMIN = (() => {
       return;
     }
     lista.innerHTML = _adminUids.map(u => {
-      const isOwner  = u === _adminOwner;
-      const perms    = Array.isArray(_adminPermissoes[u]) ? _adminPermissoes[u] : _SECOES.map(s => s.id);
-      const permBtns = isOwner ? '<span style="font-size:.7rem;color:var(--warn);font-weight:700">👑 Owner</span>' : `
-        <button class="admin-btn-sm" style="background:var(--bg3);border:1px solid var(--line2)" onclick="ADMIN.abrirPermissoes('${u}')">⚙️ Permissões</button>
-        <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${u}')">✕</button>`;
+      const isOwner    = u === _adminOwner;
+      const isMe       = u === meUID;
+      const perms      = Array.isArray(_adminPermissoes[u]) ? _adminPermissoes[u] : _SECOES.map(s => s.id);
+      const nomeExib   = _adminNomes[u] || '';
+      const uidCurto   = u.slice(0, 10) + '…';
+
+      const permBtns = isOwner
+        ? '<span style="font-size:.7rem;color:var(--warn);font-weight:700">👑 Owner</span>'
+        : `<button class="admin-btn-sm" style="background:var(--bg3);border:1px solid var(--line2)" onclick="ADMIN.abrirPermissoes('${u}')">⚙️ Permissões</button>
+           <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${u}')">✕</button>`;
+
+      const meBadge = isMe
+        ? '<span style="font-size:.6rem;background:rgba(201,151,58,.15);color:var(--gold);border:1px solid var(--gold-bd);border-radius:4px;padding:1px 5px;font-weight:700;flex-shrink:0">você</span>'
+        : '';
+
+      const permInfo = isOwner ? '' : `<span style="font-size:.65rem;color:var(--t3)">(${perms.length}/${_SECOES.length} seções)</span>`;
+
       return `
-        <div class="admin-uid-row" style="flex-wrap:wrap;gap:6px">
-          <span class="admin-uid-text" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${u}${isOwner ? '' : ` <span style="font-size:.65rem;color:var(--t3)">(${perms.length}/${_SECOES.length} seções)</span>`}</span>
+        <div class="admin-uid-row" style="flex-wrap:wrap;gap:6px;align-items:center">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+            <div style="display:flex;align-items:center;gap:6px;min-width:0">
+              ${nomeExib
+                ? `<span style="font-size:.88rem;font-weight:700;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nomeExib}</span>`
+                : `<span style="font-size:.82rem;color:var(--t2);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${uidCurto}</span>`
+              }
+              ${meBadge}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:.68rem;color:var(--t3);font-family:var(--mono)">${nomeExib ? uidCurto : ''}</span>
+              ${permInfo}
+            </div>
+          </div>
           <div style="display:flex;gap:4px;flex-shrink:0">${permBtns}</div>
         </div>`;
     }).join('');
@@ -2135,90 +2397,211 @@ const ADMIN = (() => {
 
   function _aplicarPermissoesNav() {
     const meUID = window._player?.uid || '';
-    if (!meUID || meUID === _adminOwner) return; // owner vê tudo
+    if (!meUID || meUID === _adminOwner) {
+      // Owner: garante que todos os botões aparecem
+      document.querySelectorAll('.admin-nav-btn').forEach(btn => btn.style.display = '');
+      _esconderOverlayBloqueio();
+      return;
+    }
+
     const perms = Array.isArray(_adminPermissoes[meUID]) ? _adminPermissoes[meUID] : null;
-    if (!perms) return;
+
+    // Admin com zero permissões ativas → overlay de sem-permissão
+    if (perms && perms.length === 0) {
+      _mostrarOverlaySemPermissao();
+      return;
+    }
+
+    _esconderOverlayBloqueio();
+
     document.querySelectorAll('.admin-nav-btn').forEach(btn => {
       const sec = btn.dataset.sec;
-      btn.style.display = perms.includes(sec) ? '' : 'none';
+      // null = sem restrição definida ainda → mostra tudo
+      btn.style.display = (!perms || perms.includes(sec)) ? '' : 'none';
     });
+
+    // Se a seção atual não é mais permitida, redireciona para a primeira disponível
+    const primeiraBtnVisivel = document.querySelector('.admin-nav-btn:not([style*="none"])');
+    if (perms && !perms.includes(_currentSection) && primeiraBtnVisivel) {
+      primeiraBtnVisivel.click();
+    }
+  }
+
+  /* ── OVERLAYS DE BLOQUEIO ───────────────────────── */
+  function _mostrarOverlayAcessoRevogado() {
+    let ov = document.getElementById('admin-overlay-revogado');
+    if (!ov) return;
+    ov.style.display = 'flex';
+  }
+
+  function _mostrarOverlaySemPermissao() {
+    let ov = document.getElementById('admin-overlay-sem-permissao');
+    if (!ov) return;
+    // Esconde o conteúdo principal mas não o nav (admin ainda está logado)
+    document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.admin-nav-btn').forEach(b => b.style.display = 'none');
+    ov.style.display = 'flex';
+  }
+
+  function _esconderOverlayBloqueio() {
+    const ov1 = document.getElementById('admin-overlay-revogado');
+    const ov2 = document.getElementById('admin-overlay-sem-permissao');
+    if (ov1) ov1.style.display = 'none';
+    if (ov2) ov2.style.display = 'none';
+  }
+
+  /* ── POLLING: revogação imediata de acesso ──────── */
+  function _iniciarPollingAdmin() {
+    if (_pollingAdminInterval) return; // já rodando
+    _pollingAdminInterval = setInterval(_verificarAcessoAdmin, 30_000);
+  }
+
+  function _pararPollingAdmin() {
+    if (_pollingAdminInterval) {
+      clearInterval(_pollingAdminInterval);
+      _pollingAdminInterval = null;
+    }
+  }
+
+  async function _verificarAcessoAdmin() {
+    const meUID = window._player?.uid || '';
+    if (!meUID) return;
+    try {
+      const doc = await _get('config/admins');
+      const uids       = _val(doc.fields?.uids)        || [];
+      const owner      = _val(doc.fields?.owner)       || '';
+      const permissoes = _val(doc.fields?.permissoes)  || {};
+      const nomes      = _val(doc.fields?.nomes)       || {};
+
+      // ① Acesso totalmente revogado (UID removido da lista)
+      const aindaAdmin = uids.includes(meUID) || meUID === owner;
+      if (!aindaAdmin) {
+        _pararPollingAdmin();
+        _mostrarOverlayAcessoRevogado();
+        return;
+      }
+
+      // ② Atualiza estado local sem precisar chamar carregarAdmins inteiro
+      const permAntes = JSON.stringify(_adminPermissoes[meUID] ?? null);
+      _adminUids       = uids;
+      _adminOwner      = owner;
+      _adminPermissoes = permissoes;
+      _adminNomes      = nomes;
+
+      // Reavalia permissões se mudaram
+      const permDepois = JSON.stringify(_adminPermissoes[meUID] ?? null);
+      if (permAntes !== permDepois) {
+        _renderAdminLista();
+        _aplicarPermissoesNav();
+      }
+    } catch(e) {
+      console.warn('[ADMIN] polling verificação de acesso falhou:', e?.message);
+    }
   }
 
   function abrirPermissoes(uid) {
-    const perms = Array.isArray(_adminPermissoes[uid]) ? _adminPermissoes[uid] : _SECOES.map(s => s.id);
+    const perms      = Array.isArray(_adminPermissoes[uid]) ? _adminPermissoes[uid] : _SECOES.map(s => s.id);
+    const nomeExib   = _adminNomes[uid] || uid.slice(0, 14) + '…';
+    const temTodasPerms = perms.length === _SECOES.length;
     const modal = document.getElementById('admin-modal');
     const body  = document.getElementById('admin-modal-body');
     if (!modal || !body) return;
+
+    const tituloEl = document.getElementById('admin-modal-title');
+    if (tituloEl) tituloEl.textContent = '⚙️ Permissões';
+
     body.innerHTML = `
-      <div style="padding:16px">
-        <div class="admin-sec-title" style="margin-bottom:12px">⚙️ Permissões — ${uid.slice(0,12)}...</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="padding:16px 20px">
+        <div style="font-size:.8rem;color:var(--t3);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)">
+          Editando acesso de <strong style="color:var(--t1)">${nomeExib}</strong>
+          <span style="display:block;font-size:.68rem;font-family:var(--mono);color:var(--t3);margin-top:2px">${uid}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:.75rem;color:var(--t3)">${perms.length}/${_SECOES.length} seções ativas</span>
+          <button onclick="(function(){
+              document.querySelectorAll('#admin-modal-body input[data-perm]').forEach(c=>c.checked=true);
+            })()" style="font-size:.7rem;background:transparent;border:none;color:var(--gold);cursor:pointer;padding:0">
+            Marcar todas
+          </button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
           ${_SECOES.map(s => `
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--line);transition:border-color .15s"
+              onmouseover="this.style.borderColor='var(--line2)'" onmouseout="this.style.borderColor='var(--line)'">
               <input type="checkbox" data-perm="${s.id}" ${perms.includes(s.id) ? 'checked' : ''}
-                style="width:16px;height:16px;accent-color:var(--s-text)">
-              <span style="font-size:.85rem">${s.label}</span>
+                style="width:15px;height:15px;accent-color:var(--gold);flex-shrink:0">
+              <span style="font-size:.84rem;color:var(--t1)">${s.label}</span>
             </label>`).join('')}
         </div>
         <div style="display:flex;gap:8px;margin-top:16px">
           <button class="admin-btn admin-btn-ok" style="flex:1" onclick="ADMIN.salvarPermissoes('${uid}')">✅ Salvar</button>
-          <button class="admin-btn" style="flex:1;background:var(--bg3);border:1px solid var(--line2)" onclick="ADMIN.fecharModal()">Cancelar</button>
+          <button class="admin-btn" style="flex:1;background:var(--bg3);border:1px solid var(--line2);color:var(--t2);text-transform:none;letter-spacing:0;font-weight:600" onclick="ADMIN.fecharModal()">Cancelar</button>
         </div>
       </div>`;
     modal.style.display = 'flex';
   }
 
   async function salvarPermissoes(uid) {
-    const checkboxes = document.querySelectorAll('#admin-modal-body input[data-perm]');
+    const checkboxes  = document.querySelectorAll('#admin-modal-body input[data-perm]');
     const selecionadas = Array.from(checkboxes).filter(c => c.checked).map(c => c.dataset.perm);
-    try {
-      const novasPermissoes = { ..._adminPermissoes, [uid]: selecionadas };
-      const tok = await _token();
-      const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=permissoes`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: {
-          permissoes: { mapValue: { fields: Object.fromEntries(
-            Object.entries(novasPermissoes).map(([k, v]) => [k, {
-              arrayValue: { values: v.map(s => ({ stringValue: s })) }
-            }])
-          )}}
-        }})
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      _adminPermissoes = novasPermissoes;
-      fecharModal();
-      _showAdminToast('✅ Permissões salvas!');
-      _registrarAuditoria(`Permissões de ${uid.slice(0,8)} atualizadas`);
-      _renderAdminLista();
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    }
+    const nomeExib    = _adminNomes[uid] || uid.slice(0,10) + '…';
+
+    await _opFeedback({
+      etapas: [
+        'Verificando permissões…',
+        `Salvando acesso de ${nomeExib}…`,
+      ],
+      executar: async () => {
+        const novasPermissoes = { ..._adminPermissoes, [uid]: selecionadas };
+        const tok = await _token();
+        const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=permissoes`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: {
+            permissoes: { mapValue: { fields: Object.fromEntries(
+              Object.entries(novasPermissoes).map(([k, v]) => [k, {
+                arrayValue: { values: v.map(s => ({ stringValue: s })) }
+              }])
+            )}}
+          }})
+        });
+        if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
+        _adminPermissoes = novasPermissoes;
+        _registrarAuditoria(`Permissões de ${uid.slice(0,8)} atualizadas`);
+      },
+      sucesso: `${selecionadas.length} seção(ões) salvas para ${nomeExib}`,
+      onSucesso: () => { fecharModal(); _renderAdminLista(); },
+    });
   }
 
   async function salvarConfigGlobal() {
-    const btn = document.getElementById('btn-salvar-config');
-    if (btn) btn.textContent = 'Salvando...';
-    try {
-      const manut     = document.getElementById('admin-manutencao')?.checked || false;
-      const inicio    = document.getElementById('admin-manut-inicio')?.value || '';
-      const fim       = document.getElementById('admin-manut-fim')?.value    || '';
-      const modoSala  = document.getElementById('admin-modo-sala')?.checked  || false;
-      const mensagem  = document.getElementById('admin-manut-mensagem')?.value.trim() || '';
-      await _patch('config/global', {
-        manutencao:       _fsBool(manut),
-        manutencaoInicio: _fsStr(inicio),
-        manutencaoFim:    _fsStr(fim),
-        modoSalaAtivo:    _fsBool(modoSala),
-        mensagem:         _fsStr(mensagem),
-      });
-      const banner = document.getElementById('admin-manutencao-banner');
-      if (banner) banner.style.display = manut ? 'block' : 'none';
-      _showAdminToast('✅ Configurações salvas!');
-      _registrarAuditoria(manut ? 'Manutenção ativada' : 'Manutenção desativada');
-      if (modoSala !== undefined) _registrarAuditoria(modoSala ? 'Modo Sala ativado' : 'Modo Sala desativado');
-    } catch(e) { _showAdminToast('Erro: ' + e.message, true); }
-    if (btn) btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar';
+    const manut    = document.getElementById('admin-manutencao')?.checked || false;
+    const inicio   = document.getElementById('admin-manut-inicio')?.value || '';
+    const fim      = document.getElementById('admin-manut-fim')?.value    || '';
+    const modoSala = document.getElementById('admin-modo-sala')?.checked  || false;
+    const mensagem = document.getElementById('admin-manut-mensagem')?.value.trim() || '';
+
+    await _opFeedback({
+      etapas: [
+        'Verificando permissões…',
+        'Gravando configurações globais…',
+        'Registrando auditoria…',
+      ],
+      executar: async () => {
+        await _patch('config/global', {
+          manutencao:       _fsBool(manut),
+          manutencaoInicio: _fsStr(inicio),
+          manutencaoFim:    _fsStr(fim),
+          modoSalaAtivo:    _fsBool(modoSala),
+          mensagem:         _fsStr(mensagem),
+        });
+        const banner = document.getElementById('admin-manutencao-banner');
+        if (banner) banner.style.display = manut ? 'block' : 'none';
+        _registrarAuditoria(manut ? 'Manutenção ativada' : 'Manutenção desativada');
+        if (modoSala !== undefined) _registrarAuditoria(modoSala ? 'Modo Sala ativado' : 'Modo Sala desativado');
+      },
+      sucesso: 'Configurações globais salvas com sucesso!',
+    });
   }
 
   /* ════════════════════════════════════════════════════
@@ -2243,15 +2626,15 @@ const ADMIN = (() => {
     irParaSecao,
     carregarJogadores, verHistoricoJogador, toggleBan,
     filtrarJogadores, exportarCSVJogadores, exportarCSVPodio,
-    removerDoPodio, resetarPodioPorSetor,
+    removerDoPodio, resetarPodioPorSetor, resetarPodioTotal,
     carregarConfigGlobal, salvarConfigGlobal,
     adicionarAdmin, removerAdmin, carregarAdmins, abrirPermissoes, salvarPermissoes,
+    _iniciarPollingAdmin, _pararPollingAdmin, _verificarAcessoAdmin,
     limparAuditLog,
     fecharModal,
     abrirModalInbox, fecharModalInbox, enviarMensagemInbox, enviarMensagemTodos,
     abrirNovaMsg, fecharNovaMsg, enviarNovaMsg, selecionarCategoria,
     carregarMensagens, apagarMensagemLog, apagarTodasMensagens,
-    abrirBroadcast, fecharBroadcast, confirmarBroadcast,
     abrirBroadcast, fecharBroadcast, confirmarBroadcast,
     toggleDropdown, selecionarSetor,
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,

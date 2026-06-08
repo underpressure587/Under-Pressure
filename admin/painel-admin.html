@@ -127,23 +127,43 @@
 
         <!-- ══ PÓDIO ══ -->
         <div id="admin-sec-podio" class="admin-section" style="display:none">
-          <div class="admin-reset-row">
-            <div class="admin-dropdown" id="admin-setor-dropdown">
+
+          <!-- Linha 1: filtro por setor + CSV -->
+          <div class="admin-reset-row" style="flex-wrap:wrap;gap:8px">
+            <div class="admin-dropdown" id="admin-setor-dropdown" style="flex:1;min-width:160px">
               <button class="admin-dropdown-trigger" onclick="ADMIN.toggleDropdown()" type="button">
-                <span id="admin-setor-label">Selecionar setor...</span>
+                <span id="admin-setor-label">🌐 Todos os setores</span>
                 <svg class="admin-dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
               <div class="admin-dropdown-menu" id="admin-setor-menu" style="display:none">
-                <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('', 'Selecionar setor...')">— Nenhum —</button>
+                <button class="admin-dropdown-item active" onclick="ADMIN.selecionarSetor('', '🌐 Todos os setores')">🌐 Todos os setores</button>
                 <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('tecnologia', '🚀 Tecnologia')">🚀 Tecnologia</button>
                 <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('varejo', '🛒 Varejo')">🛒 Varejo</button>
                 <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('logistica', '🚛 Logística')">🚛 Logística</button>
                 <button class="admin-dropdown-item" onclick="ADMIN.selecionarSetor('industria', '🏭 Indústria')">🏭 Indústria</button>
               </div>
             </div>
+            <span id="admin-podio-count" style="font-size:.72rem;color:var(--t3);align-self:center;flex-shrink:0"></span>
             <button class="admin-btn admin-btn-csv" onclick="ADMIN.exportarCSVPodio()" title="Exportar CSV">⬇ CSV</button>
-            <button class="admin-btn admin-btn-danger" onclick="ADMIN.resetarPodioPorSetor()">🗑 Resetar</button>
           </div>
+
+          <!-- Linha 2: ações de reset -->
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+            <button id="btn-resetar-setor" class="admin-btn admin-btn-danger"
+              style="flex:1;opacity:.45;cursor:not-allowed"
+              disabled
+              title="Selecione um setor para resetar"
+              onclick="ADMIN.resetarPodioPorSetor()">
+              🗑 Resetar setor
+            </button>
+            <button class="admin-btn"
+              style="flex:1;background:transparent;border:1px solid rgba(239,68,68,.35);color:var(--err);font-weight:700;text-transform:none;letter-spacing:0"
+              onclick="ADMIN.resetarPodioTotal()"
+              title="Apaga o pódio inteiro — todos os setores">
+              💣 Limpar tudo
+            </button>
+          </div>
+
           <div id="admin-podio-lista"><div class="admin-loading"></div></div>
         </div>
 
@@ -467,6 +487,112 @@
 
   <!-- Toast -->
   <div id="admin-toast" class="admin-toast" style="display:none"></div>
+
+  <!-- Overlay: feedback de operação (loading + etapas + resultado) -->
+  <div id="admin-op-feedback"
+    style="display:none;position:fixed;inset:0;z-index:99995;
+           background:rgba(9,9,14,.88);backdrop-filter:blur(8px);
+           align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+    <div style="background:var(--bg1);border:1px solid var(--line2);border-radius:var(--r3);
+                width:100%;max-width:360px;overflow:hidden;
+                box-shadow:var(--sh3);animation:popIn .25s cubic-bezier(.22,.68,0,1.2)">
+
+      <!-- Cabeçalho com ícone + título -->
+      <div style="padding:24px 24px 16px;display:flex;flex-direction:column;align-items:center;gap:14px;border-bottom:1px solid var(--line)">
+        <div id="aof-icon" class="aof-icon aof-loading" style="
+          width:52px;height:52px;border-radius:50%;
+          display:flex;align-items:center;justify-content:center;
+          background:var(--bg3);border:1.5px solid var(--line2);
+          color:var(--t2);flex-shrink:0;transition:all .3s">
+        </div>
+        <div style="text-align:center">
+          <div id="aof-titulo" style="font-family:var(--serif);font-size:1.05rem;font-weight:800;color:var(--t1);letter-spacing:-.01em"></div>
+          <div id="aof-etapa" style="font-size:.78rem;color:var(--t3);margin-top:4px;line-height:1.5;min-height:1.5em"></div>
+        </div>
+      </div>
+
+      <!-- Barra de progresso -->
+      <div style="height:2px;background:var(--bg3);overflow:hidden">
+        <div id="aof-barra-fill" style="height:100%;width:0%;background:var(--gold);transition:width .4s cubic-bezier(.4,0,.2,1),background .3s"></div>
+      </div>
+
+      <!-- Lista de etapas -->
+      <div id="aof-lista" style="padding:14px 20px;display:flex;flex-direction:column;gap:7px;min-height:64px"></div>
+
+      <!-- Footer com botões (aparece só no estado final) -->
+      <div id="aof-footer" style="padding:0 20px 18px;display:flex;gap:8px;justify-content:flex-end"></div>
+    </div>
+  </div>
+
+  <!-- Overlay: acesso totalmente revogado (UID removido da lista de admins) -->
+  <div id="admin-overlay-revogado"
+    style="display:none;position:fixed;inset:0;z-index:99990;background:rgba(9,9,14,.96);backdrop-filter:blur(8px);
+           align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+    <div style="background:var(--bg1);border:1px solid rgba(239,68,68,.3);border-radius:var(--r3);
+                padding:32px 28px;max-width:380px;width:100%;text-align:center;
+                box-shadow:0 0 60px rgba(239,68,68,.12),var(--sh3);animation:popIn .3s cubic-bezier(.22,.68,0,1.2)">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,.1);
+                  border:1.5px solid rgba(239,68,68,.3);display:flex;align-items:center;
+                  justify-content:center;font-size:1.6rem;margin:0 auto 20px">🔒</div>
+      <div style="font-family:var(--serif);font-size:1.25rem;font-weight:800;color:var(--t1);margin-bottom:10px;letter-spacing:-.02em">
+        Acesso encerrado
+      </div>
+      <p style="font-size:.84rem;color:var(--t2);line-height:1.65;margin-bottom:24px">
+        Você foi removido da lista de administradores. Se acredita que isso foi um engano, entre em contato com o responsável pelo sistema.
+      </p>
+      <button onclick="document.getElementById('btn-sair').click()"
+        style="width:100%;padding:13px;background:var(--bg3);border:1px solid rgba(239,68,68,.3);
+               border-radius:var(--r2);color:var(--err);font-family:var(--sans);font-size:.82rem;
+               font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+               transition:background .2s"
+        onmouseover="this.style.background='rgba(239,68,68,.08)'"
+        onmouseout="this.style.background='var(--bg3)'">
+        Sair da conta
+      </button>
+    </div>
+  </div>
+
+  <!-- Overlay: admin sem nenhuma permissão ativa -->
+  <div id="admin-overlay-sem-permissao"
+    style="display:none;position:absolute;inset:0;z-index:900;background:rgba(9,9,14,.92);backdrop-filter:blur(6px);
+           align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+    <div style="background:var(--bg1);border:1px solid var(--gold-bd);border-radius:var(--r3);
+                padding:32px 28px;max-width:400px;width:100%;text-align:center;
+                box-shadow:var(--sh-gold),var(--sh3);animation:popIn .3s cubic-bezier(.22,.68,0,1.2)">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--gold-bg);
+                  border:1.5px solid var(--gold-bd);display:flex;align-items:center;
+                  justify-content:center;font-size:1.6rem;margin:0 auto 20px">⚠️</div>
+      <div style="font-family:var(--serif);font-size:1.2rem;font-weight:800;color:var(--t1);margin-bottom:10px;letter-spacing:-.02em">
+        Sem permissões ativas
+      </div>
+      <p style="font-size:.84rem;color:var(--t2);line-height:1.7;margin-bottom:6px">
+        Sua conta de administrador existe, mas <strong style="color:var(--t1)">nenhuma seção foi liberada</strong> para você ainda.
+      </p>
+      <p style="font-size:.8rem;color:var(--t3);line-height:1.6;margin-bottom:24px">
+        Peça ao responsável pelo painel que configure suas permissões em <em style="color:var(--gold)">Config → Admins</em>.
+      </p>
+      <div style="display:flex;gap:10px">
+        <button onclick="ADMIN.carregarAdmins()"
+          style="flex:1;padding:12px;background:var(--gold-bg);border:1px solid var(--gold-bd);
+                 border-radius:var(--r2);color:var(--gold2);font-family:var(--sans);font-size:.78rem;
+                 font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+                 transition:background .2s"
+          onmouseover="this.style.background='rgba(201,151,58,.14)'"
+          onmouseout="this.style.background='var(--gold-bg)'">
+          🔄 Verificar novamente
+        </button>
+        <button onclick="document.getElementById('btn-sair').click()"
+          style="flex:1;padding:12px;background:var(--bg3);border:1px solid var(--line2);
+                 border-radius:var(--r2);color:var(--t2);font-family:var(--sans);font-size:.78rem;
+                 font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+                 transition:background .2s"
+          onmouseover="this.style.background='var(--bg4)'"
+          onmouseout="this.style.background='var(--bg3)'">
+          Sair
+        </button>
+      </div>
+    </div>
+  </div>
 
 </div><!-- /app -->
 
