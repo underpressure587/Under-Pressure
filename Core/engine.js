@@ -181,9 +181,14 @@ function iniciar(sectorId, groupName, companyName, modoSala) {
         console.warn("[Engine] Nenhuma situação para setor:", setorFinal, "— usando pool completo.");
         situacoesFiltradas = SITUACOES_INICIAIS;
     }
-    state.situacaoAtual = situacoesFiltradas[
-        Math.floor(Math.random() * situacoesFiltradas.length)
-    ] || null;
+
+    // ── ROTAÇÃO DE SITUAÇÕES: evita repetir a mesma situação inicial ──────────
+    const situacoesUsadas  = (typeof _getSituacoesUsadas === 'function')
+        ? _getSituacoesUsadas(situacoesFiltradas.length)
+        : [];
+    const situacoesNovas   = situacoesFiltradas.filter(s => !situacoesUsadas.includes(s.titulo));
+    const poolSituacoes    = situacoesNovas.length > 0 ? situacoesNovas : situacoesFiltradas;
+    state.situacaoAtual    = poolSituacoes[Math.floor(Math.random() * poolSituacoes.length)] || null;
 
     const empresa   = EMPRESAS[setorFinal];
     const introList = empresa.intros || (empresa.intro ? [empresa.intro] : []);
@@ -195,8 +200,15 @@ function iniciar(sectorId, groupName, companyName, modoSala) {
         .map((r, i) => (r && r.length > 0 ? i : -1))
         .filter(i => i !== -1 && i < introList.length);
 
-    const introIndex = indicesValidos.length > 0
-        ? indicesValidos[Math.floor(Math.random() * indicesValidos.length)]
+    // ── ROTAÇÃO DE INTROS: evita repetir a mesma história/empresa ────────────
+    const introsUsadas  = (typeof _getIntrosUsadas === 'function')
+        ? _getIntrosUsadas(setorFinal, introList.length)
+        : [];
+    const indicesNovos  = indicesValidos.filter(i => !introsUsadas.includes(i));
+    const poolIntros    = indicesNovos.length > 0 ? indicesNovos : indicesValidos;
+
+    const introIndex = poolIntros.length > 0
+        ? poolIntros[Math.floor(Math.random() * poolIntros.length)]
         : 0;
 
     const introSorteada = introList[introIndex] || null;

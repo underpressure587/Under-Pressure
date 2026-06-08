@@ -26,6 +26,7 @@ const SK = {
   HISTORICO:"gsp_historico", HIST_GUEST:"gsp_historico_guest",
   SESSION:"gsp_session", SETTINGS:"gsp_settings",
   SALA:"gsp_sala",        // { codigo, nome, modoSetor, setorFixo, ... }
+  INTROS_USADAS:"gsp_intros_usadas", // { sector: [indices ja jogados], situacoes: [indices usados] }
 };
 
 /* ════════════════════════════════════════════════════
@@ -612,11 +613,16 @@ function descartarSessao() {
 function _registrarResultado(score, scoreGestor, sector, companyName) {
   const isGuest  = _player?.tipo === 'guest' || !_player?.uid;
   const histKey  = isGuest ? SK.HIST_GUEST : SK.HISTORICO;
+  const state    = BetaState.get();
   const entrada  = {
     player: _player?.nome || 'Convidado',
     score, scoreGestor, sector, companyName, ts: Date.now(),
     uid: _player?.uid || null,
+    introIndex: state?.introIndex ?? null,  // registra qual história foi jogada
   };
+
+  // Marca intro e situação como usadas para evitar repetição imediata
+  _registrarIntroUsada(sector, state?.introIndex ?? null, state?.situacaoAtual ?? null);
 
   // Salva no histórico local
   const hist = LS.get(histKey) || [];
@@ -674,6 +680,76 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
 }
 
 /* irParaPodio: definição única e correta abaixo (com data-sector) */
+
+/* ════════════════════════════════════════════════════
+   ROTAÇÃO DE HISTÓRIAS — evita repetir intro/situação
+════════════════════════════════════════════════════ */
+
+/**
+ * Registra qual introIndex e situação foram usados nesta partida.
+ * Mantém uma fila circular por setor: quando todos os índices já foram usados,
+ * reseta a fila (rotação completa antes de repetir).
+ */
+function _registrarIntroUsada(sector, introIndex, situacao) {
+  if (!sector) return;
+  const dados = LS.get(SK.INTROS_USADAS) || {};
+  if (!dados[sector]) dados[sector] = [];
+
+  // Adiciona o introIndex à fila do setor (se for válido)
+  if (introIndex !== null && introIndex !== undefined) {
+    if (!dados[sector].includes(introIndex)) {
+      dados[sector].push(introIndex);
+    }
+  }
+
+  // Registra situação usada (por título, independente de setor)
+  if (situacao?.titulo) {
+    if (!dados._situacoes) dados._situacoes = [];
+    if (!dados._situacoes.includes(situacao.titulo)) {
+      dados._situacoes.push(situacao.titulo);
+    }
+  }
+
+  LS.set(SK.INTROS_USADAS, dados);
+}
+
+/**
+ * Retorna os introIndexes já usados para um setor.
+ * Se todos foram usados, reseta a fila (rotação completa).
+ * @param {string} sector
+ * @param {number} totalIntros — total de intros disponíveis no setor
+ * @returns {number[]} — lista de índices já usados (a excluir do sorteio)
+ */
+function _getIntrosUsadas(sector, totalIntros) {
+  const dados  = LS.get(SK.INTROS_USADAS) || {};
+  const usados = dados[sector] || [];
+
+  // Se já jogou todas as histórias do setor, reseta a fila
+  if (usados.length >= totalIntros) {
+    const novoDados = { ...dados, [sector]: [] };
+    LS.set(SK.INTROS_USADAS, novoDados);
+    return [];
+  }
+  return usados;
+}
+
+/**
+ * Retorna as situações iniciais já usadas (por título).
+ * Reseta quando todas foram usadas.
+ * @param {number} totalSituacoes
+ * @returns {string[]} — títulos das situações já usadas
+ */
+function _getSituacoesUsadas(totalSituacoes) {
+  const dados  = LS.get(SK.INTROS_USADAS) || {};
+  const usadas = dados._situacoes || [];
+
+  if (usadas.length >= totalSituacoes) {
+    const novoDados = { ...dados, _situacoes: [] };
+    LS.set(SK.INTROS_USADAS, novoDados);
+    return [];
+  }
+  return usadas;
+}
 
 function irParaHistoricoJogos() {
   mostrarTela("screen-historico-jogos");
