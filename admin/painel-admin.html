@@ -485,6 +485,22 @@
     </div>
   </div>
 
+  <!-- Modal de confirmação — substitui window.confirm() -->
+  <div id="admin-modal-confirm" class="admin-modal-overlay" style="display:none;z-index:99980">
+    <div class="admin-modal-card" style="max-width:360px">
+      <div class="admin-modal-head">
+        <span id="acm-titulo" class="admin-modal-title"></span>
+      </div>
+      <div class="admin-modal-body" style="gap:0;padding:20px">
+        <p id="acm-mensagem" class="admin-modal-desc"></p>
+      </div>
+      <div class="admin-modal-foot">
+        <button id="acm-cancel" class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2);text-transform:none;letter-spacing:0;font-weight:600">Cancelar</button>
+        <button id="acm-ok" class="admin-btn admin-btn-danger">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="admin-toast" class="admin-toast" style="display:none"></div>
 

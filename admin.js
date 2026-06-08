@@ -15,7 +15,42 @@ const ADMIN = (() => {
   let _setorSelecionado = '';  // setor ativo no dropdown do pódio
   let _banUid = '';            // uid do jogador sendo analisado no modal de ban
   let _adminNomes = {};          // { uid: 'Nome Exibido' }
-  let _pollingAdminInterval = null;  // polling de revogação de acesso
+  let _pollingAdminInterval = null;  // polling de revogação de acesso (RTDB)
+  let _auditUnsubscribe    = null;  // listener RTDB — auditoria
+  let _configUnsubscribe   = null;  // listener RTDB — config/global
+  let _adminsUnsubscribe   = null;  // listener RTDB — config/admins
+  let _sectionPolling      = null;  // polling da seção ativa (Firestore)
+  const _POLLING_SECAO_MS  = 8000; // 8s — atualização da seção visível
+
+  /* ══════════════════════════════════════════════════
+     CONFIRM MODAL — substitui window.confirm()
+  ══════════════════════════════════════════════════ */
+  function _confirmar({ titulo, mensagem, labelOk = 'Confirmar', labelCancel = 'Cancelar', perigoso = false }) {
+    return new Promise(resolve => {
+      const ov = document.getElementById('admin-modal-confirm');
+      if (!ov) { resolve(window.confirm(mensagem)); return; } // fallback seguro
+
+      document.getElementById('acm-titulo').textContent   = titulo;
+      document.getElementById('acm-mensagem').textContent = mensagem;
+
+      const btnOk = document.getElementById('acm-ok');
+      btnOk.textContent = labelOk;
+      btnOk.className   = 'admin-btn ' + (perigoso ? 'admin-btn-danger' : 'admin-btn-ok');
+
+      document.getElementById('acm-cancel').textContent = labelCancel;
+
+      // Limpa handlers anteriores clonando os botões
+      const newOk     = btnOk.cloneNode(true);
+      const newCancel = document.getElementById('acm-cancel').cloneNode(true);
+      btnOk.replaceWith(newOk);
+      document.getElementById('acm-cancel').replaceWith(newCancel);
+
+      newOk.addEventListener('click', () => { ov.style.display = 'none'; resolve(true);  }, { once: true });
+      newCancel.addEventListener('click', () => { ov.style.display = 'none'; resolve(false); }, { once: true });
+
+      ov.style.display = 'flex';
+    });
+  }
 
   /* ── TOKEN ─────────────────────────────────────── */
   async function _token() {
@@ -318,7 +353,8 @@ const ADMIN = (() => {
 
   async function toggleBan(uid, estaBanido) {
     const acao = estaBanido ? 'desbanir' : 'banir';
-    if (!confirm(`Tem certeza que deseja ${acao} este jogador?`)) return;
+    const ok = await _confirmar({ titulo: estaBanido ? 'Desbanir jogador' : 'Banir jogador', mensagem: `Tem certeza que deseja ${acao} este jogador?`, labelOk: estaBanido ? 'Desbanir' : 'Banir', perigoso: true });
+    if (!ok) return;
 
     await _opFeedback({
       etapas: ['Verificando permissões…', `${estaBanido ? 'Removendo' : 'Aplicando'} banimento…`],
@@ -394,7 +430,8 @@ const ADMIN = (() => {
   }
 
   async function removerDoPodio(uid, nome) {
-    if (!confirm(`Remover ${nome} do pódio?`)) return;
+    const ok = await _confirmar({ titulo: 'Remover do pódio', mensagem: `Remover ${nome} do pódio? Esta ação não pode ser desfeita.`, labelOk: 'Remover', perigoso: true });
+    if (!ok) return;
 
     await _opFeedback({
       etapas: ['Verificando permissões…', `Removendo ${nome} do pódio…`],
@@ -407,7 +444,8 @@ const ADMIN = (() => {
   async function resetarPodioPorSetor() {
     const setor = _setorSelecionado;
     if (!setor) { _showAdminToast('Selecione um setor primeiro.', true); return; }
-    if (!confirm(`Resetar pódio de "${setor}"?\nIsso remove todas as entradas desse setor e não pode ser desfeito.`)) return;
+    const ok = await _confirmar({ titulo: `Resetar pódio — ${setor}`, mensagem: `Isso remove todas as entradas do setor "${setor}". Esta ação não pode ser desfeita.`, labelOk: 'Resetar', perigoso: true });
+    if (!ok) return;
 
     let _totalDocs = 0;
     await _opFeedback({
@@ -480,11 +518,13 @@ const ADMIN = (() => {
     if (!window.GSPRtdb) return;
     try {
       const { db, ref, set } = window.GSPRtdb;
+      // Inclui permissoes e nomes para que o listener de carregarAdmins tenha dados completos
       await set(ref(db, 'config/admins'), {
-        uids:  Array.isArray(uids)          ? uids  : _adminUids,
-        owner: typeof owner === 'string'    ? owner : _adminOwner,
+        uids:       Array.isArray(uids)       ? uids  : _adminUids,
+        owner:      typeof owner === 'string' ? owner : _adminOwner,
+        permissoes: _adminPermissoes || {},
+        nomes:      _adminNomes      || {},
       });
-      console.log('[ADMIN] RTDB config/admins sincronizado | uids:', uids);
     } catch(e) {
       console.warn('[ADMIN] _rtdbSyncAdmins falhou (não crítico):', e?.message);
     }
@@ -527,7 +567,8 @@ const ADMIN = (() => {
   async function removerAdmin(uid) {
     if (uid === _adminOwner) { _showAdminToast('Owner não pode ser removido.', true); return; }
     const nomeExib = _adminNomes[uid] || uid.slice(0, 12) + '…';
-    if (!confirm(`Remover ${nomeExib} dos admins?`)) return;
+    const ok = await _confirmar({ titulo: 'Remover administrador', mensagem: `Remover ${nomeExib} dos administradores? O acesso será revogado imediatamente.`, labelOk: 'Remover', perigoso: true });
+    if (!ok) return;
 
     await _opFeedback({
       etapas: [
@@ -614,7 +655,8 @@ const ADMIN = (() => {
 
   // Reseta pódio completo (todos os setores)
   async function resetarPodioTotal() {
-    if (!confirm('⚠️ Isso vai apagar TODO o pódio de TODOS os setores.\n\nEsta ação não pode ser desfeita.')) return;
+    const ok = await _confirmar({ titulo: '⚠️ Limpar pódio completo', mensagem: 'Isso vai apagar TODO o pódio de TODOS os setores. Esta ação não pode ser desfeita.', labelOk: 'Limpar tudo', perigoso: true });
+    if (!ok) return;
 
     let _total = 0;
     await _opFeedback({
@@ -1191,7 +1233,8 @@ const ADMIN = (() => {
   }
 
   async function apagarTodasMensagens() {
-    if (!confirm('⚠️ Apagar TODAS as mensagens de TODOS os jogadores e limpar o log?\n\nEsta ação não pode ser desfeita.')) return;
+    const ok = await _confirmar({ titulo: '⚠️ Apagar todas as mensagens', mensagem: 'Isso apaga TODAS as mensagens de TODOS os jogadores e limpa o log. Esta ação não pode ser desfeita.', labelOk: 'Apagar tudo', perigoso: true });
+    if (!ok) return;
     _showAdminToast('Apagando mensagens...');
     let totalApagadas = 0;
     let erros = 0;
@@ -1482,6 +1525,41 @@ const ADMIN = (() => {
     // Última etapa visual fica "rodando" enquanto o fetch real acontece
     if (etapas.length > 0) await _avancarEtapa(etapas.length - 1);
 
+    // ── Verifica permissão em tempo real antes de executar ─────────────────
+    try {
+      const meUID = window._player?.uid || '';
+      if (meUID) {
+        const docAdmins = await _get('config/admins');
+        const uidsLive  = _val(docAdmins.fields?.uids)  || [];
+        const ownerLive = _val(docAdmins.fields?.owner) || '';
+        const permsLive = _val(docAdmins.fields?.permissoes) || {};
+
+        // UID removido completamente
+        if (meUID !== ownerLive && !uidsLive.includes(meUID)) {
+          _pararPollingAdmin();
+          _mostrarOverlayAcessoRevogado();
+          throw new Error('403: acesso revogado');
+        }
+
+        // Permissões zeradas (mas ainda é admin)
+        const minhasPerms = Array.isArray(permsLive[meUID]) ? permsLive[meUID] : null;
+        if (meUID !== ownerLive && minhasPerms && minhasPerms.length === 0) {
+          _mostrarOverlaySemPermissao();
+          throw new Error('403: sem permissões ativas');
+        }
+
+        // Atualiza estado local para refletir mudanças ocorridas durante a sessão
+        _adminUids       = uidsLive;
+        _adminOwner      = ownerLive;
+        _adminPermissoes = permsLive;
+      }
+    } catch(pErr) {
+      // Se o erro foi de permissão, propaga para o catch do _opFeedback
+      if (pErr?.message?.startsWith('403')) throw pErr;
+      // Erros de rede na verificação não bloqueiam (fail open — o Firestore vai rejeitar de qualquer forma)
+      console.warn('[ADMIN] pré-verificação falhou (não crítico):', pErr?.message);
+    }
+
     // ── Executa a operação real ──────────────────────
     try {
       await executar();
@@ -1532,14 +1610,44 @@ const ADMIN = (() => {
   }
 
   /* ── NAVEGAÇÃO ENTRE SEÇÕES ─────────────────────── */
+  // Seções que usam RTDB (listeners próprios, não precisam de polling)
+  const _SECOES_RTDB = new Set(['visao-geral', 'sessoes', 'config']);
+
+  function _pararPollingSecao() {
+    if (_sectionPolling) { clearInterval(_sectionPolling); _sectionPolling = null; }
+  }
+
+  function _iniciarPollingSecao(id) {
+    _pararPollingSecao();
+    if (_SECOES_RTDB.has(id)) return; // já tem listener RTDB
+    const fn = {
+      jogadores: () => carregarJogadores(document.getElementById('admin-busca')?.value || ''),
+      podio:     () => carregarPodioAdmin(),
+      dashboard: () => carregarDashboard(),
+      historias: () => carregarHistorias(),
+      feedback:  () => carregarFeedback(),
+      versao:    () => {}, // estático, não precisa
+      logs:      () => carregarLogs(),
+      mensagens: () => carregarMensagens(),
+    }[id];
+    if (fn) _sectionPolling = setInterval(fn, _POLLING_SECAO_MS);
+  }
+
   function irParaSecao(id) {
     _currentSection = id;
+
+    // Para listeners RTDB de seções que não são a ativa
+    if (id !== 'config')  { if (_configUnsubscribe) { _configUnsubscribe(); _configUnsubscribe = null; } }
+    if (id !== 'config')  { if (_auditUnsubscribe)  { _auditUnsubscribe();  _auditUnsubscribe  = null; } }
+
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
     const sec = document.getElementById('admin-sec-' + id);
     const btn = document.querySelector(`.admin-nav-btn[data-sec="${id}"]`);
     if (sec) sec.style.display = 'block';
     if (btn) btn.classList.add('active');
+
+    // Carga inicial da seção
     if (id === 'visao-geral')  { carregarVisaoGeral(); carregarAoVivo(); }
     if (id === 'jogadores')    carregarJogadores();
     if (id === 'podio')        carregarPodioAdmin();
@@ -1551,6 +1659,9 @@ const ADMIN = (() => {
     if (id === 'logs')         carregarLogs();
     if (id === 'config')       { carregarConfigGlobal(); carregarAuditLog(); }
     if (id === 'mensagens')    carregarMensagens();
+
+    // Polling para seções Firestore (8s)
+    _iniciarPollingSecao(id);
   }
 
   function fecharModal() {
@@ -2202,18 +2313,75 @@ const ADMIN = (() => {
       const user = window._player;
       const nome = user?.nome || 'Admin';
       const uid  = user?.uid  || 'desconhecido';
+      const entrada = { acao, uid, nome, ts: Date.now() };
+
+      // Grava no Firestore (persistência)
       await _patch(`auditoria/${ts}`, {
         acao:  _fsStr(acao),
         uid:   _fsStr(uid),
         nome:  _fsStr(nome),
         ts:    _fsInt(Date.now()),
       });
+
+      // Replica no RTDB para tempo real (outros admins veem na hora)
+      if (window.GSPRtdb) {
+        const { db, ref, set } = window.GSPRtdb;
+        set(ref(db, `auditoria_live/${ts}`), entrada).catch(() => {});
+      }
     } catch(e) { /* silencioso */ }
+  }
+
+  function _renderAuditLog(docs) {
+    const el = document.getElementById('admin-audit-log');
+    if (!el) return;
+    const isOwner = window._player?.uid && window._player.uid === _adminOwner;
+    const limparBtn = isOwner
+      ? `<button class="admin-btn admin-btn-danger" style="margin-bottom:8px;font-size:.75rem" onclick="ADMIN.limparAuditLog()">🗑 Limpar log</button>`
+      : '';
+    if (!docs.length) {
+      el.innerHTML = limparBtn + '<div class="admin-empty">Sem registros.</div>';
+      return;
+    }
+    el.innerHTML = limparBtn + docs.map(d => `
+      <div class="admin-audit-row" style="animation:slideUp .2s ease">
+        <span class="admin-audit-quem">${d.nome || d.uid?.slice(0,8) || 'Admin'}</span>
+        <span style="color:var(--t2)"> — ${d.acao || ''}</span>
+        <span class="admin-audit-quando"> · ${d.ts ? _formatarDataHora(d.ts) : ''}</span>
+      </div>`).join('');
   }
 
   async function carregarAuditLog() {
     const el = document.getElementById('admin-audit-log');
     if (!el) return;
+
+    // Cancela listener anterior se existir
+    if (_auditUnsubscribe) { _auditUnsubscribe(); _auditUnsubscribe = null; }
+
+    // ── RTDB: escuta o nó auditoria em tempo real ──────────────────────────
+    if (window.GSPRtdb) {
+      const { db, ref, onValue } = window.GSPRtdb;
+      el.innerHTML = '<div class="admin-loading">Conectando...</div>';
+
+      const auditRef = ref(db, 'auditoria_live');
+      _auditUnsubscribe = onValue(auditRef, (snapshot) => {
+        const dados = snapshot.val() || {};
+        const docs  = Object.values(dados)
+          .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+          .slice(0, 20);
+        _renderAuditLog(docs);
+      }, (err) => {
+        console.warn('[ADMIN] audit RTDB err:', err);
+        _carregarAuditLogFirestore(); // fallback para Firestore REST
+      });
+      return;
+    }
+
+    // Fallback: Firestore REST
+    _carregarAuditLogFirestore();
+  }
+
+  // Fallback Firestore (usado quando RTDB não disponível)
+  async function _carregarAuditLogFirestore() {
     try {
       const res = await _query({
         structuredQuery: {
@@ -2226,25 +2394,16 @@ const ADMIN = (() => {
         ..._parseFields(r.document.fields),
         _id: r.document.name.split('/').pop()
       }));
-      const isOwner = window._player?.uid && window._player.uid === _adminOwner;
-      const limparBtn = isOwner
-        ? `<button class="admin-btn admin-btn-danger" style="margin-bottom:8px;font-size:.75rem" onclick="ADMIN.limparAuditLog()">🗑 Limpar log</button>`
-        : '';
-      if (!docs.length) {
-        el.innerHTML = limparBtn + '<div class="admin-empty">Sem registros.</div>';
-        return;
-      }
-      el.innerHTML = limparBtn + docs.map(d => `
-        <div class="admin-audit-row">
-          <span class="admin-audit-quem">Admin — ${d.nome || d.uid?.slice(0,8) || 'desconhecido'}</span>
-          <span> — ${d.acao||''}</span>
-          <span class="admin-audit-quando"> · ${d.ts ? _formatarDataHora(d.ts) : ''}</span>
-        </div>`).join('');
-    } catch(e) { el.innerHTML = '<div class="admin-empty">Sem registros.</div>'; }
+      _renderAuditLog(docs);
+    } catch(e) {
+      const el = document.getElementById('admin-audit-log');
+      if (el) el.innerHTML = '<div class="admin-empty">Sem registros.</div>';
+    }
   }
 
   async function limparAuditLog() {
-    if (!confirm('Limpar todo o log de auditoria? Esta ação não pode ser desfeita.')) return;
+    const ok = await _confirmar({ titulo: 'Limpar log de auditoria', mensagem: 'Isso apaga todos os registros de auditoria. Esta ação não pode ser desfeita.', labelOk: 'Limpar log', perigoso: true });
+    if (!ok) return;
     let _total = 0;
 
     await _opFeedback({
@@ -2272,27 +2431,56 @@ const ADMIN = (() => {
   /* ════════════════════════════════════════════════════
      AGENDAMENTO DE MANUTENÇÃO
   ════════════════════════════════════════════════════ */
+  function _aplicarConfigUI(cfg) {
+    const cb = document.getElementById('admin-manutencao');
+    if (cb) cb.checked = !!cfg.manutencao;
+    const banner = document.getElementById('admin-manutencao-banner');
+    if (banner) banner.style.display = cfg.manutencao ? 'block' : 'none';
+    const cbSala = document.getElementById('admin-modo-sala');
+    if (cbSala) cbSala.checked = !!cfg.modoSalaAtivo;
+    const inicio = document.getElementById('admin-manut-inicio');
+    const fim    = document.getElementById('admin-manut-fim');
+    if (inicio) inicio.value = cfg.manutencaoInicio || '';
+    if (fim)    fim.value    = cfg.manutencaoFim    || '';
+    const mensagemEl = document.getElementById('admin-manut-mensagem');
+    if (mensagemEl) mensagemEl.value = cfg.mensagem || '';
+  }
+
   async function carregarConfigGlobal() {
-    try {
-      const doc = await _get('config/global');
-      const cfg = _parseFields(doc.fields || {});
-      const cb = document.getElementById('admin-manutencao');
-      if (cb) cb.checked = !!cfg.manutencao;
-      const banner = document.getElementById('admin-manutencao-banner');
-      if (banner) banner.style.display = cfg.manutencao ? 'block' : 'none';
-      const cbSala = document.getElementById('admin-modo-sala');
-      if (cbSala) cbSala.checked = !!cfg.modoSalaAtivo;
-      const inicio = document.getElementById('admin-manut-inicio');
-      const fim    = document.getElementById('admin-manut-fim');
-      if (inicio) inicio.value = cfg.manutencaoInicio || '';
-      if (fim)    fim.value    = cfg.manutencaoFim    || '';
-      const mensagemEl = document.getElementById('admin-manut-mensagem');
-      if (mensagemEl) mensagemEl.value = cfg.mensagem || '';
-    } catch(e) { console.warn('[ADMIN] Config:', e); }
-    // Admins
+    // Cancela listener anterior
+    if (_configUnsubscribe) { _configUnsubscribe(); _configUnsubscribe = null; }
+
+    if (window.GSPRtdb) {
+      // ── RTDB: tempo real — qualquer mudança em config_live reflete aqui ──
+      const { db, ref, onValue } = window.GSPRtdb;
+      const cfgRef = ref(db, 'config_live');
+      _configUnsubscribe = onValue(cfgRef, (snapshot) => {
+        const cfg = snapshot.val();
+        if (cfg) _aplicarConfigUI(cfg);
+      }, () => {
+        // Fallback: Firestore REST
+        _get('config/global').then(doc => _aplicarConfigUI(_parseFields(doc.fields || {}))).catch(() => {});
+      });
+    } else {
+      // Sem RTDB: Firestore REST
+      try {
+        const doc = await _get('config/global');
+        _aplicarConfigUI(_parseFields(doc.fields || {}));
+      } catch(e) { console.warn('[ADMIN] Config:', e); }
+    }
+
+    // Admins e polling de acesso
     carregarAdmins();
-    // Inicia polling de revogação de acesso (30s)
     _iniciarPollingAdmin();
+  }
+
+  // Chamado por salvarConfigGlobal após gravar — sincroniza RTDB config_live
+  async function _sincronizarConfigLive(cfg) {
+    if (!window.GSPRtdb) return;
+    try {
+      const { db, ref, set } = window.GSPRtdb;
+      await set(ref(db, 'config_live'), cfg);
+    } catch(e) { /* não crítico */ }
   }
 
   const _SECOES = [
@@ -2310,25 +2498,76 @@ const ADMIN = (() => {
   ];
 
   async function carregarAdmins() {
-    try {
-      const doc = await _get('config/admins');
-      _adminUids       = _val(doc.fields?.uids)        || [];
-      _adminOwner      = _val(doc.fields?.owner)       || '';
-      _adminPermissoes = _val(doc.fields?.permissoes)  || {};
-      _adminNomes      = _val(doc.fields?.nomes)       || {};
+    // Cancela listener anterior
+    if (_adminsUnsubscribe) { _adminsUnsubscribe(); _adminsUnsubscribe = null; }
 
-      // Registra/atualiza o displayName do admin logado no campo nomes
+    const _aplicarDadosAdmins = async (uids, owner, permissoes, nomes) => {
       const meUID  = window._player?.uid  || '';
       const meNome = window._player?.nome || '';
+
+      const permAntes  = JSON.stringify(_adminPermissoes[meUID] ?? null);
+      _adminUids       = uids;
+      _adminOwner      = owner;
+      _adminPermissoes = permissoes;
+      _adminNomes      = nomes;
+      const permDepois = JSON.stringify(_adminPermissoes[meUID] ?? null);
+
+      // Verifica se o admin atual foi removido
+      if (meUID && meUID !== owner && !uids.includes(meUID)) {
+        _pararPollingAdmin();
+        _mostrarOverlayAcessoRevogado();
+        return;
+      }
+
+      // Registra displayName se mudou
       if (meUID && meNome && _adminNomes[meUID] !== meNome) {
         _gravarNomeAdmin(meUID, meNome).catch(() => {});
       }
 
-      // Sincroniza RTDB sempre que o painel carrega
-      await _rtdbSyncAdmins(_adminUids, _adminOwner);
       _renderAdminLista();
-      _aplicarPermissoesNav();
-    } catch(e) { console.warn('[ADMIN] carregarAdmins:', e); }
+
+      // Reavalia nav e overlays se permissões mudaram
+      if (permAntes !== permDepois) _aplicarPermissoesNav();
+    };
+
+    if (window.GSPRtdb) {
+      // ── RTDB: tempo real — qualquer mudança em config/admins reflete aqui ─
+      const { db, ref, onValue } = window.GSPRtdb;
+      const admRef = ref(db, 'config/admins');
+      _adminsUnsubscribe = onValue(admRef, async (snapshot) => {
+        const dados = snapshot.val() || {};
+        await _aplicarDadosAdmins(
+          Array.isArray(dados.uids) ? dados.uids : [],
+          dados.owner || '',
+          dados.permissoes || {},
+          dados.nomes      || {}
+        );
+      }, async () => {
+        // Fallback Firestore
+        try {
+          const doc = await _get('config/admins');
+          await _aplicarDadosAdmins(
+            _val(doc.fields?.uids)       || [],
+            _val(doc.fields?.owner)      || '',
+            _val(doc.fields?.permissoes) || {},
+            _val(doc.fields?.nomes)      || {}
+          );
+          await _rtdbSyncAdmins(_adminUids, _adminOwner);
+        } catch(e) { console.warn('[ADMIN] carregarAdmins fallback:', e); }
+      });
+    } else {
+      // Sem RTDB: Firestore REST
+      try {
+        const doc = await _get('config/admins');
+        await _aplicarDadosAdmins(
+          _val(doc.fields?.uids)       || [],
+          _val(doc.fields?.owner)      || '',
+          _val(doc.fields?.permissoes) || {},
+          _val(doc.fields?.nomes)      || {}
+        );
+        await _rtdbSyncAdmins(_adminUids, _adminOwner);
+      } catch(e) { console.warn('[ADMIN] carregarAdmins:', e); }
+    }
   }
 
   // Grava apenas o mapa "nomes" no config/admins (permitido pelas Firestore Rules para qualquer admin)
@@ -2461,6 +2700,11 @@ const ADMIN = (() => {
       clearInterval(_pollingAdminInterval);
       _pollingAdminInterval = null;
     }
+    // Também para polling de seção e listeners RTDB
+    _pararPollingSecao();
+    if (_adminsUnsubscribe) { _adminsUnsubscribe(); _adminsUnsubscribe = null; }
+    if (_configUnsubscribe) { _configUnsubscribe(); _configUnsubscribe = null; }
+    if (_auditUnsubscribe)  { _auditUnsubscribe();  _auditUnsubscribe  = null; }
   }
 
   async function _verificarAcessoAdmin() {
@@ -2568,6 +2812,8 @@ const ADMIN = (() => {
         if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
         _adminPermissoes = novasPermissoes;
         _registrarAuditoria(`Permissões de ${uid.slice(0,8)} atualizadas`);
+        // Sincroniza RTDB para que outros admins vejam a mudança em tempo real
+        await _rtdbSyncAdmins(_adminUids, _adminOwner);
       },
       sucesso: `${selecionadas.length} seção(ões) salvas para ${nomeExib}`,
       onSucesso: () => { fecharModal(); _renderAdminLista(); },
@@ -2601,6 +2847,10 @@ const ADMIN = (() => {
         if (modoSala !== undefined) _registrarAuditoria(modoSala ? 'Modo Sala ativado' : 'Modo Sala desativado');
       },
       sucesso: 'Configurações globais salvas com sucesso!',
+      onSucesso: async () => {
+        // Sincroniza config_live no RTDB para todos os admins verem na hora
+        await _sincronizarConfigLive({ manutencao: manut, manutencaoInicio: inicio, manutencaoFim: fim, modoSalaAtivo: modoSala, mensagem });
+      },
     });
   }
 
@@ -2630,6 +2880,7 @@ const ADMIN = (() => {
     carregarConfigGlobal, salvarConfigGlobal,
     adicionarAdmin, removerAdmin, carregarAdmins, abrirPermissoes, salvarPermissoes,
     _iniciarPollingAdmin, _pararPollingAdmin, _verificarAcessoAdmin,
+    _sincronizarConfigLive, _pararPollingSecao,
     limparAuditLog,
     fecharModal,
     abrirModalInbox, fecharModalInbox, enviarMensagemInbox, enviarMensagemTodos,
