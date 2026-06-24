@@ -38,6 +38,9 @@ jobs:
       - name: Generate launcher icons
         run: dart run flutter_launcher_icons
         continue-on-error: true
+      
+      - name: Print SHA-1
+        run: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>/dev/null | grep SHA1
 
       # 6. Build APK release
       - name: Build APK
