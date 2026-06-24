@@ -52,6 +52,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "240438805750-scqlag6e49onlppenvhphu0vefhut46f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.underpressuregame.app",
+            "certificate_hash": "2bb23d844c011fe44ced9eba20f5a6900bd38c77"
+          }
+        },
+        {
           "client_id": "240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com",
           "client_type": 3
         }
