@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final uid = AuthService.currentUser?.uid;
     if (uid == null) return;
     final doc = await FirebaseFirestore.instance
-        .collection('players')
+        .collection('usuarios')
         .doc(uid)
         .get();
     if (mounted && doc.exists) {

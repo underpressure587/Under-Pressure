@@ -41,7 +41,7 @@ class HistoricoScreen extends StatelessWidget {
                               AppTheme.inter(color: AppTheme.t3)))
                   : StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
-                          .collection('games')
+                          .collection('partidas')
                           .where('uid', isEqualTo: uid)
                           .orderBy('criadoEm', descending: true)
                           .limit(50)

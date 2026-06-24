@@ -25,7 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final uid = AuthService.currentUser?.uid;
     if (uid == null) return;
     final doc = await FirebaseFirestore.instance
-        .collection('players')
+        .collection('usuarios')
         .doc(uid)
         .get();
     if (mounted && doc.exists) setState(() => _data = doc.data());

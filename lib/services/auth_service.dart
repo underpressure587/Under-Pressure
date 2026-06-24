@@ -6,11 +6,14 @@ class AuthService {
   static final _auth = FirebaseAuth.instance;
   static final _db   = FirebaseFirestore.instance;
 
-  // ── Current user ─────────────────────────────────────────────
+  // ── Coleções ──────────────────────────────────────────
+  static const _colUsers = 'usuarios';
+
+  // ── Current user ─────────────────────────────────────
   static User? get currentUser => _auth.currentUser;
   static Stream<User?> get authStream => _auth.authStateChanges();
 
-  // ── E-mail / Senha ───────────────────────────────────────────
+  // ── E-mail / Senha ────────────────────────────────────
   static Future<UserCredential> loginEmail(String email, String pass) =>
       _auth.signInWithEmailAndPassword(email: email, password: pass);
 
@@ -26,7 +29,7 @@ class AuthService {
   static Future<void> sendPasswordReset(String email) =>
       _auth.sendPasswordResetEmail(email: email);
 
-  // ── Google ───────────────────────────────────────────────────
+  // ── Google ────────────────────────────────────────────
   static Future<UserCredential?> loginGoogle() async {
     final gUser = await GoogleSignIn(
       serverClientId:
@@ -41,8 +44,10 @@ class AuthService {
     );
     final cred = await _auth.signInWithCredential(credential);
 
-    // Cria perfil se for primeiro login
-    final doc = await _db.collection('players').doc(cred.user!.uid).get();
+    final doc = await _db
+        .collection(_colUsers)
+        .doc(cred.user!.uid)
+        .get();
     if (!doc.exists) {
       await _criarPerfil(
         cred.user!,
@@ -53,40 +58,50 @@ class AuthService {
     return cred;
   }
 
-  // ── Convidado ────────────────────────────────────────────────
+  // ── Convidado ─────────────────────────────────────────
   static Future<UserCredential> loginGuest() async {
     final cred = await _auth.signInAnonymously();
     await _criarPerfil(cred.user!, 'Convidado');
     return cred;
   }
 
-  // ── Logout ───────────────────────────────────────────────────
+  // ── Logout ────────────────────────────────────────────
   static Future<void> logout() async {
     await GoogleSignIn().signOut();
     await _auth.signOut();
   }
 
-  // ── Helpers ──────────────────────────────────────────────────
+  // ── Criar perfil ──────────────────────────────────────
   static Future<void> _criarPerfil(User user, String nome,
       {String? photoUrl}) async {
-    await _db.collection('players').doc(user.uid).set({
-      'nome': nome,
-      'email': user.email ?? '',
-      'fotoUrl': photoUrl ?? user.photoURL ?? '',
-      'criadoEm': FieldValue.serverTimestamp(),
-      'totalJogos': 0,
+    await _db.collection(_colUsers).doc(user.uid).set({
+      'nome':        nome,
+      'email':       user.email ?? '',
+      'fotoUrl':     photoUrl ?? user.photoURL ?? '',
+      'criadoEm':    FieldValue.serverTimestamp(),
+      'totalJogos':  0,
       'melhorScore': 0,
     }, SetOptions(merge: true));
   }
 
+  // ── Buscar perfil ─────────────────────────────────────
+  static Future<Map<String, dynamic>?> buscarPerfil() async {
+    final uid = currentUser?.uid;
+    if (uid == null) return null;
+    final doc = await _db.collection(_colUsers).doc(uid).get();
+    return doc.exists ? doc.data() : null;
+  }
+
+  // ── Traduzir erro ─────────────────────────────────────
   static String traduzirErro(String code) {
     switch (code) {
-      case 'user-not-found':       return 'E-mail não encontrado.';
-      case 'wrong-password':       return 'Senha incorreta.';
-      case 'email-already-in-use': return 'E-mail já cadastrado.';
-      case 'weak-password':        return 'Senha muito fraca (mín. 6 caracteres).';
-      case 'invalid-email':        return 'E-mail inválido.';
-      case 'network-request-failed': return 'Sem conexão. Verifique a internet.';
+      case 'user-not-found':        return 'E-mail não encontrado.';
+      case 'wrong-password':        return 'Senha incorreta.';
+      case 'email-already-in-use':  return 'E-mail já cadastrado.';
+      case 'weak-password':         return 'Senha muito fraca (mín. 6 caracteres).';
+      case 'invalid-email':         return 'E-mail inválido.';
+      case 'network-request-failed':return 'Sem conexão. Verifique a internet.';
+      case 'invalid-credential':    return 'E-mail ou senha incorretos.';
       default: return 'Erro: $code';
     }
   }

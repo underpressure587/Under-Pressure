@@ -38,9 +38,9 @@ class _SplashScreenState extends State<SplashScreen>
       final uid  = FirebaseAuth.instance.currentUser?.uid;
       final doc  = await FirebaseFirestore.instance
           .collection('config')
-          .doc('manutencao')
+          .doc('global')
           .get();
-      final ativo = doc.data()?['ativo'] == true;
+      final ativo = doc.data()?['manutencao'] == true;
       final liberados = (doc.data()?['liberados'] as List?)
           ?.map((e) => e.toString())
           .toList() ?? [];

@@ -91,12 +91,12 @@ class _PodioScreenState extends State<PodioScreen> {
               child: StreamBuilder<QuerySnapshot>(
                 stream: _filtro == 'all'
                     ? FirebaseFirestore.instance
-                        .collection('games')
+                        .collection('partidas')
                         .orderBy('score', descending: true)
                         .limit(50)
                         .snapshots()
                     : FirebaseFirestore.instance
-                        .collection('games')
+                        .collection('partidas')
                         .where('setor', isEqualTo: _filtro)
                         .orderBy('score', descending: true)
                         .limit(50)
