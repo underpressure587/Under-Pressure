@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "240438805750",
+    "firebase_url": "https://under-pressure-49320-default-rtdb.firebaseio.com",
     "project_id": "under-pressure-49320",
     "storage_bucket": "under-pressure-49320.firebasestorage.app"
   },
@@ -9,10 +10,23 @@
       "client_info": {
         "mobilesdk_app_id": "1:240438805750:android:90ab3118d158050b8f58d7",
         "android_client_info": {
-          "package_name": "com.underpressiongame.app"
+          "package_name": "com.example.under_pressure_admin"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "240438805750-5272ntd96sbsra1a3m7pe2b13405tn7d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.under_pressure_admin",
+            "certificate_hash": "2bb23d844c011fe44ced9eba20f5a6900bd38c77"
+          }
+        },
+        {
+          "client_id": "240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA8R7vnuWAWWDfe2DHLhGJdZTsWiXC5u7g"
@@ -20,7 +34,41 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:240438805750:android:3b442adf826fbfe38f58d7",
+        "android_client_info": {
+          "package_name": "com.underpressuregame.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8R7vnuWAWWDfe2DHLhGJdZTsWiXC5u7g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
