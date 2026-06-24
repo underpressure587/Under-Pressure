@@ -39,12 +39,14 @@ jobs:
         run: dart run flutter_launcher_icons
         continue-on-error: true
       
-      - name: Print SHA-1
-        run: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>/dev/null | grep SHA1
 
       # 6. Build APK release
       - name: Build APK
         run: flutter build apk --release
+      
+      - name: Print SHA-1
+        continue-on-error: true
+        run: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>/dev/null | grep SHA1
 
       # 7. Upload do APK como artefato
       - name: Upload APK
