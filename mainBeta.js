@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   GESTÃO SOB PRESSÃO · MAIN v5.1
+   UNDER PRESSURE
    ─────────────────────────────────────────────────────
    · Sistema de jogador com persistência (localStorage)
    · Pódio global e histórico de jogos
