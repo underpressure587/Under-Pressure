@@ -14,43 +14,90 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _fade;
+    with TickerProviderStateMixin {
+
+  // Logo pulse
+  late AnimationController _pulseCtrl;
+  late Animation<double>   _pulseScale;
+  late Animation<double>   _pulseGlow;
+
+  // Mini-bars (5 barras como no web)
+  late List<AnimationController> _barCtrls;
+  late List<Animation<double>>   _barHeights;
+
+  // Barra de progresso
+  double _progress = 0;
+  String _msg = 'Carregando...';
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800));
-    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
-    _ctrl.forward();
-    _check();
+
+    // ── Logo pulse ───────────────────────────────────
+    _pulseCtrl = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 2200))
+      ..repeat(reverse: true);
+    _pulseScale = Tween(begin: 1.0, end: 1.06).animate(
+        CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
+    _pulseGlow = Tween(begin: 18.0, end: 30.0).animate(
+        CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
+
+    // ── Mini-bars com delays escalonados ─────────────
+    final delays = [0, 120, 240, 360, 480];
+    _barCtrls = List.generate(5, (i) {
+      final ctrl = AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 1100));
+      Future.delayed(Duration(milliseconds: delays[i]), () {
+        if (mounted) ctrl.repeat(reverse: true);
+      });
+      return ctrl;
+    });
+    _barHeights = _barCtrls
+        .map((c) => Tween(begin: 8.0, end: 28.0)
+            .animate(CurvedAnimation(parent: c, curve: Curves.easeInOut)))
+        .toList();
+
+    _runLoading();
   }
 
-  Future<void> _check() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+  Future<void> _runLoading() async {
+    // Progresso animado
+    final steps = [
+      (0.3,  300,  'Iniciando Firebase...'),
+      (0.6,  400,  'Verificando sessão...'),
+      (0.85, 300,  'Preparando mandato...'),
+      (1.0,  200,  'Pronto!'),
+    ];
+
+    for (final s in steps) {
+      await Future.delayed(Duration(milliseconds: s.$2));
+      if (mounted) setState(() { _progress = s.$1; _msg = s.$3; });
+    }
+
+    await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
 
-    // Verificar modo manutenção
+    // Verificar manutenção e sessão
     Widget destino;
     try {
-      final uid  = FirebaseAuth.instance.currentUser?.uid;
-      final doc  = await FirebaseFirestore.instance
-          .collection('config')
-          .doc('global')
-          .get();
-      final ativo = doc.data()?['manutencao'] == true;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final doc = await FirebaseFirestore.instance
+          .collection('config').doc('global').get();
+      final manut    = doc.data()?['manutencao'] == true;
       final liberados = (doc.data()?['liberados'] as List?)
-          ?.map((e) => e.toString())
-          .toList() ?? [];
+          ?.map((e) => e.toString()).toList() ?? [];
       final liberado = uid != null && liberados.contains(uid);
 
-      if (ativo && !liberado) {
+      if (manut && !liberado) {
         destino = const ManutencaoScreen();
       } else {
         final user = FirebaseAuth.instance.currentUser;
-        destino = user != null ? const HomeScreen() : const LoginScreen();
+        final isReturn = user != null;
+        destino = isReturn
+            ? const HomeScreen()
+            : const LoginScreen();
       }
     } catch (_) {
       final user = FirebaseAuth.instance.currentUser;
@@ -71,7 +118,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _ctrl.dispose();
+    _pulseCtrl.dispose();
+    for (final c in _barCtrls) c.dispose();
     super.dispose();
   }
 
@@ -79,52 +127,120 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.bg,
-      body: FadeTransition(
-        opacity: _fade,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo estrela
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.goldGradient,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryGlow,
-                      blurRadius: 32,
-                      spreadRadius: 4,
-                    )
-                  ],
-                ),
-                child: const Icon(Icons.star_rounded,
-                    color: Colors.black, size: 36),
-              ),
-              const SizedBox(height: 20),
-              Text('Under Pressure',
-                  style: AppTheme.syne(
-                      size: 22, weight: FontWeight.w800, color: AppTheme.t1)),
-              const SizedBox(height: 6),
-              Text('Simulação Executiva · Beta',
-                  style: AppTheme.inter(size: 12, color: AppTheme.t3)),
-              const SizedBox(height: 48),
-              // Loading bar
-              SizedBox(
-                width: 120,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(99),
-                  child: const LinearProgressIndicator(
-                    backgroundColor: AppTheme.bg3,
-                    color: AppTheme.primary,
-                    minHeight: 3,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // ── Logo pulsante ─────────────────────────
+            AnimatedBuilder(
+              animation: Listenable.merge([_pulseScale, _pulseGlow]),
+              builder: (_, __) => Transform.scale(
+                scale: _pulseScale.value,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primary.withOpacity(0.5),
+                        blurRadius: _pulseGlow.value,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/logo.jpg',
+                      width: 88,
+                      height: 88,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Título ────────────────────────────────
+            Text(
+              'UNDER PRESSURE',
+              style: AppTheme.syne(
+                size: 18,
+                weight: FontWeight.w800,
+                color: AppTheme.t1,
+                letterSpacing: 0.08 * 18,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Mini-bars (5 barras animadas) ─────────
+            SizedBox(
+              height: 32,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(5, (i) {
+                  return AnimatedBuilder(
+                    animation: _barHeights[i],
+                    builder: (_, __) => Container(
+                      width: 5,
+                      height: _barHeights[i].value,
+                      margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.goldGradient,
+                        borderRadius: BorderRadius.circular(3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primary.withOpacity(0.4),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Barra de progresso ────────────────────
+            SizedBox(
+              width: 200,
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 450),
+                      curve: Curves.easeInOut,
+                      width: 200 * _progress,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.goldGradient,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primary.withOpacity(0.4),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Track
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // ── Mensagem ──────────────────────────────
+            Text(
+              _msg,
+              style: AppTheme.inter(
+                size: 11,
+                color: AppTheme.t3,
+                letterSpacing: 0.02 * 11,
+              ),
+            ),
+          ],
         ),
       ),
     );
