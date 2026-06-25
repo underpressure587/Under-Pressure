@@ -9,9 +9,9 @@ const Protagonista = (() => {
 
     const NPCS = {
         tecnologia: [
-            { id: "cto",        nome: "Rafael (CTO)",          nivel: 6, sensivel: ["clima", "inovacao", "seguranca"] },
+            { id: "cto",        nome: "Rafael (CTO)",          nivel: 6, sensivel: ["rh", "inovacao", "seguranca"] },
             { id: "investidor", nome: "Fundo Caravela",         nivel: 6, sensivel: ["financeiro", "reputacao"] },
-            { id: "lider_eng",  nome: "Time de Engenharia",     nivel: 5, sensivel: ["clima", "produtividade"] },
+            { id: "lider_eng",  nome: "Time de Engenharia",     nivel: 5, sensivel: ["rh", "produtividade"] },
         ],
         varejo: [
             { id: "gerente",    nome: "Cláudia (Ger. Geral)",   nivel: 6, sensivel: ["rh", "processos", "margem"] },

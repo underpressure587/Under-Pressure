@@ -161,14 +161,20 @@ function _iniciarListenerAuth() {
 function _fecharOverlay(id) {
   const el = document.getElementById(id);
   if (!el) return;
+  el.classList.remove('active');
   el.style.display = 'none';
   el.removeAttribute('data-sector');
+  // Só remove overlay-active se nenhum outro overlay continuar aberto
+  const algumAberto = Array.from(document.querySelectorAll('.overlay'))
+    .some(o => o !== el && o.style.display === 'flex');
+  if (!algumAberto) document.body.classList.remove('overlay-active');
 }
 
 function _abrirOverlay(id) {
   const el = document.getElementById(id);
   if (!el) return;
   if (el.parentElement !== document.body) document.body.appendChild(el);
+  document.body.classList.add('overlay-active');
   // Força estilos inline sempre (garante centralização independente do contexto)
   el.style.position = 'fixed';
   el.style.top = '0';
@@ -181,7 +187,16 @@ function _abrirOverlay(id) {
   el.style.justifyContent = 'center';
   el.style.padding = '20px';
   el.style.boxSizing = 'border-box';
-  el.style.background = 'rgba(0,0,0,0.75)';
+  // NÃO definir background aqui — isso sobrescreveria via inline qualquer
+  // ajuste feito no CSS (.overlay já define um background quase-opaco).
+  // Essa sobrescrita inline (antes fixa em 0.75 de opacidade) era a causa
+  // raiz real do conteúdo de baixo (ex: indicadores críticos com glow)
+  // continuar visível através do overlay, independente de qualquer
+  // mudança no style.css.
+  // Força reflow síncrono antes de adicionar a classe .active (usada para
+  // a animação do card interno). Mantém consistência com mostrarTela().
+  void el.offsetHeight;
+  el.classList.add('active');
   // Aplica cor do setor só se estiver numa tela de jogo
   const TELAS_JOGO = ['screen-intro','screen-game','screen-feedback','screen-result'];
   const telaAtiva = document.querySelector('.screen.active');
@@ -231,8 +246,15 @@ async function _boot() {
     _verificarSessaoSalva();
     _atualizarHome();
 
+    // Mostra a tela de loading com progresso real durante a restauração
+    // da sessão, em vez de deixar a tela anterior parada enquanto o boot
+    // processa auth/polling/admin silenciosamente por baixo.
+    mostrarTela('screen-loading');
+    _setLoadingMsg('Restaurando sessão...', `Olá, ${(saved.nome || 'jogador')}!`, 15);
+
     // Espera o Firebase resolver o auth antes de qualquer chamada ao Firestore
     if (window.GSPAuth) {
+      _setLoadingMsg('Verificando login...', 'Conectando com o Firebase', 35);
       let t = 0;
       while (!window.GSPAuth.isReady() && t < 50) {
         await new Promise(r => setTimeout(r, 100));
@@ -243,6 +265,7 @@ async function _boot() {
       _atualizarHome();
     }
 
+    _setLoadingMsg('Carregando seu painel...', 'Verificando permissões', 60);
     await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
     if (window.ADMIN) {
       // Espera GSPAuth ficar pronto (módulo ES6 carrega depois dos scripts normais)
@@ -254,8 +277,10 @@ async function _boot() {
       const cfg = await window.ADMIN.verificarMensagemGlobal().catch(()=>null);
       if (cfg) _atualizarModoSala(cfg);
     }
+    _setLoadingMsg('Quase lá...', 'Sincronizando dados', 85);
     _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     _iniciarInbox(saved.uid); // inicia polling do inbox
+    _setLoadingMsg('Pronto!', '', 100);
     if (!localStorage.getItem('gsp_tutorial_done')) {
       mostrarTela('screen-tutorial');
     } else {
@@ -1138,7 +1163,7 @@ const BENCHMARKS = {
   varejo:    { financeiro:11,rh:10,clientes:12,processos:10,margem:9,estoque:11,marca:10,digital:9 },
   logistica: { financeiro:11,rh:10,clientes:12,processos:11,sla:12,frota:10,seguranca:11,tecnologia:9 },
   industria: { financeiro:11,rh:10,clientes:11,processos:11,seguranca:10,manutencao:10,qualidade:12,conformidade:11 },
-  tecnologia:{ financeiro:11,clima:11,satisfacao:12,qualidade:11,produtividade:10,reputacao:10,inovacao:9,seguranca:10 },
+  tecnologia:{ financeiro:11,rh:11,clientes:12,qualidade:11,produtividade:10,reputacao:10,inovacao:9,seguranca:10 },
 };
 
 function _bench(sector, key) { return BENCHMARKS[sector]?.[key] ?? null; }
@@ -1146,6 +1171,122 @@ function _bench(sector, key) { return BENCHMARKS[sector]?.[key] ?? null; }
 /* ════════════════════════════════════════════════════
    SIDEBAR — INDICADORES + GESTOR
 ════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════
+   ANIMAÇÕES DE INDICADORES
+════════════════════════════════════════════════════ */
+
+/**
+ * Anima o valor numérico de um indicador de `de` para `ate`,
+ * passo a passo, atualizando o elemento DOM no caminho.
+ * @param {HTMLElement} el   — elemento com o número
+ * @param {number}      de   — valor inicial
+ * @param {number}      ate  — valor final
+ * @param {number}      dur  — duração total em ms
+ */
+function _animarContador(el, de, ate, dur = 500) {
+  if (!el || de === ate) return;
+  const passos   = Math.abs(ate - de);
+  const intervMs = Math.max(30, Math.round(dur / passos));
+  const direcao  = ate > de ? 1 : -1;
+  let atual = de;
+  const iv = setInterval(() => {
+    atual += direcao;
+    el.textContent = atual;
+    if (atual === ate) clearInterval(iv);
+  }, intervMs);
+}
+
+/**
+ * Aplica flash de cor + contador animado + barra animada em um card de indicador.
+ * @param {string} key   — chave do indicador (ex: 'financeiro')
+ * @param {number} prev  — valor anterior
+ * @param {number} next  — valor novo
+ */
+function _animarIndicador(key, prev, next) {
+  if (prev === next || prev === undefined) return;
+  const row     = document.querySelector(`.game-ind-row[data-ind="${key}"]`);
+  const valEl   = row?.querySelector('.game-ind-val');
+  const barEl   = row?.querySelector('.game-ind-bar');
+  const trendEl = row?.querySelector('.game-ind-trend');
+  const nameEl  = row?.querySelector('.game-ind-name');
+  const benchEl = row?.querySelector('.game-ind-bench');
+  if (!row) return;
+
+  const subiu = next > prev;
+  const diff  = Math.abs(next - prev);
+
+  // Cor final calculada a partir do VALOR NOVO (next) — corrige o bug de cor
+  // presa no valor antigo (ex: 3/20 deveria ser vermelho crítico, não amarelo)
+  const corFinal = BetaIndicadores.corNivel(next);
+  const isCriticalNovo = next <= 3;
+  const eraCritico      = prev <= 3;
+
+  // Remove classes anteriores para reiniciar animação
+  row.classList.remove('ind-flash-up', 'ind-flash-down');
+  // Força reflow para reiniciar a animação CSS
+  void row.offsetWidth;
+  row.classList.add(subiu ? 'ind-flash-up' : 'ind-flash-down');
+
+  // Contador animado no número
+  if (valEl) {
+    valEl.classList.remove('ind-val-pop');
+    void valEl.offsetWidth;
+    valEl.classList.add('ind-val-pop');
+    _animarContador(valEl, prev, next, 400);
+  }
+
+  // Barra: aplica transition e muda o width — o navegador anima a diferença
+  if (barEl) {
+    const pctTo = `${(next / 20) * 100}%`;
+    barEl.style.transition = 'width .5s cubic-bezier(.4,0,.2,1)';
+    // Força reflow antes de mudar o width para garantir que a transition pega o estado anterior
+    void barEl.offsetWidth;
+    barEl.style.width = pctTo;
+  }
+
+  // Cor: sincronizada com o fim da animação do número/barra — sem isso,
+  // o elemento fica com a cor do NÍVEL ANTIGO até o próximo render completo.
+  setTimeout(() => {
+    if (valEl) valEl.style.color = corFinal;
+    if (barEl) barEl.style.background = corFinal;
+    row.style.setProperty('--ind-cor', corFinal);
+
+    // Atualiza/benchVal (cor do número 'x/20' junto ao texto de média)
+    if (benchEl) {
+      const valSpan = benchEl.querySelector('span[style*="font-weight"]') || benchEl.lastElementChild;
+      if (valSpan) valSpan.style.color = corFinal;
+    }
+
+    // Aplica/remove estado crítico (borda pulsante, etc.) se o nível mudou
+    if (isCriticalNovo && !eraCritico) {
+      row.classList.add('critical');
+      nameEl?.classList.add('critical-label');
+    } else if (!isCriticalNovo && eraCritico) {
+      row.classList.remove('critical');
+      nameEl?.classList.remove('critical-label');
+    }
+  }, 400); // mesma duração de _animarContador, mesmo timing da seta
+
+  // Seta de tendência: só aparece QUANDO a animação do número termina,
+  // garantindo que ela nunca fica dessincronizada do valor exibido.
+  // Depois de 2s visível, desaparece com fade suave.
+  if (trendEl) {
+    trendEl.textContent = '';
+    trendEl.className   = 'game-ind-trend';
+    trendEl.style.opacity = '0';
+    setTimeout(() => {
+      trendEl.textContent  = subiu ? `▲${diff}` : `▼${diff}`;
+      trendEl.className    = `game-ind-trend ${subiu ? 'up' : 'down'}`;
+      trendEl.style.opacity = '1';
+
+      // Some após 2s, com fade de .3s (definido no CSS .game-ind-trend)
+      setTimeout(() => {
+        trendEl.style.opacity = '0';
+      }, 2000);
+    }, 400); // mesma duração de _animarContador
+  }
+}
+
 function renderSidebar(state, empresa) {
   try {
   // BUG #1 FIX: snapshot _prevIndicators at the START of render so trend arrows
@@ -1175,46 +1316,77 @@ function renderSidebar(state, empresa) {
   if (grid) {
     // Detectar indicadores críticos para toast
     const newlyCritical = [];
+
+    // Se há valores anteriores (não é a primeira renderização), o HTML nasce
+    // com os valores ANTIGOS — para a transição ser visível — e a animação
+    // via _animarIndicador() corrige para os valores novos depois.
+    const temAnterior = Object.keys(snapPrev).length > 0;
+
     grid.innerHTML = Object.entries(state.indicators).map(([k, v]) => {
-      const pct      = (v / 20) * 100;
-      const cor      = BetaIndicadores.corNivel(v);
-      const label    = BetaIndicadores.LABELS[k] || k;
-      const b        = _bench(state.sector, k);
-      const benchHtml = b ? `<span class="game-ind-bench">Méd: ${b}</span>` : "";
+      const vExibir   = temAnterior && snapPrev[k] !== undefined ? snapPrev[k] : v;
+      const pct       = (vExibir / 20) * 100;
+      const cor       = BetaIndicadores.corNivel(vExibir);
+      const label     = BetaIndicadores.LABELS[k] || k;
+      const b         = _bench(state.sector, k);
+      const prev      = snapPrev[k];
 
-      // Seta de tendência vs rodada anterior — usa snapPrev (capturado no início da função)
-      const prev = snapPrev[k];
-      let trendHtml = "";
-      if (prev !== undefined) {
-        const diff = v - prev;
-        if      (diff >  0) trendHtml = `<span class="game-ind-trend up">▲${diff}</span>`;
-        else if (diff <  0) trendHtml = `<span class="game-ind-trend down">▼${Math.abs(diff)}</span>`;
-        // flat: sem símbolo para não confundir com número negativo
-      }
+      // IMPORTANTE: a seta de tendência NÃO é inserida aqui no HTML inicial.
+      // Ela é injetada via JS em _animarIndicador() (ou imediatamente abaixo,
+      // se não há mudança a animar) — assim a seta sempre aparece SINCRONIZADA
+      // com o número e a barra já no valor final, nunca antes.
 
-      // Classe crítico se valor <= 3
+      // Classe crítico se valor final <= 3
       const isCritical = v <= 3;
       if (isCritical && (prev === undefined || prev > 3)) newlyCritical.push(label);
       const rowClass = isCritical ? ' critical' : '';
       const nameClass = isCritical ? ' critical-label' : '';
 
       // Label already contains emoji prefix (e.g. "💰 Financeiro")
-      // Split into icon + name for better layout
       const labelParts = label.split(" ");
       const indIcon = labelParts[0];
       const indName = labelParts.slice(1).join(" ");
-      const benchVal = b ? `<span>Méd: ${b}</span><span style="color:${cor};font-weight:700">${v}/20</span>` : `<span style="color:${cor};font-weight:600">${v}/20</span>`;
-      return `<div class="game-ind-row${rowClass}" style="--ind-cor:${cor}" onclick="BetaUI.abrirTooltipIndicador('${k}')">
+      const benchVal = b ? `<span>Méd: ${b}</span><span style="color:${cor};font-weight:700">${vExibir}/20</span>` : `<span style="color:${cor};font-weight:600">${vExibir}/20</span>`;
+      return `<div class="game-ind-row${rowClass}" data-ind="${k}" style="--ind-cor:${cor}" onclick="BetaUI.abrirTooltipIndicador('${k}')">
         <div class="game-ind-top">
           <span class="game-ind-name${nameClass}"><span style="margin-right:4px;font-size:.8rem">${indIcon}</span>${indName}</span>
-          <div style="display:flex;align-items:center;gap:3px">${trendHtml}<span class="game-ind-val" style="color:${cor}">${v}</span></div>
+          <div style="display:flex;align-items:center;gap:3px"><span class="game-ind-trend" data-trend-for="${k}"></span><span class="game-ind-val" style="color:${cor}">${vExibir}</span></div>
         </div>
-        <div class="game-ind-track"><div class="game-ind-bar" style="width:${pct}%;background:${cor}"></div></div>
+        <div class="game-ind-track"><div class="game-ind-bar" style="width:${pct}%;background:${cor};transition:none"></div></div>
         <div class="game-ind-bench">${benchVal}</div>
       </div>`;
     }).join("");
 
-    // BUG #1 FIX: update _prevIndicators AFTER rendering (was inside the map, updating mid-render)
+    // Para indicadores SEM mudança (prev === v), insere a seta vazia imediatamente
+    // (não há nada a animar, então não precisa esperar)
+    if (!temAnterior) {
+      // Primeira renderização — nenhuma seta, nenhuma comparação possível
+    } else {
+      Object.entries(state.indicators).forEach(([k, v]) => {
+        const prev = snapPrev[k];
+        if (prev === undefined || prev === v) {
+          // Sem mudança real — não precisa de seta, e o número já está correto
+          const trendEl = grid.querySelector(`[data-trend-for="${k}"]`);
+          if (trendEl) trendEl.textContent = '';
+        }
+      });
+    }
+
+    // BUG #1 FIX: update _prevIndicators AFTER rendering
+    // Anima dos valores antigos (já no DOM) para os valores reais do state.
+    const _snapParaAnim = { ...snapPrev };
+    if (temAnterior) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          Object.entries(state.indicators).forEach(([k, v], i) => {
+            const prev = _snapParaAnim[k];
+            if (prev !== undefined && prev !== v) {
+              setTimeout(() => _animarIndicador(k, prev, v), i * 60);
+            }
+          });
+        });
+      });
+    }
+
     _prevIndicators = { ...state.indicators };
 
     // Toast para indicadores recém-críticos
@@ -1253,7 +1425,164 @@ function renderSidebar(state, empresa) {
 /* ════════════════════════════════════════════════════
    RODADA
 ════════════════════════════════════════════════════ */
-function renderRodada(state) {
+/**
+ * Animação de abertura: mostra todos os indicadores em 20
+ * e conta sequencialmente até os valores reais, revelando o estado inicial da empresa.
+ * @param {object} indicators — valores reais dos indicadores
+ * @param {number} delayBase  — delay inicial em ms
+ */
+/**
+ * Anima chips de um grid sequencialmente via JS (evita problema de innerHTML + CSS animation).
+ * Insere os chips sem classe de animação, depois aplica uma por uma com delay.
+ * @param {string}   gridId  — id do elemento container
+ * @param {Array}    itens   — [{ html: string, positivo: boolean }]
+ */
+// Fila de chips pendentes para animar quando o jogador apertar "Próxima Rodada"
+let _chipsFila = [];
+
+/**
+ * Insere chips no grid de forma estática (visíveis, sem animação).
+ * A animação só acontece quando _dispararAnimacaoChips() for chamada
+ * (ao apertar o botão Próxima Rodada).
+ */
+function _animarChips(gridId, itens) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+
+  // Insere chips estáticos e visíveis — jogador lê normalmente
+  grid.innerHTML = itens.map(it => it.html).join('');
+
+  // Registra na fila para animar ao apertar Próxima Rodada
+  const chips = Array.from(grid.querySelectorAll('.fb-chip'));
+  chips.forEach((chip, i) => {
+    _chipsFila.push({ chip, index: i, positivo: chip.dataset.positivo === 'true' });
+  });
+}
+
+/**
+ * Chamada ao apertar "Próxima Rodada".
+ * Anima todos os chips da fila sequencialmente antes de avançar.
+ * Retorna uma Promise que resolve quando todas as animações terminarem.
+ */
+function _dispararAnimacaoChips() {
+  const fila = [..._chipsFila];
+  _chipsFila = [];
+  if (!fila.length) return Promise.resolve();
+
+  // Esconde todos antes de animar
+  fila.forEach(({ chip }) => {
+    chip.style.transition = 'none';
+    chip.style.opacity    = '0';
+    chip.style.transform  = 'translateY(10px) scale(.9)';
+  });
+
+  return new Promise(resolve => {
+    // rAF duplo: garante que o estado opacity:0 foi pintado
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const duracaoUltimo = (fila.length - 1) * 90 + 220 + 400 + 50;
+
+        fila.forEach(({ chip, index, positivo }) => {
+          setTimeout(() => {
+            chip.style.transition = 'opacity .22s ease, transform .22s cubic-bezier(.22,.68,0,1.3)';
+            chip.style.opacity    = '1';
+            chip.style.transform  = 'translateY(0) scale(1)';
+
+            // Pulso de cor após entrar
+            setTimeout(() => {
+              chip.style.transition += ', box-shadow .3s ease';
+              chip.style.boxShadow  = positivo
+                ? '0 0 10px rgba(34,197,94,.45)'
+                : '0 0 10px rgba(239,68,68,.45)';
+              setTimeout(() => {
+                chip.style.boxShadow = 'none';
+              }, 400);
+            }, 220);
+          }, index * 90);
+        });
+
+        // Resolve após o último chip terminar de pulsar
+        setTimeout(resolve, duracaoUltimo);
+      });
+    });
+  });
+}
+
+function _animarInicioPartida(indicators, delayBase = 600) {
+  const entradas = Object.entries(indicators);
+
+  // Passo 1: força barra em 0% e número em 20 para todos,
+  // sem transition para ser instantâneo
+  entradas.forEach(([k]) => {
+    const row   = document.querySelector(`.game-ind-row[data-ind="${k}"]`);
+    const valEl = row?.querySelector('.game-ind-val');
+    const barEl = row?.querySelector('.game-ind-bar');
+    if (valEl) valEl.textContent = '20';
+    if (barEl) {
+      barEl.style.transition = 'none';
+      barEl.style.width = '100%'; // parte cheio (20/20)
+    }
+  });
+
+  // Passo 2: para cada indicador, anima sequencialmente do valor 20 ao real
+  entradas.forEach(([k, v], i) => {
+    setTimeout(() => {
+      const row    = document.querySelector(`.game-ind-row[data-ind="${k}"]`);
+      const valEl  = row?.querySelector('.game-ind-val');
+      const barEl  = row?.querySelector('.game-ind-bar');
+      const nameEl = row?.querySelector('.game-ind-name');
+
+      // Restaura transition antes de animar
+      if (barEl) barEl.style.transition = 'width .5s cubic-bezier(.4,0,.2,1)';
+
+      const corFinal = BetaIndicadores.corNivel(v); // cor 20 = excelente, sempre OK no início
+
+      if (v === 20) {
+        // Sem mudança — só garante número e cor corretos
+        if (valEl) { valEl.textContent = '20'; valEl.style.color = corFinal; }
+        if (row)   row.style.setProperty('--ind-cor', corFinal);
+        return;
+      }
+
+      // Flash e contador
+      if (row) {
+        row.classList.remove('ind-flash-up', 'ind-flash-down');
+        void row.offsetWidth;
+        row.classList.add('ind-flash-down'); // começa cheio e cai
+      }
+      if (valEl) {
+        valEl.classList.remove('ind-val-pop');
+        void valEl.offsetWidth;
+        valEl.classList.add('ind-val-pop');
+        _animarContador(valEl, 20, v, 450);
+      }
+      if (barEl) {
+        // Anima barra do valor máximo (100%) para o valor real
+        barEl.style.width = `${(v / 20) * 100}%`;
+      }
+
+      // Cor e estado crítico — sincronizados com o fim da animação (450ms)
+      setTimeout(() => {
+        if (valEl) valEl.style.color = corFinal;
+        if (barEl) barEl.style.background = corFinal;
+        if (row)   row.style.setProperty('--ind-cor', corFinal);
+
+        const benchEl = row?.querySelector('.game-ind-bench');
+        if (benchEl) {
+          const valSpan = benchEl.querySelector('span[style*="font-weight"]') || benchEl.lastElementChild;
+          if (valSpan) valSpan.style.color = corFinal;
+        }
+
+        if (v <= 3) {
+          row?.classList.add('critical');
+          nameEl?.classList.add('critical-label');
+        }
+      }, 450);
+    }, delayBase + i * 200);
+  });
+}
+
+function renderRodada(state, aposTrocaTela) {
   _escolhaFeita = false;
   _bloqueioAte  = Date.now() + 350; // bloqueia toques fantasma pós-transição
   const round = state.gameRounds[state.currentRound];
@@ -1302,9 +1631,21 @@ function renderRodada(state) {
   // Timer
   _iniciarTimer();
 
+  // Animação de início: na primeira rodada os indicadores "caem" de 20 até o valor real
+  if (state.currentRound === 0) {
+    requestAnimationFrame(() => _animarInicioPartida(state.indicators));
+  }
+
   // Sempre começa na aba HISTÓRIA
   mudarTab("historia");
   mostrarTela("screen-game");
+
+  // Se houver callback (chamado por _avancarRodada para renderizar a sidebar
+  // SÓ DEPOIS que a tela já estiver visível), executa após o screenIn (~300ms)
+  // para o jogador perceber a transição dos indicadores na tela certa.
+  if (typeof aposTrocaTela === 'function') {
+    setTimeout(aposTrocaTela, 60);
+  }
 }
 
 /* ── Abas ──────────────────────────────────────────── */
@@ -1411,6 +1752,80 @@ function escolher(idx) {
   setTimeout(() => processarEscolha(idx), 180);
 }
 
+/* ════════════════════════════════════════════════════
+   FEEDBACK DE OMISSÃO — tela diferenciada quando o tempo esgota
+════════════════════════════════════════════════════ */
+function mostrarFeedbackOmissao({ faseLabel, rodadaTitulo, efeitos, efeitosGestor }, callback) {
+  _feedbackCallback = callback;
+  mostrarTela('screen-feedback');
+
+  // Badge: vermelho com ícone de relógio
+  const badge = document.getElementById('fb-veredito-badge');
+  if (badge) { badge.className = 'verdict-badge verdict-ruim'; badge.textContent = '⏰'; }
+
+  const lbl = document.getElementById('fb-veredito-label');
+  if (lbl) { lbl.textContent = 'TEMPO ESGOTADO'; lbl.style.color = 'var(--danger)'; }
+
+  const sub = document.getElementById('fb-veredito-sub');
+  if (sub) sub.textContent = 'Você não respondeu a tempo';
+
+  // Contexto da rodada
+  const escolhaEl = document.getElementById('fb-escolha-texto');
+  if (escolhaEl) escolhaEl.textContent = `"${rodadaTitulo}" — ${faseLabel}`;
+
+  // Explicação
+  const expEl = document.getElementById('fb-explicacao-texto');
+  if (expEl) expEl.textContent =
+    'A omissão tem custo. Em gestão, a indecisão raramente é neutra — ela cria vácuos que o mercado, a equipe e os stakeholders preenchem do jeito deles. As consequências abaixo refletem o impacto de não agir a tempo.';
+
+  // Impactos negativos
+  const grid = document.getElementById('fb-impactos-grid');
+  if (grid) {
+    const chips = Object.entries(efeitos)
+      .filter(([, v]) => v !== 0)
+      .map(([k, v]) => {
+        const nome = BetaIndicadores.LABELS[k] || k;
+        const cor  = v > 0 ? 'var(--good)' : 'var(--danger)';
+        return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v > 0 ? '+' : ''}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;
+      }).join('');
+
+    // Efeito no gestor
+    const gestorChips = Object.entries(efeitosGestor || {})
+      .filter(([, v]) => v !== 0)
+      .map(([k, v]) => {
+        const labels = { capitalPolitico: '👔 Capital Político', esgotamento: '😓 Esgotamento' };
+        const nome = labels[k] || k;
+        const cor  = v > 0 ? 'var(--danger)' : 'var(--good)'; // esgotamento+ é ruim
+        return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v > 0 ? '+' : ''}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;
+      }).join('');
+
+    grid.innerHTML = chips + gestorChips ||
+      '<span style="font-size:.8rem;color:var(--text-muted)">Nenhum impacto mensurável desta vez.</span>';
+  }
+
+  // Esconde "melhor alternativa" (não faz sentido em omissão)
+  const altEl = document.getElementById('fb-melhor-alt');
+  if (altEl) altEl.style.display = 'none';
+
+  // Limpa seções que podem ter conteúdo de partidas/rodadas anteriores
+  const histEl  = document.getElementById('fb-historico');
+  const histLst = document.getElementById('fb-historico-lista');
+  if (histEl)  histEl.style.display  = 'none';
+  if (histLst) histLst.innerHTML     = '';
+
+  const gestorSec = document.getElementById('fb-gestor');
+  const gestorGrid = document.getElementById('fb-gestor-grid');
+  if (gestorSec)  gestorSec.style.display  = 'none';
+  if (gestorGrid) gestorGrid.innerHTML     = '';
+
+  const stakeholderEl = document.getElementById('fb-stakeholder');
+  if (stakeholderEl) stakeholderEl.style.display = 'none';
+
+  // Mostra banner de omissão
+  const omissaoBanner = document.getElementById('fb-omissao-banner');
+  if (omissaoBanner) omissaoBanner.style.display = '';
+}
+
 let _presencaInicializada = false;
 
 // Registra presença no RTDB quando o jogador está na tela inicial (sem partida ativa)
@@ -1515,7 +1930,7 @@ function _iniciarTimer() {
     _timerSegs--;
     el.textContent = `⏱ ${_timerSegs}s`;
     if (_timerSegs <= 10) el.classList.add("danger");
-    if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) { const _cards = document.querySelectorAll(".choice-card"); escolher(Math.floor(Math.random() * (_cards.length || 1))); } }
+    if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) _escolherPorOmissao(); }
   }, 1000);
 }
 
@@ -1526,11 +1941,124 @@ function _pararTimer() {
 }
 
 /* ════════════════════════════════════════════════════
+   OMISSÃO — penalidade quando o tempo esgota
+════════════════════════════════════════════════════ */
+
+// Tabela de penalidade base por fase (% de queda nos indicadores relevantes)
+const _OMISSAO_PENALIDADE = {
+  diagnostico: { base: 6,  max: 10 }, // fase inicial — penalidade leve
+  pressao:     { base: 10, max: 16 }, // fase do meio — penalidade moderada
+  decisao:     { base: 15, max: 22 }, // fase crítica — penalidade severa
+};
+
+/**
+ * Calcula os efeitos de omissão baseados nos indicadores que o round afeta.
+ * Lê os effects de todas as choices e extrai os indicadores negativamente relevantes,
+ * aplicando penalidade proporcional à fase da rodada.
+ * @param {object} round   — round atual (com .fase e .choices)
+ * @param {object} state   — estado do jogo (com .indicators e .currentRound)
+ * @returns {{ efeitos: object, indicadoresAfetados: string[], faseLabel: string }}
+ */
+function _calcularPenalidadeOmissao(round, state) {
+  const fase  = round.fase || 'pressao';
+  const cfg   = _OMISSAO_PENALIDADE[fase] || _OMISSAO_PENALIDADE.pressao;
+
+  // Coleta todos os indicadores mencionados pelas choices do round
+  const frequencia = {}; // indicador → quantas choices o mencionam
+  const somaNeg    = {}; // indicador → soma dos valores negativos (para priorizar os mais impactantes)
+
+  (round.choices || []).forEach(c => {
+    Object.entries(c.effects || {}).forEach(([k, v]) => {
+      if (!frequencia[k]) { frequencia[k] = 0; somaNeg[k] = 0; }
+      frequencia[k]++;
+      if (v < 0) somaNeg[k] += Math.abs(v);
+    });
+  });
+
+  // Filtra apenas indicadores que existem no estado atual do jogador
+  const candidatos = Object.keys(frequencia).filter(k =>
+    state.indicators[k] !== undefined && state.indicators[k] > 0
+  );
+
+  // Ordena por relevância: indicadores mais mencionados e com maior impacto negativo
+  candidatos.sort((a, b) =>
+    (frequencia[b] + somaNeg[b] * 0.5) - (frequencia[a] + somaNeg[a] * 0.5)
+  );
+
+  // Seleciona os 2-3 mais relevantes para penalizar
+  const qtd      = candidatos.length >= 3 ? 3 : candidatos.length >= 2 ? 2 : 1;
+  const alvos    = candidatos.slice(0, qtd);
+
+  // Fallback: se não houver candidatos claros, penaliza financeiro + outro do setor
+  if (alvos.length === 0) {
+    const fallbacks = Object.keys(state.indicators).filter(k => state.indicators[k] > 0);
+    alvos.push(...fallbacks.slice(0, 2));
+  }
+
+  // Distribui a penalidade: primeiro alvo leva mais, demais dividem o restante
+  const efeitos = {};
+  alvos.forEach((k, i) => {
+    const fator = i === 0 ? 1.0 : i === 1 ? 0.6 : 0.4;
+    // Penalidade é proporcional ao valor atual do indicador (não mata instantaneamente)
+    const penalidade = Math.round(cfg.base * fator);
+    efeitos[k] = -Math.min(penalidade, cfg.max, state.indicators[k]); // nunca vai abaixo de 0
+  });
+
+  const faseLabels = {
+    diagnostico: 'Diagnóstico', pressao: 'Pressão', decisao: 'Decisão Crítica',
+    fundacao: 'Fundação', crescimento: 'Crescimento', crise: 'Crise',
+    consolidacao: 'Consolidação', expansao: 'Expansão',
+  };
+
+  return { efeitos, indicadoresAfetados: alvos, faseLabel: faseLabels[fase] || fase };
+}
+
+/**
+ * Chamada quando o timer chega a zero e o jogador não escolheu.
+ * Em vez de sortear uma alternativa, aplica consequências de omissão diretamente.
+ */
+function _escolherPorOmissao() {
+  if (_escolhaFeita) return;
+  _escolhaFeita = true;
+  _pararTimer();
+
+  const state = BetaState.get();
+  if (!state) return;
+  const round = state.gameRounds?.[state.currentRound];
+  if (!round) return;
+
+  // Pisca o timer no vermelho antes de sumir
+  const timerEl = document.getElementById('timer-display');
+  if (timerEl) {
+    timerEl.textContent = '⏱ 0s';
+    timerEl.classList.add('danger', 'active');
+    setTimeout(() => timerEl.classList.remove('active', 'danger'), 800);
+  }
+
+  // Desabilita todas as choices (sem highlight — nenhuma foi escolhida)
+  document.querySelectorAll('.choice-card').forEach(b => {
+    b.disabled = true;
+    b.style.opacity = '0.35';
+  });
+
+  // Calcula penalidade
+  const { efeitos, indicadoresAfetados, faseLabel } = _calcularPenalidadeOmissao(round, state);
+
+  // Aplica via engine com flag de omissão
+  setTimeout(() => processarOmissao(efeitos, round, faseLabel), 350);
+}
+
+/* ════════════════════════════════════════════════════
    FEEDBACK
 ════════════════════════════════════════════════════ */
 function mostrarFeedback(data, callback) {
   _feedbackCallback = callback;
   mostrarTela("screen-feedback");
+
+  // Garante que o banner de omissão não vaze entre rodadas
+  const _omBanner = document.getElementById('fb-omissao-banner');
+  if (_omBanner) _omBanner.style.display = 'none';
+
   const corMap   = { boa:"var(--good)", media:"var(--warn)", ruim:"var(--danger)" };
   const iconMap  = { boa:"✅", media:"⚠️", ruim:"❌" };
   const labelMap = { boa:"BOA DECISÃO", media:"DECISÃO COM TRADE-OFFS", ruim:"MÁ DECISÃO" };
@@ -1544,10 +2072,17 @@ function mostrarFeedback(data, callback) {
   document.getElementById("fb-explicacao-texto").textContent = data.ensinamento||"";
   // Impactos
   const grid = document.getElementById("fb-impactos-grid");
-  if (grid) grid.innerHTML = Object.entries(data.efeitos||{}).filter(([,v])=>v!==0).map(([k,v])=>{
-    const cor=v>0?"var(--good)":"var(--danger)"; const nome=BetaIndicadores.LABELS[k]||k;
-    return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v>0?"+":""}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;
-  }).join("")||`<span style="font-size:.8rem;color:var(--text-muted)">Sem impacto direto.</span>`;
+  if (grid) {
+    const chipEfeitos = Object.entries(data.efeitos||{}).filter(([,v])=>v!==0);
+    if (chipEfeitos.length) {
+      _animarChips('fb-impactos-grid', chipEfeitos.map(([k,v]) => ({
+        html: `<div class="fb-chip" data-positivo="${v>0}"><span class="fb-chip-val" style="color:${v>0?'var(--good)':'var(--danger)'}">${v>0?'+':''}${v}</span><span class="fb-chip-nome">${BetaIndicadores.LABELS[k]||k}</span></div>`,
+        positivo: v > 0
+      })));
+    } else {
+      grid.innerHTML = `<span style="font-size:.8rem;color:var(--text-muted)">Sem impacto direto.</span>`;
+    }
+  }
   // Melhor alternativa
   const altEl = document.getElementById("fb-melhor-alt");
   if (altEl) {
@@ -1560,10 +2095,15 @@ function mostrarFeedback(data, callback) {
       document.getElementById("fb-alt-texto").textContent = melhor.text;
       document.getElementById("fb-alt-ensinamento").textContent = melhor.ensinamento||"";
       const efEl = document.getElementById("fb-alt-efeitos");
-      if (efEl) efEl.innerHTML = Object.entries(melhor.effects||{}).filter(([,v])=>v!==0).map(([k,v])=>{
-        const cor=v>0?"var(--good)":"var(--danger)"; const nome=BetaIndicadores.LABELS[k]||k;
-        return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor};font-size:.8rem">${v>0?"+":""}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;
-      }).join("");
+      if (efEl) {
+        const altChips = Object.entries(melhor.effects||{}).filter(([,v])=>v!==0);
+        if (altChips.length) {
+          _animarChips('fb-alt-efeitos', altChips.map(([k,v]) => ({
+            html: `<div class="fb-chip" data-positivo="${v>0}"><span class="fb-chip-val" style="color:${v>0?'var(--good)':'var(--danger)'};">${v>0?'+':''}${v}</span><span class="fb-chip-nome">${BetaIndicadores.LABELS[k]||k}</span></div>`,
+            positivo: v > 0
+          })));
+        }
+      }
     } else { altEl.style.display="none"; }
   }
   // Gestor
@@ -1573,10 +2113,17 @@ function mostrarFeedback(data, callback) {
     if (temEfeito) {
       gestorEl.style.display="";
       const labels={reputacaoInterna:"🧑 Reputação",capitalPolitico:"🏛 Cap. Político",esgotamento:"🔋 Esgotamento"};
-      gestorGrid.innerHTML=Object.entries(eg).filter(([,v])=>v!==0).map(([k,v])=>{
-        const ruim=k==="esgotamento"?v>0:v<0; const cor=ruim?"var(--danger)":"var(--purple)";
-        return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v>0?"+":""}${v}</span><span class="fb-chip-nome">${labels[k]||k}</span></div>`;
-      }).join("");
+      const gestorChips = Object.entries(eg).filter(([,v])=>v!==0);
+      if (gestorChips.length) {
+        _animarChips('fb-gestor-grid', gestorChips.map(([k,v]) => {
+          const ruim = k==="esgotamento"?v>0:v<0;
+          const cor  = ruim?"var(--danger)":"var(--purple)";
+          return {
+            html: `<div class="fb-chip" data-positivo="${!ruim}"><span class="fb-chip-val" style="color:${cor}">${v>0?'+':''}${v}</span><span class="fb-chip-nome">${labels[k]||k}</span></div>`,
+            positivo: !ruim
+          };
+        }));
+      }
     } else { gestorEl.style.display="none"; }
   }
   // Stakeholder
@@ -1614,7 +2161,9 @@ function avancar() {
   const cb = _feedbackCallback;
   _feedbackCallback = null;
   _bloqueioAte = Date.now() + 400; // bloqueia escolher() durante transição
-  cb();
+
+  // Dispara animação dos chips e avança ao terminar
+  _dispararAnimacaoChips().then(() => cb());
 }
 
 /* ════════════════════════════════════════════════════
@@ -1624,13 +2173,38 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
                            history, companyName, empresa, sector, epilogo, decisoesCruciais }) {
   mostrarTela("screen-result");
   _registrarResultado(score, scoreGestor, sector, companyName);
-  const titulos={fim:score>=70?"Mandato Concluído com Êxito":score>=45?"Mandato Concluído":"Mandato com Dificuldades",gameover:"Colapso Operacional",mandato_conselho:"Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};
-  const subs={fim:`Você completou as ${BetaState.get()?.totalRounds||10} rodadas. Veja o balanço do seu mandato.`,gameover:"Um indicador zerou. A empresa entrou em colapso.",mandato_conselho:"Seu capital político se esgotou e o conselho encerrou seu mandato.",mandato_burnout:"O esgotamento chegou ao limite e você precisou se afastar."};
-  const motivoLabels = {fim:"Relatório Final",gameover:"Colapso Operacional",
-    mandato_conselho:"Mandato Encerrado pelo Conselho",mandato_burnout:"Afastamento por Burnout"};
+  const titulos={
+    fim:           score>=70?"Mandato Concluído com Êxito":score>=45?"Mandato Concluído":"Mandato com Dificuldades",
+    gameover:      "Colapso Operacional",
+    omissao_gameover: "Paralisia Decisória",
+    mandato_conselho: "Encerrado pelo Conselho",
+    mandato_burnout:  "Afastamento por Burnout",
+  };
+  const subs={
+    fim:           `Você completou as ${BetaState.get()?.totalRounds||10} rodadas. Veja o balanço do seu mandato.`,
+    gameover:      "Um indicador zerou. A empresa entrou em colapso.",
+    omissao_gameover: "A recusa em decidir no momento certo destruiu a empresa. Omissão é também uma escolha — e a mais cara de todas.",
+    mandato_conselho: "Seu capital político se esgotou e o conselho encerrou seu mandato.",
+    mandato_burnout:  "O esgotamento chegou ao limite e você precisou se afastar.",
+  };
+  const motivoLabels = {
+    fim:              "Relatório Final",
+    gameover:         "Colapso Operacional",
+    omissao_gameover: "Paralisia Decisória",
+    mandato_conselho: "Mandato Encerrado pelo Conselho",
+    mandato_burnout:  "Afastamento por Burnout",
+  };
   document.getElementById("result-motivo-label").textContent = motivoLabels[motivo] || motivo.replace(/_/g," ").toUpperCase();
   document.getElementById("result-title").textContent    = titulos[motivo]||"Mandato Encerrado";
   document.getElementById("result-subtitle").textContent = subs[motivo]||"";
+
+  // Identidade visual por motivo
+  document.getElementById("screen-result")?.setAttribute("data-motivo", motivo);
+  const motivoEl = document.getElementById("result-motivo-label");
+  if (motivoEl) motivoEl.style.color = motivo==="omissao_gameover"?"var(--warn)":motivo==="gameover"?"var(--danger)":motivo==="fim"?"var(--good)":"var(--text-muted)";
+  const omBanner = document.getElementById("result-omissao-banner");
+  if (omBanner) omBanner.style.display = motivo==="omissao_gameover" ? "" : "none";
+
   const corEmp=score>=70?"var(--good)":score>=45?"var(--warn)":"var(--danger)";
   const corGes=scoreGestor>=70?"var(--purple)":scoreGestor>=45?"var(--warn)":"var(--danger)";
   const numEl=document.getElementById("result-score-num"), mgEl=document.getElementById("result-manager-num");
@@ -1677,7 +2251,7 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
       }).join("");
       return `<div class="crucial-item">
         <div class="crucial-round">${emo} Rodada ${d.rodada} — ${d.titulo}</div>
-        <div class="crucial-escolha">"${d.escolha}"</div>
+        <div class="crucial-escolha">"${d.escolha ?? '⏰ Omissão — tempo esgotado'}"</div>
         <div style="margin:6px 0">${efeitos}</div>
         ${d.ensinamento?`<div style="font-size:.75rem;color:var(--t2);line-height:1.4;font-style:italic">${d.ensinamento}</div>`:""}
       </div>`;
@@ -2534,7 +3108,7 @@ function continuarJogo() {
   const overlay = document.getElementById('overlay-pause');
   _fecharOverlay('overlay-pause');
   // BUG #11 FIX: se timer chegou a 0 durante pausa, forçar escolha imediata
-  if (_settings.timer && !_escolhaFeita && _timerSegs <= 0) { const _cards = document.querySelectorAll(".choice-card"); escolher(Math.floor(Math.random() * (_cards.length || 1))); return; }
+  if (_settings.timer && !_escolhaFeita && _timerSegs <= 0) { _escolherPorOmissao(); return; }
   if (_settings.timer && !_escolhaFeita && _timerSegs > 0) {
     const el = document.getElementById('timer-display');
     if (el) { el.classList.add('active'); if (_timerSegs <= 10) el.classList.add('danger'); }
@@ -2542,7 +3116,7 @@ function continuarJogo() {
       _timerSegs--;
       if (el) el.textContent = `⏱ ${_timerSegs}s`;
       if (_timerSegs <= 10 && el) el.classList.add('danger');
-      if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) { const _c = document.querySelectorAll(".choice-card"); escolher(Math.floor(Math.random() * (_c.length || 1))); } }
+      if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) _escolherPorOmissao(); }
     }, 1000);
   }
 }
@@ -2723,17 +3297,7 @@ const INDICADOR_INFO = {
     desc: 'Aderência às normas e regulações do setor. Envolve licenças, certificações e auditorias.',
     consequence: '⚠ Não conformidade pode resultar em multas, interdições e danos à reputação.',
   },
-  // ── Tecnologia ──
-  clima: {
-    titulo: '🧑‍💻 Clima Organizacional',
-    desc: 'Bem-estar e satisfação dos colaboradores de tecnologia. Essencial para atrair e reter talentos.',
-    consequence: '⚠ Clima ruim aumenta turnover em cargos técnicos críticos.',
-  },
-  satisfacao: {
-    titulo: '⭐ Satisfação do Cliente',
-    desc: 'Nível de satisfação dos usuários com os produtos e serviços digitais.',
-    consequence: '⚠ Insatisfação leva ao churn e prejudica o crescimento.',
-  },
+  // ── Tecnologia (rh/clientes já cobertos pelas entradas padrão acima) ──
   produtividade: {
     titulo: '⚡ Produtividade',
     desc: 'Velocidade e eficiência das entregas de tecnologia. Impactada por dívida técnica, processos e motivação.',
@@ -2897,7 +3461,7 @@ function renderResultadoAnimado({ motivo, score, scoreGestor, gestor, indicators
 /* ════════════════════════════════════════════════════
    REGISTRO NO ENGINE + BOOT
 ════════════════════════════════════════════════════ */
-registrarUI({ mostrarTela, mostrarIntro, renderSidebar, renderRodada, mostrarFeedback, renderResultado: renderResultadoAnimado });
+registrarUI({ mostrarTela, mostrarIntro, renderSidebar, renderRodada, mostrarFeedback, mostrarFeedbackOmissao, renderResultado: renderResultadoAnimado });
 
 
 /* ════════════════════════════════════════════════════

@@ -11,11 +11,11 @@ const BetaState = (() => {
         // começa em situações muito diferentes (SaaS saudável vs EdTech em crise vs Scale-up IA)
         const TECNOLOGIA_POR_HISTORIA = [
             // [0] SaaS B2B — empresa crescendo, time ainda relativamente ok
-            { financeiro: 9, clima: 7, satisfacao: 7, qualidade: 6, produtividade: 7, reputacao: 8, inovacao: 7, seguranca: 6 },
-            // [1] EdTech — time sobrecarregado, clima crítico (runway 8 meses)
-            { financeiro: 9, clima: 4, satisfacao: 7, qualidade: 6, produtividade: 5, reputacao: 8, inovacao: 7, seguranca: 6 },
+            { financeiro: 9, rh: 7, clientes: 7, qualidade: 6, produtividade: 7, reputacao: 8, inovacao: 7, seguranca: 6 },
+            // [1] EdTech — time sobrecarregado, clima/rh crítico (runway 8 meses)
+            { financeiro: 9, rh: 4, clientes: 7, qualidade: 6, produtividade: 5, reputacao: 8, inovacao: 7, seguranca: 6 },
             // [2] Scale-up IA — produto bom, pipeline travado, vendas fracas
-            { financeiro: 9, clima: 6, satisfacao: 7, qualidade: 6, produtividade: 6, reputacao: 8, inovacao: 7, seguranca: 6 },
+            { financeiro: 9, rh: 6, clientes: 7, qualidade: 6, produtividade: 6, reputacao: 8, inovacao: 7, seguranca: 6 },
         ];
 
         const BASE = {

@@ -272,8 +272,15 @@ body::after{
 .screen{
   display:none; position:absolute; inset:0; flex-direction:column;
   overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
+  /* content-visibility:hidden força o navegador a descartar a camada de
+     composição/render desta tela enquanto inativa, evitando que conteúdo
+     "fantasma" de uma tela anterior (especialmente com animação contínua,
+     como o botão da home) vaze visualmente durante a transição para a
+     próxima tela. Sem isso, alguns navegadores Android mantêm a textura
+     da última pintura em cache na GPU por um frame extra. */
+  content-visibility: hidden;
 }
-.screen.active{ display:flex; z-index:10; }
+.screen.active{ display:flex; z-index:10; content-visibility: visible; }
 
 @keyframes screenIn{
   from{ opacity:0; transform:translateY(22px) scale(.99); }
@@ -527,6 +534,9 @@ body::after{
   padding: 0 var(--sp3) calc(var(--sp4) + env(safe-area-inset-bottom, 0px));
   min-height: 100%; box-sizing: border-box;
 }
+
+/* Vitrine lateral — oculta no mobile, ativada só no layout desktop */
+.auth-showcase { display: none; }
 
 .auth-topbar {
   display: flex; align-items: center; justify-content: space-between;
@@ -2069,6 +2079,7 @@ body::after{
 .fb-chip{
   padding:5px 13px; border-radius:var(--rpill); font-size:.78rem; font-weight:600;
   display:inline-flex; align-items:center; gap:5px;
+  transition: box-shadow .3s ease;
 }
 .fb-chip.up  { background:rgba(46,204,113,.12); border:1px solid rgba(46,204,113,.3); color:var(--ok); }
 .fb-chip.down{ background:rgba(231,76,60,.12); border:1px solid rgba(231,76,60,.3); color:var(--err); }
@@ -2224,7 +2235,7 @@ body::after{
 ════════════════════════════════════════════════════ */
 .overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 99999;
-  background: rgba(0,0,0,.82);
+  background: rgba(5,5,8,.97);
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   display: none; align-items: flex-end; justify-content: center;
   padding: 0; box-sizing: border-box;
@@ -2487,8 +2498,8 @@ body::after{
   transition: transform .28s cubic-bezier(.22,.68,0,1.4);
 }
 .toggle-btn.on {
-  background: var(--ok2);
-  box-shadow: 0 0 14px rgba(34,197,94,.35);
+  background: var(--s-gradient);
+  box-shadow: 0 0 14px var(--s-glow);
 }
 .toggle-btn.on::after  { transform: translateX(22px); }
 .toggle-btn.off {
@@ -2584,11 +2595,6 @@ body::after{
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
-.fb-chip{
-  display:inline-flex; align-items:center; gap:5px;
-  padding:5px 12px; border-radius:var(--rpill);
-  background:var(--bg3); border:1px solid var(--line2);
-}
 .fb-chip-val{ font-size:.82rem; font-weight:700; }
 .fb-chip-nome{ font-size:.78rem; color:var(--t2); }
 
@@ -3187,22 +3193,61 @@ body::after{
 }
 @keyframes pulseCriticalBg {
   0%,100% { background: transparent; }
-  50%     { background: rgba(239,68,68,.08); }
+  50%     { background: rgba(239,68,68,.10); }
 }
+/* Borda pulsando com brilho — mais intenso que o anterior, cria urgência real */
+@keyframes pulseCriticalBorder {
+  0%,100% { border-color: rgba(239,68,68,.4);  box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  50%     { border-color: rgba(239,68,68,.95); box-shadow: 0 0 14px 1px rgba(239,68,68,.45); }
+}
+/* Valor numérico "respirando" — leve escala para chamar atenção sem ser irritante */
+@keyframes pulseCriticalVal {
+  0%,100% { transform: scale(1);    text-shadow: 0 0 0 rgba(239,68,68,0); }
+  50%     { transform: scale(1.12); text-shadow: 0 0 8px rgba(239,68,68,.6); }
+}
+/* Ícone de alerta tremendo sutilmente */
+@keyframes shakeCritical {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-1px); }
+  40%      { transform: translateX(1px); }
+  60%      { transform: translateX(-1px); }
+  80%      { transform: translateX(1px); }
+}
+
 .game-ind-row.critical {
-  border-color: rgba(239,68,68,.4) !important;
-  animation: pulseCriticalBg 1.6s ease infinite, indFadeIn .3s ease both;
+  border-width: 1.5px !important;
+  animation: pulseCriticalBg 1.4s ease infinite,
+             pulseCriticalBorder 1.4s ease infinite,
+             indFadeIn .3s ease both;
+}
+/* Pausa as animações infinitas dos indicadores enquanto um overlay está
+   aberto. Múltiplas animações infinite simultâneas promovem o elemento
+   para sua própria camada de composição em GPU, o que pode fazer esse
+   conteúdo "vencer" a ordem de pintura do overlay (ainda em transição de
+   opacidade) por alguns frames — o flash relatado ao abrir overlays. */
+body.overlay-active .game-ind-row.critical,
+body.overlay-active .game-ind-row.critical::before,
+body.overlay-active .game-ind-row.critical .game-ind-val,
+body.overlay-active .game-ind-row.critical .game-ind-bar,
+body.overlay-active .game-ind-name.critical-label {
+  animation-play-state: paused !important;
 }
 .game-ind-row.critical::before {
   background: var(--err) !important;
 }
-.game-ind-row.critical .game-ind-val { animation: none; }
+.game-ind-row.critical .game-ind-val {
+  animation: pulseCriticalVal 1.4s ease infinite;
+  display: inline-block;
+}
 .game-ind-row.critical .game-ind-bar {
-  animation: pulseCritical 1.6s ease infinite;
+  animation: pulseCritical 1.4s ease infinite;
 }
 .game-ind-name.critical-label {
   color: var(--err) !important;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  animation: shakeCritical 2.5s ease-in-out infinite;
 }
 
 /* ── TOAST DE INDICADOR CRÍTICO ─────────────────── */
@@ -3300,6 +3345,21 @@ body::after{
   ══════════════════════════════════════════ */
   html, body { overflow: hidden; background: #07080f; }
 
+  /* Transição entre telas no desktop — redefine os mesmos keyframes usados
+     no mobile (screenIn/screenBack) com deslocamento horizontal mais amplo
+     e perceptível em telas largas (o translateY sutil do mobile passa
+     despercebido em viewports grandes). Como o nome do keyframe é o mesmo
+     usado no JS (mostrarTela), isso é aplicado automaticamente sem precisar
+     tocar no JS — a última definição de @keyframes com o mesmo nome vence. */
+  @keyframes screenIn {
+    from { opacity: 0; transform: translateX(36px) scale(.985); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes screenBack {
+    from { opacity: 0; transform: translateX(-36px) scale(.985); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
   #app {
     position: fixed;
     inset: 0;
@@ -3340,9 +3400,9 @@ body::after{
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: flex-start;
-    padding: 72px 60px;
+    padding: 0 60px;
     background:
       radial-gradient(ellipse 90% 70% at 0% 100%, rgba(212,168,83,.09) 0%, transparent 60%),
       linear-gradient(160deg, #090b13 0%, #0c0e18 100%);
@@ -3375,6 +3435,7 @@ body::after{
     width: 72px; height: 72px;
     margin-bottom: 36px;
     position: relative; z-index: 1;
+    border-radius: 50%;
     animation: logoFloat 6s ease-in-out infinite;
     filter: drop-shadow(0 0 20px rgba(212,168,83,.45));
   }
@@ -3423,12 +3484,13 @@ body::after{
   }
 
   .login-footer::before {
-    content: 'Bem-vindo de volta';
+    content: 'Bem-vindo';
     display: block;
     font-family: var(--serif);
     font-size: 1.7rem; font-weight: 700;
     color: var(--t1); line-height: 1.25;
     margin-bottom: 8px;
+    text-align: center;
   }
 
   .login-footer::after {
@@ -3455,40 +3517,119 @@ body::after{
   }
 
   /* ══════════════════════════════════════════
-     AUTH — card centralizado (sem nada atrás)
+     AUTH — duas colunas (vitrine + formulário)
   ══════════════════════════════════════════ */
   #screen-auth {
-    justify-content: center; align-items: center;
-    overflow-y: auto;
-    /* Fundo sólido garante que nada aparece atrás */
-    background: #0d0f14;
+    flex-direction: row;
+    overflow: hidden;
+    background: #07080f;
   }
+  #screen-auth::before { display: none; }
 
-  #screen-auth::before {
-    content: '';
+  /* Coluna esquerda — vitrine, mesma linguagem visual da tela de login */
+  .auth-showcase {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    flex: 1; min-width: 0;
+    padding: 0 64px;
+    background:
+      radial-gradient(ellipse 90% 70% at 0% 100%, rgba(212,168,83,.09) 0%, transparent 60%),
+      linear-gradient(160deg, #090b13 0%, #0c0e18 100%);
+    position: relative; overflow: hidden;
+    border-right: 1px solid rgba(255,255,255,.05);
+  }
+  .auth-showcase-grid {
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(212,168,83,.05) 0%, transparent 65%);
+    background-image:
+      linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+    background-size: 56px 56px;
     pointer-events: none;
   }
-
-  .auth-wrap {
-    width: 100%; max-width: 440px;
+  .auth-showcase-logo {
+    width: 76px; height: 76px;
+    margin-bottom: 32px;
     position: relative; z-index: 1;
-    margin: auto; padding: 40px 44px;
-    background: #13161d;
+    border-radius: 50%;
+    animation: logoFloat 6s ease-in-out infinite;
+    filter: drop-shadow(0 0 24px rgba(212,168,83,.5));
+  }
+  .auth-showcase-eyebrow {
+    display: block; position: relative; z-index: 1;
+    font-size: .67rem; letter-spacing: .32em;
+    color: var(--s-text); opacity: .8;
+    margin-bottom: 0;
+  }
+  .auth-showcase-rule {
+    width: 48px; height: 3px;
+    background: var(--s-gradient);
+    border-radius: 2px;
+    margin: 22px 0; position: relative; z-index: 1;
+  }
+  .auth-showcase-title {
+    font-family: var(--serif); font-weight: 700;
+    font-size: 2.3rem; line-height: 1.15;
+    color: var(--t1); position: relative; z-index: 1;
+    margin: 0 0 18px;
+  }
+  .auth-showcase-desc {
+    font-size: .9rem; color: var(--t2); line-height: 1.75;
+    max-width: 360px; position: relative; z-index: 1;
+    margin: 0 0 40px;
+  }
+  .auth-showcase-stat {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 360px;
+    padding: 20px 22px;
+    background: rgba(255,255,255,.025);
     border: 1px solid rgba(255,255,255,.07);
-    border-radius: 24px;
-    box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 8px 32px rgba(0,0,0,.4);
-    min-height: unset; align-self: center;
+    border-radius: 16px;
+  }
+  .auth-showcase-stat-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .auth-showcase-stat-label {
+    font-size: .78rem; color: var(--t2); font-weight: 600;
+  }
+  .auth-showcase-stat-val {
+    font-family: var(--serif); font-size: 1rem; font-weight: 700;
+    color: var(--ok);
+  }
+  .auth-showcase-stat-bar {
+    height: 6px; border-radius: 4px;
+    background: rgba(255,255,255,.07);
+    overflow: hidden; margin-bottom: 12px;
+  }
+  .auth-showcase-stat-fill {
+    height: 100%; width: 68%; border-radius: 4px;
+    background: var(--s-gradient);
+    animation: authStatFill 2.4s ease-in-out infinite alternate;
+  }
+  .auth-showcase-stat-caption {
+    font-size: .72rem; color: var(--t3);
+  }
+  @keyframes authStatFill {
+    from { width: 58%; }
+    to   { width: 74%; }
   }
 
-  .auth-topbar { margin-bottom: 12px; }
-  .auth-logo-row { margin-bottom: 20px; }
-  .auth-logo-img {
-    width: 54px; height: 54px;
-    animation: logoFloat 6s ease-in-out infinite;
-    filter: drop-shadow(0 0 14px rgba(212,168,83,.3));
+  /* Coluna direita — formulário */
+  #screen-auth .auth-wrap {
+    width: 480px; flex-shrink: 0;
+    justify-content: center;
+    margin: 0; padding: 56px 56px;
+    background: #0f111a;
+    overflow-y: auto;
+    min-height: 100%;
   }
+
+  .auth-topbar { margin-bottom: 8px; border-bottom: none; padding: 0; }
+  .auth-brand { display: none; } /* marca já aparece na vitrine */
+  .auth-logo-row { display: none; } /* logo já aparece na vitrine */
+
+  .auth-tabs { margin-top: 8px; }
+
 
   /* ══════════════════════════════════════════
      HOME — grid com sidebar e área central
@@ -3860,47 +4001,42 @@ body::after{
   #screen-game { flex-direction: row; }
 
   .game-top {
-    width: 252px; flex-shrink: 0;
+    width: 320px; flex-shrink: 0;
     border-right: 1px solid var(--line); border-bottom: none;
     overflow-y: auto; display: flex; flex-direction: column;
     background: var(--bg1);
   }
 
   .game-topbar {
-    padding: 14px 12px; border-bottom: 1px solid var(--line); background: var(--bg);
+    padding: 16px 16px; border-bottom: 1px solid var(--line); background: var(--bg);
+    flex-wrap: wrap; row-gap: 8px;
   }
 
+  .game-co {
+    white-space: normal; overflow: visible; text-overflow: unset;
+    flex: 1 1 100%; margin-right: 0;
+  }
+
+  .game-meta { flex: 1 1 100%; justify-content: flex-end; }
+
   .game-ind-grid {
-    flex-direction: column; overflow-x: visible; padding: 10px; gap: 3px; flex: 1;
+    grid-template-columns: repeat(2, 1fr);
+    padding: 14px; gap: 8px;
   }
 
   .game-ind-row {
-    width: 100%; display: flex; align-items: center; gap: 8px;
-    padding: 7px 10px; border-radius: var(--r);
-    background: var(--bg2); transition: background .15s;
+    padding: 11px 12px 9px;
   }
 
-  .game-ind-row:hover { background: var(--bg3); }
-
-  .game-ind-top {
-    flex: 1; margin-bottom: 0;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-
-  .game-ind-track {
-    width: 44px; flex-shrink: 0; margin-bottom: 0; height: 4px; border-radius: 2px;
-  }
-
-  .game-ind-bench { display: none; }
+  .game-ind-bench { display: flex; }
 
   .gestor-strip {
-    flex-direction: column; overflow-x: visible; padding: 10px; gap: 3px;
+    padding: 12px 14px;
     border-top: 1px solid var(--line); background: var(--bg);
   }
 
   .gestor-pill {
-    width: 100%; justify-content: space-between;
-    padding: 7px 10px; border-radius: var(--r); background: var(--bg2);
+    padding: 10px 8px;
   }
 
   .game-body { flex: 1; min-width: 0; }
@@ -4026,7 +4162,7 @@ body::after{
 .loading-wrap {
   position: relative; z-index: 1;
   display: flex; flex-direction: column;
-  align-items: center; gap: 20px;
+  align-items: center; gap: 22px;
   animation: loadingFadeIn .5s ease both;
 }
 @keyframes loadingFadeIn {
@@ -4034,14 +4170,16 @@ body::after{
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Logo imagem com pulso */
-.loading-logo {
-  font-size: 3rem;
-  animation: loadingPulse 2s ease-in-out infinite;
+/* Logo real da marca, com glow pulsante — consistente com login/auth */
+.loading-logo-img {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 22px rgba(212,168,83,.5));
+  animation: loadingLogoPulse 2.2s ease-in-out infinite;
 }
-@keyframes loadingPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%       { transform: scale(1.1); opacity: .75; }
+@keyframes loadingLogoPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 18px rgba(212,168,83,.4)); }
+  50%      { transform: scale(1.06); filter: drop-shadow(0 0 30px rgba(212,168,83,.6)); }
 }
 
 /* Título */
@@ -4049,21 +4187,34 @@ body::after{
   font-family: var(--serif); font-size: 1.4rem; font-weight: 800;
   color: var(--t1); letter-spacing: .08em;
   text-shadow: 0 0 30px var(--s-glow);
+  margin-top: -6px;
 }
 
-/* Spinner aprimorado — duplo anel */
-.loading-ring {
-  width: 44px; height: 44px; border-radius: 50%;
-  border: 2.5px solid var(--s-bg-accent);
-  border-top-color: var(--s-primary);
-  border-right-color: var(--s-primary);
-  animation: loadingSpin .75s linear infinite;
-  position: relative;
-  box-shadow: 0 0 16px var(--s-glow);
+/* Mini-barras de indicador "calculando" — referência direta à mecânica
+   central do jogo (indicadores de negócio), em vez de um spinner genérico.
+   Cada barra sobe e desce em looping com atraso escalonado, como um
+   painel de KPIs sendo computado antes de exibir o mandato. */
+.loading-bars {
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: 5px; height: 28px;
 }
-@keyframes loadingSpin { to { transform: rotate(360deg); } }
+.loading-bar-mini {
+  width: 5px; border-radius: 3px;
+  background: var(--s-gradient);
+  box-shadow: 0 0 8px var(--s-glow);
+  animation: loadingBarRise 1.1s ease-in-out infinite;
+}
+.loading-bar-mini:nth-child(1) { animation-delay: 0s; }
+.loading-bar-mini:nth-child(2) { animation-delay: .12s; }
+.loading-bar-mini:nth-child(3) { animation-delay: .24s; }
+.loading-bar-mini:nth-child(4) { animation-delay: .36s; }
+.loading-bar-mini:nth-child(5) { animation-delay: .48s; }
+@keyframes loadingBarRise {
+  0%, 100% { height: 8px; opacity: .55; }
+  50%      { height: 28px; opacity: 1; }
+}
 
-/* Barra de progresso mais elegante */
+/* Barra de progresso real */
 .loading-bar-wrap { width: 200px; }
 .loading-bar-track {
   width: 100%; height: 3px;
@@ -6722,3 +6873,60 @@ body::after{
   -webkit-touch-callout: none;
   pointer-events: none;
 }
+
+/* ════════════════════════════════════════════════════
+   ANIMAÇÕES DE INDICADORES
+════════════════════════════════════════════════════ */
+
+/* Flash quando indicador sobe */
+@keyframes indFlashUp {
+  0%   { background: rgba(34,197,94,.0);  box-shadow: none; }
+  30%  { background: rgba(34,197,94,.18); box-shadow: 0 0 12px rgba(34,197,94,.25); border-color: rgba(34,197,94,.5); }
+  100% { background: var(--bg2);          box-shadow: none; }
+}
+
+/* Flash quando indicador desce */
+@keyframes indFlashDown {
+  0%   { background: rgba(239,68,68,.0);  box-shadow: none; }
+  30%  { background: rgba(239,68,68,.18); box-shadow: 0 0 12px rgba(239,68,68,.25); border-color: rgba(239,68,68,.5); }
+  100% { background: var(--bg2);          box-shadow: none; }
+}
+
+/* Contador animando (número subindo/descendo) */
+@keyframes valPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* Barra crescendo/encolhendo */
+@keyframes barGrow {
+  from { width: var(--bar-from); }
+  to   { width: var(--bar-to); }
+}
+
+/* Chips do feedback — entrada sequencial */
+@keyframes chipSlideIn {
+  from { opacity: 0; transform: translateY(8px) scale(.92); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* Pulso de cor nos chips */
+@keyframes chipPulseGood {
+  0%,100% { box-shadow: none; }
+  50%     { box-shadow: 0 0 10px rgba(34,197,94,.4); }
+}
+@keyframes chipPulseErr {
+  0%,100% { box-shadow: none; }
+  50%     { box-shadow: 0 0 10px rgba(239,68,68,.4); }
+}
+
+/* Classes aplicadas por JS */
+.ind-flash-up   { animation: indFlashUp   .7s ease forwards; }
+.ind-flash-down { animation: indFlashDown .7s ease forwards; }
+
+.ind-val-pop { animation: valPop .35s cubic-bezier(.22,.68,0,1.4) forwards; }
+
+/* Removido: animação dos chips agora é 100% via JS (_animarChips / _dispararAnimacaoChips
+   em mainBeta.js). Uma regra CSS .fb-chip { animation: ... } aqui disparava a entrada
+   imediatamente ao inserir no DOM, brigando com e sobrescrevendo o controle via JS. */

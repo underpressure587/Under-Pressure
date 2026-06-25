@@ -32,8 +32,7 @@ const BetaImpacto = (() => {
         margem: "Margem", estoque: "Estoque", marca: "Marca", digital: "Digital",
         sla: "SLA", frota: "Frota", seguranca: "Segurança", tecnologia: "Tecnologia",
         manutencao: "Manutenção", qualidade: "Qualidade", conformidade: "Conformidade",
-        clima: "Clima", satisfacao: "Satisfação", produtividade: "Produtividade",
-        reputacao: "Reputação", inovacao: "Inovação",
+        produtividade: "Produtividade", reputacao: "Reputação", inovacao: "Inovação",
     };
 
     function descricao(effects) {

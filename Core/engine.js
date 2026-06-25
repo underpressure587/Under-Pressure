@@ -7,78 +7,105 @@
 ═══════════════════════════════════════════════════════ */
 
 /* ── Situações iniciais com filtro de setor ─────────── */
+// effects: deltas aplicados nos indicadores ao iniciar a partida.
+// Chaves são os nomes dos indicadores conforme o setor — só os existentes são aplicados.
+// Valores negativos pioram, positivos melhoram. Refletem o estado de crise descrito na história.
 const SITUACOES_INICIAIS = [
     {
         titulo:  "Batalha Judicial Trabalhista",
         resumo:  "Processo trabalhista + caixa apertado",
         setores: ["varejo", "logistica", "industria", "tecnologia"],
-        historia: "Três ex-funcionários abriram um processo coletivo por horas extras não pagas dos últimos 2 anos. O valor estimado da causa é R$420 mil. Ao mesmo tempo, o caixa da empresa mal cobre os próximos 45 dias de operação. O advogado diz que as chances de perder são de 60%. Você precisa tomar decisões estratégicas com uma faca no pescoço — cada real gasto precisa ser justificado, e o time já está sentindo o clima pesado."
+        historia: "Três ex-funcionários abriram um processo coletivo por horas extras não pagas dos últimos 2 anos. O valor estimado da causa é R$420 mil. Ao mesmo tempo, o caixa da empresa mal cobre os próximos 45 dias de operação. O advogado diz que as chances de perder são de 60%. Você precisa tomar decisões estratégicas com uma faca no pescoço — cada real gasto precisa ser justificado, e o time já está sentindo o clima pesado.",
+        // Caixa comprometido, clima organizacional pesado, processos em risco
+        effects: { financeiro: -3, rh: -4, processos: -1, conformidade: -2 }
     },
     {
         titulo:  "Invasão do Mercado Internacional",
         resumo:  "Concorrente internacional com preços 35% menores",
         setores: ["varejo", "tecnologia", "logistica"],
-        historia: "Uma multinacional europeia desembarcou no Brasil com uma campanha massiva de marketing e preços 35% abaixo dos seus. Nos últimos 30 dias, você perdeu 3 dos seus 10 maiores clientes para eles. Sua equipe comercial está em pânico, e alguns vendedores já receberam propostas do concorrente para trocar de lado. O mercado está olhando para você esperando a sua reação — ou a sua capitulação."
+        historia: "Uma multinacional europeia desembarcou no Brasil com uma campanha massiva de marketing e preços 35% abaixo dos seus. Nos últimos 30 dias, você perdeu 3 dos seus 10 maiores clientes para eles. Sua equipe comercial está em pânico, e alguns vendedores já receberam propostas do concorrente para trocar de lado. O mercado está olhando para você esperando a sua reação — ou a sua capitulação.",
+        // Clientes perdidos, margem pressionada, marca enfraquecida
+        effects: { clientes: -5, margem: -2, financeiro: -2, marca: -2, reputacao: -2 }
     },
     {
         titulo:  "Colapso da Liderança",
         resumo:  "Diretoria inteira pediu demissão",
         setores: ["tecnologia", "varejo", "industria", "logistica"],
-        historia: "Em uma semana chocante, o CEO, o CFO e o COO entregaram as cartas de demissão em conjunto, alegando divergências estratégicas com os sócios. Eles levaram consigo anos de conhecimento operacional e, pior, parece que estão fundando uma empresa concorrente. A equipe está desorientada, os processos estão sem dono, e os principais clientes já ligaram perguntando o que está acontecendo. Você assume um navio sem capitão em plena tempestade."
+        historia: "Em uma semana chocante, o CEO, o CFO e o COO entregaram as cartas de demissão em conjunto, alegando divergências estratégicas com os sócios. Eles levaram consigo anos de conhecimento operacional e, pior, parece que estão fundando uma empresa concorrente. A equipe está desorientada, os processos estão sem dono, e os principais clientes já ligaram perguntando o que está acontecendo. Você assume um navio sem capitão em plena tempestade.",
+        // Processos sem dono, RH desorientado, clima péssimo, clientes preocupados
+        effects: { processos: -3, rh: -6, clientes: -2, produtividade: -2 }
     },
     {
         titulo:  "Vazamento Massivo de Dados",
         resumo:  "120 mil registros de clientes expostos na dark web",
         setores: ["tecnologia", "varejo"],
-        historia: "Uma vulnerabilidade no sistema de autenticação expôs nome, CPF, endereço e dados de cartão de 120 mil clientes. Os dados já aparecem em fóruns da dark web. Dois clientes corporativos enviaram notificações de rescisão contratual, a imprensa está ligando, e a ANPD abriu um processo administrativo. Você tem 72 horas para comunicar o incidente oficialmente ou a multa dobra."
+        historia: "Uma vulnerabilidade no sistema de autenticação expôs nome, CPF, endereço e dados de cartão de 120 mil clientes. Os dados já aparecem em fóruns da dark web. Dois clientes corporativos enviaram notificações de rescisão contratual, a imprensa está ligando, e a ANPD abriu um processo administrativo. Você tem 72 horas para comunicar o incidente oficialmente ou a multa dobra.",
+        // Reputação destruída, clientes saindo, segurança comprometida, financeiro em risco
+        effects: { reputacao: -4, clientes: -6, seguranca: -3, financeiro: -2, digital: -2, marca: -3 }
     },
     {
         titulo:  "Explosão de Demanda",
         resumo:  "Demanda triplicou em 30 dias — estrutura não aguenta",
         setores: ["varejo", "logistica", "industria", "tecnologia"],
-        historia: "Uma menção espontânea de um influenciador com 8 milhões de seguidores fez a demanda explodir 200% em menos de um mês. O prazo de entrega que era de 5 dias agora está em 22 dias, o SAC está soterrado de reclamações, três funcionários-chave pediram demissão por excesso de trabalho, e o estoque de matéria-prima acaba em 8 dias. A janela de oportunidade está aberta — mas pode fechar com um estrondo."
+        historia: "Uma menção espontânea de um influenciador com 8 milhões de seguidores fez a demanda explodir 200% em menos de um mês. O prazo de entrega que era de 5 dias agora está em 22 dias, o SAC está soterrado de reclamações, três funcionários-chave pediram demissão por excesso de trabalho, e o estoque de matéria-prima acaba em 8 dias. A janela de oportunidade está aberta — mas pode fechar com um estrondo.",
+        // Estrutura no limite: RH sobrecarregado, processos colapsando, estoque crítico, SLA caindo
+        effects: { rh: -3, processos: -3, estoque: -3, sla: -3, clientes: -1 }
     },
     {
         titulo:  "Fornecedor Principal Faliu",
         resumo:  "Fornecedor exclusivo decretou falência — 12 dias de estoque",
         setores: ["varejo", "industria", "logistica"],
-        historia: "Seu único fornecedor de componentes críticos decretou falência repentinamente após um escândalo de fraude contábil. Você tem exatamente 12 dias de estoque. Já tentou contato com outros 4 fornecedores: dois não têm capacidade, um tem prazo de 45 dias para primeira entrega, e um oferece qualidade duvidosa. Três contratos grandes vencem no mês que vem com cláusula de multa por atraso. O relógio está contando."
+        historia: "Seu único fornecedor de componentes críticos decretou falência repentinamente após um escândalo de fraude contábil. Você tem exatamente 12 dias de estoque. Já tentou contato com outros 4 fornecedores: dois não têm capacidade, um tem prazo de 45 dias para primeira entrega, e um oferece qualidade duvidosa. Três contratos grandes vencem no mês que vem com cláusula de multa por atraso. O relógio está contando.",
+        // Estoque crítico, processos travados, qualidade em risco, clientes ameaçados
+        effects: { estoque: -4, processos: -3, qualidade: -2, clientes: -2, financeiro: -2, manutencao: -1 }
     },
     {
         titulo:  "Recessão e Juros nas Alturas",
         resumo:  "PIB caiu 3,2% e taxa básica de juros chegou a 22%",
         setores: ["varejo", "industria", "logistica", "tecnologia"],
-        historia: "O país entrou em recessão técnica e o Banco Central elevou a taxa básica de juros para 22% ao ano. Seu empréstimo de capital de giro, que custava R$18 mil/mês, agora custa R$34 mil. As vendas caíram 28% nos últimos 60 dias. Dois dos seus maiores clientes B2B pediram renegociação de prazo de pagamento para 120 dias. Sobreviver a esse ciclo vai exigir decisões difíceis."
+        historia: "O país entrou em recessão técnica e o Banco Central elevou a taxa básica de juros para 22% ao ano. Seu empréstimo de capital de giro, que custava R$18 mil/mês, agora custa R$34 mil. As vendas caíram 28% nos últimos 60 dias. Dois dos seus maiores clientes B2B pediram renegociação de prazo de pagamento para 120 dias. Sobreviver a esse ciclo vai exigir decisões difíceis.",
+        // Financeiro sangrado, clientes em fuga, margem espremida
+        effects: { financeiro: -4, clientes: -3, margem: -3, inovacao: -1 }
     },
     {
         titulo:  "Crise nas Redes Sociais",
         resumo:  "Post viral com 4,2 mi de visualizações destruindo a marca",
         setores: ["varejo", "tecnologia"],
-        historia: "Um influenciador com 6 milhões de seguidores postou um vídeo de 8 minutos relatando uma péssima experiência com seu produto e atendimento, com provas em tela. Em 24 horas: 4,2 milhões de visualizações, trending nos topics, 340 avaliações 1-estrela no Google e cancelamento de 87 pedidos. Concorrentes já estão fazendo posts irônicos. Sua equipe de marketing está em reunião de crise desde ontem à noite."
+        historia: "Um influenciador com 6 milhões de seguidores postou um vídeo de 8 minutos relatando uma péssima experiência com seu produto e atendimento, com provas em tela. Em 24 horas: 4,2 milhões de visualizações, trending nos topics, 340 avaliações 1-estrela no Google e cancelamento de 87 pedidos. Concorrentes já estão fazendo posts irônicos. Sua equipe de marketing está em reunião de crise desde ontem à noite.",
+        // Marca destruída, clientes cancelando, digital em colapso
+        effects: { marca: -4, clientes: -6, digital: -3, reputacao: -3, financeiro: -1 }
     },
     {
         titulo:  "Nova Regulamentação Imposta",
         resumo:  "Lei publicada: 90 dias para adequação total ou multa de R$2M",
         setores: ["industria", "logistica", "tecnologia"],
-        historia: "Uma nova lei federal publicada na semana passada exige que todas as empresas do setor implementem controles específicos de rastreabilidade, proteção de dados e relatórios ESG obrigatórios. O prazo é de 90 dias. O custo estimado de adequação é entre R$280 mil e R$600 mil. Empresas que descumprirem serão multadas em até R$2 milhões e podem ter as operações suspensas. Seu concorrente principal já anunciou que vai começar a adequação imediatamente."
+        historia: "Uma nova lei federal publicada na semana passada exige que todas as empresas do setor implementem controles específicos de rastreabilidade, proteção de dados e relatórios ESG obrigatórios. O prazo é de 90 dias. O custo estimado de adequação é entre R$280 mil e R$600 mil. Empresas que descumprirem serão multadas em até R$2 milhões e podem ter as operações suspensas. Seu concorrente principal já anunciou que vai começar a adequação imediatamente.",
+        // Conformidade em risco, financeiro drenado pela adequação, processos a adaptar
+        effects: { conformidade: -3, financeiro: -3, processos: -2, seguranca: -1 }
     },
     {
         titulo:  "Colapso na Cadeia de Entregas",
         resumo:  "Frota bloqueada + 800 entregas atrasadas",
         setores: ["logistica"],
-        historia: "Uma operação policial bloqueou a principal rodovia de escoamento por 72 horas, e a sua frota ficou presa. Com isso, 800 entregas estão atrasadas, sendo 120 delas com prazo contratual já vencido e cláusula de multa de 0,5% ao dia. O sistema de rastreamento parou de atualizar por causa de uma falha de integração. Três grandes embarcadores ameaçam rescindir contrato."
+        historia: "Uma operação policial bloqueou a principal rodovia de escoamento por 72 horas, e a sua frota ficou presa. Com isso, 800 entregas estão atrasadas, sendo 120 delas com prazo contratual já vencido e cláusula de multa de 0,5% ao dia. O sistema de rastreamento parou de atualizar por causa de uma falha de integração. Três grandes embarcadores ameaçam rescindir contrato.",
+        // SLA destruído, frota travada, clientes ameaçando saída, financeiro com multas
+        effects: { sla: -4, frota: -3, clientes: -3, financeiro: -2, tecnologia: -2 }
     },
     {
         titulo:  "Apagão de Dados Críticos",
         resumo:  "Servidor principal corrompido — 3 anos de dados perdidos",
         setores: ["tecnologia", "logistica"],
-        historia: "Uma falha em cascata no sistema de armazenamento corrompeu o banco de dados principal. Três anos de histórico de clientes, contratos, registros financeiros e propriedade intelectual estão inacessíveis. O último backup completo é de 8 meses atrás. A TI estima que a recuperação parcial levará entre 15 e 40 dias. Enquanto isso, a operação está funcionando no modo manual. Dois contratos precisam ser renovados essa semana e você não tem os dados para emitir as propostas."
+        historia: "Uma falha em cascata no sistema de armazenamento corrompeu o banco de dados principal. Três anos de histórico de clientes, contratos, registros financeiros e propriedade intelectual estão inacessíveis. O último backup completo é de 8 meses atrás. A TI estima que a recuperação parcial levará entre 15 e 40 dias. Enquanto isso, a operação está funcionando no modo manual. Dois contratos precisam ser renovados essa semana e você não tem os dados para emitir as propostas.",
+        // Produtividade zerada no manual, qualidade em queda, clientes sem atendimento
+        effects: { produtividade: -4, clientes: -5, financeiro: -2, tecnologia: -3, processos: -2 }
     },
     {
         titulo:  "Paralisação por Acidente Grave",
         resumo:  "Fiscalização do MTE interdita linha de produção",
         setores: ["industria"],
-        historia: "Após dois acidentes com afastamento em 30 dias, o Ministério do Trabalho interditou preventivamente a linha principal de produção. O auto de infração cita ausência de NR-12 em 4 equipamentos e treinamento desatualizado. O prazo para regularização é de 20 dias úteis. Com a linha parada, três clientes que dependem da entrega estão ameaçando acionar as cláusulas de penalidade contratual. O custo por dia de paralisação é de R$180 mil."
+        historia: "Após dois acidentes com afastamento em 30 dias, o Ministério do Trabalho interditou preventivamente a linha principal de produção. O auto de infração cita ausência de NR-12 em 4 equipamentos e treinamento desatualizado. O prazo para regularização é de 20 dias úteis. Com a linha parada, três clientes que dependem da entrega estão ameaçando acionar as cláusulas de penalidade contratual. O custo por dia de paralisação é de R$180 mil.",
+        // Segurança crítica, produção parada, financeiro sangrando, conformidade comprometida
+        effects: { seguranca: -4, manutencao: -3, financeiro: -3, clientes: -2, conformidade: -3 }
     },
 ];
 
@@ -216,6 +243,26 @@ function iniciar(sectorId, groupName, companyName, modoSala) {
     state.introIndex = introIndex;
     BetaState.aplicarIndicadoresHistoria(introIndex);
 
+    // ── Aplica efeitos da situação inicial nos indicadores ────────────────────
+    // Agora que os indicadores base foram definidos, aplica os deltas da situação
+    // sorteada. Só aplica keys que existem nos indicadores do setor (seguro para
+    // setores que não têm todos os campos, ex: 'digital' não existe em logística).
+    if (state.situacaoAtual?.effects) {
+        const efeitosFiltrados = {};
+        Object.entries(state.situacaoAtual.effects).forEach(([k, v]) => {
+            if (state.indicators[k] !== undefined) efeitosFiltrados[k] = v;
+        });
+        if (Object.keys(efeitosFiltrados).length > 0) {
+            BetaState.applyEffects(efeitosFiltrados);
+            // Clamp para não deixar indicador em 0 já na largada (mínimo 1)
+            Object.keys(efeitosFiltrados).forEach(k => {
+                if (state.indicators[k] !== undefined) {
+                    state.indicators[k] = Math.max(1, state.indicators[k]);
+                }
+            });
+        }
+    }
+
     if (empresa.rounds && empresa.rounds[introIndex]?.length > 0) {
         const _todasRounds = empresa.rounds[introIndex];
 
@@ -342,8 +389,9 @@ function processarEscolha(choiceIndex) {
 
     // BUG 9: avaliarDecisaoContextual recebe indicadores válidos pois state.indicators
     //   é inicializado em BetaState.init e sempre clampado — não pode ser undefined aqui
-    const avaliacao = BetaIndicadores.avaliarDecisaoContextual(
-        efeitosFinais, state.indicators, state.situacaoAtual
+    // Passa state completo para avaliação contextual (A+B+C)
+    const { avaliacao, contexto: contextoAvaliacao } = BetaIndicadores.avaliarDecisaoContextual(
+        efeitosFinais, state.indicators, state.situacaoAtual, state
     );
 
     // BUG 10 FIX: snapshot completo antes dos efeitos para delta preciso
@@ -407,7 +455,11 @@ function processarEscolha(choiceIndex) {
         }
     }
 
-    _ui.renderSidebar?.(state, EMPRESAS[state.sector]);
+    // NOTA: renderSidebar NÃO é chamada aqui de propósito.
+    // Os indicadores já mudaram no state, mas a sidebar deve continuar mostrando
+    // os valores da rodada ANTERIOR enquanto o jogador lê o feedback. Ela só
+    // atualiza (com animação) quando _avancarRodada() troca para a próxima
+    // rodada — assim o jogador vê a transição ao apertar "Próxima Rodada".
 
     let stakeholderReacao = null;
     try { stakeholderReacao = Protagonista.calcularReacao(efeitosFinais, state.sector, state); } catch(e) {}
@@ -420,6 +472,7 @@ function processarEscolha(choiceIndex) {
         choice,
         choiceIndex,
         avaliacaoContextual: avaliacao,
+        contextoAvaliacao,
         efeitosFinais:       efeitosLiquidos,
         eventoAtivo,
         history:             state.history,
@@ -442,6 +495,83 @@ function processarEscolha(choiceIndex) {
             _encerrar("gameover");
         } else if (motivoMandato) {
             _encerrar(motivoMandato === "conselho" ? "mandato_conselho" : "mandato_burnout");
+        } else {
+            _avancarRodada();
+        }
+    });
+}
+
+/* ═══════════════════════════════════════════════════════
+   OMISSÃO — penalidade por tempo esgotado
+═══════════════════════════════════════════════════════ */
+/**
+ * Processa a consequência de o jogador não ter escolhido a tempo.
+ * Aplica os efeitos calculados por _calcularPenalidadeOmissao (mainBeta),
+ * mostra tela de feedback diferenciada e verifica game over.
+ * @param {object} efeitos     — ex: { financeiro: -8, clientes: -5 }
+ * @param {object} round       — round atual (para título e fase)
+ * @param {string} faseLabel   — label legível da fase
+ */
+function processarOmissao(efeitos, round, faseLabel) {
+    if (Engine.pausado) return;
+    if (_processandoEscolha) return;
+    _processandoEscolha = true;
+
+    const state = BetaState.get();
+    if (!state) { _processandoEscolha = false; return; }
+
+    // Snapshot antes
+    const indicadoresAntes = { ...state.indicators };
+
+    // Aplica efeitos de omissão
+    BetaState.applyEffects(efeitos);
+    _aplicarInterdependencias(state.sector, state.indicators);
+    _clampIndicadores(state.indicators);
+
+    // Delta real (após interdependências)
+    const efeitosLiquidos = {};
+    Object.keys({ ...indicadoresAntes, ...state.indicators }).forEach(k => {
+        const delta = (state.indicators[k] ?? 0) - (indicadoresAntes[k] ?? 0);
+        if (delta !== 0) efeitosLiquidos[k] = delta;
+    });
+
+    // Adiciona ao histórico da partida (sem escolha — marcado como omissão)
+    // Usa efeitosLiquidos (todos os indicadores alterados, incluindo interdependências)
+    BetaState.addHistory({
+        rodada:      state.currentRound + 1,
+        titulo:      round.title,
+        escolha:     null, // null = omissão
+        avaliacao:   'omissao',
+        efeitos:     efeitosLiquidos,
+        ensinamento: ''
+    }, HISTORICO_MAX);
+
+    // Gestor: omissão consome capital político e aumenta esgotamento
+    const efeitosGestor = { capitalPolitico: -1, esgotamento: +2 };
+    BetaState.applyGestorEffects(efeitosGestor);
+
+    // NOTA: renderSidebar não é chamada aqui — mesmo motivo do processarEscolha.
+    // A sidebar só atualiza (com animação) ao avançar para a próxima rodada.
+
+    const isGameOver    = BetaIndicadores.isGameOver(state.indicators);
+    const motivoMandato = _verificarMandatoEncerrado(state.gestor);
+
+    _processandoEscolha = false;
+
+    // Dados para a tela de feedback de omissão
+    const feedbackOmissao = {
+        omissao:       true,
+        faseLabel,
+        rodadaTitulo:  round.title,
+        efeitos:       efeitosLiquidos,
+        efeitosGestor,
+    };
+
+    _ui.mostrarFeedbackOmissao?.(feedbackOmissao, () => {
+        if (isGameOver) {
+            _encerrar('omissao_gameover');
+        } else if (motivoMandato) {
+            _encerrar(motivoMandato === 'conselho' ? 'mandato_conselho' : 'mandato_burnout');
         } else {
             _avancarRodada();
         }
@@ -493,8 +623,13 @@ function _avancarRodada() {
         _encerrar("fim");
     } else {
         _preparaRodada(state);
-        _ui.renderSidebar?.(state, EMPRESAS[state.sector]);
-        _ui.renderRodada?.(state);
+        // renderRodada troca a tela para screen-game primeiro.
+        // renderSidebar é chamada DEPOIS (dentro do callback de renderRodada,
+        // já com a tela visível) para que a animação dos indicadores seja
+        // percebida pelo jogador em vez de acontecer "atrás" da tela de feedback.
+        _ui.renderRodada?.(state, () => {
+            _ui.renderSidebar?.(state, EMPRESAS[state.sector]);
+        });
     }
 }
 
@@ -517,19 +652,31 @@ function _encerrar(motivo) {
         ? IndicadoresTecnologia.scoreTotal(state.indicators)
         : BetaIndicadores.scoreTotal(state.indicators, state.sector);
 
-    const scoreFinal = Math.round(score * 5); // 0–100
+    const scoreBase = Math.round(score * 5); // 0–100
+
+    // Score proporcional: penaliza quem terminou por omissão antes do fim.
+    // Rodadas jogadas = currentRound (0-based, então +1 = rodadas concluídas antes do encerramento).
+    // Ex: omitiu na rodada 1 de 10 → fator 0.10 → score × 0.10
+    const scoreFinal = motivo === 'omissao_gameover'
+        ? Math.round(scoreBase * Math.min(1, (state.currentRound) / (state.totalRounds || 10)))
+        : scoreBase;
 
     const g = state.gestor;
     // BUG 18 FIX: divisor nomeado (SCORE_GESTOR_DIVISOR = 1.30)
     //   Max bruto: 10*5 + 10*5 + 10*3 = 130  →  130 / 1.30 = 100 (escala 0–100)
-    const scoreGestor = Math.round(
+    const scoreGestorBase = Math.round(
         (g.reputacaoInterna * 5 + g.capitalPolitico * 5 + (10 - g.esgotamento) * 3)
         / SCORE_GESTOR_DIVISOR
     );
+    // Proporcional igual ao score empresa: gestor que omitiu na rodada 1 fica com 0
+    const scoreGestor = motivo === 'omissao_gameover'
+        ? Math.round(scoreGestorBase * Math.min(1, (state.currentRound) / (state.totalRounds || 10)))
+        : scoreGestorBase;
 
     const decisoesCruciais = [...state.history]
         .map(h => ({
             ...h,
+            escolha: h.escolha === null ? '⏰ Omissão — tempo esgotado' : h.escolha,
             impacto: Object.values(h.efeitos || {}).reduce((a, v) => a + Math.abs(v), 0)
         }))
         .sort((a, b) => b.impacto - a.impacto)
@@ -597,7 +744,6 @@ function _calcularEfeitosGestorAutomatico(efeitosEmpresa, avaliacao, state) {
     const efeitos = { reputacaoInterna: 0, capitalPolitico: 0, esgotamento: 0 };
 
     const impactoRH = (efeitosEmpresa.rh       ?? 0)
-                    + (efeitosEmpresa.clima     ?? 0)
                     + (efeitosEmpresa.seguranca ?? 0) * 0.5
                     + (efeitosEmpresa.frota     ?? 0) * 0.3;
 

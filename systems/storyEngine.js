@@ -45,10 +45,9 @@ const StoryEngine = (() => {
     function registrarFlags(choice, state, avaliacao) {
         const { history, indicators, storyState } = state;
 
-        // Liderança tóxica: 3 decisões RUINS com clima/rh negativo
+        // Liderança tóxica: 3 decisões RUINS com RH negativo
         const ruinsClima = history.filter(h =>
-            h.avaliacao === "ruim" &&
-            (h.efeitos?.clima < 0 || h.efeitos?.rh < 0)
+            h.avaliacao === "ruim" && h.efeitos?.rh < 0
         );
         if (ruinsClima.length >= 3) {
             BetaState.addFlag("lideranca_toxica",
@@ -73,7 +72,7 @@ const StoryEngine = (() => {
 
         // Demissão em massa: 2 decisões com impacto severo em RH
         const demissoes = history.filter(h =>
-            (h.efeitos?.clima < -2 || h.efeitos?.rh < -2) &&
+            h.efeitos?.rh < -2 &&
             (h.efeitos?.produtividade < 0 || h.efeitos?.processos < 0)
         );
         if (demissoes.length >= 2) {
@@ -85,10 +84,10 @@ const StoryEngine = (() => {
         // RH negligenciado: BUG D FIX — verifica as últimas 5 rodadas, não o histórico inteiro.
         // Antes: boasRH.length === 0 sobre TODO history → se o jogador foi bom com RH na
         // rodada 2 e negligenciou nas rodadas 3–9, a flag nunca disparava.
-        // Agora: se nas últimas 5 rodadas não houve nenhuma decisão boa com RH/clima → flag.
+        // Agora: se nas últimas 5 rodadas não houve nenhuma decisão boa com RH → flag.
         const ultimas5RH = history.slice(-5);
         const boasRHRecentes = ultimas5RH.filter(h =>
-            h.avaliacao === "boa" && (h.efeitos?.clima > 0 || h.efeitos?.rh > 0)
+            h.avaliacao === "boa" && h.efeitos?.rh > 0
         );
         if (ultimas5RH.length >= 5 && boasRHRecentes.length === 0) {
             BetaState.addFlag("rh_negligenciado",
@@ -133,7 +132,7 @@ const StoryEngine = (() => {
     function _atualizarReputacao(state) {
         const { indicators, storyState } = state;
         const imgExterna   = indicators.reputacao ?? indicators.clientes ?? indicators.marca ?? 0;
-        const saudeInterna = indicators.rh ?? indicators.clima ?? indicators.processos ?? 0;
+        const saudeInterna = indicators.rh ?? indicators.processos ?? 0;
         const financeiro   = indicators.financeiro ?? 0;
 
         const flagsNeg = ["lideranca_toxica", "demissao_em_massa", "ignorou_seguranca"];

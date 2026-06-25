@@ -109,10 +109,17 @@
   </div>
 
   <!-- ══ LOADING ══ -->
-  <div id="screen-loading" class="screen">
+  <div id="screen-loading" class="screen active">
     <div class="loading-wrap">
-      <div class="loading-logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+      <img class="loading-logo-img" src="logo.jpg" alt="Under Pressure" draggable="false">
       <div class="loading-title">Under Pressure</div>
+      <div class="loading-bars" aria-hidden="true">
+        <span class="loading-bar-mini"></span>
+        <span class="loading-bar-mini"></span>
+        <span class="loading-bar-mini"></span>
+        <span class="loading-bar-mini"></span>
+        <span class="loading-bar-mini"></span>
+      </div>
       <div class="loading-bar-wrap">
         <div class="loading-bar-track">
           <div class="loading-bar-fill" id="loading-bar-fill"></div>
@@ -124,7 +131,7 @@
   </div>
 
   <!-- ══ LOGIN ══ -->
-  <div id="screen-login" class="screen active">
+  <div id="screen-login" class="screen">
     <div class="login-topbar">
       <div style="display:flex;gap:6px">
         <button class="btn-ghost btn-icon" onclick="BetaUI.toggleFullscreen()" title="Tela cheia"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
@@ -146,6 +153,25 @@
 
   <!-- ══ AUTH (Login / Cadastro / Recuperar Senha) ══ -->
   <div id="screen-auth" class="screen">
+
+    <!-- Vitrine — visível só no layout desktop (min-width:800px via CSS) -->
+    <div class="auth-showcase">
+      <div class="auth-showcase-grid"></div>
+      <img class="auth-showcase-logo" src="logo.jpg" alt="Under Pressure" draggable="false">
+      <span class="auth-showcase-eyebrow">Simulação Executiva · Beta</span>
+      <div class="auth-showcase-rule"></div>
+      <h1 class="auth-showcase-title">Toda decisão<br>tem um preço.</h1>
+      <p class="auth-showcase-desc">Assuma o mandato, leia o mercado e responda antes que a pressão responda por você.</p>
+      <div class="auth-showcase-stat">
+        <div class="auth-showcase-stat-row">
+          <span class="auth-showcase-stat-label">📣 Reputação de Mercado</span>
+          <span class="auth-showcase-stat-val">+4</span>
+        </div>
+        <div class="auth-showcase-stat-bar"><div class="auth-showcase-stat-fill"></div></div>
+        <span class="auth-showcase-stat-caption">Resultado de uma decisão real na Rodada 3</span>
+      </div>
+    </div>
+
     <div class="auth-wrap">
 
       <!-- Topbar -->
@@ -689,6 +715,12 @@
         <div id="fb-historico-lista"></div>
       </div>
     </div>
+    <!-- Banner de omissão — visível apenas quando tempo esgota -->
+    <div id="fb-omissao-banner" style="display:none;margin:0 16px 4px;padding:10px 14px;
+      border-radius:8px;background:rgba(239,179,0,.08);border:1px solid rgba(239,179,0,.25);
+      font-size:.75rem;color:var(--warn);line-height:1.5;text-align:center">
+      ⏰ <strong>Tempo esgotado.</strong> As consequências acima refletem o custo da indecisão.
+    </div>
     <div class="fb-foot">
       <button class="btn btn-primary" onclick="BetaUI.avancar()">Próxima Rodada →</button>
     </div>
@@ -700,6 +732,20 @@
       <div class="result-motivo" id="result-motivo-label">Relatório Final</div>
       <h1 class="result-heading" id="result-title">Resultado do Mandato</h1>
       <p class="result-sub" id="result-subtitle"></p>
+    </div>
+
+    <!-- Banner exclusivo para paralisia decisória — oculto nos outros motivos -->
+    <div id="result-omissao-banner" style="display:none;margin:0 16px 8px;padding:14px 16px;
+      border-radius:10px;background:rgba(239,179,0,.07);border:1px solid rgba(239,179,0,.3);
+      text-align:center;line-height:1.7">
+      <div style="font-size:1.5rem;margin-bottom:6px">⏰</div>
+      <div style="font-size:.85rem;font-weight:700;color:var(--warn);margin-bottom:4px">
+        Paralisia Decisória
+      </div>
+      <div style="font-size:.78rem;color:var(--t2)">
+        Em gestão, não decidir é também uma decisão — geralmente a pior delas.<br>
+        A empresa colapsou porque a liderança se ausentou no momento crítico.
+      </div>
     </div>
     <div class="result-scores">
       <div class="result-score-col">

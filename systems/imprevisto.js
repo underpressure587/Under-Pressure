@@ -22,12 +22,8 @@ const BetaImprevisto = (() => {
             id: "greve",
             titulo: "⚠️ Risco de Greve",
             descricao: "A equipe está agitada. Decisões que prejudiquem RH têm impacto dobrado.",
-            // tecnologia não tem "rh" — usa "clima" que é o equivalente
             modifierPorSetor: {
-                tecnologia: { clima: 2.0 },
-                varejo:     { rh: 2.0 },
-                logistica:  { rh: 2.0 },
-                industria:  { rh: 2.0 },
+                default: { rh: 2.0 },
             },
             gestorEffects: { capitalPolitico: -1, esgotamento: +1 },
             duracao: 2
@@ -46,12 +42,9 @@ const BetaImprevisto = (() => {
             id: "viral_positivo",
             titulo: "📣 Campanha Viral",
             descricao: "A empresa ganhou atenção positiva. Ganhos com clientes são maiores.",
-            // tecnologia chama o indicador de "satisfacao"; os outros de "clientes"
             modifierPorSetor: {
-                tecnologia: { satisfacao: 1.5 },
-                varejo:     { clientes: 1.5, marca: 1.5 },
-                logistica:  { clientes: 1.5 },
-                industria:  { clientes: 1.5 },
+                default: { clientes: 1.5 },
+                varejo:  { clientes: 1.5, marca: 1.5 },
             },
             gestorEffects: { capitalPolitico: +1 },
             duracao: 1
@@ -85,10 +78,7 @@ const BetaImprevisto = (() => {
             descricao: "Muitas saídas simultâneas. O indicador de pessoas está hipersensível.",
             // Cap em 2.0 (antes era 2.5 — podia zerar indicador numa rodada)
             modifierPorSetor: {
-                tecnologia: { clima: 2.0 },
-                varejo:     { rh: 2.0 },
-                logistica:  { rh: 2.0 },
-                industria:  { rh: 2.0 },
+                default: { rh: 2.0 },
             },
             gestorEffects: { reputacaoInterna: -1, esgotamento: +1 },
             duracao: 2
@@ -112,7 +102,7 @@ const BetaImprevisto = (() => {
             descricao: "A empresa foi citada positivamente pela mídia especializada.",
             // reputacao e marca não existem em logística/indústria — usa clientes como proxy
             modifierPorSetor: {
-                tecnologia: { reputacao: 1.5, satisfacao: 1.2 },
+                tecnologia: { reputacao: 1.5, clientes: 1.2 },
                 varejo:     { marca: 1.5, clientes: 1.2 },
                 logistica:  { clientes: 1.5, sla: 1.2 },
                 industria:  { clientes: 1.5, qualidade: 1.2 },
@@ -223,8 +213,6 @@ const BetaImprevisto = (() => {
         manutencao:    "🔧 Manutenção",
         qualidade:     "🎯 Qualidade",
         conformidade:  "📋 Conformidade",
-        clima:         "🧑‍💻 Clima",
-        satisfacao:    "⭐ Satisfação",
         produtividade: "⚡ Produtividade",
         reputacao:     "📣 Reputação",
         inovacao:      "🔬 Inovação",
@@ -233,7 +221,7 @@ const BetaImprevisto = (() => {
     /* Indicadores válidos por setor — usado para filtrar o modifier
        e mostrar apenas os que de fato existem no setor ativo.       */
     const _IND_POR_SETOR = {
-        tecnologia: ["financeiro","clima","satisfacao","qualidade","produtividade","reputacao","inovacao","seguranca"],
+        tecnologia: ["financeiro","rh","clientes","qualidade","produtividade","reputacao","inovacao","seguranca"],
         varejo:     ["financeiro","rh","clientes","processos","margem","estoque","marca","digital"],
         logistica:  ["financeiro","rh","clientes","processos","sla","frota","seguranca","tecnologia"],
         industria:  ["financeiro","rh","clientes","processos","seguranca","manutencao","qualidade","conformidade"],

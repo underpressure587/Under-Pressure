@@ -97,21 +97,106 @@ const BetaIndicadores = (() => {
         return "em expansão";
     }
 
-    function avaliarDecisaoContextual(effects, indicators, situacao) {
+    /**
+     * Avalia a decisão de forma contextual — considera:
+     *   A) Urgência dos indicadores afetados (impacto relativo ao estado atual)
+     *   B) Fase da empresa (crise exige mais, expansão é mais tolerante)
+     *   C) Tendência recente (sequência de ruins torna neutros insuficientes)
+     *
+     * Retorna { avaliacao: 'boa'|'media'|'ruim', contexto: string }
+     * O campo `contexto` explica o que influenciou o veredito além dos efeitos brutos.
+     */
+    function avaliarDecisaoContextual(effects, indicators, situacao, state) {
         const positivos = Object.entries(effects).filter(([, v]) => v > 0);
         const negativos = Object.entries(effects).filter(([, v]) => v < 0);
-        const somaPos   = positivos.reduce((a, [, v]) => a + v, 0);
-        const somaNeg   = Math.abs(negativos.reduce((a, [, v]) => a + v, 0));
-        const netScore  = somaPos - somaNeg;
 
-        const penCritico = negativos.some(([k]) => nivel(indicators[k] ?? 10) === "critico") ? -2 : 0;
-        const bonCritico = positivos.some(([k]) => nivel(indicators[k] ?? 10) === "critico") ? +1.5 : 0;
+        // ── A) Score ponderado pela urgência dos indicadores ──────────────────
+        // Indicadores baixos têm urgência maior — prejudicá-los custa mais,
+        // ajudá-los vale mais.
+        const _urgencia = (k) => {
+            const v = indicators[k] ?? 10;
+            if (v <= 3)  return 3.0;  // crítico — peso máximo
+            if (v <= 6)  return 2.0;  // baixo
+            if (v <= 10) return 1.2;  // médio
+            if (v <= 14) return 0.9;  // bom — peso reduzido (não precisa tanto)
+            return 0.6;               // excelente — ajudar pouco importa
+        };
 
-        const score = netScore + penCritico + bonCritico;
+        const somaPosUrgente = positivos.reduce((a, [k, v]) =>  a + v * _urgencia(k), 0);
+        const somaNegUrgente = negativos.reduce((a, [k, v]) =>  a + Math.abs(v) * _urgencia(k), 0);
+        let scoreA = somaPosUrgente - somaNegUrgente;
 
-        if (score >= 3)  return "boa";
-        if (score >= 0)  return "media";
-        return "ruim";
+        // ── B) Limiar ajustado pela fase da empresa ───────────────────────────
+        // Em crise: precisa de score mais alto para ser "boa"
+        // Em expansão/consolidação: mais tolerante
+        const fase = state?.storyState?.faseEmpresa || 'crescimento';
+        const limiares = {
+            crise:         { boa: 6,  media: 2  },  // exige mais
+            crescimento:   { boa: 4,  media: 0  },  // padrão
+            fundacao:      { boa: 3,  media: -1 },  // início: mais tolerante
+            consolidacao:  { boa: 4,  media: 0  },
+            expansao:      { boa: 3,  media: -1 },  // indo bem: mais tolerante
+        };
+        const lim = limiares[fase] || limiares.crescimento;
+
+        // ── C) Penalidade por tendência negativa recente ──────────────────────
+        // Se as últimas 3 decisões foram ruins ou médias, decisões neutras não bastam
+        const historico = state?.history || [];
+        const ultimas3  = historico.slice(-3);
+        const qtdRuins  = ultimas3.filter(h => h.avaliacao === 'ruim').length;
+        const qtdMedias = ultimas3.filter(h => h.avaliacao === 'media').length;
+
+        let penTendencia = 0;
+        let contextoTendencia = '';
+        if (qtdRuins >= 2) {
+            penTendencia = -3;
+            contextoTendencia = 'sequência de decisões ruins pesa no resultado';
+        } else if (qtdRuins >= 1 && qtdMedias >= 1) {
+            penTendencia = -1.5;
+            contextoTendencia = 'histórico recente exige uma virada mais clara';
+        } else if (qtdRuins === 0 && qtdMedias === 0 && ultimas3.length >= 2) {
+            // Sequência positiva — pequeno bônus por consistência
+            penTendencia = +1;
+        }
+
+        const scoreTotal = scoreA + penTendencia;
+
+        // ── Determina veredito ────────────────────────────────────────────────
+        let avaliacao;
+        if      (scoreTotal >= lim.boa)   avaliacao = 'boa';
+        else if (scoreTotal >= lim.media) avaliacao = 'media';
+        else                               avaliacao = 'ruim';
+
+        // ── Monta string de contexto (explicação complementar) ────────────────
+        const partes = [];
+
+        // Contexto de fase
+        if (fase === 'crise') {
+            partes.push('A empresa está em crise — o padrão exigido é mais alto');
+        } else if (fase === 'expansao') {
+            partes.push('A empresa está em expansão — há mais margem para trade-offs');
+        } else if (fase === 'fundacao') {
+            partes.push('Fase de fundação — ainda há espaço para ajustes');
+        }
+
+        // Contexto de indicadores críticos ajudados/prejudicados
+        const criticosAjudados  = positivos.filter(([k]) => nivel(indicators[k] ?? 10) === 'critico');
+        const criticosPrejudicados = negativos.filter(([k]) => nivel(indicators[k] ?? 10) === 'critico');
+        if (criticosAjudados.length > 0) {
+            const nomes = criticosAjudados.map(([k]) => LABELS[k] || k).join(', ');
+            partes.push(`Ação decisiva em indicador crítico: ${nomes}`);
+        }
+        if (criticosPrejudicados.length > 0) {
+            const nomes = criticosPrejudicados.map(([k]) => LABELS[k] || k).join(', ');
+            partes.push(`Risco: ${nomes} já está crítico e foi prejudicado`);
+        }
+
+        // Contexto de tendência
+        if (contextoTendencia) partes.push(contextoTendencia.charAt(0).toUpperCase() + contextoTendencia.slice(1));
+
+        const contexto = partes.join('. ') + (partes.length ? '.' : '');
+
+        return { avaliacao, contexto };
     }
 
     function isGameOver(indicators) {

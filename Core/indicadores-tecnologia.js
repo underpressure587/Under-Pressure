@@ -3,11 +3,11 @@
    Sistema expandido e interdependente para o setor de TI.
    8 indicadores com lógica de efeito em cadeia.
 
-   MAPEAMENTO (antigo → novo):
-     rh         → clima        (Clima Organizacional)
-     clientes   → satisfacao   (Satisfação do Cliente)
-     processos  → qualidade    (Qualidade do Produto)
-     [novos]    → produtividade, reputacao, inovacao, seguranca
+   Indicadores padronizados com os demais setores:
+     rh         — equivalente ao antigo "clima" (Clima Organizacional)
+     clientes   — equivalente ao antigo "satisfacao" (Satisfação do Cliente)
+     qualidade  — Controle/Qualidade do Produto (mesma chave de Indústria)
+     [próprios] — produtividade, reputacao, inovacao, seguranca
 ═══════════════════════════════════════════════════════ */
 
 const IndicadoresTecnologia = (() => {
@@ -15,20 +15,20 @@ const IndicadoresTecnologia = (() => {
     /* ── Rótulos exibidos na sidebar / feedback ──────── */
     const LABELS = {
         financeiro:   "💰 Financeiro",
-        clima:        "🧑‍💻 Clima Organizacional",
-        satisfacao:   "⭐ Satisfação do Cliente",
-        qualidade:    "🛠️ Qualidade do Produto",
+        rh:           "👥 RH",
+        clientes:     "⭐ Clientes",
+        qualidade:    "🎯 Controle de Qualidade",
         produtividade:"⚡ Produtividade",
         reputacao:    "📣 Reputação de Mercado",
         inovacao:     "🔬 Inovação",
-        seguranca:    "🔒 Segurança da Informação"
+        seguranca:    "🦺 Segurança Operacional"
     };
 
     /* ── Pesos para score final (soma = 1.0) ─────────── */
     const PESOS = {
         financeiro:    0.20,
-        clima:         0.10,
-        satisfacao:    0.15,
+        rh:         0.10,
+        clientes:    0.15,
         qualidade:     0.13,
         produtividade: 0.12,
         reputacao:     0.12,
@@ -39,8 +39,8 @@ const IndicadoresTecnologia = (() => {
     /* ── Valores iniciais ────────────────────────────── */
     const VALORES_INICIAIS = {
         financeiro:    10,
-        clima:         10,
-        satisfacao:    10,
+        rh:         10,
+        clientes:    10,
         qualidade:     10,
         produtividade: 10,
         reputacao:     10,
@@ -58,7 +58,7 @@ const IndicadoresTecnologia = (() => {
 
         /* 1. Clima ruim → queda de produtividade
               Engenheiros desmotivados entregam menos */
-        if (ind.clima <= 5 && ind.produtividade > 1) {
+        if (ind.rh <= 5 && ind.produtividade > 1) {
             ind.produtividade = Math.max(0, ind.produtividade - 2);
             log.push("🌡️ Clima crítico drena a produtividade do time.");
         }
@@ -72,14 +72,14 @@ const IndicadoresTecnologia = (() => {
 
         /* 3. Qualidade baixa → insatisfação dos clientes
               Bugs e instabilidade geram churn */
-        if (ind.qualidade <= 5 && ind.satisfacao > 1) {
-            ind.satisfacao = Math.max(0, ind.satisfacao - 2);
+        if (ind.qualidade <= 5 && ind.clientes > 1) {
+            ind.clientes = Math.max(0, ind.clientes - 2);
             log.push("🛠️ Produto instável deteriora a satisfação dos clientes.");
         }
 
         /* 4. Satisfação baixa → impacto financeiro
               Churn elevado reduz ARR */
-        if (ind.satisfacao <= 5 && ind.financeiro > 1) {
+        if (ind.clientes <= 5 && ind.financeiro > 1) {
             ind.financeiro = Math.max(0, ind.financeiro - 2);
             log.push("⭐ Churn alto corrói a saúde financeira.");
         }
@@ -98,8 +98,8 @@ const IndicadoresTecnologia = (() => {
                 ind.reputacao = Math.max(0, ind.reputacao - 3);
                 log.push("🔒 Falha crítica de segurança destrói a reputação.");
             }
-            if (ind.satisfacao > 1) {
-                ind.satisfacao = Math.max(0, ind.satisfacao - 2);
+            if (ind.clientes > 1) {
+                ind.clientes = Math.max(0, ind.clientes - 2);
                 log.push("🔒 Clientes perdem confiança após incidente de segurança.");
             }
         }
@@ -113,8 +113,8 @@ const IndicadoresTecnologia = (() => {
 
         /* 8. Reputação excelente → atrai clientes
               Referência de mercado reduz churn */
-        if (ind.reputacao >= 16 && ind.satisfacao < 20) {
-            ind.satisfacao = Math.min(20, ind.satisfacao + 1);
+        if (ind.reputacao >= 16 && ind.clientes < 20) {
+            ind.clientes = Math.min(20, ind.clientes + 1);
             log.push("📣 Reputação forte aumenta confiança e retém clientes.");
         }
 
