@@ -2652,6 +2652,84 @@ body::after{
   line-height:1.7;
 }
 
+/* Barra de pesquisa, fixa entre o cabeçalho e a lista de termos */
+.glossary-search-wrap{
+  position: relative;
+  display: flex; align-items: center;
+  margin: 0 20px 4px; flex-shrink: 0;
+}
+.glossary-search-icon{
+  position: absolute; left: 12px;
+  color: var(--t3); pointer-events: none;
+}
+.glossary-search-input{
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: var(--r2);
+  color: var(--t1);
+  font-size: .85rem;
+  font-family: inherit;
+  transition: border-color .2s, background .2s;
+}
+.glossary-search-input::placeholder{ color: var(--t3); }
+.glossary-search-input:focus{
+  outline: none;
+  border-color: var(--s-bd-accent);
+  background: var(--bg3);
+}
+
+/* Seções do glossário */
+/* Abas de categoria — mesma linguagem visual das abas da tela de jogo
+   (sublinhado dourado/de-tema animado), rolável horizontalmente já que
+   há várias categorias e o card tem largura limitada. */
+.glossary-tabs{
+  display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; gap: 2px;
+  margin: 10px 20px 4px; flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+}
+.glossary-tabs::-webkit-scrollbar{ display: none; }
+.glossary-tab-btn{
+  flex-shrink: 0; padding: 8px 12px;
+  background: transparent; border: none;
+  font-family: var(--sans); font-size: .68rem; font-weight: 700; color: var(--t3);
+  cursor: pointer; transition: color .18s; position: relative;
+  white-space: nowrap; letter-spacing: .01em;
+}
+.glossary-tab-btn::after{
+  content: ''; position: absolute; bottom: -1px; left: 10%; right: 10%;
+  height: 2px; background: var(--s-gradient);
+  box-shadow: 0 0 8px var(--s-glow);
+  border-radius: 2px 2px 0 0; opacity: 0;
+  transform: scaleX(.2); transition: all .25s cubic-bezier(.22,.68,0,1.2);
+}
+.glossary-tab-btn.active{ color: var(--s-text); }
+.glossary-tab-btn.active::after{ opacity: 1; transform: scaleX(1); }
+
+.glossary-section{ margin-bottom: 8px; }
+
+.glossary-section:last-child{ margin-bottom: 0; }
+.glossary-section-title{
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--s-text);
+  padding: 14px 0 8px;
+  border-bottom: 1px solid var(--s-bd-accent);
+  margin-bottom: 4px;
+}
+.glossary-section:first-child .glossary-section-title{ padding-top: 4px; }
+
+.glossary-empty{
+  padding: 32px 0;
+  text-align: center;
+  color: var(--t3);
+  font-size: .85rem;
+}
+
 /* Overlay body — garante texto claro */
 .overlay-body{
   color:var(--t1);
