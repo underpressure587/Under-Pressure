@@ -17,14 +17,12 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
 
-  // ── Animações ─────────────────────────────────────────
   late AnimationController _pulseCtrl;
   late Animation<double>   _pulseScale;
   late Animation<double>   _pulseGlow;
   late List<AnimationController> _barCtrls;
   late List<Animation<double>>   _barHeights;
 
-  // ── Estado de verificação ─────────────────────────────
   double _progress  = 0;
   String _msg       = 'Iniciando...';
   bool   _erro      = false;
@@ -66,27 +64,21 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _runChecks() async {
     if (mounted) setState(() { _erro = false; _tentando = true; });
 
-    // ── Passo 1: Firebase Core ────────────────────────
+    // Passo 1: Firebase Core
     _setMsg('Verificando Firebase...', 0.15);
     await Future.delayed(const Duration(milliseconds: 400));
 
     try {
       if (Firebase.apps.isEmpty) {
-        _setErro(
-          'Firebase não inicializado',
-          'O app não conseguiu inicializar o Firebase. Verifique se o arquivo google-services.json está correto e se você tem conexão com a internet.',
-        );
+        _setErro('Firebase não inicializado', 'Firebase.apps está vazio.');
         return;
       }
     } catch (e) {
-      _setErro(
-        'Erro ao inicializar',
-        'Ocorreu um erro ao inicializar o app: ${e.toString()}',
-      );
+      _setErro('Erro ao inicializar', 'STEP1: ${e.runtimeType}: $e');
       return;
     }
 
-    // ── Passo 2: Conexão com internet / Firestore ────
+    // Passo 2: Firestore
     _setMsg('Verificando conexão...', 0.35);
     await Future.delayed(const Duration(milliseconds: 300));
 
@@ -100,34 +92,33 @@ class _SplashScreenState extends State<SplashScreen>
             onTimeout: () => throw Exception('timeout'),
           );
     } on FirebaseException catch (e) {
+      // Mostra o código real em vez de esconder
       if (e.code == 'unavailable' || e.code == 'network-request-failed') {
         _setErro(
-          'Sem conexão com o servidor',
-          'Não foi possível conectar ao servidor do Under Pressure. '
-          'Verifique sua conexão com a internet e tente novamente.',
+          'Sem conexão [${e.code}]',
+          'STEP2 FirebaseException\ncode: ${e.code}\nmsg: ${e.message}',
         );
         return;
       }
-      // Outros erros do Firestore (permissão, etc.) deixamos passar
+      // permission-denied e outros — agora mostra em vez de ignorar
+      _setErro(
+        'Erro Firestore [${e.code}]',
+        'STEP2 FirebaseException\ncode: ${e.code}\nmsg: ${e.message}',
+      );
+      return;
     } catch (e) {
-      final msg = e.toString();
-      if (msg.contains('timeout') || msg.contains('network')) {
-        _setErro(
-          'Tempo de conexão esgotado',
-          'O servidor demorou muito para responder. '
-          'Isso pode indicar uma conexão instável ou o servidor está temporariamente indisponível.',
-        );
-        return;
-      }
-      // Outros erros não críticos — continua
+      _setErro(
+        'Erro conexão',
+        'STEP2 ${e.runtimeType}: $e',
+      );
+      return;
     }
 
-    // ── Passo 3: Firebase Auth ────────────────────────
+    // Passo 3: Auth
     _setMsg('Verificando autenticação...', 0.55);
     await Future.delayed(const Duration(milliseconds: 300));
 
     try {
-      // Força refresh do token se logado
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         await user.reload().timeout(
@@ -137,19 +128,13 @@ class _SplashScreenState extends State<SplashScreen>
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'network-request-failed') {
-        _setErro(
-          'Sem conexão com a internet',
-          'Não foi possível verificar sua conta. Verifique sua conexão e tente novamente.',
-        );
+        _setErro('Sem conexão [auth]', 'STEP3: ${e.code}: ${e.message}');
         return;
       }
-      // user-not-found, token expirado etc. → logout silencioso
       await FirebaseAuth.instance.signOut();
-    } catch (_) {
-      // timeout de auth — continua mesmo assim
-    }
+    } catch (_) {}
 
-    // ── Passo 4: Manutenção ───────────────────────────
+    // Passo 4: Manutenção
     _setMsg('Verificando status do servidor...', 0.75);
     await Future.delayed(const Duration(milliseconds: 300));
 
@@ -180,7 +165,6 @@ class _SplashScreenState extends State<SplashScreen>
           : const LoginScreen();
     }
 
-    // ── Passo 5: Pronto ───────────────────────────────
     _setMsg('Pronto!', 1.0);
     await Future.delayed(const Duration(milliseconds: 350));
 
@@ -209,18 +193,15 @@ class _SplashScreenState extends State<SplashScreen>
   void _setErro(String titulo, String desc) {
     if (!mounted) return;
     setState(() {
-      _erro      = true;
-      _tentando  = false;
+      _erro       = true;
+      _tentando   = false;
       _erroTitulo = titulo;
-      _erroDesc  = desc;
+      _erroDesc   = desc;
     });
   }
 
   void _tentar() {
-    setState(() {
-      _progress = 0;
-      _msg = 'Tentando novamente...';
-    });
+    setState(() { _progress = 0; _msg = 'Tentando novamente...'; });
     _runChecks();
   }
 
@@ -238,21 +219,17 @@ class _SplashScreenState extends State<SplashScreen>
       body: Center(
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          child: _erro
-              ? _buildError()
-              : _buildLoading(),
+          child: _erro ? _buildError() : _buildLoading(),
         ),
       ),
     );
   }
 
-  // ══ LOADING ══════════════════════════════════════════
   Widget _buildLoading() {
     return Column(
       key: const ValueKey('loading'),
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Logo pulsante
         AnimatedBuilder(
           animation: Listenable.merge([_pulseScale, _pulseGlow]),
           builder: (_, __) => Transform.scale(
@@ -277,8 +254,6 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ),
         const SizedBox(height: 20),
-
-        // Título
         Text('UNDER PRESSURE',
             style: AppTheme.syne(
                 size: 18,
@@ -286,8 +261,6 @@ class _SplashScreenState extends State<SplashScreen>
                 color: AppTheme.t1,
                 letterSpacing: 0.08 * 18)),
         const SizedBox(height: 20),
-
-        // Mini-bars
         SizedBox(
           height: 32,
           child: Row(
@@ -312,43 +285,36 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ),
         const SizedBox(height: 20),
-
-        // Barra de progresso
         SizedBox(
           width: 220,
-          child: Column(children: [
-            // Track
-            Container(
-              height: 3,
-              decoration: BoxDecoration(
-                color: AppTheme.bg3,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: AnimatedFractionallySizedBox(
-                  duration: const Duration(milliseconds: 450),
-                  curve: Curves.easeInOut,
-                  widthFactor: _progress,
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.goldGradient,
-                      borderRadius: BorderRadius.circular(3),
-                      boxShadow: [BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.4),
-                        blurRadius: 8,
-                      )],
-                    ),
+          child: Container(
+            height: 3,
+            decoration: BoxDecoration(
+              color: AppTheme.bg3,
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: AnimatedFractionallySizedBox(
+                duration: const Duration(milliseconds: 450),
+                curve: Curves.easeInOut,
+                widthFactor: _progress,
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.goldGradient,
+                    borderRadius: BorderRadius.circular(3),
+                    boxShadow: [BoxShadow(
+                      color: AppTheme.primary.withOpacity(0.4),
+                      blurRadius: 8,
+                    )],
                   ),
                 ),
               ),
             ),
-          ]),
+          ),
         ),
         const SizedBox(height: 10),
-
-        // Mensagem
         Text(_msg,
             style: AppTheme.inter(
                 size: 11,
@@ -358,7 +324,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  // ══ ERRO ═════════════════════════════════════════════
   Widget _buildError() {
     return Padding(
       key: const ValueKey('error'),
@@ -366,7 +331,6 @@ class _SplashScreenState extends State<SplashScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Ícone de erro
           Container(
             width: 72, height: 72,
             decoration: BoxDecoration(
@@ -379,8 +343,6 @@ class _SplashScreenState extends State<SplashScreen>
                 color: AppTheme.err, size: 30),
           ),
           const SizedBox(height: 20),
-
-          // Logo pequena
           ClipOval(
             child: Image.asset(
               'assets/logo.jpg',
@@ -388,17 +350,13 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
           const SizedBox(height: 16),
-
-          // Título
           Text(_erroTitulo,
               textAlign: TextAlign.center,
               style: AppTheme.syne(
-                  size: 18,
+                  size: 16,
                   weight: FontWeight.w800,
                   color: AppTheme.t1)),
           const SizedBox(height: 12),
-
-          // Descrição explicando o que aconteceu
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -408,24 +366,12 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             child: Text(
               _erroDesc,
-              textAlign: TextAlign.center,
+              textAlign: TextAlign.left,
               style: AppTheme.inter(
-                  size: 13, color: AppTheme.t2, height: 1.65),
+                  size: 12, color: AppTheme.t2, height: 1.65),
             ),
           ),
-          const SizedBox(height: 8),
-
-          // Dica técnica
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.info_outline_rounded,
-                size: 12, color: AppTheme.t3),
-            const SizedBox(width: 5),
-            Text('Verifique sua conexão Wi-Fi ou dados móveis.',
-                style: AppTheme.inter(size: 11, color: AppTheme.t3)),
-          ]),
           const SizedBox(height: 28),
-
-          // Botão tentar novamente
           GestureDetector(
             onTap: _tentando ? null : _tentar,
             child: AnimatedContainer(
@@ -433,40 +379,18 @@ class _SplashScreenState extends State<SplashScreen>
               width: double.infinity,
               height: 52,
               decoration: BoxDecoration(
-                gradient: _tentando
-                    ? null
-                    : AppTheme.goldGradient,
+                gradient: _tentando ? null : AppTheme.goldGradient,
                 color: _tentando ? AppTheme.bg3 : null,
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: _tentando ? null : [
-                  BoxShadow(
-                    color: AppTheme.primary.withOpacity(0.25),
-                    blurRadius: 20, offset: const Offset(0, 4),
-                  ),
-                ],
               ),
               child: Center(
-                child: _tentando
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(
-                            width: 16, height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppTheme.t3),
-                          ),
-                          const SizedBox(width: 10),
-                          Text('Verificando...',
-                              style: AppTheme.inter(
-                                  size: 13, color: AppTheme.t3)),
-                        ],
-                      )
-                    : Text('Tentar novamente',
-                        style: AppTheme.syne(
-                            size: 14,
-                            weight: FontWeight.w700,
-                            color: Colors.black)),
+                child: Text(
+                  _tentando ? 'Verificando...' : 'Tentar novamente',
+                  style: AppTheme.syne(
+                      size: 14,
+                      weight: FontWeight.w700,
+                      color: _tentando ? AppTheme.t3 : Colors.black),
+                ),
               ),
             ),
           ),
