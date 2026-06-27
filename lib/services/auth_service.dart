@@ -16,7 +16,22 @@ class AuthService {
     final cred = await _auth.createUserWithEmailAndPassword(
         email: email, password: pass);
     await cred.user!.updateDisplayName(nome);
-    await _criarPerfil(cred.user!, nome);
+    // Pega token direto do UserCredential — garante disponibilidade imediata
+    final token = await cred.user!.getIdToken(true);
+    if (token != null) {
+      await FirestoreService.setDocWithToken(
+        'usuarios/${cred.user!.uid}',
+        {
+          'nome':        nome,
+          'email':       email,
+          'fotoUrl':     '',
+          'totalJogos':  0,
+          'melhorScore': 0,
+          'criadoEm':    DateTime.now().toIso8601String(),
+        },
+        token,
+      );
+    }
     return cred;
   }
 
@@ -36,35 +51,51 @@ class AuthService {
       idToken: gAuth.idToken,
     );
     final cred = await _auth.signInWithCredential(credential);
+    final token = await cred.user!.getIdToken(true);
 
-    final exists = await FirestoreService.getDoc('usuarios/${cred.user!.uid}');
-    if (exists == null) {
-      await _criarPerfil(cred.user!, gUser.displayName ?? 'Jogador',
-          photoUrl: gUser.photoUrl);
+    if (token != null) {
+      final exists = await FirestoreService.getDoc('usuarios/${cred.user!.uid}');
+      if (exists == null) {
+        await FirestoreService.setDocWithToken(
+          'usuarios/${cred.user!.uid}',
+          {
+            'nome':        gUser.displayName ?? 'Jogador',
+            'email':       gUser.email,
+            'fotoUrl':     gUser.photoUrl ?? '',
+            'totalJogos':  0,
+            'melhorScore': 0,
+            'criadoEm':    DateTime.now().toIso8601String(),
+          },
+          token,
+        );
+      }
     }
     return cred;
   }
 
   static Future<UserCredential> loginGuest() async {
     final cred = await _auth.signInAnonymously();
-    await _criarPerfil(cred.user!, 'Convidado');
+    final token = await cred.user!.getIdToken(true);
+    if (token != null) {
+      await FirestoreService.setDocWithToken(
+        'usuarios/${cred.user!.uid}',
+        {
+          'nome':        'Convidado',
+          'email':       '',
+          'fotoUrl':     '',
+          'totalJogos':  0,
+          'melhorScore': 0,
+          'criadoEm':    DateTime.now().toIso8601String(),
+        },
+        token,
+      );
+    }
     return cred;
   }
 
   static Future<void> logout() async {
     await GoogleSignIn().signOut();
     await _auth.signOut();
-  }
-
-  static Future<void> _criarPerfil(User user, String nome,
-      {String? photoUrl}) async {
-    await FirestoreService.setDoc('usuarios/${user.uid}', {
-      'nome':        nome,
-      'email':       user.email ?? '',
-      'fotoUrl':     photoUrl ?? user.photoURL ?? '',
-      'totalJogos':  0,
-      'melhorScore': 0,
-    });
   }
 
   static Future<Map<String, dynamic>?> buscarPerfil() async {
