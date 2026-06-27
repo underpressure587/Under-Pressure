@@ -17,31 +17,34 @@ class FeedbackScreen extends StatelessWidget {
 
   Color get _avaliacaoColor {
     switch (result.choice.avaliacao) {
-      case Avaliacao.boa:   return AppTheme.ok;
-      case Avaliacao.media: return AppTheme.warn;
-      case Avaliacao.ruim:  return AppTheme.err;
+      case Avaliacao.boa:     return AppTheme.ok;
+      case Avaliacao.media:   return AppTheme.warn;
+      case Avaliacao.omissao: return AppTheme.err;
+      case Avaliacao.ruim:    return AppTheme.err;
     }
   }
 
   String get _avaliacaoLabel {
     switch (result.choice.avaliacao) {
-      case Avaliacao.boa:   return '✅ Boa decisão';
-      case Avaliacao.media: return '⚠️ Decisão razoável';
-      case Avaliacao.ruim:  return '❌ Decisão arriscada';
+      case Avaliacao.boa:     return '✅ Boa decisão';
+      case Avaliacao.media:   return '⚠️ Decisão razoável';
+      case Avaliacao.omissao: return '⏱️ Tempo esgotado — Omissão';
+      case Avaliacao.ruim:    return '❌ Decisão arriscada';
     }
   }
 
   String get _avaliacaoIcon {
     switch (result.choice.avaliacao) {
-      case Avaliacao.boa:   return '💡';
-      case Avaliacao.media: return '📌';
-      case Avaliacao.ruim:  return '⚠️';
+      case Avaliacao.boa:     return '💡';
+      case Avaliacao.media:   return '📌';
+      case Avaliacao.omissao: return '⏱️';
+      case Avaliacao.ruim:    return '⚠️';
     }
   }
 
   void _continuar(BuildContext context) {
     if (result.finished || result.gameOver) {
-      final motivo = result.gameOver ? 'game_over' : 'fim';
+      final motivo = result.motivo.isNotEmpty ? result.motivo : 'fim';
       final gameResult = GameEngine.resultado(state, motivo);
       Navigator.pushReplacement(
         context,
