@@ -27,9 +27,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadPlayer() async {
-    final uid = AuthService.currentUser?.uid;
-    if (uid == null) return;
-    final data = await FirestoreService.getDoc('usuarios/$uid');
+    final user = AuthService.currentUser;
+    if (user == null) return;
+    final uid = user.uid;
+
+    var data = await FirestoreService.getDoc('usuarios/$uid');
+
+    // Perfil não existe — cria agora com token fresco
+    if (data == null) {
+      final token = await user.getIdToken(true);
+      if (token != null) {
+        final nome = user.isAnonymous
+            ? 'Convidado'
+            : (user.displayName ?? user.email ?? 'Jogador');
+        await FirestoreService.setDocWithToken(
+          'usuarios/$uid',
+          {
+            'nome':        nome,
+            'email':       user.email ?? '',
+            'fotoUrl':     user.photoURL ?? '',
+            'totalJogos':  0,
+            'melhorScore': 0,
+            'criadoEm':    DateTime.now().toIso8601String(),
+          },
+          token,
+        );
+        data = await FirestoreService.getDoc('usuarios/$uid');
+      }
+    }
+
     if (mounted && data != null) {
       setState(() => _playerData = data);
     }
