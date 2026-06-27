@@ -69,12 +69,14 @@ class AppTheme {
     FontWeight weight = FontWeight.w400,
     Color color = t2,
     double? height,
+    double? letterSpacing,
   }) =>
       GoogleFonts.inter(
         fontSize: size,
         fontWeight: weight,
         color: color,
         height: height,
+        letterSpacing: letterSpacing,
       );
 
   // ── MaterialApp Theme ────────────────────────────────────────

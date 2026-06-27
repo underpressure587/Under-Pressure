@@ -32,6 +32,9 @@ class AuthService {
   // ── Google ────────────────────────────────────────────
   static Future<UserCredential?> loginGoogle() async {
     final gUser = await GoogleSignIn(
+      // Android client ID para com.underpressuregame.app
+      clientId: '240438805750-scqlag6e49onlppenvhphu0vefhut46f.apps.googleusercontent.com',
+      // Web client ID (server-side token validation)
       serverClientId:
           '240438805750-30aegs2ra4pr6r961hcjmmt3iuj4iiel.apps.googleusercontent.com',
     ).signIn();

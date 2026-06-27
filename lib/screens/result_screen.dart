@@ -371,9 +371,10 @@ class _HistoryChip extends StatelessWidget {
 
   Color get _col {
     switch (entry.avaliacao) {
-      case Avaliacao.boa:   return AppTheme.ok;
-      case Avaliacao.media: return AppTheme.warn;
-      case Avaliacao.ruim:  return AppTheme.err;
+      case Avaliacao.boa:     return AppTheme.ok;
+      case Avaliacao.media:   return AppTheme.warn;
+      case Avaliacao.ruim:    return AppTheme.err;
+      case Avaliacao.omissao: return AppTheme.t3;
     }
   }
 

@@ -24,7 +24,7 @@ void main() async {
   await Firebase.initializeApp(
     options: const FirebaseOptions(
       apiKey: 'AIzaSyA8R7vnuWAWWDfe2DHLhGJdZTsWiXC5u7g',
-      appId: '1:240438805750:android:90ab3118d158050b8f58d7',
+      appId: '1:240438805750:android:3b442adf826fbfe38f58d7',
       messagingSenderId: '240438805750',
       projectId: 'under-pressure-49320',
       storageBucket: 'under-pressure-49320.firebasestorage.app',
