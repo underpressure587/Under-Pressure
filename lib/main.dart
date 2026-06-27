@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
 
@@ -31,6 +32,12 @@ void main() async {
       databaseURL:
           'https://under-pressure-49320-default-rtdb.firebaseio.com',
     ),
+  );
+
+  // Banco em southamerica-east1 (São Paulo) — persistência local habilitada
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
   runApp(const UnderPressureApp());
