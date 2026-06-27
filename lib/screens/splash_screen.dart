@@ -1,11 +1,17 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 import 'manutencao_screen.dart';
+
+// Usa REST direto igual ao app admin — evita problema de gRPC/região do Firestore SDK
+const _projectId = 'under-pressure-49320';
+const _fsBase =
+    'https://firestore.googleapis.com/v1/projects/$_projectId/databases/default/documents';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,12 +29,12 @@ class _SplashScreenState extends State<SplashScreen>
   late List<AnimationController> _barCtrls;
   late List<Animation<double>>   _barHeights;
 
-  double _progress  = 0;
-  String _msg       = 'Iniciando...';
-  bool   _erro      = false;
+  double _progress   = 0;
+  String _msg        = 'Iniciando...';
+  bool   _erro       = false;
   String _erroTitulo = '';
-  String _erroDesc  = '';
-  bool   _tentando  = false;
+  String _erroDesc   = '';
+  bool   _tentando   = false;
 
   @override
   void initState() {
@@ -61,6 +67,28 @@ class _SplashScreenState extends State<SplashScreen>
         .toList();
   }
 
+  // Lê config/global via REST HTTP (igual ao admin) — sem gRPC
+  Future<Map<String, dynamic>?> _getConfigGlobal() async {
+    try {
+      final uri = Uri.parse('$_fsBase/config/global');
+      final r = await http.get(uri).timeout(const Duration(seconds: 10));
+      if (r.statusCode == 200) {
+        final body = jsonDecode(r.body) as Map<String, dynamic>;
+        final fields = body['fields'] as Map<String, dynamic>? ?? {};
+        // Converte formato Firestore REST para mapa simples
+        return fields.map((k, v) {
+          if (v is Map) {
+            final val = v['booleanValue'] ?? v['stringValue'] ??
+                v['integerValue'] ?? v['arrayValue'];
+            return MapEntry(k, val);
+          }
+          return MapEntry(k, v);
+        });
+      }
+    } catch (_) {}
+    return null;
+  }
+
   Future<void> _runChecks() async {
     if (mounted) setState(() { _erro = false; _tentando = true; });
 
@@ -74,44 +102,18 @@ class _SplashScreenState extends State<SplashScreen>
         return;
       }
     } catch (e) {
-      _setErro('Erro ao inicializar', 'STEP1: ${e.runtimeType}: $e');
+      _setErro('Erro ao inicializar', '$e');
       return;
     }
 
-    // Passo 2: Firestore
+    // Passo 2: Conexão via REST HTTP
     _setMsg('Verificando conexão...', 0.35);
     await Future.delayed(const Duration(milliseconds: 300));
 
-    try {
-      await FirebaseFirestore.instance
-          .collection('config')
-          .doc('global')
-          .get()
-          .timeout(
-            const Duration(seconds: 8),
-            onTimeout: () => throw Exception('timeout'),
-          );
-    } on FirebaseException catch (e) {
-      // Mostra o código real em vez de esconder
-      if (e.code == 'unavailable' || e.code == 'network-request-failed') {
-        _setErro(
-          'Sem conexão [${e.code}]',
-          'STEP2 FirebaseException\ncode: ${e.code}\nmsg: ${e.message}',
-        );
-        return;
-      }
-      // permission-denied e outros — agora mostra em vez de ignorar
-      _setErro(
-        'Erro Firestore [${e.code}]',
-        'STEP2 FirebaseException\ncode: ${e.code}\nmsg: ${e.message}',
-      );
-      return;
-    } catch (e) {
-      _setErro(
-        'Erro conexão',
-        'STEP2 ${e.runtimeType}: $e',
-      );
-      return;
+    final config = await _getConfigGlobal();
+    if (config == null) {
+      // Sem internet ou servidor fora — deixa continuar para login
+      // (não bloqueia o app por falta de config)
     }
 
     // Passo 3: Auth
@@ -121,16 +123,9 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        await user.reload().timeout(
-          const Duration(seconds: 6),
-          onTimeout: () => throw Exception('auth_timeout'),
-        );
+        await user.reload().timeout(const Duration(seconds: 6));
       }
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'network-request-failed') {
-        _setErro('Sem conexão [auth]', 'STEP3: ${e.code}: ${e.message}');
-        return;
-      }
+    } on FirebaseAuthException catch (_) {
       await FirebaseAuth.instance.signOut();
     } catch (_) {}
 
@@ -140,17 +135,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     Widget destino;
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      final doc = await FirebaseFirestore.instance
-          .collection('config')
-          .doc('global')
-          .get()
-          .timeout(const Duration(seconds: 5));
-
-      final manut     = doc.data()?['manutencao'] == true;
-      final liberados = (doc.data()?['liberados'] as List?)
-          ?.map((e) => e.toString()).toList() ?? [];
-      final liberado  = uid != null && liberados.contains(uid);
+      final uid       = FirebaseAuth.instance.currentUser?.uid;
+      final manut     = config?['manutencao'] == true;
+      final liberados = config?['liberados'];
+      final lista     = liberados is Map
+          ? (liberados['values'] as List? ?? [])
+              .map((e) => (e as Map)['stringValue']?.toString() ?? '')
+              .toList()
+          : <String>[];
+      final liberado  = uid != null && lista.contains(uid);
 
       if (manut && !liberado) {
         destino = const ManutencaoScreen();
@@ -167,10 +160,8 @@ class _SplashScreenState extends State<SplashScreen>
 
     _setMsg('Pronto!', 1.0);
     await Future.delayed(const Duration(milliseconds: 350));
-
     if (!mounted) return;
     setState(() => _tentando = false);
-
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
 
@@ -244,11 +235,8 @@ class _SplashScreenState extends State<SplashScreen>
                 )],
               ),
               child: ClipOval(
-                child: Image.asset(
-                  'assets/logo.jpg',
-                  width: 88, height: 88,
-                  fit: BoxFit.cover,
-                ),
+                child: Image.asset('assets/logo.jpg',
+                    width: 88, height: 88, fit: BoxFit.cover),
               ),
             ),
           ),
@@ -290,9 +278,8 @@ class _SplashScreenState extends State<SplashScreen>
           child: Container(
             height: 3,
             decoration: BoxDecoration(
-              color: AppTheme.bg3,
-              borderRadius: BorderRadius.circular(3),
-            ),
+                color: AppTheme.bg3,
+                borderRadius: BorderRadius.circular(3)),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(3),
               child: AnimatedFractionallySizedBox(
@@ -317,9 +304,7 @@ class _SplashScreenState extends State<SplashScreen>
         const SizedBox(height: 10),
         Text(_msg,
             style: AppTheme.inter(
-                size: 11,
-                color: AppTheme.t3,
-                letterSpacing: 0.02 * 11)),
+                size: 11, color: AppTheme.t3, letterSpacing: 0.02 * 11)),
       ],
     );
   }
@@ -344,18 +329,14 @@ class _SplashScreenState extends State<SplashScreen>
           ),
           const SizedBox(height: 20),
           ClipOval(
-            child: Image.asset(
-              'assets/logo.jpg',
-              width: 44, height: 44, fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/logo.jpg',
+                width: 44, height: 44, fit: BoxFit.cover),
           ),
           const SizedBox(height: 16),
           Text(_erroTitulo,
               textAlign: TextAlign.center,
               style: AppTheme.syne(
-                  size: 16,
-                  weight: FontWeight.w800,
-                  color: AppTheme.t1)),
+                  size: 16, weight: FontWeight.w800, color: AppTheme.t1)),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(16),
@@ -364,12 +345,10 @@ class _SplashScreenState extends State<SplashScreen>
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppTheme.line2),
             ),
-            child: Text(
-              _erroDesc,
-              textAlign: TextAlign.left,
-              style: AppTheme.inter(
-                  size: 12, color: AppTheme.t2, height: 1.65),
-            ),
+            child: Text(_erroDesc,
+                textAlign: TextAlign.left,
+                style: AppTheme.inter(
+                    size: 12, color: AppTheme.t2, height: 1.65)),
           ),
           const SizedBox(height: 28),
           GestureDetector(

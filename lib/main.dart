@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
 
@@ -30,14 +29,6 @@ void main() async {
       databaseURL:
           'https://under-pressure-49320-default-rtdb.firebaseio.com',
     ),
-  );
-
-  // Força o endpoint da região southamerica-east1 (São Paulo)
-  FirebaseFirestore.instance.settings = const Settings(
-    host: 'southamerica-east1-firestore.googleapis.com',
-    sslEnabled: true,
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
   runApp(const UnderPressureApp());
