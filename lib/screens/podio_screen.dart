@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_theme.dart';
+import '../services/firestore_service.dart';
 import '../widgets/app_widgets.dart';
 
 class PodioScreen extends StatefulWidget {
@@ -12,14 +12,35 @@ class PodioScreen extends StatefulWidget {
 
 class _PodioScreenState extends State<PodioScreen> {
   String _filtro = 'all';
+  List<Map<String, dynamic>> _items = [];
+  bool _loading = true;
 
   final _filtros = [
-    {'id': 'all', 'label': 'Todos'},
+    {'id': 'all',        'label': 'Todos'},
     {'id': 'tecnologia', 'label': '🚀'},
-    {'id': 'industria', 'label': '🏭'},
-    {'id': 'logistica', 'label': '🚚'},
-    {'id': 'varejo', 'label': '🛒'},
+    {'id': 'industria',  'label': '🏭'},
+    {'id': 'logistica',  'label': '🚚'},
+    {'id': 'varejo',     'label': '🛒'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    final items = await FirestoreService.query(
+      'partidas',
+      whereField: _filtro == 'all' ? null : 'setor',
+      whereValue: _filtro == 'all' ? null : _filtro,
+      orderBy: 'score',
+      descending: true,
+      limit: 50,
+    );
+    if (mounted) setState(() { _items = items; _loading = false; });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +49,6 @@ class _PodioScreenState extends State<PodioScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Row(
@@ -36,16 +56,11 @@ class _PodioScreenState extends State<PodioScreen> {
                   const BackBtn(),
                   const SizedBox(width: 12),
                   Text('🏆  Pódio',
-                      style: AppTheme.syne(
-                          size: 15,
-                          weight: FontWeight.w700,
-                          color: AppTheme.t1)),
+                      style: AppTheme.syne(size: 15, weight: FontWeight.w700, color: AppTheme.t1)),
                 ],
               ),
             ),
             const Divider(color: AppTheme.line, height: 1),
-
-            // Filtros
             SizedBox(
               height: 44,
               child: ListView.separated(
@@ -57,78 +72,38 @@ class _PodioScreenState extends State<PodioScreen> {
                   final f = _filtros[i];
                   final active = _filtro == f['id'];
                   return GestureDetector(
-                    onTap: () => setState(() => _filtro = f['id']!),
+                    onTap: () {
+                      setState(() => _filtro = f['id']!);
+                      _load();
+                    },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 150),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                       decoration: BoxDecoration(
-                        color: active
-                            ? AppTheme.primary
-                            : AppTheme.bg3,
+                        color: active ? AppTheme.primary : AppTheme.bg3,
                         borderRadius: BorderRadius.circular(99),
-                        border: Border.all(
-                            color: active
-                                ? AppTheme.primary
-                                : AppTheme.line2),
+                        border: Border.all(color: active ? AppTheme.primary : AppTheme.line2),
                       ),
-                      child: Text(
-                        f['label']!,
-                        style: AppTheme.inter(
-                          size: 12,
-                          weight: FontWeight.w600,
-                          color: active ? Colors.black : AppTheme.t2,
-                        ),
-                      ),
+                      child: Text(f['label']!,
+                          style: AppTheme.inter(size: 12, weight: FontWeight.w600,
+                              color: active ? Colors.black : AppTheme.t2)),
                     ),
                   );
                 },
               ),
             ),
-
-            // Lista
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _filtro == 'all'
-                    ? FirebaseFirestore.instance
-                        .collection('partidas')
-                        .orderBy('score', descending: true)
-                        .limit(50)
-                        .snapshots()
-                    : FirebaseFirestore.instance
-                        .collection('partidas')
-                        .where('setor', isEqualTo: _filtro)
-                        .orderBy('score', descending: true)
-                        .limit(50)
-                        .snapshots(),
-                builder: (_, snap) {
-                  if (snap.connectionState ==
-                      ConnectionState.waiting) {
-                    return const Center(
-                        child: CircularProgressIndicator(
-                            color: AppTheme.primary));
-                  }
-                  final docs = snap.data?.docs ?? [];
-                  if (docs.isEmpty) {
-                    return Center(
-                      child: Text('Nenhum jogo finalizado ainda.',
-                          style: AppTheme.inter(color: AppTheme.t3)),
-                    );
-                  }
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: docs.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: 8),
-                    itemBuilder: (_, i) {
-                      final d =
-                          docs[i].data() as Map<String, dynamic>;
-                      return _PodioRow(
-                          rank: i + 1, data: d);
-                    },
-                  );
-                },
-              ),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+                  : _items.isEmpty
+                      ? Center(child: Text('Nenhum jogo finalizado ainda.',
+                          style: AppTheme.inter(color: AppTheme.t3)))
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _items.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          itemBuilder: (_, i) => _PodioRow(rank: i + 1, data: _items[i]),
+                        ),
             ),
           ],
         ),
@@ -140,7 +115,6 @@ class _PodioScreenState extends State<PodioScreen> {
 class _PodioRow extends StatelessWidget {
   final int rank;
   final Map<String, dynamic> data;
-
   const _PodioRow({required this.rank, required this.data});
 
   Color get _rankColor {
@@ -159,10 +133,7 @@ class _PodioRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.bg2,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: rank <= 3
-                ? _rankColor.withOpacity(0.3)
-                : AppTheme.line2),
+        border: Border.all(color: rank <= 3 ? _rankColor.withOpacity(0.3) : AppTheme.line2),
       ),
       child: Row(
         children: [
@@ -181,27 +152,16 @@ class _PodioRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  data['nomeJogador'] ?? 'Jogador',
-                  style: AppTheme.syne(
-                      size: 13,
-                      weight: FontWeight.w600,
-                      color: AppTheme.t1),
-                ),
-                Text(
-                  '${data['nomeEmpresa'] ?? ''} · ${data['setor'] ?? ''}',
-                  style: AppTheme.inter(size: 11, color: AppTheme.t3),
-                ),
+                Text(data['nomeJogador'] ?? 'Jogador',
+                    style: AppTheme.syne(size: 13, weight: FontWeight.w600, color: AppTheme.t1)),
+                Text('${data['nomeEmpresa'] ?? ''} · ${data['setor'] ?? ''}',
+                    style: AppTheme.inter(size: 11, color: AppTheme.t3)),
               ],
             ),
           ),
-          Text(
-            '${data['score'] ?? 0}',
-            style: AppTheme.syne(
-                size: 18,
-                weight: FontWeight.w800,
-                color: rank <= 3 ? _rankColor : AppTheme.primary),
-          ),
+          Text('${data['score'] ?? 0}',
+              style: AppTheme.syne(size: 18, weight: FontWeight.w800,
+                  color: rank <= 3 ? _rankColor : AppTheme.primary)),
         ],
       ),
     );

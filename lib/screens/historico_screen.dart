@@ -1,22 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 import '../widgets/app_widgets.dart';
 
-class HistoricoScreen extends StatelessWidget {
+class HistoricoScreen extends StatefulWidget {
   const HistoricoScreen({super.key});
+
+  @override
+  State<HistoricoScreen> createState() => _HistoricoScreenState();
+}
+
+class _HistoricoScreenState extends State<HistoricoScreen> {
+  List<Map<String, dynamic>> _items = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final uid = AuthService.currentUser?.uid;
+    if (uid == null) { setState(() => _loading = false); return; }
+    final items = await FirestoreService.query(
+      'partidas',
+      whereField: 'uid',
+      whereValue: uid,
+      orderBy: 'criadoEm',
+      descending: true,
+      limit: 50,
+    );
+    if (mounted) setState(() { _items = items; _loading = false; });
+  }
 
   @override
   Widget build(BuildContext context) {
     final uid = AuthService.currentUser?.uid;
-
     return Scaffold(
       backgroundColor: AppTheme.bg,
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Row(
@@ -24,57 +50,26 @@ class HistoricoScreen extends StatelessWidget {
                   const BackBtn(),
                   const SizedBox(width: 12),
                   Text('📋  Histórico de Jogos',
-                      style: AppTheme.syne(
-                          size: 15,
-                          weight: FontWeight.w700,
-                          color: AppTheme.t1)),
+                      style: AppTheme.syne(size: 15, weight: FontWeight.w700, color: AppTheme.t1)),
                 ],
               ),
             ),
             const Divider(color: AppTheme.line, height: 1),
-
             Expanded(
               child: uid == null
-                  ? Center(
-                      child: Text('Entre para ver seu histórico.',
-                          style:
-                              AppTheme.inter(color: AppTheme.t3)))
-                  : StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('partidas')
-                          .where('uid', isEqualTo: uid)
-                          .orderBy('criadoEm', descending: true)
-                          .limit(50)
-                          .snapshots(),
-                      builder: (_, snap) {
-                        if (snap.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator(
-                                  color: AppTheme.primary));
-                        }
-                        final docs = snap.data?.docs ?? [];
-                        if (docs.isEmpty) {
-                          return Center(
-                            child: Text(
-                                'Nenhum jogo registrado ainda.',
-                                style: AppTheme.inter(
-                                    color: AppTheme.t3)),
-                          );
-                        }
-                        return ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: docs.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (_, i) {
-                            final d = docs[i].data()
-                                as Map<String, dynamic>;
-                            return _HistRow(data: d);
-                          },
-                        );
-                      },
-                    ),
+                  ? Center(child: Text('Entre para ver seu histórico.',
+                      style: AppTheme.inter(color: AppTheme.t3)))
+                  : _loading
+                      ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+                      : _items.isEmpty
+                          ? Center(child: Text('Nenhum jogo registrado ainda.',
+                              style: AppTheme.inter(color: AppTheme.t3)))
+                          : ListView.separated(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: _items.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 8),
+                              itemBuilder: (_, i) => _HistRow(data: _items[i]),
+                            ),
             ),
           ],
         ),
@@ -115,35 +110,20 @@ class _HistRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  data['nomeEmpresa'] ?? 'Empresa',
-                  style: AppTheme.syne(
-                      size: 13,
-                      weight: FontWeight.w600,
-                      color: AppTheme.t1),
-                ),
+                Text(data['nomeEmpresa'] ?? 'Empresa',
+                    style: AppTheme.syne(size: 13, weight: FontWeight.w600, color: AppTheme.t1)),
                 const SizedBox(height: 2),
-                Text(
-                  data['setor'] ?? '',
-                  style:
-                      AppTheme.inter(size: 11, color: AppTheme.t3),
-                ),
+                Text(data['setor'] ?? '',
+                    style: AppTheme.inter(size: 11, color: AppTheme.t3)),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '$score',
-                style: AppTheme.syne(
-                    size: 20,
-                    weight: FontWeight.w800,
-                    color: AppTheme.primary),
-              ),
-              Text('pts',
-                  style:
-                      AppTheme.inter(size: 10, color: AppTheme.t3)),
+              Text('$score',
+                  style: AppTheme.syne(size: 20, weight: FontWeight.w800, color: AppTheme.primary)),
+              Text('pts', style: AppTheme.inter(size: 10, color: AppTheme.t3)),
             ],
           ),
         ],
