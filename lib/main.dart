@@ -8,13 +8,11 @@ import 'screens/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Forçar orientação retrato
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Status bar escura
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
@@ -34,8 +32,10 @@ void main() async {
     ),
   );
 
-  // Banco em southamerica-east1 (São Paulo) — persistência local habilitada
+  // Força o endpoint da região southamerica-east1 (São Paulo)
   FirebaseFirestore.instance.settings = const Settings(
+    host: 'southamerica-east1-firestore.googleapis.com',
+    sslEnabled: true,
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
