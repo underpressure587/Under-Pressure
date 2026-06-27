@@ -1,7 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'firestore_service.dart';
 import 'auth_service.dart';
-import '../engine/models.dart';
+import '../engine/game_engine.dart';
 
 class GameService {
   // ── Salvar partida finalizada ─────────────────────────
@@ -38,7 +37,7 @@ class GameService {
     final data = await FirestoreService.getDoc('usuarios/$uid');
     if (data == null) return;
 
-    final atual = (data['melhorScore'] as num?)?.toInt() ?? 0;
+    final atual      = (data['melhorScore'] as num?)?.toInt() ?? 0;
     final totalJogos = ((data['totalJogos'] as num?)?.toInt() ?? 0) + 1;
 
     await FirestoreService.setDoc('usuarios/$uid', {
