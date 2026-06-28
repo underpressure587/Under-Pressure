@@ -183,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             _buildHeader(),
             if (_showSession) _buildSessionBanner(),
             Expanded(child: _buildCenter()),
-            _buildTabBar(),
+
           ],
         ),
       ),
@@ -302,73 +302,84 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // ── Centro — botão Iniciar ───────────────────────────
   Widget _buildCenter() {
     return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      // "UNDER PRESSURE" acima
       Text('UNDER PRESSURE',
-          style: AppTheme.syne(size: 9, weight: FontWeight.w700,
-              color: AppTheme.primary.withOpacity(0.45), letterSpacing: 0.35 * 9)),
-      const SizedBox(height: 28),
+          style: AppTheme.syne(size: 11, weight: FontWeight.w800,
+              color: const Color(0xFFD4AF37).withOpacity(0.6), letterSpacing: 0.35 * 11)),
+      const SizedBox(height: 32),
 
-      // Botão circular com anéis animados
       GestureDetector(
         onTap: _irParaSector,
         child: AnimatedBuilder(
           animation: _ringCtrl,
           builder: (_, __) => SizedBox(
-            width: 196, height: 196,
+            width: 200, height: 200,
             child: Stack(alignment: Alignment.center, children: [
-              // Anel externo
               Positioned.fill(child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppTheme.primary.withOpacity(_ring1.value * 0.55),
-                    width: 1.5,
+                    color: const Color(0xFFD4AF37).withOpacity(_ring1.value * 0.4),
+                    width: 2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD4AF37).withOpacity(_ring1.value * 0.15),
+                      blurRadius: 25,
+                      spreadRadius: 4,
+                    )
+                  ],
                 ),
               )),
-              // Anel interno
               Positioned(
-                left: 12, right: 12, top: 12, bottom: 12,
+                left: 10, right: 10, top: 10, bottom: 10,
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppTheme.primaryBd.withOpacity(_ring2.value * 0.3),
+                      color: const Color(0xFFD4AF37).withOpacity(_ring2.value * 0.25),
                       width: 1,
                     ),
                   ),
                 ),
               ),
-              // Botão principal
               Container(
-                width: 172, height: 172,
+                width: 165, height: 165,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.3),
-                    colors: [
-                      Colors.white.withOpacity(0.07),
-                      AppTheme.bg2,
-                      Colors.black.withOpacity(0.3),
-                    ],
-                    stops: const [0, 0.45, 1],
+                  color: const Color(0xFF0B0B0E),
+                  border: Border.all(
+                    color: const Color(0xFFD4AF37),
+                    width: 3.5,
                   ),
                   boxShadow: [
-                    BoxShadow(color: AppTheme.primaryGlow, blurRadius: 50),
-                    const BoxShadow(color: Color(0xB3000000), blurRadius: 40, offset: Offset(0, 12)),
+                    BoxShadow(
+                      color: const Color(0xFFD4AF37).withOpacity(0.4),
+                      blurRadius: 20,
+                      spreadRadius: 1,
+                    ),
+                    const BoxShadow(
+                      color: Colors.black,
+                      blurRadius: 15,
+                      offset: Offset(0, 8),
+                    ),
                   ],
-                  border: Border.all(color: Colors.white.withOpacity(0.06)),
                 ),
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  ShaderMask(
-                    shaderCallback: (b) => AppTheme.goldGradient.createShader(b),
-                    child: const Icon(Icons.play_arrow_rounded, size: 40, color: Colors.white),
+                  const Icon(
+                    Icons.play_arrow_rounded,
+                    size: 42,
+                    color: Color(0xFFD4AF37),
                   ),
-                  const SizedBox(height: 6),
-                  Text('INICIAR\nMANDATO',
+                  const SizedBox(height: 4),
+                  Text('INICIAR
+MANDATO',
                       textAlign: TextAlign.center,
-                      style: AppTheme.syne(size: 11, weight: FontWeight.w800,
-                          color: AppTheme.t2, letterSpacing: 0.14 * 11)),
+                      style: AppTheme.syne(
+                        size: 13, 
+                        weight: FontWeight.w800,
+                        color: const Color(0xFFD4AF37), 
+                        letterSpacing: 0.14 * 13,
+                      )),
                 ]),
               ),
             ]),
@@ -377,43 +388,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     ]);
   }
-
-  // ── Tab bar ──────────────────────────────────────────
-  Widget _buildTabBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xE60D0F14),
-        border: const Border(top: BorderSide(color: AppTheme.line)),
-      ),
-      child: Row(children: [
-        // Brand
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: Text('Under\nPressure',
-              style: AppTheme.syne(size: 8, weight: FontWeight.w800,
-                  color: AppTheme.t3, letterSpacing: 0.05 * 8),
-              textAlign: TextAlign.center),
-        ),
-        Expanded(child: _TabBtn(
-          icon: const Icon(Icons.person_outline_rounded, size: 15),
-          label: 'Perfil',
-          onTap: _irParaPerfil,
-        )),
-        Expanded(child: _TabBtn(
-          icon: const Icon(Icons.emoji_events_outlined, size: 16),
-          label: 'Pódio',
-          onTap: _irParaPodio,
-        )),
-        Expanded(child: _TabBtn(
-          icon: const Icon(Icons.assignment_outlined, size: 15),
-          label: 'Histórico',
-          onTap: _irParaHistorico,
-        )),
-      ]),
-    );
-  }
-}
 
 // ── Home Avatar ──────────────────────────────────────
 class _HomeAvatar extends StatelessWidget {
