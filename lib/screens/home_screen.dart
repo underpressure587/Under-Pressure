@@ -209,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               Text('Gestor',
                   style: AppTheme.inter(size: 9, weight: FontWeight.w700,
                       color: AppTheme.t2, letterSpacing: 0.18 * 9)),
-              Text(_playerName,
+              Text("OLÁ, $_playerName",
                   style: AppTheme.syne(size: 12, weight: FontWeight.w800, color: AppTheme.t1)),
             ]),
           ]),
