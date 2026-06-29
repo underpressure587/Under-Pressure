@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'theme/app_theme.dart';
-import 'screens/splash_screen.dart';
+import 'screens/logo_video_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +43,7 @@ class UnderPressureApp extends StatelessWidget {
       title: 'Under Pressure',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const SplashScreen(),
+      home: const LogoVideoScreen(),
     );
   }
 }
