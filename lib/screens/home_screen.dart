@@ -11,6 +11,7 @@ import 'profile_screen.dart';
 import 'podio_screen.dart';
 import 'historico_screen.dart';
 import 'glossario_screen.dart';
+import 'config_screen.dart';
 
 enum _FbStatus { connecting, online, offline }
 
@@ -274,8 +275,8 @@ class _HomeScreenState extends State<HomeScreen>
                         color: AppTheme.t2))),
             const SizedBox(width: 6),
             _GhostBtn(
-                onTap: _logout,
-                child: const Icon(Icons.logout_rounded,
+                onTap: () => _push(const ConfigScreen()),
+                child: const Icon(Icons.settings_outlined,
                     size: 16, color: AppTheme.t2)),
           ]),
         ]),

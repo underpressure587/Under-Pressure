@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../engine/models.dart';
 import '../engine/game_engine.dart';
 import '../data/sector_data.dart';
 import '../services/game_service.dart';
+import '../services/toast_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_widgets.dart';
 import 'home_screen.dart';
+import 'podio_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   final GameResult result;
@@ -29,6 +33,8 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Future<void> _salvar() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('sessao_ativa');
     try {
       await GameService.salvarResultado(widget.result);
       if (mounted) setState(() => _salvando = false);
@@ -71,6 +77,24 @@ class _ResultScreenState extends State<ResultScreen> {
       ),
       (_) => false,
     );
+  }
+
+  void _verPodio() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const PodioScreen()),
+      (_) => false,
+    );
+  }
+
+  void _compartilhar() {
+    final isGO = r.motivo == 'game_over';
+    final texto = '${sectorIcon(r.sector)} ${isGO ? "Mandato Encerrado" : "Mandato Concluído"}\n'
+        '📊 Score: $_scoreFinal/100\n'
+        '🏢 ${r.companyName}\n\n'
+        'Joguei Under Pressure — o simulador de decisões executivas!';
+    Clipboard.setData(ClipboardData(text: texto));
+    ToastService.sucesso('Resultado copiado para a área de transferência!');
   }
 
   @override
@@ -258,8 +282,26 @@ class _ResultScreenState extends State<ResultScreen> {
               child: Column(
                 children: [
                   PrimaryButton(
-                    label: '🔄  Jogar Novamente',
+                    label: '🔄  Novo Mandato',
                     onTap: _voltarHome,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SecBtn(
+                          label: '📤 Compartilhar',
+                          onTap: _compartilhar,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _SecBtn(
+                          label: '🏆 Ver Pódio',
+                          onTap: _verPodio,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -269,6 +311,28 @@ class _ResultScreenState extends State<ResultScreen> {
       ),
     );
   }
+}
+
+// ── Botão secundário ──────────────────────────────────
+class _SecBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _SecBtn({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.bg2,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.line2),
+      ),
+      child: Center(child: Text(label,
+          style: AppTheme.inter(size: 13, weight: FontWeight.w600, color: AppTheme.t2))),
+    ),
+  );
 }
 
 // ── Score card ────────────────────────────────────────

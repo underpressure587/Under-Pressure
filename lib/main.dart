@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'theme/app_theme.dart';
+import 'services/toast_service.dart';
 import 'screens/logo_video_screen.dart';
 
 void main() async {
@@ -42,6 +43,7 @@ class UnderPressureApp extends StatelessWidget {
     return MaterialApp(
       title: 'Under Pressure',
       debugShowCheckedModeBanner: false,
+      navigatorKey: ToastService.navigatorKey,
       theme: AppTheme.theme,
       home: const LogoVideoScreen(),
     );

@@ -3,6 +3,7 @@ import '../engine/game_engine.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_widgets.dart';
 import 'intro_screen.dart';
+import '../services/toast_service.dart';
 
 class SectorScreen extends StatefulWidget {
   const SectorScreen({super.key});
@@ -50,29 +51,11 @@ class _SectorScreenState extends State<SectorScreen> {
 
   void _lancarJogo() {
     if (_setorSelecionado == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Selecione um setor.',
-              style: AppTheme.inter(color: AppTheme.t1)),
-          backgroundColor: AppTheme.bg3,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+      ToastService.aviso('Selecione um setor.');
       return;
     }
     if (_nomeCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Digite o nome da empresa.',
-              style: AppTheme.inter(color: AppTheme.t1)),
-          backgroundColor: AppTheme.bg3,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+      ToastService.aviso('Digite o nome da empresa.');
       return;
     }
     final state = GameEngine.iniciar(

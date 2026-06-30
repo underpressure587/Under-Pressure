@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/game_service.dart';
 import '../widgets/app_widgets.dart';
+import '../services/toast_service.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -185,8 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (!_isGuest && _shortId.isNotEmpty) GestureDetector(
           onTap: () {
             Clipboard.setData(ClipboardData(text: _uid));
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('ID copiado!'), duration: Duration(seconds: 2)));
+            ToastService.sucesso('ID copiado!');
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
