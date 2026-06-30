@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   UNDER PRESSURE
+   UNDER-PRESSURE · MAIN v5.1
    ─────────────────────────────────────────────────────
    · Sistema de jogador com persistência (localStorage)
    · Pódio global e histórico de jogos
@@ -1595,7 +1595,7 @@ function renderRodada(state, aposTrocaTela) {
   document.getElementById("hist-round-badge").textContent =
     `Rodada ${state.currentRound+1} · ${faseLabel[fase]||""}`;
   document.getElementById("hist-round-title").textContent = round.title || "";
-  document.getElementById("hist-round-desc").textContent  = _enriquecerDescricao(round.description||"", state);
+  document.getElementById("hist-round-desc").innerHTML = _destacarTermosGlossario(_enriquecerDescricao(round.description||"", state));
 
   // Evento ativo
   const ev     = state.activeEvents?.find(e => e.expiresAt >= state.currentRound);
@@ -1620,7 +1620,7 @@ function renderRodada(state, aposTrocaTela) {
     const risco = (c.risco && state.currentRound < 2) ? `<span class="choice-risk risk-${c.risco}">${c.risco.toUpperCase()}</span>` : "";
     return `<button class="choice-card" onclick="BetaUI.escolher(${i})" id="choice-btn-${i}">
       <span class="choice-letter">${letra}</span>
-      <span class="choice-text">${c.text}</span>
+      <span class="choice-text">${_destacarTermosGlossario(c.text)}</span>
       ${risco}
     </button>`;
   }).join("");
@@ -1690,6 +1690,82 @@ function _renderHistoricoTab(state) {
 /* ════════════════════════════════════════════════════
    MEMÓRIA NARRATIVA
 ════════════════════════════════════════════════════ */
+// Cache dos termos do glossário ordenados do mais longo para o mais curto
+// (evita que um termo curto, ex: "SLA", "roube" a marcação de um termo
+// mais longo que o contém, ex: nenhum caso aqui, mas é uma proteção geral).
+let _glossarioTermosOrdenados = null;
+function _getGlossarioTermosOrdenados() {
+  if (!_glossarioTermosOrdenados) {
+    _glossarioTermosOrdenados = GLOSSARIO_TERMOS
+      .slice()
+      .sort((a, b) => b.termo.length - a.termo.length);
+  }
+  return _glossarioTermosOrdenados;
+}
+
+function _escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Detecta termos do Glossário dentro de um texto puro (sem HTML) e os
+// envolve em um <span> sublinhado e clicável, que abre a explicação do
+// Glossário ao ser tocado. Cada termo só é destacado na primeira
+// ocorrência dentro do texto, para não poluir visualmente o conteúdo.
+function _destacarTermosGlossario(texto) {
+  if (!texto) return texto;
+  const termos = _getGlossarioTermosOrdenados();
+  // Mapa de posições já ocupadas, para não destacar termos que se sobrepõem
+  // (ex: "Capital Político" já marcado não deveria ter "Capital" marcado de novo).
+  const ocupado = new Array(texto.length).fill(false);
+  const marcacoes = []; // {start, end, termo, def}
+
+  for (const g of termos) {
+    // Aceita o termo com variações simples de plural (s no final) e ignora
+    // parênteses internos do próprio nome do termo (ex: "Angel (Investidor-Anjo)").
+    const nomesBusca = g.termo.split('/').map(s => s.trim().replace(/\s*\(.*?\)\s*/g, ''));
+    for (const nome of nomesBusca) {
+      if (!nome) continue;
+      const pattern = new RegExp(`\\b${_escapeRegex(nome)}s?\\b`, 'i');
+      const match = pattern.exec(texto);
+      if (!match) continue;
+      const start = match.index, end = start + match[0].length;
+      let livre = true;
+      for (let i = start; i < end; i++) { if (ocupado[i]) { livre = false; break; } }
+      if (!livre) continue;
+      for (let i = start; i < end; i++) ocupado[i] = true;
+      marcacoes.push({ start, end, termo: g.termo, def: g.def });
+      break; // já achou esse termo do glossário, não tenta os outros nomesBusca
+    }
+  }
+
+  if (!marcacoes.length) return _escapeHtml(texto);
+
+  marcacoes.sort((a, b) => a.start - b.start);
+  let out = '';
+  let cursor = 0;
+  for (const m of marcacoes) {
+    out += _escapeHtml(texto.slice(cursor, m.start));
+    const trecho = _escapeHtml(texto.slice(m.start, m.end));
+    const termoAttr = m.termo.replace(/'/g, "\\'");
+    out += `<span class="termo-glossario" onclick="event.stopPropagation();BetaUI.abrirTermoGlossario('${termoAttr}')">${trecho}</span>`;
+    cursor = m.end;
+  }
+  out += _escapeHtml(texto.slice(cursor));
+  return out;
+}
+
+function _escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function abrirTermoGlossario(termo) {
+  const item = GLOSSARIO_TERMOS.find(g => g.termo === termo);
+  if (!item) return;
+  abrirTooltipInfo(item.termo, `<p class="tooltip-body-text">${item.def}</p>`);
+}
+
 function _enriquecerDescricao(desc, state) {
   const hist  = state.history || [];
   const flags = state.storyState?.flags || [];
@@ -2272,7 +2348,18 @@ const GLOSSARIO_SECOES = [
     { termo:"Flag", def:"Padrão de comportamento registrado ao longo do mandato. Influencia quais eventos aparecem e o desfecho final. Ex: Liderança Tóxica, Crescimento sem Caixa." },
     { termo:"Imprevisto", def:"Evento inesperado que altera os efeitos das decisões durante aquela rodada. Pode ser positivo ou negativo, e é influenciado pelo estado atual dos indicadores." },
     { termo:"Margem Operacional", def:"Quanto de cada real de receita sobra como lucro operacional. Ex: margem de 8% significa que a empresa lucra R$8 para cada R$100 vendidos." },
-    { termo:"Mandato", def:"Uma partida completa do jogo, com 10 rodadas de decisões organizadas em três fases (Diagnóstico, Pressão e Decisão Crítica). O gestor conduz a empresa do início ao fim e recebe uma pontuação pelo resultado." },
+    { termo:"Mandato", def:"Uma partida completa do jogo, com 10 rodadas de decisões organizadas em fases que vão evoluindo conforme o desempenho da empresa (Fundação, Crescimento, Crise, Consolidação ou Expansão). O gestor conduz a empresa do início ao fim e recebe uma pontuação pelo resultado." },
+    { termo:"Fases da Empresa", def:"Etapa em que a empresa se encontra dentro do mandato: Fundação (início), Crescimento, Crise (quando indicadores-chave estão muito ruins), Consolidação ou Expansão. A fase influencia o tom dos eventos e o peso das decisões." },
+    { termo:"Situação Inicial", def:"Evento de abertura do mandato, sorteado entre cenários possíveis (ex: crise herdada, queda de reputação, concorrente agressivo). Já chega aplicando efeitos nos indicadores antes da primeira decisão." },
+    { termo:"Boa Decisão / Decisão com Trade-offs / Má Decisão", def:"As três avaliações possíveis para cada escolha do jogador, mostradas na tela de resultado da rodada. 'Boa Decisão' indica acerto claro; 'Decisão com Trade-offs' indica ganhos e perdas simultâneos; 'Má Decisão' indica um custo que supera os benefícios." },
+    { termo:"Alternativa Mais Indicada", def:"Quando a escolha do jogador não foi a ideal, o feedback da rodada mostra qual seria a opção mais indicada e o resultado que ela traria, para fins de aprendizado." },
+    { termo:"Paralisia Decisória", def:"Forma de game over que ocorre quando o gestor acumula desgaste (Esgotamento) por deixar o timer expirar sem decidir repetidas vezes. Representa o colapso do gestor por excesso de indecisão e encerra o mandato antes do previsto." },
+    { termo:"Decisão por Omissão", def:"O que acontece quando o Timer por Rodada está ativado e o tempo se esgota sem o jogador escolher uma opção. O jogo segue automaticamente com um resultado de omissão, diferente de uma escolha ativa, e aumenta o Esgotamento do gestor." },
+    { termo:"Timer por Rodada", def:"Configuração opcional (90 segundos por decisão) que adiciona pressão de tempo real a cada rodada. Pode ser ativada ou desativada na tela de criação da empresa." },
+    { termo:"Modo Treino", def:"Configuração opcional para jogar sem pontuação valer para o pódio ou histórico — ideal para aprender as mecânicas e testar estratégias sem compromisso com o resultado final." },
+    { termo:"Reputação Interna", def:"Como o gestor é visto por dentro da própria empresa (equipe, diretoria, conselho). Diferente da Reputação de Mercado, que é a percepção externa de clientes e do setor." },
+    { termo:"Reputação de Mercado", def:"Indicador que mede como a empresa é vista externamente — por clientes, concorrentes e pela imprensa do setor. Cai com crises públicas e sobe com boas entregas visíveis ao mercado." },
+    { termo:"Pódio", def:"Ranking dos melhores mandatos já jogados, comparando a pontuação final entre partidas (suas e, quando aplicável, de outros jogadores)." },
   ]},
   { categoria: "Finanças e Investimento", termos: [
     { termo:"ARR", def:"Receita Recorrente Anual (Annual Recurring Revenue). Total de contratos ativos que a empresa recebe por ano. Principal métrica de saúde de empresas SaaS." },
@@ -3425,6 +3512,34 @@ function closeTooltip() {
   _fecharOverlay('overlay-tooltip');
 }
 
+// Tooltip informativo genérico — reaproveita o overlay-tooltip, mas sem
+// depender de um indicador do jogo. Usado para explicações de
+// configuração (ex: Timer por Rodada, Modo Treino).
+function abrirTooltipInfo(titulo, htmlCorpo) {
+  const overlay = document.getElementById('overlay-tooltip');
+  const title   = document.getElementById('tooltip-title');
+  const body    = document.getElementById('tooltip-body');
+  if (!overlay) return;
+  if (title) title.textContent = titulo;
+  if (body) body.innerHTML = htmlCorpo;
+  _abrirOverlay('overlay-tooltip');
+}
+
+function abrirInfoTimer() {
+  abrirTooltipInfo('Timer por Rodada', `
+    <p class="tooltip-body-text">Com o timer ativado, você tem <strong>90 segundos</strong> para tomar cada decisão. O tempo aparece na tela durante a rodada e fica vermelho nos últimos segundos.</p>
+    <div class="tooltip-consequence">⏰ Se o tempo esgotar sem você escolher uma opção, o jogo segue automaticamente com uma <strong>Decisão por Omissão</strong> — um resultado diferente de uma escolha ativa, geralmente pior, e que aumenta o <strong>Esgotamento</strong> do gestor.</div>
+    <p class="tooltip-body-text">Deixar o tempo esgotar repetidas vezes acumula esgotamento até o limite. Se isso acontecer, o gestor entra em <strong>Paralisia Decisória</strong> — um colapso por excesso de indecisão que encerra o mandato antes do previsto.</p>
+  `);
+}
+
+function abrirInfoModoTreino() {
+  abrirTooltipInfo('Modo Treino', `
+    <p class="tooltip-body-text">No Modo Treino, você joga normalmente, mas <strong>o resultado não conta</strong> para o pódio nem fica salvo no seu histórico de partidas.</p>
+    <div class="tooltip-consequence">🎓 Ideal para aprender as mecânicas, testar decisões diferentes ou simplesmente jogar sem a pressão de manter uma boa pontuação registrada.</div>
+  `);
+}
+
 /* ════════════════════════════════════════════════════
    MODO TREINO
 ════════════════════════════════════════════════════ */
@@ -3850,7 +3965,7 @@ async function irParaAdmin() {
   // Usa _isAdmin já calculado no boot — evita nova verificação que pode falhar por RTDB vazio
   const isAdmin = _isAdmin || (await window.ADMIN?.verificarAdmin(_player.uid).catch(() => null));
   if (isAdmin) {
-    location.href = '/admin/painel-admin.html';
+    location.href = '/admin/painel-controle.html';
   }
 }
 
@@ -4358,55 +4473,118 @@ function _atualizarBadgeInbox() {
   }
 }
 
-function abrirInbox() {
-  const overlay  = document.getElementById('overlay-inbox');
-  const lista    = document.getElementById('inbox-lista');
-  const subtit   = document.getElementById('inbox-subtitulo');
-  if (!overlay || !lista) return;
+let _inboxAbaAtiva = 'mensagem';
+
+function mudarAbaInbox(aba) {
+  _inboxAbaAtiva = aba;
+  document.getElementById('inbox-tab-mensagem')?.classList.toggle('active', aba === 'mensagem');
+  document.getElementById('inbox-tab-changelog')?.classList.toggle('active', aba === 'changelog');
+  document.getElementById('inbox-painel-mensagem')?.classList.toggle('active', aba === 'mensagem');
+  document.getElementById('inbox-painel-changelog')?.classList.toggle('active', aba === 'changelog');
+  if (aba === 'changelog') _renderChangelog();
+}
+
+function _renderInboxMensagens() {
+  const lista  = document.getElementById('inbox-lista');
+  const subtit = document.getElementById('inbox-subtitulo');
+  if (!lista) return;
 
   const total    = _inboxMensagens.length;
   const naoLidas = _inboxMensagens.filter(m => !m.lida).length;
   if (subtit) subtit.textContent = total === 0 ? 'Nenhum comunicado' : `${naoLidas > 0 ? naoLidas + ' não lido(s) · ' : ''}${total} total`;
 
-  if (!total) {
-    lista.innerHTML = '<div style="color:var(--t3,#666);font-size:.85rem;text-align:center;padding:30px 0">Nenhum comunicado recebido.</div>';
-  } else {
-    lista.innerHTML = _inboxMensagens.map(m => {
-      const catIcon = _CAT_ICONS_PLAYER[m.categoria] || '💬';
-      const data    = m.ts ? new Date(m.ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
-      const fixPin  = m.fixada ? '<span style="font-size:.7rem;color:var(--s-primary,#eab308);font-weight:700">📌 Fixado</span>' : '';
-      const lida_cl = m.lida ? 'lida' : 'nao-lida';
-      const fix_cl  = m.fixada ? ' fixada' : '';
-      const confirmar_btn = (!m.lida && m.exigirConfirmacao && !m.confirmada)
-        ? `<button class="inbox-confirmar-btn" onclick="BetaUI._confirmarLeitura('${m.id}')">✅ Entendido</button>`
-        : '';
-      const apagar_btn = `<button onclick="BetaUI._apagarMsg('${m.id}')" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;padding:2px 4px" title="Apagar">🗑️</button>`;
-      return `
-        <div class="inbox-msg-item ${lida_cl}${fix_cl}" id="inbox-item-${m.id}">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
-            <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
-              <span style="font-size:.7rem;background:var(--bg4,#111);border:1px solid var(--line2);border-radius:999px;padding:2px 7px;color:var(--t2)">${catIcon} ${m.categoria}</span>
-              ${fixPin}
-            </div>
-            <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-              <span style="font-size:.68rem;color:var(--t3,#666)">${data}</span>
-              ${apagar_btn}
-            </div>
-          </div>
-          <div style="font-size:.85rem;color:${m.lida ? 'var(--t2,#aaa)' : 'var(--t1,#fff)'};line-height:1.45" onclick="BetaUI._lerMensagem('${m.id}')">${m.texto || ''}</div>
-          ${!m.lida && !m.exigirConfirmacao ? `<div style="font-size:.65rem;color:#eab308;margin-top:5px;font-weight:600">● Não lido — toque para marcar</div>` : ''}
-          ${confirmar_btn}
-        </div>`;
-    }).join('');
+  const badgeTab = document.getElementById('inbox-badge-tab');
+  if (badgeTab) {
+    if (naoLidas > 0) { badgeTab.textContent = naoLidas; badgeTab.style.display = 'inline-flex'; }
+    else { badgeTab.style.display = 'none'; }
   }
-  overlay.style.display = 'flex';
+
+  if (!total) {
+    lista.innerHTML = '<div class="inbox-vazio">Nenhum comunicado recebido.</div>';
+    return;
+  }
+
+  lista.innerHTML = _inboxMensagens.map(m => {
+    const catIcon = _CAT_ICONS_PLAYER[m.categoria] || '💬';
+    const data    = m.ts ? new Date(m.ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+    const fixPin  = m.fixada ? '<span class="inbox-msg-fixada-tag">📌 Fixado</span>' : '';
+    const lida_cl = m.lida ? 'lida' : 'nao-lida';
+    const fix_cl  = m.fixada ? ' fixada' : '';
+    const confirmar_btn = (!m.lida && m.exigirConfirmacao && !m.confirmada)
+      ? `<button class="inbox-confirmar-btn" onclick="BetaUI._confirmarLeitura('${m.id}')">✅ Entendido</button>`
+      : '';
+    const apagar_btn = `<button class="inbox-msg-apagar" onclick="BetaUI._apagarMsg('${m.id}')" title="Apagar">🗑️</button>`;
+    // _escapeHtml + white-space:pre-line no CSS preserva as quebras de
+    // linha digitadas pelo admin, em vez do texto sair tudo corrido numa
+    // única linha (era a reclamação original sobre a formatação).
+    const textoSeguro = _escapeHtml(m.texto || '');
+    return `
+      <div class="inbox-msg-item ${lida_cl}${fix_cl}" id="inbox-item-${m.id}">
+        <div class="inbox-msg-top">
+          <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+            <span class="inbox-msg-cat">${catIcon} ${m.categoria}</span>
+            ${fixPin}
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+            <span class="inbox-msg-data">${data}</span>
+            ${apagar_btn}
+          </div>
+        </div>
+        <div class="inbox-msg-corpo" onclick="BetaUI._lerMensagem('${m.id}')">${textoSeguro}</div>
+        ${!m.lida && !m.exigirConfirmacao ? `<div class="inbox-msg-hint">● Não lido — toque para marcar</div>` : ''}
+        ${confirmar_btn}
+      </div>`;
+  }).join('');
+}
+
+// Renderiza o changelog publicado pelo admin (documento config/changelog
+// no Firestore, mesmo padrão de leitura pública usado em config/admins).
+// Se nada foi publicado ainda, mostra um estado vazio em vez de quebrar.
+async function _renderChangelog() {
+  const wrap = document.getElementById('inbox-changelog-content');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="inbox-vazio">Carregando...</div>';
+  try {
+    let tok = null;
+    try { tok = await window.GSPAuth?.getToken?.(); } catch(e) {}
+    const r = await fetch(`${_FS_BASE}/config/changelog`, {
+      headers: tok ? { Authorization: `Bearer ${tok}` } : {}
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const doc = await r.json();
+    const fields = doc?.fields;
+    const texto  = fields?.texto?.stringValue || '';
+    if (!fields || !texto) {
+      wrap.innerHTML = '<div class="inbox-vazio">Nenhuma novidade publicada ainda.</div>';
+      return;
+    }
+    const versao = _escapeHtml(fields.versao?.stringValue || '');
+    const tsStr  = fields.ts?.timestampValue || null;
+    const data   = tsStr ? new Date(tsStr).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }) : '';
+    const corpo  = _escapeHtml(texto);
+    wrap.innerHTML = `
+      ${versao ? `<div class="inbox-changelog-version">${versao}</div>` : ''}
+      ${data ? `<div class="inbox-changelog-data">${data}</div>` : ''}
+      <div class="inbox-changelog-corpo">${corpo}</div>`;
+  } catch (e) {
+    wrap.innerHTML = '<div class="inbox-vazio">Nenhuma novidade publicada ainda.</div>';
+  }
+}
+
+function abrirInbox() {
+  mostrarTela('screen-inbox');
+  _inboxAbaAtiva = 'mensagem';
+  document.getElementById('inbox-tab-mensagem')?.classList.add('active');
+  document.getElementById('inbox-tab-changelog')?.classList.remove('active');
+  document.getElementById('inbox-painel-mensagem')?.classList.add('active');
+  document.getElementById('inbox-painel-changelog')?.classList.remove('active');
+  _renderInboxMensagens();
   // Marca simples como lidas ao abrir (não as que exigem confirmação)
   if (_player?.uid) _marcarLidasSimples(_player.uid);
 }
 
 function fecharInbox() {
-  const overlay = document.getElementById('overlay-inbox');
-  if (overlay) overlay.style.display = 'none';
+  mostrarTela('screen-home');
   _atualizarBadgeInbox();
 }
 
@@ -4621,7 +4799,7 @@ window.BetaUI = {
   pularTutorial, tutorialStep, irParaSlide, reverTutorial,
   pausarJogo, continuarJogo, abandonarJogo,
   pedirConfirmacaoSaida, cancelarSaida, confirmarSaida,
-  abrirTooltipIndicador, closeTooltip,
+  abrirTooltipIndicador, closeTooltip, abrirInfoTimer, abrirInfoModoTreino, abrirTermoGlossario,
   toggleModoTreino,
   compartilharResultado,
   irParaAdmin,
@@ -4648,7 +4826,7 @@ window.BetaUI = {
   // Modo de jogo
   abrirModalModo, fecharModalModo, escolherModoSolo, escolherModoGrupo,
   // Inbox
-  abrirInbox, fecharInbox, marcarTodasLidas, _lerMensagem,
+  abrirInbox, fecharInbox, mudarAbaInbox, marcarTodasLidas, _lerMensagem,
   _confirmarLeitura, _apagarMsg, apagarTodasMsgs, _renderPerfilMsgsPublic,
   // Manutenção
   manutencaoSalvarSair,
@@ -4672,7 +4850,7 @@ function _telaAtiva() {
 }
 
 function _overlayAberto() {
-  const overlays = ['overlay-pause','overlay-tooltip','overlay-glossary','overlay-settings','overlay-inbox'];
+  const overlays = ['overlay-pause','overlay-tooltip','overlay-glossary','overlay-settings'];
   return overlays.find(id => {
     const el = document.getElementById(id);
     return el && el.style.display !== 'none' && el.style.display !== '';
@@ -4705,7 +4883,7 @@ function _iniciarPopstate() {
     }
 
     // 3. Telas que voltam para home
-    if (['screen-perfil','screen-podio','screen-historico-jogos','screen-sector'].includes(tela)) {
+    if (['screen-perfil','screen-podio','screen-historico-jogos','screen-sector','screen-inbox'].includes(tela)) {
       voltar('screen-home');
       return;
     }

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   UNDER PRESSURE — Design Escuro Elegante
+   UNDER-PRESSURE · v5.2 — Design Escuro Elegante
    Temas por setor via [data-sector] no #app
 ═══════════════════════════════════════════════════════ */
 
@@ -2730,6 +2730,25 @@ body::after{
   font-size: .85rem;
 }
 
+/* Termos técnicos detectados automaticamente nos textos de rodada e nas
+   opções de escolha — sublinhado pontilhado sutil, na cor do tema ativo,
+   sinalizando que é clicável sem competir visualmente com o texto normal. */
+.termo-glossario {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--s-text);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  color: inherit;
+  font-weight: inherit;
+  transition: color .15s;
+}
+.termo-glossario:hover,
+.termo-glossario:active {
+  color: var(--s-text);
+}
+
 /* Overlay body — garante texto claro */
 .overlay-body{
   color:var(--t1);
@@ -2943,7 +2962,35 @@ body::after{
 }
 .sector-mode-row:hover { border-color: var(--line2); }
 .sector-mode-info { flex: 1; margin-right: 12px; }
-.sector-mode-label { font-size: .85rem; font-weight: 600; color: var(--t1); display: block; }
+.sector-mode-label {
+  font-size: .85rem; font-weight: 600; color: var(--t1);
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Ícone "i" de informação — abre um tooltip explicativo. Área de toque
+   maior que o tamanho visual, para facilitar o toque no celular. */
+.info-icon-btn {
+  width: 16px; height: 16px; min-width: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--line3);
+  background: transparent;
+  color: var(--t3);
+  font-size: .62rem; font-weight: 700; font-style: italic;
+  font-family: serif;
+  line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: border-color .15s, color .15s;
+}
+.info-icon-btn::before {
+  /* Aumenta a área de toque sem aumentar o tamanho visual do ícone */
+  content: ''; position: absolute; inset: -10px;
+}
+.info-icon-btn:hover, .info-icon-btn:active {
+  border-color: var(--s-bd-accent); color: var(--s-text);
+}
 .sector-mode-desc  { font-size: .72rem; color: var(--t3); margin-top: 2px; }
 
 /* ══════════════════════════════════════════════════
@@ -7008,3 +7055,134 @@ body.overlay-active .game-ind-name.critical-label {
 /* Removido: animação dos chips agora é 100% via JS (_animarChips / _dispararAnimacaoChips
    em mainBeta.js). Uma regra CSS .fb-chip { animation: ... } aqui disparava a entrada
    imediatamente ao inserir no DOM, brigando com e sobrescrevendo o controle via JS. */
+
+/* ════════════════════════════════════════════════════
+   SCREEN: INBOX — header, abas, lista de mensagens e changelog
+════════════════════════════════════════════════════ */
+.inbox-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 16px var(--sp2);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.inbox-header-title {
+  font-family: var(--serif); font-weight: 800; font-size: .95rem; color: var(--t1);
+}
+
+/* Sidebar de abas, fixa na parte inferior da tela */
+.inbox-tabs {
+  display: flex; flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg1);
+}
+.inbox-tab-btn {
+  flex: 1; padding: 13px 8px;
+  background: transparent; border: none;
+  font-family: var(--sans); font-size: .82rem; font-weight: 700; color: var(--t3);
+  cursor: pointer; transition: color .18s; position: relative;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.inbox-tab-btn::after {
+  content: ''; position: absolute; bottom: -1px; left: 16%; right: 16%;
+  height: 2px; background: var(--s-gradient);
+  box-shadow: 0 0 8px var(--s-glow);
+  border-radius: 2px 2px 0 0; opacity: 0;
+  transform: scaleX(.2); transition: all .25s cubic-bezier(.22,.68,0,1.2);
+}
+.inbox-tab-btn.active { color: var(--s-text); }
+.inbox-tab-btn.active::after { opacity: 1; transform: scaleX(1); }
+.inbox-tab-badge {
+  background: var(--err); color: #fff;
+  font-size: .6rem; font-weight: 700; border-radius: 999px;
+  min-width: 16px; height: 16px; line-height: 16px; text-align: center; padding: 0 4px;
+}
+
+.inbox-painel { display: none; flex: 1; min-height: 0; flex-direction: column; overflow: hidden; }
+.inbox-painel.active { display: flex; }
+
+.inbox-subtitulo {
+  font-size: .7rem; color: var(--t3); letter-spacing: .02em;
+  padding: 12px var(--sp2) 0; flex-shrink: 0;
+}
+.inbox-lista {
+  overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1;
+  padding: 12px var(--sp2);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.inbox-acoes {
+  padding: 10px var(--sp2); border-top: 1px solid var(--line);
+  display: flex; gap: 8px; flex-shrink: 0;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+.inbox-acao-btn {
+  flex: 1; background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--r2); color: var(--t2); padding: 10px;
+  font-size: .78rem; cursor: pointer; font-family: var(--sans);
+  transition: background .18s;
+}
+.inbox-acao-btn:hover { background: var(--bg4); }
+.inbox-acao-btn.inbox-acao-danger { flex: 0 0 auto; color: var(--err); padding: 10px 16px; }
+
+.inbox-vazio {
+  color: var(--t3); font-size: .85rem; text-align: center; padding: 40px 20px;
+}
+
+/* Item de mensagem individual */
+.inbox-msg-item {
+  border-radius: var(--r2); padding: 14px;
+  transition: border-color .2s, background .2s;
+}
+.inbox-msg-item.nao-lida { border: 1.5px solid var(--s-bd-accent); background: var(--s-bg-accent); }
+.inbox-msg-item.lida { border: 1px solid var(--line2); background: var(--bg3); }
+.inbox-msg-item.fixada { border-color: var(--s-primary) !important; }
+
+.inbox-msg-top {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 6px; gap: 6px; flex-wrap: wrap;
+}
+.inbox-msg-cat {
+  font-size: .7rem; background: var(--bg4); border: 1px solid var(--line2);
+  border-radius: 999px; padding: 2px 7px; color: var(--t2);
+}
+.inbox-msg-fixada-tag { font-size: .7rem; color: var(--s-primary); font-weight: 700; }
+.inbox-msg-data { font-size: .68rem; color: var(--t3); }
+.inbox-msg-apagar {
+  background: none; border: none; cursor: pointer; color: var(--err);
+  font-size: .8rem; padding: 2px 4px;
+}
+
+/* Corpo do texto da mensagem — respeita quebras de linha e parágrafos
+   digitados pelo admin, em vez de exibir tudo como texto corrido numa
+   única linha. white-space:pre-line preserva \n sem precisar de <br>
+   manual, mantendo o texto seguro contra HTML injection. */
+.inbox-msg-corpo {
+  font-size: .85rem; line-height: 1.6;
+  white-space: pre-line; word-wrap: break-word;
+  color: var(--t1);
+}
+.inbox-msg-item.lida .inbox-msg-corpo { color: var(--t2); }
+
+.inbox-msg-hint {
+  font-size: .65rem; color: var(--warn); margin-top: 7px; font-weight: 600;
+}
+.inbox-confirmar-btn {
+  width: 100%; margin-top: 10px; padding: 10px;
+  border-radius: var(--r); background: var(--s-gradient);
+  border: none; color: #0A0800; font-weight: 700; font-size: .82rem; cursor: pointer;
+}
+
+/* Changelog */
+.inbox-changelog-wrap {
+  overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1;
+  padding: var(--sp2);
+}
+.inbox-changelog-version {
+  font-family: var(--serif); font-weight: 800; font-size: 1.05rem; color: var(--s-text);
+  margin-bottom: 4px;
+}
+.inbox-changelog-data { font-size: .7rem; color: var(--t3); margin-bottom: 18px; }
+.inbox-changelog-corpo {
+  font-size: .85rem; line-height: 1.7; color: var(--t1);
+  white-space: pre-line; word-wrap: break-word;
+}
