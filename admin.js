@@ -1056,46 +1056,50 @@ const ADMIN = (() => {
 
   async function enviarMensagemTodos(texto) {
     if (!texto) return;
-    try {
-      const res = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'usuarios' }],
-          select: { fields: [{ fieldPath: 'nome' }] }
+    let totalEnviado = 0;
+
+    await _opFeedback({
+      etapas: ['Buscando jogadores…', 'Enviando mensagem em lote…', 'Registrando no log…'],
+      executar: async () => {
+        const res = await _query({
+          structuredQuery: {
+            from: [{ collectionId: 'usuarios' }],
+            select: { fields: [{ fieldPath: 'nome' }] }
+          }
+        });
+        const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
+        const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+        const campos = {
+          texto:             { stringValue: texto },
+          de:                { stringValue: 'admin' },
+          ts:                { integerValue: String(Date.now()) },
+          lida:              { booleanValue: false },
+          confirmada:        { booleanValue: false },
+          categoria:         { stringValue: 'aviso' },
+          fixada:            { booleanValue: false },
+          exigirConfirmacao: { booleanValue: false },
+          broadcast:         { booleanValue: true },
+          expiraEm:          { integerValue: String(Date.now() + 30*24*60*60*1000) },
+        };
+        for (const uid of uids) {
+          try {
+            await _patch(`usuarios/${uid}/mensagens/${msgId}`, campos);
+            totalEnviado++;
+          } catch(e) { /* continua tentando os demais jogadores */ }
         }
-      });
-      const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
-      const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-      const campos = {
-        texto:             { stringValue: texto },
-        de:                { stringValue: 'admin' },
-        ts:                { integerValue: String(Date.now()) },
-        lida:              { booleanValue: false },
-        confirmada:        { booleanValue: false },
-        categoria:         { stringValue: 'aviso' },
-        fixada:            { booleanValue: false },
-        exigirConfirmacao: { booleanValue: false },
-        broadcast:         { booleanValue: true },
-        expiraEm:          { integerValue: String(Date.now() + 30*24*60*60*1000) },
-      };
-      let ok = 0;
-      for (const uid of uids) {
-        try {
-          await _patch(`usuarios/${uid}/mensagens/${msgId}`, campos);
-          ok++;
-        } catch(e) { /* continua */ }
-      }
-      await _patch(`mensagens_log/${msgId}`, {
-        ...campos,
-        destUid:      { stringValue: '' },
-        destNome:     { stringValue: '' },
-        lidoPor:      { integerValue: '0' },
-        totalEnviado: { integerValue: String(ok) },
-      });
-      _showAdminToast(`✅ Mensagem enviada para ${ok} jogadores!`);
-      if (_currentSection === 'mensagens') carregarMensagens();
-    } catch(e) {
-      _showAdminToast('Erro ao enviar broadcast: ' + e.message, true);
-    }
+        await _patch(`mensagens_log/${msgId}`, {
+          ...campos,
+          destUid:      { stringValue: '' },
+          destNome:     { stringValue: '' },
+          lidoPor:      { integerValue: '0' },
+          totalEnviado: { integerValue: String(totalEnviado) },
+        });
+      },
+      sucesso: 'Mensagem enviada para todos os jogadores!',
+      onSucesso: () => {
+        if (_currentSection === 'mensagens') carregarMensagens();
+      },
+    });
   }
 
 
@@ -1143,41 +1147,46 @@ const ADMIN = (() => {
     if (!texto) { _showAdminToast('Digite uma mensagem.', true); return; }
     const fixar = !!(document.getElementById('admin-nova-msg-fixar')?.checked);
     const conf  = !!(document.getElementById('admin-nova-msg-confirmar')?.checked);
-    const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-    const campos = {
-      texto:             { stringValue: texto },
-      de:                { stringValue: 'admin' },
-      ts:                { integerValue: String(Date.now()) },
-      lida:              { booleanValue: false },
-      confirmada:        { booleanValue: false },
-      categoria:         { stringValue: _novaMsgCategoria },
-      fixada:            { booleanValue: fixar },
-      exigirConfirmacao: { booleanValue: conf },
-      broadcast:         { booleanValue: !_novaMsgUid },
-      expiraEm:          { integerValue: String(Date.now() + 30*24*60*60*1000) },
-    };
-    try {
-      if (_novaMsgUid) {
-        // Mensagem individual
+
+    if (!_novaMsgUid) {
+      // Sem destinatário definido — abre o fluxo de broadcast em vez de enviar aqui
+      fecharNovaMsg();
+      abrirBroadcast();
+      return;
+    }
+
+    const dest = _novaMsgNome || _novaMsgUid;
+    await _opFeedback({
+      etapas: ['Verificando permissões…', `Enviando mensagem para ${dest}…`, 'Registrando no log…'],
+      executar: async () => {
+        const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+        const campos = {
+          texto:             { stringValue: texto },
+          de:                { stringValue: 'admin' },
+          ts:                { integerValue: String(Date.now()) },
+          lida:              { booleanValue: false },
+          confirmada:        { booleanValue: false },
+          categoria:         { stringValue: _novaMsgCategoria },
+          fixada:            { booleanValue: fixar },
+          exigirConfirmacao: { booleanValue: conf },
+          broadcast:         { booleanValue: false },
+          expiraEm:          { integerValue: String(Date.now() + 30*24*60*60*1000) },
+        };
         await _patch(`usuarios/${_novaMsgUid}/mensagens/${msgId}`, campos);
         await _patch(`mensagens_log/${msgId}`, {
           ...campos,
-          destUid:  { stringValue: _novaMsgUid },
-          destNome: { stringValue: _novaMsgNome },
-          lidoPor:  { integerValue: '0' }, totalEnviado: { integerValue: '1' },
+          destUid:      { stringValue: _novaMsgUid },
+          destNome:     { stringValue: _novaMsgNome },
+          lidoPor:      { integerValue: '0' },
+          totalEnviado: { integerValue: '1' },
         });
-        } else {
-        // Sem destinatário definido — abre broadcast
+      },
+      sucesso: `Mensagem enviada para ${dest}!`,
+      onSucesso: () => {
         fecharNovaMsg();
-        abrirBroadcast();
-        return;
-      }
-      fecharNovaMsg();
-      _showAdminToast(`✅ Mensagem enviada para ${_novaMsgNome || _novaMsgUid}!`);
-      if (_currentSection === 'mensagens') carregarMensagens();
-    } catch(e) {
-      _showAdminToast('Erro ao enviar: ' + e.message, true);
-    }
+        if (_currentSection === 'mensagens') carregarMensagens();
+      },
+    });
   }
 
   /* ── HISTÓRICO DE MENSAGENS ─────────────────────── */
@@ -1243,68 +1252,67 @@ const ADMIN = (() => {
   async function apagarTodasMensagens() {
     const ok = await _confirmar({ titulo: '⚠️ Apagar todas as mensagens', mensagem: 'Isso apaga TODAS as mensagens de TODOS os jogadores e limpa o log. Esta ação não pode ser desfeita.', labelOk: 'Apagar tudo', perigoso: true });
     if (!ok) return;
-    _showAdminToast('Apagando mensagens...');
     let totalApagadas = 0;
     let erros = 0;
-    try {
-      const tok = await _token();
 
-      // 1. Busca todos os usuários
-      const res = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'usuarios' }],
-          select: { fields: [{ fieldPath: 'nome' }] }
-        }
-      });
-      const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
+    await _opFeedback({
+      etapas: ['Buscando jogadores…', 'Apagando mensagens de cada jogador…', 'Limpando o log…'],
+      executar: async () => {
+        const tok = await _token();
 
-      // 2. Para cada usuário, busca mensagens via runQuery scoped ao documento do usuário
-      for (const uid of uids) {
-        try {
-          // runQuery no path do doc do usuário retorna apenas sua subcoleção 'mensagens'
-          const r = await fetch(`${FS}/usuarios/${uid}:runQuery`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              structuredQuery: {
-                from: [{ collectionId: 'mensagens' }],
-                select: { fields: [{ fieldPath: 'ts' }] }
-              }
-            })
-          });
-          if (!r.ok) continue;
-          const rows = await r.json();
-          const msgDocs = (rows || []).filter(d => d.document);
-          for (const doc of msgDocs) {
-            try {
-              const path = doc.document.name.split('/documents/')[1];
-              await _delete(path);
-              totalApagadas++;
-            } catch(e) { erros++; }
+        // 1. Busca todos os usuários
+        const res = await _query({
+          structuredQuery: {
+            from: [{ collectionId: 'usuarios' }],
+            select: { fields: [{ fieldPath: 'nome' }] }
           }
-        } catch(e) { erros++; }
-      }
+        });
+        const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
 
-      // 3. Apaga todo o mensagens_log via _query + _delete
-      const logRes = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'mensagens_log' }],
-          select: { fields: [{ fieldPath: 'ts' }] }
+        // 2. Para cada usuário, busca mensagens via runQuery scoped ao documento do usuário
+        for (const uid of uids) {
+          try {
+            const r = await fetch(`${FS}/usuarios/${uid}:runQuery`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                structuredQuery: {
+                  from: [{ collectionId: 'mensagens' }],
+                  select: { fields: [{ fieldPath: 'ts' }] }
+                }
+              })
+            });
+            if (!r.ok) continue;
+            const rows = await r.json();
+            const msgDocs = (rows || []).filter(d => d.document);
+            for (const doc of msgDocs) {
+              try {
+                const path = doc.document.name.split('/documents/')[1];
+                await _delete(path);
+                totalApagadas++;
+              } catch(e) { erros++; }
+            }
+          } catch(e) { erros++; }
         }
-      });
-      const logDocs = logRes.filter(r => r.document);
-      for (const doc of logDocs) {
-        try {
-          const path = doc.document.name.split('/documents/')[1];
-          await _delete(path);
-        } catch(e) { /* continua */ }
-      }
 
-      _showAdminToast(`✅ ${totalApagadas} mensagens apagadas${erros > 0 ? ` (${erros} erros)` : ''}.`);
-      carregarMensagens();
-    } catch(e) {
-      _showAdminToast('Erro: ' + e.message, true);
-    }
+        // 3. Apaga todo o mensagens_log via _query + _delete
+        const logRes = await _query({
+          structuredQuery: {
+            from: [{ collectionId: 'mensagens_log' }],
+            select: { fields: [{ fieldPath: 'ts' }] }
+          }
+        });
+        const logDocs = logRes.filter(r => r.document);
+        for (const doc of logDocs) {
+          try {
+            const path = doc.document.name.split('/documents/')[1];
+            await _delete(path);
+          } catch(e) { /* continua */ }
+        }
+      },
+      sucesso: 'Todas as mensagens foram apagadas!',
+      onSucesso: () => carregarMensagens(),
+    });
   }
 
   /* ── BROADCAST ──────────────────────────────────── */
@@ -1325,35 +1333,40 @@ const ADMIN = (() => {
     const texto = document.getElementById('admin-broadcast-texto')?.value?.trim();
     if (!texto) { _showAdminToast('Digite uma mensagem.', true); return; }
     fecharBroadcast();
-    _showAdminToast('Enviando para todos...');
-    try {
-      const res = await _query({ structuredQuery: { from: [{ collectionId: 'usuarios' }], select: { fields: [{ fieldPath: 'nome' }] } } });
-      const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
-      let ok = 0;
-      const msgId = `bcast_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-      for (const uid of uids) {
-        try {
-          await _patch(`usuarios/${uid}/mensagens/${msgId}`, {
-            texto: { stringValue: texto }, de: { stringValue: 'admin' },
-            ts: { integerValue: String(Date.now()) }, lida: { booleanValue: false },
-            confirmada: { booleanValue: false }, categoria: { stringValue: 'aviso' },
-            fixada: { booleanValue: false }, exigirConfirmacao: { booleanValue: false },
-            expiraEm: { integerValue: String(Date.now() + 30*24*60*60*1000) },
-            broadcast: { booleanValue: true },
-          });
-          ok++;
-        } catch(e) { /* continua */ }
-      }
-      await _patch(`mensagens_log/${msgId}`, {
-        texto: { stringValue: texto }, destUid: { stringValue: '' }, destNome: { stringValue: '' },
-        categoria: { stringValue: 'aviso' }, fixada: { booleanValue: false },
-        exigirConfirmacao: { booleanValue: false }, broadcast: { booleanValue: true },
-        lidoPor: { integerValue: '0' }, totalEnviado: { integerValue: String(ok) },
-        ts: { integerValue: String(Date.now()) },
-      });
-      _showAdminToast(`✅ Mensagem enviada para ${ok} jogadores!`);
-      if (_currentSection === 'mensagens') carregarMensagens();
-    } catch(e) { _showAdminToast('Erro: ' + e.message, true); }
+    let totalEnviado = 0;
+
+    await _opFeedback({
+      etapas: ['Buscando jogadores…', 'Enviando mensagem em lote…', 'Registrando no log…'],
+      executar: async () => {
+        const res = await _query({ structuredQuery: { from: [{ collectionId: 'usuarios' }], select: { fields: [{ fieldPath: 'nome' }] } } });
+        const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
+        const msgId = `bcast_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+        for (const uid of uids) {
+          try {
+            await _patch(`usuarios/${uid}/mensagens/${msgId}`, {
+              texto: { stringValue: texto }, de: { stringValue: 'admin' },
+              ts: { integerValue: String(Date.now()) }, lida: { booleanValue: false },
+              confirmada: { booleanValue: false }, categoria: { stringValue: 'aviso' },
+              fixada: { booleanValue: false }, exigirConfirmacao: { booleanValue: false },
+              expiraEm: { integerValue: String(Date.now() + 30*24*60*60*1000) },
+              broadcast: { booleanValue: true },
+            });
+            totalEnviado++;
+          } catch(e) { /* continua tentando os demais jogadores */ }
+        }
+        await _patch(`mensagens_log/${msgId}`, {
+          texto: { stringValue: texto }, destUid: { stringValue: '' }, destNome: { stringValue: '' },
+          categoria: { stringValue: 'aviso' }, fixada: { booleanValue: false },
+          exigirConfirmacao: { booleanValue: false }, broadcast: { booleanValue: true },
+          lidoPor: { integerValue: '0' }, totalEnviado: { integerValue: String(totalEnviado) },
+          ts: { integerValue: String(Date.now()) },
+        });
+      },
+      sucesso: 'Mensagem enviada para todos os jogadores!',
+      onSucesso: () => {
+        if (_currentSection === 'mensagens') carregarMensagens();
+      },
+    });
   }
 
 
