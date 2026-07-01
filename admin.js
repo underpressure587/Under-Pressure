@@ -125,6 +125,14 @@ const ADMIN = (() => {
     return null;
   }
 
+  // Escapa texto dinâmico antes de inserir via innerHTML, evitando que
+  // caracteres como <, >, & quebrem o layout ou permitam injeção de HTML.
+  function _esc(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
   function _parseFields(fields) {
     const obj = {};
     for (const k in fields) obj[k] = _val(fields[k]);
@@ -1177,7 +1185,7 @@ const ADMIN = (() => {
     const lista = document.getElementById('admin-msgs-lista');
     const total = document.getElementById('admin-msgs-total');
     if (!lista) return;
-    lista.innerHTML = '<div class="admin-empty">Carregando...</div>';
+    lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
     try {
       const res = await _query({
         structuredQuery: {
@@ -1926,6 +1934,9 @@ const ADMIN = (() => {
       // Histórico
       _carregarHistoricoVersoes();
 
+      // Status do changelog publicado para os jogadores
+      _carregarStatusChangelogPublicado();
+
     } catch(e) { console.error('[Versao] erro:', e); _renderVersaoSemDados(); }
   }
 
@@ -1956,6 +1967,56 @@ const ADMIN = (() => {
     });
   }
 
+  // Publica o texto do campo de changelog no documento config/changelog,
+  // lido pelo Inbox do jogo (aba "Changelog"). Ação separada de
+  // salvarChangelog(): salvar o histórico técnico não publica
+  // automaticamente para os jogadores.
+  async function publicarChangelogJogadores() {
+    const texto = document.getElementById('versao-changelog-input')?.value.trim() || '';
+    if (!texto) { _showAdminToast('Escreva o changelog antes de publicar', true); return; }
+    const versaoLabel = _versaoAtual?.versao || _versaoAtual?.hash?.slice(0,7) || '';
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Publicando para os jogadores…'],
+      executar: async () => {
+        await _patch('config/changelog', {
+          texto:   { stringValue: texto },
+          versao:  { stringValue: versaoLabel },
+          ts:      { timestampValue: new Date().toISOString() },
+        });
+      },
+      sucesso: 'Publicado! Os jogadores já podem ver no Inbox.',
+      onSucesso: () => _carregarStatusChangelogPublicado(),
+    });
+  }
+
+  async function _carregarStatusChangelogPublicado() {
+    const el = document.getElementById('changelog-publicado-status');
+    if (!el) return;
+    el.innerHTML = '<span class="admin-loading"></span>';
+    try {
+      const doc = await _get('config/changelog');
+      const f = doc?.fields;
+      const texto  = f?.texto?.stringValue || '';
+      const versao = f?.versao?.stringValue || '';
+      const ts     = f?.ts?.timestampValue || '';
+      if (!texto) {
+        el.className = 'admin-changelog-publicado vazio';
+        el.innerHTML = 'Nenhum changelog publicado para os jogadores ainda.';
+        return;
+      }
+      const dataFmt = ts ? new Date(ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+      el.className = 'admin-changelog-publicado';
+      el.innerHTML = `
+        <span class="admin-changelog-publicado-badge">${_esc(versao || 'publicado')}</span>
+        <span>Publicado em ${dataFmt}. Os jogadores estão vendo este texto no Inbox agora.</span>`;
+    } catch (e) {
+      // Documento ainda não existe — estado normal antes da primeira publicação
+      el.className = 'admin-changelog-publicado vazio';
+      el.innerHTML = 'Nenhum changelog publicado para os jogadores ainda.';
+    }
+  }
+
   async function _carregarStatsVersao(hashAtual) {
     try {
       // Conta sessões ativas com versão registrada
@@ -1977,7 +2038,7 @@ const ADMIN = (() => {
   async function _carregarHistoricoVersoes() {
     const lista = document.getElementById('versao-historico-lista');
     if (!lista) return;
-    lista.innerHTML = '<span style="color:var(--t3);font-size:.78rem">Carregando...</span>';
+    lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
     try {
       const snapRaw = await _query({ structuredQuery: { from: [{ collectionId: 'versoes' }] } });
       const docs = (snapRaw || []).filter(r => r.document).map(r => r.document).sort((a, b) => {
@@ -2172,6 +2233,8 @@ const ADMIN = (() => {
   }
 
   async function carregarDashboard() {
+    document.getElementById('dash-setores-lista').innerHTML  = '<div class="admin-loading">Carregando...</div>';
+    document.getElementById('dash-abandono-lista').innerHTML = '<div class="admin-loading">Carregando...</div>';
     try {
       const res = await _query({
         structuredQuery: {
@@ -2318,6 +2381,8 @@ const ADMIN = (() => {
      FEEDBACK
   ════════════════════════════════════════════════════ */
   async function carregarFeedback() {
+    document.getElementById('feedback-por-historia').innerHTML = '<div class="admin-loading">Carregando...</div>';
+    document.getElementById('feedback-recentes').innerHTML = '';
     try {
       const res = await _query({
         structuredQuery: {
@@ -3083,7 +3148,7 @@ const ADMIN = (() => {
     toggleDropdown, selecionarSetor,
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
     abrirModalBan, fecharModalBan, confirmarBan, selecionarMotivo, _atualizarContadorDetalhe,
-    carregarVersao, salvarChangelog,
+    carregarVersao, salvarChangelog, publicarChangelogJogadores,
     carregarDashboard, mudarPeriodoDash,
     carregarHistorias, toggleHistoria,
     carregarFeedback,

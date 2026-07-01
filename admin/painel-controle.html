@@ -239,6 +239,14 @@
               </label>
             </div>
             <button class="admin-btn admin-btn-ok" onclick="ADMIN.salvarChangelog()" style="width:100%">💾 Salvar Changelog</button>
+
+            <div class="admin-versao-section-title" style="margin-top:16px">📢 Publicação para jogadores</div>
+            <div class="admin-changelog-publicado" id="changelog-publicado-status">
+              <span class="admin-loading"></span>
+            </div>
+            <button class="admin-btn admin-btn-csv" onclick="ADMIN.publicarChangelogJogadores()" style="width:100%">📢 Publicar para jogadores</button>
+            <div class="admin-changelog-publicar-hint">Publica o texto do campo acima na aba "Changelog" que os jogadores veem no Inbox do jogo. Ação separada e opcional — salvar o changelog técnico não publica automaticamente.</div>
+
             <div class="admin-versao-section-title" style="margin-top:16px">👥 Usuários por versão</div>
             <div class="admin-versao-stats" id="versao-stats">
               <div class="admin-versao-stat"><span id="versao-usuarios-atuais">—</span><small>na versão atual</small></div>
