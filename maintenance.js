@@ -34,10 +34,14 @@
         if (!field) return undefined;
         return field.booleanValue ?? field.stringValue ?? field.integerValue ?? null;
       };
+      const _vArr = (field) => {
+        if (!field || !field.arrayValue || !Array.isArray(field.arrayValue.values)) return [];
+        return field.arrayValue.values.map(v => v && v.stringValue).filter(Boolean);
+      };
       return {
         manutencao:       !!_v(f.manutencao),
         mensagem:         _v(f.mensagem)         || '',
-        liberados:        [],
+        liberados:        _vArr(f.liberados),
       };
     } catch(e) { return null; }
   }
@@ -84,8 +88,9 @@
       const cfg = await _buscarConfigGlobal();
       if (!cfg) return;
 
-      /* 1. Manutenção — bloqueia todos sem exceção */
-      if (cfg.manutencao) {
+      /* 1. Manutenção — bloqueia todos, exceto uids liberados explicitamente */
+      const estaLiberado = !!(uid && cfg.liberados.includes(uid));
+      if (cfg.manutencao && !estaLiberado) {
         mostrarOverlay(cfg.mensagem || '');
         return;
       }

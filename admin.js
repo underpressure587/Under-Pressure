@@ -1411,6 +1411,191 @@ const ADMIN = (() => {
     }
   }
 
+  /* ══════════════════════════════════════════════════
+     TELA MANUTENÇÃO — liberar jogadores por UID
+     Busca (nome/e-mail/UID) → modal de confirmação → _opFeedback
+  ══════════════════════════════════════════════════ */
+  let _manutLiberadosCache = [];
+
+  function _linhaJogadorManut(j, estaLiberado) {
+    const nome     = j.nome  || 'Sem nome';
+    const email    = j.email || 'Convidado';
+    const nomeEsc  = nome.replace(/'/g,"\\'");
+    const emailEsc = email.replace(/'/g,"\\'");
+    return `
+      <div class="admin-jogador-row" data-uid="${j.uid}" style="display:flex;align-items:flex-start;gap:10px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${estaLiberado ? 'var(--ok)' : 'var(--line2)'};flex-shrink:0;margin-top:6px"></div>
+        <div class="admin-jogador-info" style="flex:1;min-width:0">
+          <div class="admin-jogador-nome">${nome} ${estaLiberado ? '<span class="admin-lib-badge">LIBERADO</span>' : ''}</div>
+          <div class="admin-jogador-email">${email}</div>
+          <div class="admin-jogador-stats" style="font-family:var(--mono);font-size:.66rem;word-break:break-all">${j.uid}</div>
+        </div>
+        <div class="admin-jogador-acoes">
+          <button class="admin-btn-sm ${estaLiberado ? 'admin-btn-danger' : 'admin-btn-ok'}" onclick="ADMIN.abrirModalLiberar('${j.uid}', '${nomeEsc}', '${emailEsc}', ${estaLiberado})">
+            ${estaLiberado ? '🔒 Remover' : '🔓 Liberar'}
+          </button>
+        </div>
+      </div>`;
+  }
+
+  // Lista os jogadores atualmente liberados (com nome/e-mail resolvidos)
+  async function carregarManutencao() {
+    const lista  = document.getElementById('admin-manut-liberados-lista');
+    const banner = document.getElementById('admin-manut-banner');
+    if (lista) lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
+
+    try {
+      const cfgDoc = await _get('config/global');
+      const cfg    = _parseFields(cfgDoc.fields || {});
+      if (banner) banner.style.display = cfg.manutencao ? 'block' : 'none';
+
+      const liberados = Array.isArray(cfg.liberados) ? cfg.liberados : [];
+      _manutLiberadosCache = liberados;
+      if (!lista) return;
+
+      if (!liberados.length) {
+        lista.innerHTML = '<div class="admin-empty">Nenhum jogador liberado no momento.</div>';
+        return;
+      }
+
+      const jogadores = await Promise.all(liberados.map(async uid => {
+        try {
+          const doc = await _get(`usuarios/${uid}`);
+          const f   = _parseFields(doc.fields || {});
+          return { uid, nome: f.nome || '', email: f.email || '' };
+        } catch(e) {
+          return { uid, nome: '', email: '' }; // conta pode ter sido excluída
+        }
+      }));
+
+      lista.innerHTML = jogadores.map(j => _linhaJogadorManut(j, true)).join('');
+    } catch(e) {
+      if (lista) lista.innerHTML = `<div class="admin-empty">Erro ao carregar: ${e.message}</div>`;
+    }
+  }
+
+  // Busca jogador por nome, e-mail ou UID para liberar/remover da manutenção
+  async function buscarJogadorManutencao(busca = '') {
+    const resultEl = document.getElementById('admin-manut-busca-resultado');
+    if (!resultEl) return;
+    busca = (busca || '').trim();
+
+    if (!busca) { resultEl.innerHTML = ''; return; }
+    resultEl.innerHTML = '<div class="admin-loading">Buscando...</div>';
+
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'usuarios' }],
+          select: { fields: [{ fieldPath: 'nome' }, { fieldPath: 'email' }] }
+        }
+      });
+
+      const b = busca.toLowerCase();
+      let jogadores = res.filter(r => r.document).map(r => {
+        const uid = r.document.name.split('/').pop();
+        return { uid, ..._parseFields(r.document.fields) };
+      }).filter(j =>
+        (j.nome||'').toLowerCase().includes(b) ||
+        (j.email||'').toLowerCase().includes(b) ||
+        j.uid.toLowerCase().includes(b)
+      );
+
+      jogadores = jogadores.slice(0, 8);
+
+      if (!jogadores.length) {
+        resultEl.innerHTML = '<div class="admin-empty">Nenhum jogador encontrado.</div>';
+        return;
+      }
+
+      resultEl.innerHTML = jogadores.map(j => _linhaJogadorManut(j, _manutLiberadosCache.includes(j.uid))).join('');
+    } catch(e) {
+      resultEl.innerHTML = `<div class="admin-empty">Erro: ${e.message}</div>`;
+    }
+  }
+
+  // Overlay de confirmação — mostra nome/e-mail/UID antes de liberar ou remover
+  function abrirModalLiberar(uid, nome, email, estaLiberado) {
+    const modal      = document.getElementById('admin-modal-liberar');
+    const title      = document.getElementById('admin-liberar-title');
+    const playerCard = document.getElementById('admin-liberar-player-card');
+    const statusEl   = document.getElementById('admin-liberar-status');
+    const descEl     = document.getElementById('admin-liberar-desc');
+    const foot       = document.getElementById('admin-liberar-foot');
+    if (!modal) return;
+
+    title.textContent = estaLiberado ? '🔒 Remover Liberação' : '🔓 Liberar da Manutenção';
+
+    playerCard.innerHTML = `
+      <div class="admin-ban-avatar">${(nome||'?').charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div class="admin-ban-nome">${nome || 'Sem nome'}</div>
+        <div class="admin-ban-uid">${uid}</div>
+        <div style="font-size:.72rem;color:var(--t3);margin-top:2px">${email || 'Convidado'}</div>
+      </div>`;
+
+    statusEl.innerHTML = estaLiberado
+      ? '<div class="admin-ban-badge-livre">🔓 Liberado — acessa mesmo em manutenção</div>'
+      : '<div class="admin-lib-badge-off">🔒 Sujeito à manutenção (não liberado)</div>';
+
+    descEl.textContent = estaLiberado
+      ? 'Ao remover, este jogador volta a ser bloqueado normalmente quando a manutenção estiver ativa.'
+      : 'Ao liberar, este jogador poderá jogar normalmente mesmo com a manutenção ativa.';
+
+    const nomeEsc = (nome || '').replace(/'/g,"\\'");
+    foot.innerHTML = `
+      <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2)" onclick="ADMIN.fecharModalLiberar()">Cancelar</button>
+      <button class="admin-btn admin-btn-ok" onclick="ADMIN.confirmarLiberar('${uid}', '${nomeEsc}', ${estaLiberado})">
+        ${estaLiberado ? '🔒 Confirmar Remoção' : '🔓 Confirmar Liberação'}
+      </button>`;
+
+    modal.style.display = 'flex';
+  }
+
+  function fecharModalLiberar() {
+    const modal = document.getElementById('admin-modal-liberar');
+    if (modal) modal.style.display = 'none';
+  }
+
+  // Executa a liberação/remoção com tela de progresso (mesmo padrão de _executarBan)
+  async function confirmarLiberar(uid, nome, estaLiberado) {
+    const foot = document.getElementById('admin-liberar-foot');
+    const btns = foot?.querySelectorAll('button');
+    btns?.forEach(b => { b.disabled = true; });
+
+    await _opFeedback({
+      etapas: estaLiberado
+        ? ['Verificando permissões…', 'Removendo liberação…', 'Atualizando lista…']
+        : ['Verificando permissões…', 'Liberando jogador…', 'Atualizando lista…'],
+      executar: async () => {
+        const snap      = await _get('config/global');
+        const fields    = _parseFields(snap.fields || {});
+        const liberados = Array.isArray(fields.liberados) ? fields.liberados : [];
+        const atualizado = estaLiberado
+          ? liberados.filter(u => u !== uid)
+          : [...new Set([...liberados, uid])];
+
+        await _patch('config/global', {
+          liberados: { arrayValue: { values: atualizado.map(u => ({ stringValue: u })) } }
+        });
+
+        _manutLiberadosCache = atualizado;
+        _registrarAuditoria(estaLiberado
+          ? `Liberação de manutenção removida: ${nome} (${uid})`
+          : `Jogador liberado da manutenção: ${nome} (${uid})`);
+      },
+      sucesso: estaLiberado ? 'Liberação removida com sucesso!' : 'Jogador liberado da manutenção!',
+      onSucesso: () => {
+        fecharModalLiberar();
+        carregarManutencao();
+        const buscaAtual = document.getElementById('admin-manut-busca')?.value || '';
+        if (buscaAtual.trim()) buscarJogadorManutencao(buscaAtual);
+      },
+    });
+
+    btns?.forEach(b => { b.disabled = false; });
+  }
+
   /* ── UI HELPERS ─────────────────────────────────── */
   function _setLoading(id, on) {
     const el = document.getElementById(id);
@@ -1629,6 +1814,11 @@ const ADMIN = (() => {
       versao:    () => {}, // estático, não precisa
       logs:      () => carregarLogs(),
       mensagens: () => carregarMensagens(),
+      manutencao: () => {
+        carregarManutencao();
+        const b = document.getElementById('admin-manut-busca')?.value || '';
+        if (b.trim()) buscarJogadorManutencao(b);
+      },
     }[id];
     if (fn) _sectionPolling = setInterval(fn, _POLLING_SECAO_MS);
   }
@@ -1659,6 +1849,7 @@ const ADMIN = (() => {
     if (id === 'logs')         carregarLogs();
     if (id === 'config')       { carregarConfigGlobal(); carregarAuditLog(); }
     if (id === 'mensagens')    carregarMensagens();
+    if (id === 'manutencao')   carregarManutencao();
 
     // Polling para seções Firestore (8s)
     _iniciarPollingSecao(id);
@@ -2495,6 +2686,7 @@ const ADMIN = (() => {
     { id: 'versao',      label: '🔖 Versão'      },
     { id: 'logs',        label: '🐛 Logs'        },
     { id: 'config',      label: '⚙️ Config'      },
+    { id: 'manutencao',  label: '🔓 Manutenção'  },
   ];
 
   async function carregarAdmins() {
@@ -2873,6 +3065,7 @@ const ADMIN = (() => {
 
   return {
     verificarAdmin, verificarBan, _getBanInfo, verificarMensagemGlobal, toggleLiberado,
+    carregarManutencao, buscarJogadorManutencao, abrirModalLiberar, fecharModalLiberar, confirmarLiberar,
     irParaSecao,
     carregarJogadores, verHistoricoJogador, toggleBan,
     filtrarJogadores, exportarCSVJogadores, exportarCSVPodio,
