@@ -882,6 +882,9 @@ a { color: inherit; text-decoration: none; }
 .admin-changelog-publicar-hint {
   font-size: .7rem; color: var(--t4); line-height: 1.5; margin-top: 6px;
 }
+.admin-changelog-duracao-label {
+  font-size: .74rem; color: var(--t3); font-weight: 600; margin: 10px 0 6px;
+}
 
 .admin-versao-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .admin-versao-stat { background: var(--bg3); border: 1px solid var(--line2); border-radius: var(--r2); padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 2px; }

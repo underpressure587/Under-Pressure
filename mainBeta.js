@@ -281,7 +281,8 @@ async function _boot() {
     _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
     _iniciarInbox(saved.uid); // inicia polling do inbox
     _setLoadingMsg('Pronto!', '', 100);
-    if (!localStorage.getItem('gsp_tutorial_done')) {
+    const tutorialJaVisto = await _checarTutorialVisto(saved.uid);
+    if (!tutorialJaVisto) {
       mostrarTela('screen-tutorial');
     } else {
       mostrarTela('screen-home');
@@ -2784,7 +2785,8 @@ let _tutorialStep = 0;
 const _TUTORIAL_TOTAL = 4;
 
 function pularTutorial() {
-  localStorage.setItem('gsp_tutorial_done', '1');
+  localStorage.setItem('gsp_tutorial_done', '1'); // cache local, evita re-checar Firestore na mesma sessão
+  if (_player?.uid) _marcarTutorialVistoRemoto(_player.uid); // fonte de verdade real
   // Se veio de dentro do jogo (via reverTutorial), volta pra tela de origem
   const origem = window._tutorialOrigem;
   window._tutorialOrigem = null;
@@ -3842,14 +3844,19 @@ async function _loginOk(player) {
   await _iniciarPollingGlobal(player.uid);
   // Inicia inbox em tempo real
   _iniciarInbox(player.uid);
-  // Boas-vindas para novo jogador (verifica se é novo)
-  _enviarBoasVindas(player.uid, player.nome || 'Gestor').catch(() => {});
+
+  // Onboarding (tutorial + boas-vindas) — decide via Firestore, não
+  // localStorage, para não repetir em outro dispositivo ou após limpar
+  // o cache. Mostra progresso porque essa checagem faz 1-2 requisições
+  // extras ao Firestore, perceptíveis em conexões mais lentas.
+  _setLoadingMsg('Preparando sua conta...', 'Fazendo verificações iniciais', 92);
+  const { mostrarTutorial } = await _verificarOnboarding(player.uid, player.nome || 'Gestor');
 
   // Entra no painel imediatamente — sem esperar Firestore
   _restaurarSala();
   _restaurarGrupo();
   _atualizarHome();
-  if (!localStorage.getItem('gsp_tutorial_done')) {
+  if (mostrarTutorial) {
     mostrarTela('screen-tutorial');
   } else {
     mostrarTela("screen-home");
@@ -4558,6 +4565,14 @@ async function _renderChangelog() {
       wrap.innerHTML = '<div class="inbox-vazio">Nenhuma novidade publicada ainda.</div>';
       return;
     }
+    // Expiração automática — definida pelo admin ao publicar (0 = sem expiração).
+    // Se já passou, trata como se nada estivesse publicado, sem precisar de
+    // uma ação separada do admin para "esconder" o changelog vencido.
+    const expiraEmStr = fields.expiraEm?.timestampValue || null;
+    if (expiraEmStr && new Date(expiraEmStr).getTime() <= Date.now()) {
+      wrap.innerHTML = '<div class="inbox-vazio">Nenhuma novidade publicada ainda.</div>';
+      return;
+    }
     const versao = _escapeHtml(fields.versao?.stringValue || '');
     const tsStr  = fields.ts?.timestampValue || null;
     const data   = tsStr ? new Date(tsStr).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }) : '';
@@ -4753,32 +4768,104 @@ function _renderizarPerfilMsgs() {
 // Public wrapper for profile screen delete refresh
 function _renderPerfilMsgsPublic() { _renderizarPerfilMsgs(); }
 
-// Boas-vindas para novos jogadores
-async function _enviarBoasVindas(uid, nome) {
+// Leitura simples (sem side-effects) do status do tutorial no Firestore.
+// Usado no fluxo de sessão salva, onde não faz sentido reavaliar
+// boas-vindas — só precisamos saber se o tutorial já foi visto.
+async function _checarTutorialVisto(uid) {
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return true; // sem token, assume visto para não travar o boot
+    const r = await fetch(`${_FS_BASE}/usuarios/${uid}`, { headers: { Authorization: `Bearer ${tok}` } });
+    if (!r.ok) return true;
+    const doc = await r.json();
+    return doc?.fields?.tutorialVisto?.booleanValue === true;
+  } catch(e) { return true; }
+}
+
+// Onboarding de novo jogador — unifica duas verificações num único
+// documento (usuarios/{uid}), em vez de depender de localStorage
+// (gsp_tutorial_done) ou de "checar se já tem mensagem" como proxy.
+// Isso garante que tutorial e boas-vindas aparecem exatamente uma vez
+// por jogador, mesmo trocando de dispositivo ou limpando o cache/app.
+//
+// Retorna { mostrarTutorial: boolean } para quem chamou decidir a
+// navegação (mostrarTela('screen-tutorial') vs 'screen-home').
+async function _verificarOnboarding(uid, nome) {
+  let mostrarTutorial = true; // padrão seguro: mostra tutorial se não der pra confirmar
+  try {
+    const tok = await window.GSPAuth?.getToken().catch(() => null);
+    if (!tok) return { mostrarTutorial };
+
+    const headers = { Authorization: `Bearer ${tok}` };
+    const r = await fetch(`${_FS_BASE}/usuarios/${uid}`, { headers });
+    const doc = r.ok ? await r.json() : null;
+    const fields = doc?.fields || {};
+    const tutorialVisto      = fields.tutorialVisto?.booleanValue === true;
+    const boasVindasRecebida = fields.boasVindasRecebidas?.booleanValue === true;
+    mostrarTutorial = !tutorialVisto;
+
+    // Se o tutorial ainda não foi marcado como visto neste documento (ex:
+    // jogador que já tinha localStorage de um dispositivo antigo, mas
+    // nunca teve o campo no Firestore), a tela de tutorial decide isso
+    // sozinha via mostrarTutorial; aqui só cuidamos da marcação em si
+    // não ser perdida — quem fecha o tutorial já grava tutorialVisto=true
+    // (ver fecharTutorial()).
+
+    if (!boasVindasRecebida) {
+      // Busca o texto configurável pelo admin. Se o documento ainda não
+      // existir (admin nunca configurou), usa um texto padrão de fallback
+      // para não deixar o jogador sem nenhuma mensagem de boas-vindas.
+      let texto = `Bem-vindo(a) ao Under Pressure, ${nome}! 🎮 Aqui você vai tomar decisões críticas como CEO e ver os resultados em tempo real. Boa sorte nos mandatos!`;
+      try {
+        const rMsg = await fetch(`${_FS_BASE}/config/mensagemBoasVindas`, { headers });
+        if (rMsg.ok) {
+          const docMsg = await rMsg.json();
+          const t = docMsg?.fields?.texto?.stringValue;
+          if (t) texto = t.replace(/\{nome\}/g, nome);
+        }
+      } catch(e) { /* usa o fallback */ }
+
+      const msgId = `bv_${Date.now()}`;
+      await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens/${msgId}?updateMask.fieldPaths=texto&updateMask.fieldPaths=de&updateMask.fieldPaths=ts&updateMask.fieldPaths=lida&updateMask.fieldPaths=confirmada&updateMask.fieldPaths=categoria&updateMask.fieldPaths=fixada&updateMask.fieldPaths=exigirConfirmacao&updateMask.fieldPaths=expiraEm`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: {
+          texto:             { stringValue: texto },
+          de:                { stringValue: 'admin' },
+          ts:                { integerValue: String(Date.now()) },
+          lida:              { booleanValue: false },
+          confirmada:        { booleanValue: false },
+          categoria:         { stringValue: 'geral' },
+          fixada:            { booleanValue: true },
+          exigirConfirmacao: { booleanValue: false },
+          expiraEm:          { integerValue: String(Date.now() + 90*24*60*60*1000) },
+        }})
+      });
+
+      // Marca no documento do usuário para nunca mais reenviar, em
+      // qualquer dispositivo — isso é o que resolve o problema de
+      // reaparecer após trocar de aparelho ou limpar o cache.
+      await fetch(`${_FS_BASE}/usuarios/${uid}?updateMask.fieldPaths=boasVindasRecebidas`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { boasVindasRecebidas: { booleanValue: true } } })
+      });
+    }
+  } catch(e) { /* silencioso — onboarding não deve travar o login */ }
+  return { mostrarTutorial };
+}
+
+// Marca o tutorial como visto no Firestore (documento do usuário), em vez
+// de só localStorage. Chamado quando o jogador fecha/completa o tutorial.
+async function _marcarTutorialVistoRemoto(uid) {
+  if (!uid) return;
   try {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return;
-    // Verifica se já tem alguma mensagem (evita duplicar boas-vindas)
-    const check = await fetch(`${_FS_BASE}/usuarios/${uid}:runQuery`, { method: 'POST', headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'mensagens' }], limit: 1 } }) });
-    if (check.ok) {
-      const rows2 = await check.json();
-      if (rows2.filter(r => r.document).length > 0) return; // já tem mensagens
-    }
-    const msgId = `bv_${Date.now()}`;
-    await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens/${msgId}?updateMask.fieldPaths=texto&updateMask.fieldPaths=de&updateMask.fieldPaths=ts&updateMask.fieldPaths=lida&updateMask.fieldPaths=confirmada&updateMask.fieldPaths=categoria&updateMask.fieldPaths=fixada&updateMask.fieldPaths=exigirConfirmacao&updateMask.fieldPaths=expiraEm`, {
+    await fetch(`${_FS_BASE}/usuarios/${uid}?updateMask.fieldPaths=tutorialVisto`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: {
-        texto:             { stringValue: `Bem-vindo(a) ao Under Pressure, ${nome}! 🎮 Aqui você vai tomar decisões críticas como CEO e ver os resultados em tempo real. Boa sorte nos mandatos!` },
-        de:                { stringValue: 'admin' },
-        ts:                { integerValue: String(Date.now()) },
-        lida:              { booleanValue: false },
-        confirmada:        { booleanValue: false },
-        categoria:         { stringValue: 'geral' },
-        fixada:            { booleanValue: true },
-        exigirConfirmacao: { booleanValue: false },
-        expiraEm:          { integerValue: String(Date.now() + 90*24*60*60*1000) },
-      }})
+      body: JSON.stringify({ fields: { tutorialVisto: { booleanValue: true } } })
     });
   } catch(e) { /* silencioso */ }
 }

@@ -1191,6 +1191,7 @@ const ADMIN = (() => {
 
   /* ── HISTÓRICO DE MENSAGENS ─────────────────────── */
   async function carregarMensagens() {
+    _carregarStatusBoasVindas();
     const lista = document.getElementById('admin-msgs-lista');
     const total = document.getElementById('admin-msgs-total');
     if (!lista) return;
@@ -1984,21 +1985,65 @@ const ADMIN = (() => {
   // lido pelo Inbox do jogo (aba "Changelog"). Ação separada de
   // salvarChangelog(): salvar o histórico técnico não publica
   // automaticamente para os jogadores.
+  // Duração (em dias) que o changelog fica no ar após publicar. 0 = sem
+  // expiração. Só o admin escolhe isso — o jogador nunca vê essa opção,
+  // só o resultado (changelog visível ou já expirado).
+  let _changelogDuracaoDias = 7;
+
+  function selecionarDuracaoChangelog(dias) {
+    _changelogDuracaoDias = dias;
+    document.querySelectorAll('#changelog-duracao-opcoes .admin-filtro-btn').forEach(b => {
+      b.classList.toggle('active', Number(b.dataset.dias) === dias);
+    });
+  }
+
   async function publicarChangelogJogadores() {
     const texto = document.getElementById('versao-changelog-input')?.value.trim() || '';
     if (!texto) { _showAdminToast('Escreva o changelog antes de publicar', true); return; }
     const versaoLabel = _versaoAtual?.versao || _versaoAtual?.hash?.slice(0,7) || '';
+    const dias = _changelogDuracaoDias;
 
     await _opFeedback({
       etapas: ['Verificando permissões…', 'Publicando para os jogadores…'],
       executar: async () => {
-        await _patch('config/changelog', {
+        const campos = {
           texto:   { stringValue: texto },
           versao:  { stringValue: versaoLabel },
           ts:      { timestampValue: new Date().toISOString() },
-        });
+        };
+        if (dias > 0) {
+          const expiraEm = new Date(Date.now() + dias * 24 * 60 * 60 * 1000);
+          campos.expiraEm = { timestampValue: expiraEm.toISOString() };
+        } else {
+          // Sem expiração — nullValue limpa explicitamente um prazo anterior
+          campos.expiraEm = { nullValue: null };
+        }
+        await _patch('config/changelog', campos);
       },
       sucesso: 'Publicado! Os jogadores já podem ver no Inbox.',
+      onSucesso: () => _carregarStatusChangelogPublicado(),
+    });
+  }
+
+  async function apagarChangelogJogadores() {
+    const ok = await _confirmar({
+      titulo: '🗑️ Apagar changelog publicado',
+      mensagem: 'Isso remove imediatamente o changelog da aba "Changelog" dos jogadores. Você pode publicar um novo depois.',
+      labelOk: 'Apagar',
+      perigoso: true,
+    });
+    if (!ok) return;
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Removendo changelog publicado…'],
+      executar: async () => {
+        await _patch('config/changelog', {
+          texto:    { stringValue: '' },
+          versao:   { stringValue: '' },
+          expiraEm: { nullValue: null },
+        });
+      },
+      sucesso: 'Changelog removido dos jogadores.',
       onSucesso: () => _carregarStatusChangelogPublicado(),
     });
   }
@@ -2010,24 +2055,94 @@ const ADMIN = (() => {
     try {
       const doc = await _get('config/changelog');
       const f = doc?.fields;
-      const texto  = f?.texto?.stringValue || '';
-      const versao = f?.versao?.stringValue || '';
-      const ts     = f?.ts?.timestampValue || '';
-      if (!texto) {
+      const texto     = f?.texto?.stringValue || '';
+      const versao    = f?.versao?.stringValue || '';
+      const ts        = f?.ts?.timestampValue || '';
+      const expiraEm  = f?.expiraEm?.timestampValue || '';
+      const jaExpirou = expiraEm && new Date(expiraEm).getTime() <= Date.now();
+      if (!texto || jaExpirou) {
         el.className = 'admin-changelog-publicado vazio';
-        el.innerHTML = 'Nenhum changelog publicado para os jogadores ainda.';
+        el.innerHTML = jaExpirou
+          ? 'O último changelog publicado já expirou e não está mais visível aos jogadores.'
+          : 'Nenhum changelog publicado para os jogadores ainda.';
         return;
       }
       const dataFmt = ts ? new Date(ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+      const expiraFmt = expiraEm
+        ? `Expira em ${new Date(expiraEm).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })}.`
+        : 'Sem expiração definida.';
       el.className = 'admin-changelog-publicado';
       el.innerHTML = `
         <span class="admin-changelog-publicado-badge">${_esc(versao || 'publicado')}</span>
-        <span>Publicado em ${dataFmt}. Os jogadores estão vendo este texto no Inbox agora.</span>`;
+        <span>Publicado em ${dataFmt}. ${expiraFmt}</span>`;
     } catch (e) {
       // Documento ainda não existe — estado normal antes da primeira publicação
       el.className = 'admin-changelog-publicado vazio';
       el.innerHTML = 'Nenhum changelog publicado para os jogadores ainda.';
     }
+  }
+
+  // Texto padrão usado como fallback no jogo quando o admin nunca
+  // configurou (ou apagou) o texto de boas-vindas. Mantido igual ao
+  // fallback dentro de mainBeta.js para os dois lados ficarem coerentes.
+  const _BOASVINDAS_PADRAO = 'Bem-vindo(a) ao Under Pressure, {nome}! 🎮 Aqui você vai tomar decisões críticas como CEO e ver os resultados em tempo real. Boa sorte nos mandatos!';
+
+  async function _carregarStatusBoasVindas() {
+    const el  = document.getElementById('boasvindas-status');
+    const txt = document.getElementById('boasvindas-texto');
+    if (!el || !txt) return;
+    el.innerHTML = '<span class="admin-loading"></span>';
+    try {
+      const doc = await _get('config/mensagemBoasVindas');
+      const texto = doc?.fields?.texto?.stringValue || '';
+      if (!texto) {
+        el.className = 'admin-changelog-publicado vazio';
+        el.innerHTML = 'Usando o texto padrão (nenhum texto customizado configurado ainda).';
+        txt.value = _BOASVINDAS_PADRAO;
+        return;
+      }
+      el.className = 'admin-changelog-publicado';
+      el.innerHTML = '<span>✅ Texto customizado ativo — enviado a cada novo jogador no primeiro login.</span>';
+      txt.value = texto;
+    } catch (e) {
+      el.className = 'admin-changelog-publicado vazio';
+      el.innerHTML = 'Usando o texto padrão (nenhum texto customizado configurado ainda).';
+      txt.value = _BOASVINDAS_PADRAO;
+    }
+  }
+
+  async function salvarBoasVindas() {
+    const texto = document.getElementById('boasvindas-texto')?.value.trim() || '';
+    if (!texto) { _showAdminToast('Escreva o texto antes de salvar', true); return; }
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Salvando texto de boas-vindas…'],
+      executar: async () => {
+        await _patch('config/mensagemBoasVindas', {
+          texto: { stringValue: texto },
+          atualizadoEm: { timestampValue: new Date().toISOString() },
+        });
+      },
+      sucesso: 'Texto de boas-vindas salvo! Novos jogadores já vão recebê-lo.',
+      onSucesso: () => _carregarStatusBoasVindas(),
+    });
+  }
+
+  async function apagarBoasVindas() {
+    const ok = await _confirmar({
+      titulo: '🗑️ Restaurar texto padrão',
+      mensagem: 'Isso remove o texto customizado. Novos jogadores voltarão a receber o texto padrão do jogo.',
+      labelOk: 'Restaurar',
+      perigoso: true,
+    });
+    if (!ok) return;
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Removendo texto customizado…'],
+      executar: async () => {
+        await _patch('config/mensagemBoasVindas', { texto: { nullValue: null } });
+      },
+      sucesso: 'Restaurado! Novos jogadores vão receber o texto padrão.',
+      onSucesso: () => _carregarStatusBoasVindas(),
+    });
   }
 
   async function _carregarStatsVersao(hashAtual) {
@@ -3156,12 +3271,12 @@ const ADMIN = (() => {
     fecharModal,
     abrirModalInbox, fecharModalInbox, enviarMensagemInbox, enviarMensagemTodos,
     abrirNovaMsg, fecharNovaMsg, enviarNovaMsg, selecionarCategoria,
-    carregarMensagens, apagarMensagemLog, apagarTodasMensagens,
+    carregarMensagens, apagarMensagemLog, apagarTodasMensagens, salvarBoasVindas, apagarBoasVindas,
     abrirBroadcast, fecharBroadcast, confirmarBroadcast,
     toggleDropdown, selecionarSetor,
     abrirModalMsg, fecharModalMsg, salvarMensagemGlobal, limparMensagemGlobal,
     abrirModalBan, fecharModalBan, confirmarBan, selecionarMotivo, _atualizarContadorDetalhe,
-    carregarVersao, salvarChangelog, publicarChangelogJogadores,
+    carregarVersao, salvarChangelog, publicarChangelogJogadores, selecionarDuracaoChangelog, apagarChangelogJogadores,
     carregarDashboard, mudarPeriodoDash,
     carregarHistorias, toggleHistoria,
     carregarFeedback,
