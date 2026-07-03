@@ -4573,12 +4573,15 @@ async function _renderChangelog() {
       wrap.innerHTML = '<div class="inbox-vazio">Nenhuma novidade publicada ainda.</div>';
       return;
     }
-    const versao = _escapeHtml(fields.versao?.stringValue || '');
+    // O jogador nunca vê o campo "versao" (hash/número técnico de deploy) —
+    // só o título editável que o admin escreveu ao publicar. "Novidades"
+    // é o fallback caso o admin não tenha preenchido um título.
+    const titulo = _escapeHtml(fields.titulo?.stringValue || 'Novidades');
     const tsStr  = fields.ts?.timestampValue || null;
     const data   = tsStr ? new Date(tsStr).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }) : '';
     const corpo  = _escapeHtml(texto);
     wrap.innerHTML = `
-      ${versao ? `<div class="inbox-changelog-version">${versao}</div>` : ''}
+      <div class="inbox-changelog-version">${titulo}</div>
       ${data ? `<div class="inbox-changelog-data">${data}</div>` : ''}
       <div class="inbox-changelog-corpo">${corpo}</div>`;
   } catch (e) {

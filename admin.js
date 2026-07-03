@@ -573,6 +573,11 @@ const ADMIN = (() => {
   }
 
   async function removerAdmin(uid) {
+    const meUID = window._player?.uid || '';
+    if (meUID !== _adminOwner) {
+      _showAdminToast('Só o 👑 owner pode remover administradores.', true);
+      return;
+    }
     if (uid === _adminOwner) { _showAdminToast('Owner não pode ser removido.', true); return; }
     const nomeExib = _adminNomes[uid] || uid.slice(0, 12) + '…';
     const ok = await _confirmar({ titulo: 'Remover administrador', mensagem: `Remover ${nomeExib} dos administradores? O acesso será revogado imediatamente.`, labelOk: 'Remover', perigoso: true });
@@ -2000,6 +2005,7 @@ const ADMIN = (() => {
   async function publicarChangelogJogadores() {
     const texto = document.getElementById('versao-changelog-input')?.value.trim() || '';
     if (!texto) { _showAdminToast('Escreva o changelog antes de publicar', true); return; }
+    const titulo = document.getElementById('changelog-titulo-input')?.value.trim() || 'Novidades';
     const versaoLabel = _versaoAtual?.versao || _versaoAtual?.hash?.slice(0,7) || '';
     const dias = _changelogDuracaoDias;
 
@@ -2008,6 +2014,10 @@ const ADMIN = (() => {
       executar: async () => {
         const campos = {
           texto:   { stringValue: texto },
+          titulo:  { stringValue: titulo },
+          // "versao" continua gravada para referência técnica/auditoria do
+          // admin (aparece no badge do status abaixo), mas o jogador nunca
+          // vê esse campo — só "titulo" é exibido no Inbox do jogo.
           versao:  { stringValue: versaoLabel },
           ts:      { timestampValue: new Date().toISOString() },
         };
@@ -2027,44 +2037,49 @@ const ADMIN = (() => {
 
   async function apagarChangelogJogadores() {
     const ok = await _confirmar({
-      titulo: '🗑️ Apagar changelog publicado',
-      mensagem: 'Isso remove imediatamente o changelog da aba "Changelog" dos jogadores. Você pode publicar um novo depois.',
+      titulo: '🗑️ Apagar novidades publicadas',
+      mensagem: 'Isso remove imediatamente o conteúdo da aba "Novidades" dos jogadores. Você pode publicar um novo depois.',
       labelOk: 'Apagar',
       perigoso: true,
     });
     if (!ok) return;
 
     await _opFeedback({
-      etapas: ['Verificando permissões…', 'Removendo changelog publicado…'],
+      etapas: ['Verificando permissões…', 'Removendo publicação…'],
       executar: async () => {
         await _patch('config/changelog', {
           texto:    { stringValue: '' },
+          titulo:   { stringValue: '' },
           versao:   { stringValue: '' },
           expiraEm: { nullValue: null },
         });
       },
-      sucesso: 'Changelog removido dos jogadores.',
+      sucesso: 'Removido dos jogadores.',
       onSucesso: () => _carregarStatusChangelogPublicado(),
     });
   }
 
   async function _carregarStatusChangelogPublicado() {
     const el = document.getElementById('changelog-publicado-status');
+    const inputTitulo = document.getElementById('changelog-titulo-input');
     if (!el) return;
     el.innerHTML = '<span class="admin-loading"></span>';
     try {
       const doc = await _get('config/changelog');
       const f = doc?.fields;
       const texto     = f?.texto?.stringValue || '';
-      const versao    = f?.versao?.stringValue || '';
+      const titulo    = f?.titulo?.stringValue || '';
       const ts        = f?.ts?.timestampValue || '';
       const expiraEm  = f?.expiraEm?.timestampValue || '';
       const jaExpirou = expiraEm && new Date(expiraEm).getTime() <= Date.now();
+      // Pré-carrega o título atual no input, para facilitar reeditar sem
+      // precisar lembrar o que foi digitado da última vez.
+      if (inputTitulo && !inputTitulo.value) inputTitulo.value = titulo;
       if (!texto || jaExpirou) {
         el.className = 'admin-changelog-publicado vazio';
         el.innerHTML = jaExpirou
-          ? 'O último changelog publicado já expirou e não está mais visível aos jogadores.'
-          : 'Nenhum changelog publicado para os jogadores ainda.';
+          ? 'A última publicação já expirou e não está mais visível aos jogadores.'
+          : 'Nenhuma novidade publicada para os jogadores ainda.';
         return;
       }
       const dataFmt = ts ? new Date(ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
@@ -2073,12 +2088,12 @@ const ADMIN = (() => {
         : 'Sem expiração definida.';
       el.className = 'admin-changelog-publicado';
       el.innerHTML = `
-        <span class="admin-changelog-publicado-badge">${_esc(versao || 'publicado')}</span>
+        <span class="admin-changelog-publicado-badge">${_esc(titulo || 'Novidades')}</span>
         <span>Publicado em ${dataFmt}. ${expiraFmt}</span>`;
     } catch (e) {
       // Documento ainda não existe — estado normal antes da primeira publicação
       el.className = 'admin-changelog-publicado vazio';
-      el.innerHTML = 'Nenhum changelog publicado para os jogadores ainda.';
+      el.innerHTML = 'Nenhuma novidade publicada para os jogadores ainda.';
     }
   }
 
@@ -2987,11 +3002,14 @@ const ADMIN = (() => {
       const perms      = Array.isArray(_adminPermissoes[u]) ? _adminPermissoes[u] : _SECOES.map(s => s.id);
       const nomeExib   = _adminNomes[u] || '';
       const uidCurto   = u.slice(0, 10) + '…';
+      const souOwner   = meUID === _adminOwner;
 
       const permBtns = isOwner
         ? '<span style="font-size:.7rem;color:var(--warn);font-weight:700">👑 Owner</span>'
-        : `<button class="admin-btn-sm" style="background:var(--bg3);border:1px solid var(--line2)" onclick="ADMIN.abrirPermissoes('${u}')">⚙️ Permissões</button>
-           <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${u}')">✕</button>`;
+        : souOwner
+          ? `<button class="admin-btn-sm" style="background:var(--bg3);border:1px solid var(--line2)" onclick="ADMIN.abrirPermissoes('${u}')">⚙️ Permissões</button>
+             <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${u}')">✕</button>`
+          : `<span style="font-size:.68rem;color:var(--t4)">🔒 Só o 👑 pode alterar</span>`;
 
       const meBadge = isMe
         ? '<span style="font-size:.6rem;background:rgba(201,151,58,.15);color:var(--gold);border:1px solid var(--gold-bd);border-radius:4px;padding:1px 5px;font-weight:700;flex-shrink:0">você</span>'
@@ -3129,6 +3147,11 @@ const ADMIN = (() => {
   }
 
   function abrirPermissoes(uid) {
+    const meUID = window._player?.uid || '';
+    if (meUID !== _adminOwner) {
+      _showAdminToast('Só o 👑 owner pode alterar permissões de outros admins.', true);
+      return;
+    }
     const perms      = Array.isArray(_adminPermissoes[uid]) ? _adminPermissoes[uid] : _SECOES.map(s => s.id);
     const nomeExib   = _adminNomes[uid] || uid.slice(0, 14) + '…';
     const temTodasPerms = perms.length === _SECOES.length;
