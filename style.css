@@ -2852,23 +2852,41 @@ body::after{
 }
 .tutorial-slide {
   display: none; flex-direction: column; align-items: center;
-  text-align: center; gap: 18px;
-  animation: screenIn .35s cubic-bezier(.22,.68,0,1.2);
+  text-align: center; gap: 14px;
+  animation: screenIn .4s cubic-bezier(.22,.68,0,1.2);
 }
 .tutorial-slide.active { display: flex; }
 
+/* Selo do ícone — moldura circular, ecoa o tratamento da logo no login */
+.tutorial-icon-badge {
+  width: 88px; height: 88px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 40%, var(--s-bg-accent) 0%, transparent 72%);
+  border: 1px solid var(--s-bd-accent);
+  animation: tutFadeUp .5s cubic-bezier(.22,.68,0,1.2) both;
+}
 .tutorial-icon {
-  font-size: 3.8rem;
-  filter: drop-shadow(0 0 24px var(--s-glow));
+  font-size: 2.7rem; line-height: 1;
+  filter: drop-shadow(0 0 20px var(--s-glow));
   animation: logoFloat 5s ease-in-out infinite;
 }
+
+.tutorial-eyebrow {
+  display: block;
+  font-size: .64rem; font-weight: 700; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--s-text); opacity: .8;
+  animation: tutFadeUp .5s .06s cubic-bezier(.22,.68,0,1.2) both;
+}
+
 .tutorial-title {
   font-family: var(--serif); font-size: 1.75rem; font-weight: 800;
   color: var(--t1); line-height: 1.15; letter-spacing: -.01em;
+  animation: tutFadeUp .5s .12s cubic-bezier(.22,.68,0,1.2) both;
 }
 .tutorial-desc {
   font-size: .88rem; color: var(--t2); line-height: 1.8;
   max-width: 300px; font-weight: 400;
+  animation: tutFadeUp .5s .18s cubic-bezier(.22,.68,0,1.2) both;
 }
 .tutorial-desc strong { color: var(--s-text); font-weight: 700; }
 
@@ -2877,6 +2895,19 @@ body::after{
   border: 1px solid var(--line2); border-radius: var(--r2);
   padding: var(--sp2); margin-top: 2px;
   box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  animation: tutFadeUp .5s .24s cubic-bezier(.22,.68,0,1.2) both;
+}
+.tutorial-example-tag {
+  display: block; text-align: left;
+  font-size: .6rem; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--t3);
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+@keyframes tutFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Indicadores de exemplo */
@@ -2887,7 +2918,10 @@ body::after{
 .tut-ind-row:last-child { margin-bottom: 0; }
 .tut-ind-row span:first-child { width: 80px; text-align: left; flex-shrink: 0; }
 .tut-bar { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-.tut-bar-fill { height: 100%; border-radius: 3px; }
+.tut-bar-fill {
+  height: 100%; border-radius: 3px; transform-origin: left;
+  animation: tutBarGrow .9s .45s cubic-bezier(.16,.84,.32,1) both;
+}
 .tut-bar-fill.ok   { background: linear-gradient(90deg, var(--ok), #4ade80); }
 .tut-bar-fill.warn { background: linear-gradient(90deg, var(--warn), #fbbf24); }
 .tut-bar-fill.err  { background: linear-gradient(90deg, var(--err), #f87171); }
@@ -2895,6 +2929,11 @@ body::after{
 .tut-val.ok   { color: var(--ok); }
 .tut-val.warn { color: var(--warn); }
 .tut-val.err  { color: var(--err); }
+
+@keyframes tutBarGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
 
 /* Pills */
 .tut-pill-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
@@ -2932,6 +2971,13 @@ body::after{
 .tutorial-footer { display: flex; gap: 10px; flex-shrink: 0; }
 .tutorial-prev { flex: 0 0 auto; width: auto; padding: 16px 20px; }
 .tutorial-next { flex: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-icon-badge, .tutorial-eyebrow, .tutorial-title,
+  .tutorial-desc, .tutorial-example, .tut-bar-fill {
+    animation: none !important;
+  }
+}
 
 /* ══════════════════════════════════════════════════
    SETOR — estrelas e tagline
