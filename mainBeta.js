@@ -1119,6 +1119,75 @@ function _forcarSaida(msg) {
   setTimeout(() => mostrarAviso(msg), 600);
 }
 
+// Ativa o overlay-ban completo (ícone, motivo, UID para suporte, contador
+// regressivo e botão de ação) em vez do toast genérico de _forcarSaida.
+// O card e o CSS já existiam prontos no projeto, mas nunca eram ativados
+// de fato — o jogador banido só via um toast de 3s que sumia rápido.
+async function _mostrarOverlayBan(uid) {
+  // Busca o motivo antes de limpar a sessão, enquanto ainda temos o uid
+  let motivo = '';
+  try {
+    const info = await window.ADMIN?._getBanInfo(uid).catch(() => null);
+    motivo = info?.motivoBan || '';
+  } catch(e) { /* segue sem motivo */ }
+
+  _pararPollingGlobal();
+  _pararTimer();
+  LS.remove(SK.SESSION);
+  LS.remove(SK.PLAYER);
+  _player = null;
+  window._player = null;
+  _isAdmin = false;
+  window._isAdmin = false;
+  _aplicarTemaSetor(null);
+  if (window.GSPAuth?.isReady()) window.GSPAuth.logout().catch(() => {});
+  mostrarTela('screen-login');
+
+  const overlay   = document.getElementById('overlay-ban');
+  const motivoBox = document.getElementById('ban-motivo-display');
+  const motivoTxt = document.getElementById('ban-motivo-texto');
+  const uidDisplay = document.getElementById('ban-uid-display');
+  const countdownEl = document.getElementById('ban-countdown');
+  const progressBar = document.getElementById('ban-progress-bar');
+  if (!overlay) { mostrarAviso('🚫 Sua conta foi suspensa pelo administrador.'); return; }
+
+  if (motivo && motivoBox && motivoTxt) {
+    motivoTxt.textContent = motivo;
+    motivoBox.style.display = 'block';
+  } else if (motivoBox) {
+    motivoBox.style.display = 'none';
+  }
+  if (uidDisplay) uidDisplay.textContent = uid;
+
+  overlay.style.display = 'flex';
+
+  // Contador regressivo de 10s até fechar sozinho (o botão "Ir para o
+  // login" já permite fechar antes, via banIrParaLogin()).
+  let segundos = 10;
+  if (countdownEl) countdownEl.textContent = `Redirecionando em ${segundos}s...`;
+  if (progressBar) progressBar.style.width = '100%';
+  const intervalo = setInterval(() => {
+    segundos--;
+    if (countdownEl) countdownEl.textContent = segundos > 0 ? `Redirecionando em ${segundos}s...` : 'Redirecionando...';
+    if (progressBar) progressBar.style.width = `${(segundos / 10) * 100}%`;
+    if (segundos <= 0) {
+      clearInterval(intervalo);
+      banIrParaLogin();
+    }
+  }, 1000);
+  overlay.dataset.intervaloId = String(intervalo);
+}
+
+function banIrParaLogin() {
+  const overlay = document.getElementById('overlay-ban');
+  if (overlay) {
+    const intervaloId = overlay.dataset.intervaloId;
+    if (intervaloId) clearInterval(Number(intervaloId));
+    overlay.style.display = 'none';
+  }
+  mostrarTela('screen-login');
+}
+
 // Mantido para não quebrar chamadas de comecaJogo/abandonarJogo
 function _iniciarVerificacaoManutencao() { /* substituído pelo polling global */ }
 function _pararVerificacaoManutencao()  { /* substituído pelo polling global */ }
@@ -4875,7 +4944,7 @@ async function _marcarTutorialVistoRemoto(uid) {
 
 
 window.BetaUI = {
-  irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair,
+  irParaLogin, irParaAuth, irComoConvidado, confirmarNome, sair, banIrParaLogin,
   authMudarAba, authTogglePass, authLogin, authCadastrar, authGoogle, authRecuperar,
   irParaSetores, irParaPodio, irParaHistoricoJogos,
   irParaPerfil, filtrarPodio, _copiarId,

@@ -104,8 +104,12 @@
       if (window.ADMIN) {
         const banido = await window.ADMIN.verificarBan(uid).catch(() => false);
         if (banido) {
-          if (typeof _forcarSaida === 'function')
+          if (typeof _mostrarOverlayBan === 'function') {
+            _mostrarOverlayBan(uid);
+          } else if (typeof _forcarSaida === 'function') {
+            // Fallback caso o overlay não esteja disponível por algum motivo
             _forcarSaida('🚫 Sua conta foi suspensa pelo administrador.');
+          }
           return;
         }
       }
