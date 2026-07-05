@@ -2862,20 +2862,31 @@ body::after{
 .tutorial-slide.active { display: flex; }
 
 /* Selo do ícone — moldura circular, ecoa o tratamento da logo no login */
+.tutorial-icon-enter {
+  animation: tutFadeUp .5s cubic-bezier(.22,.68,0,1.2) both;
+}
 .tutorial-icon-badge {
   width: 88px; height: 88px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   background: radial-gradient(circle at 50% 40%, var(--s-bg-accent) 0%, transparent 72%);
   border: 1px solid var(--s-bd-accent);
-  animation: tutFadeUp .5s cubic-bezier(.22,.68,0,1.2) both;
+  animation: badgeFloat 5s ease-in-out infinite;
 }
 .tutorial-icon {
   color: var(--s-text);
-  filter: drop-shadow(0 0 20px var(--s-glow));
-  animation: logoFloat 5s ease-in-out infinite;
+  animation: iconGlow 5s ease-in-out infinite;
 }
 .tutorial-logo-icon {
   width: 72px; height: 72px; object-fit: contain; border-radius: 50%;
+}
+
+@keyframes badgeFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-8px) scale(1.015); }
+}
+@keyframes iconGlow {
+  0%, 100% { filter: drop-shadow(0 0 20px var(--s-glow)); }
+  50%      { filter: drop-shadow(0 0 34px var(--s-glow)); }
 }
 
 .tutorial-eyebrow {
