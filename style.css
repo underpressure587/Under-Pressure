@@ -179,6 +179,10 @@
 /* ── RESET ─────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
+/* remove o "flash" cinza/azul padrão do Android/Chrome ao tocar em
+   qualquer elemento clicável (botões, divs com onclick, links etc.) */
+*{ -webkit-tap-highlight-color: transparent; }
+
 html,body{
   height:100%; font-family:var(--sans); font-size:15px;
   overflow:hidden; -webkit-font-smoothing:antialiased;
