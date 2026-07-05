@@ -2870,6 +2870,9 @@ body::after{
   filter: drop-shadow(0 0 20px var(--s-glow));
   animation: logoFloat 5s ease-in-out infinite;
 }
+.tutorial-logo-icon {
+  width: 72px; height: 72px; object-fit: contain; border-radius: 50%;
+}
 
 .tutorial-eyebrow {
   display: block;
@@ -7042,7 +7045,10 @@ body.overlay-active .game-ind-name.critical-label {
 
 /* Bloquear menu de contexto e arrastar nas imagens do logo */
 .login-logo-img,
-.auth-logo-img {
+.auth-logo-img,
+.loading-logo-img,
+.auth-showcase-logo,
+.tutorial-logo-icon {
   -webkit-user-drag: none;
   user-drag: none;
   -webkit-touch-callout: none;
