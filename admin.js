@@ -2524,15 +2524,107 @@ const ADMIN = (() => {
   /* ════════════════════════════════════════════════════
      GLOSSÁRIO
   ════════════════════════════════════════════════════ */
-  const _GLOSSARIO_CATEGORIAS_SUGERIDAS = [
-    'Indicadores e Mecânicas do Jogo', 'Finanças e Investimento',
-    'Tecnologia e Produto', 'Operações e Logística',
-    'RH e Gestão de Pessoas', 'Regulatório e Jurídico', 'Mercado e Estratégia',
-  ];
 
-  let _glossarioCache = [];   // [{id, termo, def, categoria}]
-  let _glossarioBusca = '';
-  let _glossarioEditandoId = null;  // null = criando novo termo
+  // Conjunto de termos padrão que já existiam hardcoded no jogo
+  // (mainBeta.js). Usado só pelo botão "Importar termos padrão" —
+  // depois de importados uma vez, essa constante deixa de ser necessária.
+const _GLOSSARIO_PADRAO_SECOES = [
+  { categoria: "Indicadores e Mecânicas do Jogo", termos: [
+    { termo:"SLA", def:"Acordo de Nível de Serviço (Service Level Agreement). Define metas de prazo e qualidade entre fornecedor e cliente. Ex: entregar 95% dos pedidos em até 48h." },
+    { termo:"NPS", def:"Nota de lealdade dos clientes (Net Promoter Score). Calculado pela pergunta: 'De 0 a 10, quanto você recomendaria esta empresa?' Acima de 70 é excelente." },
+    { termo:"Benchmark", def:"Referência média do mercado para um indicador. Exibido abaixo das barras durante o jogo — serve para comparar seu desempenho com o do setor." },
+    { termo:"Capital Político", def:"Credibilidade do gestor junto ao conselho e parceiros estratégicos. Cai com decisões precipitadas ou resultados ruins. Sobe com alinhamento e entregas consistentes." },
+    { termo:"Esgotamento", def:"Nível de desgaste pessoal do gestor. Ao atingir 10, é necessário se afastar por colapso e o mandato é encerrado antecipadamente." },
+    { termo:"Flag", def:"Padrão de comportamento registrado ao longo do mandato. Influencia quais eventos aparecem e o desfecho final. Ex: Liderança Tóxica, Crescimento sem Caixa." },
+    { termo:"Imprevisto", def:"Evento inesperado que altera os efeitos das decisões durante aquela rodada. Pode ser positivo ou negativo, e é influenciado pelo estado atual dos indicadores." },
+    { termo:"Margem Operacional", def:"Quanto de cada real de receita sobra como lucro operacional. Ex: margem de 8% significa que a empresa lucra R$8 para cada R$100 vendidos." },
+    { termo:"Mandato", def:"Uma partida completa do jogo, com 10 rodadas de decisões organizadas em fases que vão evoluindo conforme o desempenho da empresa (Fundação, Crescimento, Crise, Consolidação ou Expansão). O gestor conduz a empresa do início ao fim e recebe uma pontuação pelo resultado." },
+    { termo:"Fases da Empresa", def:"Etapa em que a empresa se encontra dentro do mandato: Fundação (início), Crescimento, Crise (quando indicadores-chave estão muito ruins), Consolidação ou Expansão. A fase influencia o tom dos eventos e o peso das decisões." },
+    { termo:"Situação Inicial", def:"Evento de abertura do mandato, sorteado entre cenários possíveis (ex: crise herdada, queda de reputação, concorrente agressivo). Já chega aplicando efeitos nos indicadores antes da primeira decisão." },
+    { termo:"Boa Decisão / Decisão com Trade-offs / Má Decisão", def:"As três avaliações possíveis para cada escolha do jogador, mostradas na tela de resultado da rodada. 'Boa Decisão' indica acerto claro; 'Decisão com Trade-offs' indica ganhos e perdas simultâneos; 'Má Decisão' indica um custo que supera os benefícios." },
+    { termo:"Alternativa Mais Indicada", def:"Quando a escolha do jogador não foi a ideal, o feedback da rodada mostra qual seria a opção mais indicada e o resultado que ela traria, para fins de aprendizado." },
+    { termo:"Paralisia Decisória", def:"Forma de game over que ocorre quando o gestor acumula desgaste (Esgotamento) por deixar o timer expirar sem decidir repetidas vezes. Representa o colapso do gestor por excesso de indecisão e encerra o mandato antes do previsto." },
+    { termo:"Decisão por Omissão", def:"O que acontece quando o Timer por Rodada está ativado e o tempo se esgota sem o jogador escolher uma opção. O jogo segue automaticamente com um resultado de omissão, diferente de uma escolha ativa, e aumenta o Esgotamento do gestor." },
+    { termo:"Timer por Rodada", def:"Configuração opcional (90 segundos por decisão) que adiciona pressão de tempo real a cada rodada. Pode ser ativada ou desativada na tela de criação da empresa." },
+    { termo:"Modo Treino", def:"Configuração opcional para jogar sem pontuação valer para o pódio ou histórico — ideal para aprender as mecânicas e testar estratégias sem compromisso com o resultado final." },
+    { termo:"Reputação Interna", def:"Como o gestor é visto por dentro da própria empresa (equipe, diretoria, conselho). Diferente da Reputação de Mercado, que é a percepção externa de clientes e do setor." },
+    { termo:"Reputação de Mercado", def:"Indicador que mede como a empresa é vista externamente — por clientes, concorrentes e pela imprensa do setor. Cai com crises públicas e sobe com boas entregas visíveis ao mercado." },
+    { termo:"Pódio", def:"Ranking dos melhores mandatos já jogados, comparando a pontuação final entre partidas (suas e, quando aplicável, de outros jogadores)." },
+  ]},
+  { categoria: "Finanças e Investimento", termos: [
+    { termo:"ARR", def:"Receita Recorrente Anual (Annual Recurring Revenue). Total de contratos ativos que a empresa recebe por ano. Principal métrica de saúde de empresas SaaS." },
+    { termo:"Churn", def:"Taxa de cancelamento de clientes. Churn de 3,8% ao mês significa que 3,8% da base cancela todo mês — o que elimina metade da base em menos de 2 anos." },
+    { termo:"CAC", def:"Custo de Aquisição de Cliente. Quanto a empresa gasta em marketing e vendas para conquistar um novo cliente. Quanto menor, melhor." },
+    { termo:"Runway", def:"Tempo que a empresa sobrevive com o caixa atual, sem nova receita. Ex: 'temos 8 meses de runway' significa que o dinheiro acaba em 8 meses." },
+    { termo:"Break-even", def:"Ponto de equilíbrio: quando receitas e custos se igualam. A empresa deixa de ter prejuízo e começa a lucrar a partir desse ponto." },
+    { termo:"Capex", def:"Investimento em bens de capital fixo (Capital Expenditure). Ex: comprar máquinas, construir um galpão, instalar painéis solares. Diferente de custo operacional." },
+    { termo:"Hedge Cambial", def:"Instrumento financeiro que trava o custo do dólar, protegendo empresas que têm custos em moeda estrangeira mas receita em reais." },
+    { termo:"Payback", def:"Prazo em que um investimento se paga com a economia ou receita gerada. Ex: painéis solares com payback de 4,5 anos se pagam em 4 anos e 6 meses." },
+    { termo:"IPO", def:"Abertura de capital na bolsa de valores (Initial Public Offering). A empresa vende ações ao público para captar dinheiro e cresce com capital dos investidores." },
+    { termo:"M&A", def:"Fusões e Aquisições (Mergers & Acquisitions). Processo de compra, fusão ou incorporação de uma empresa por outra." },
+    { termo:"Due Diligence", def:"Análise detalhada feita antes de uma aquisição ou investimento. Verifica riscos financeiros, jurídicos, trabalhistas e operacionais da empresa-alvo." },
+    { termo:"Série A / Série B", def:"Rodadas de investimento numeradas. Série A é a primeira rodada significativa (geralmente R$5M a R$30M). Série B é a seguinte, para escalar o que foi validado." },
+    { termo:"Angel (Investidor-Anjo)", def:"Pessoa física que investe capital próprio em startups em estágio inicial, geralmente em troca de uma participação pequena na empresa." },
+    { termo:"Venture Capital", def:"Fundo de capital de risco que investe em startups com alto potencial de crescimento. Em troca, recebe participação societária." },
+    { termo:"Private Equity", def:"Fundo que investe em empresas maiores e mais maduras (não startups), buscando eficiência operacional e retorno na venda futura." },
+    { termo:"Stock Options", def:"Opção de compra de ações da empresa por um preço fixo. Benefício que alinha o interesse do colaborador com o crescimento da empresa a longo prazo." },
+    { termo:"Switching Cost", def:"Custo que o cliente teria ao trocar de fornecedor — tempo de integração, retreinamento, risco de falha. Quanto maior, mais difícil é perder o cliente." },
+  ]},
+  { categoria: "Tecnologia e Produto", termos: [
+    { termo:"SaaS", def:"Software como Serviço (Software as a Service). Modelo em que o software é cobrado mensalmente por assinatura, sem instalação local. Ex: Google Drive, Salesforce." },
+    { termo:"Dívida Técnica", def:"Atalhos no código que aceleram a entrega hoje, mas criam problemas no futuro. Quanto maior a dívida, mais lento e instável o sistema fica com o tempo." },
+    { termo:"Pivot", def:"Mudança radical de direção estratégica ou de modelo de negócio. Ex: uma startup de SaaS que decide virar plataforma de IA generativa." },
+    { termo:"Product-Market Fit", def:"Encaixe produto-mercado. O momento em que o produto resolve tão bem um problema real que os clientes o recomendam naturalmente e o churn cai." },
+    { termo:"Roadmap", def:"Plano de funcionalidades e melhorias do produto ordenado no tempo. Define o que será desenvolvido e em que sequência." },
+    { termo:"ERP", def:"Sistema integrado de gestão empresarial (Enterprise Resource Planning). Centraliza finanças, estoque, RH e produção em um único sistema." },
+    { termo:"IoT", def:"Internet das Coisas (Internet of Things). Sensores e equipamentos conectados à internet que enviam dados em tempo real. Ex: sensor de temperatura em câmara fria." },
+    { termo:"DPO", def:"Encarregado de Proteção de Dados (Data Protection Officer). Profissional responsável pela conformidade com a LGPD. Nomeação obrigatória para empresas que tratam dados pessoais em escala." },
+    { termo:"TMS", def:"Sistema de Gerenciamento de Transporte (Transportation Management System). Controla rotas, rastreamento e custos de frota em operações logísticas." },
+    { termo:"Injeção SQL", def:"Tipo de ataque hacker que insere comandos maliciosos em campos de texto para acessar o banco de dados e roubar informações." },
+  ]},
+  { categoria: "Operações e Logística", termos: [
+    { termo:"Lead Time", def:"Tempo total desde o pedido até a entrega ao cliente. Reduzir o lead time é um dos principais objetivos da gestão de operações." },
+    { termo:"Kanban", def:"Sistema de produção puxada. Produz apenas o que foi vendido ou consumido, reduzindo estoque intermediário e tempo de entrega." },
+    { termo:"Lean Manufacturing", def:"Manufatura enxuta. Filosofia que elimina desperdícios no processo produtivo — tempo ocioso, estoque excessivo, defeitos, movimentação desnecessária." },
+    { termo:"Cold Chain", def:"Cadeia do frio. Transporte e armazenagem de produtos que precisam de temperatura controlada, como alimentos perecíveis e medicamentos." },
+    { termo:"White Label", def:"Produto fabricado por uma empresa e vendido por outra com a sua própria marca. Ex: supermercado que vende arroz com a marca própria fabricado por terceiro." },
+    { termo:"Dark Store", def:"Loja física convertida em mini-centro de distribuição para e-commerce, sem atendimento presencial. Foco em separação e envio rápido de pedidos." },
+    { termo:"Click-and-Collect", def:"Modelo onde o cliente compra online e retira na loja física. Elimina o custo de frete e gera tráfego para o ponto físico." },
+    { termo:"SKU", def:"Código único de produto (Stock Keeping Unit). Cada variação de produto (tamanho, cor, sabor) tem um SKU diferente para controle de estoque." },
+    { termo:"Omnichannel", def:"Estratégia que integra todos os canais de venda e atendimento (loja física, site, app, telefone) em uma experiência única para o cliente." },
+  ]},
+  { categoria: "RH e Gestão de Pessoas", termos: [
+    { termo:"Burnout", def:"Síndrome de esgotamento profissional causada por estresse crônico no trabalho. Pode levar ao afastamento. No jogo, representa colapso do gestor." },
+    { termo:"Onboarding", def:"Processo de integração de um novo colaborador ou cliente. Inclui treinamentos, apresentações e adaptação à cultura e ferramentas da empresa." },
+    { termo:"Rotatividade (Turnover)", def:"Percentual de funcionários que saem e precisam ser substituídos no ano. Alta rotatividade sinaliza problemas de gestão, cultura ou remuneração." },
+  ]},
+  { categoria: "Regulatório e Jurídico", termos: [
+    { termo:"LGPD", def:"Lei Geral de Proteção de Dados. Regula o uso de dados pessoais no Brasil. Multas podem chegar a 2% do faturamento ou R$50 milhões por infração." },
+    { termo:"ANPD", def:"Autoridade Nacional de Proteção de Dados. Órgão do governo que fiscaliza o cumprimento da LGPD e aplica penalidades em caso de violação." },
+    { termo:"ISO 9001", def:"Norma internacional de gestão da qualidade. Certifica que a empresa tem processos controlados e rastreáveis. Exigida por grandes clientes industriais." },
+    { termo:"ESG", def:"Critérios ambientais, sociais e de governança (Environmental, Social, Governance). Avaliados por investidores e clientes para decidir com quem fazer negócio." },
+    { termo:"IFA", def:"Índice de Frequência de Acidentes. Mede o número de acidentes com afastamento por milhão de horas trabalhadas. Benchmark nacional: 8,2." },
+    { termo:"EPI", def:"Equipamento de Proteção Individual. Capacete, luva, óculos, bota e outros itens obrigatórios por lei para proteção do trabalhador." },
+    { termo:"CIPA", def:"Comissão Interna de Prevenção de Acidentes. Grupo de funcionários e gestores que acompanha as condições de segurança. Obrigatória em empresas com 20+ funcionários." },
+    { termo:"CAT", def:"Comunicação de Acidente de Trabalho. Documento obrigatório emitido pelo empregador quando um funcionário sofre acidente ou doença ocupacional." },
+    { termo:"MTE", def:"Ministério do Trabalho e Emprego. Órgão federal que fiscaliza as condições de trabalho, pode autuar empresas e interditar operações inseguras." },
+  ]},
+  { categoria: "Mercado e Estratégia", termos: [
+    { termo:"B2B", def:"Business to Business. Empresa que vende para outras empresas (não para o consumidor final). Ex: software de gestão vendido para PMEs." },
+    { termo:"B2C", def:"Business to Consumer. Empresa que vende diretamente ao consumidor final. Ex: loja de varejo, aplicativo de delivery." },
+    { termo:"PME", def:"Pequena e Média Empresa. No Brasil, classificadas por faturamento anual: pequena até R$4,8M, média até R$300M." },
+    { termo:"Pipeline Comercial", def:"Conjunto de oportunidades de venda em andamento. 'Pipeline cheio' significa muitos negócios potenciais sendo negociados." },
+    { termo:"Indústria 4.0", def:"Quarta revolução industrial. Integração de automação, robótica, IoT e inteligência artificial nos processos industriais para maior eficiência e rastreabilidade." },
+    { termo:"Verticalização", def:"Estratégia de especializar a empresa em um setor ou nicho específico, ao invés de atender mercados variados. Cria diferencial técnico e relacionamentos mais profundos." },
+    { termo:"Interdependência", def:"Relação causal entre indicadores. Ex: na logística, frota deteriorada → segurança cai → RH cai → resultado financeiro cai." },
+  ]},
+];
+
+  let _glossarioCache        = [];   // [{id, termo, def, categoria}]
+  let _glossarioSecoesCache  = [];   // [nomeDaSecao, ...] em config/glossarioSecoes
+  let _glossarioSecoesAbertas = new Set();  // nomes de seções expandidas na UI
+  let _glossarioBusca        = '';
+  let _glossarioEditandoId   = null;  // null = criando novo termo
 
   function _slugTermo(termo) {
     return String(termo)
@@ -2543,33 +2635,54 @@ const ADMIN = (() => {
       .slice(0, 80) || `termo-${Date.now()}`;
   }
 
+  async function _getSecoesGlossario() {
+    try {
+      const doc = await _get('config/glossarioSecoes');
+      const nomes = _val(doc.fields?.nomes) || [];
+      return Array.isArray(nomes) ? nomes.filter(Boolean) : [];
+    } catch(e) { return []; }  // doc ainda não existe
+  }
+
+  async function _setSecoesGlossario(nomes) {
+    await _patch('config/glossarioSecoes', {
+      nomes: { arrayValue: { values: nomes.map(n => ({ stringValue: n })) } },
+    });
+  }
+
   async function carregarGlossario() {
     const lista = document.getElementById('admin-glossario-lista');
     lista.innerHTML = '<div class="admin-loading"></div>';
     try {
-      const res = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'glossario' }],
-          orderBy: [
-            { field: { fieldPath: 'categoria' }, direction: 'ASCENDING' },
-            { field: { fieldPath: 'termo' },     direction: 'ASCENDING' },
-          ],
-        }
-      });
+      const [secoes, res] = await Promise.all([
+        _getSecoesGlossario(),
+        _query({
+          structuredQuery: {
+            from: [{ collectionId: 'glossario' }],
+            orderBy: [{ field: { fieldPath: 'termo' }, direction: 'ASCENDING' }],
+          }
+        }),
+      ]);
+      _glossarioSecoesCache = secoes;
       _glossarioCache = (Array.isArray(res) ? res : [])
         .filter(r => r.document)
         .map(r => ({ id: r.document.name.split('/').pop(), ..._parseFields(r.document.fields) }));
 
-      // Preenche o datalist de categorias com as já usadas + sugeridas
-      const cats = new Set(_GLOSSARIO_CATEGORIAS_SUGERIDAS);
-      _glossarioCache.forEach(t => t.categoria && cats.add(t.categoria));
-      const dl = document.getElementById('admin-glossario-categorias-lista');
-      if (dl) dl.innerHTML = [...cats].map(c => `<option value="${_esc(c)}">`).join('');
+      // Abre todas as seções na primeira carga
+      if (!_glossarioSecoesAbertas.size) secoes.forEach(s => _glossarioSecoesAbertas.add(s));
 
+      _popularSelectCategorias();
       _renderGlossario();
     } catch(e) {
       _showAdminError('admin-glossario-lista', 'Erro: ' + e.message);
     }
+  }
+
+  function _popularSelectCategorias() {
+    const sel = document.getElementById('admin-glossario-categoria');
+    if (!sel) return;
+    sel.innerHTML = _glossarioSecoesCache.length
+      ? _glossarioSecoesCache.map(s => `<option value="${_esc(s)}">${_esc(s)}</option>`).join('')
+      : '<option value="">— crie uma seção primeiro —</option>';
   }
 
   function filtrarGlossario(termo) {
@@ -2577,51 +2690,159 @@ const ADMIN = (() => {
     _renderGlossario();
   }
 
+  function toggleSecaoGlossario(nome) {
+    if (_glossarioSecoesAbertas.has(nome)) _glossarioSecoesAbertas.delete(nome);
+    else _glossarioSecoesAbertas.add(nome);
+    _renderGlossario();
+  }
+
   function _renderGlossario() {
     const lista = document.getElementById('admin-glossario-lista');
     if (!lista) return;
 
-    const filtrados = _glossarioBusca
-      ? _glossarioCache.filter(t =>
-          (t.termo || '').toLowerCase().includes(_glossarioBusca) ||
-          (t.categoria || '').toLowerCase().includes(_glossarioBusca))
-      : _glossarioCache;
-
-    if (!filtrados.length) {
-      lista.innerHTML = `<div class="admin-empty">${_glossarioCache.length ? 'Nenhum termo encontrado.' : 'Nenhum termo cadastrado ainda — clique em "+ Novo termo" para adicionar.'}</div>`;
+    if (!_glossarioSecoesCache.length && !_glossarioCache.length) {
+      lista.innerHTML = '<div class="admin-empty">Nenhuma seção criada ainda — clique em "+ Seção" para começar, ou importe os termos padrão.</div>';
       return;
     }
 
-    let categoriaAtual = null;
+    const busca = _glossarioBusca;
+    const passaBusca = t => !busca || (t.termo || '').toLowerCase().includes(busca) || (t.categoria || '').toLowerCase().includes(busca);
+
     let html = '';
-    filtrados.forEach(t => {
-      if (t.categoria !== categoriaAtual) {
-        categoriaAtual = t.categoria;
-        html += `<div class="admin-sec-title">${_esc(categoriaAtual || 'Sem categoria')}</div>`;
-      }
+
+    // Seções conhecidas, na ordem em que foram criadas
+    _glossarioSecoesCache.forEach(secao => {
+      const termos = _glossarioCache.filter(t => t.categoria === secao && passaBusca(t));
+      if (busca && !termos.length) return;  // some da lista na busca se não bate com nada
+      const aberta = _glossarioSecoesAbertas.has(secao);
       html += `
-        <div class="admin-glossario-row">
-          <div class="admin-glossario-info">
-            <div class="admin-glossario-termo">${_esc(t.termo)}</div>
-            <div class="admin-glossario-def">${_esc(t.def)}</div>
+        <div class="admin-glossario-secao ${aberta ? 'aberta' : ''}">
+          <div class="admin-glossario-secao-head" onclick="ADMIN.toggleSecaoGlossario('${secao.replace(/'/g,"\\'")}')">
+            <span class="admin-glossario-secao-seta">▶</span>
+            <span class="admin-glossario-secao-nome">${_esc(secao)}</span>
+            <span class="admin-glossario-secao-count">${termos.length}</span>
+            <button class="admin-btn-sm" onclick="event.stopPropagation();ADMIN.abrirModalGlossario(null,'${secao.replace(/'/g,"\\'")}')">+ Termo</button>
+            <button class="admin-btn-sm admin-btn-danger" onclick="event.stopPropagation();ADMIN.excluirSecaoGlossario('${secao.replace(/'/g,"\\'")}')">🗑️</button>
           </div>
-          <div class="admin-glossario-actions">
-            <button class="admin-btn-sm" onclick="ADMIN.abrirModalGlossario('${t.id}')">✏️ Editar</button>
-            <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.excluirTermoGlossario('${t.id}')">🗑️</button>
-          </div>
+          ${aberta ? `<div class="admin-glossario-secao-body">
+            ${termos.length ? termos.map(t => `
+              <div class="admin-glossario-row">
+                <div class="admin-glossario-info">
+                  <div class="admin-glossario-termo">${_esc(t.termo)}</div>
+                  <div class="admin-glossario-def">${_esc(t.def)}</div>
+                </div>
+                <div class="admin-glossario-actions">
+                  <button class="admin-btn-sm" onclick="ADMIN.abrirModalGlossario('${t.id}')">✏️</button>
+                  <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.excluirTermoGlossario('${t.id}')">🗑️</button>
+                </div>
+              </div>`).join('') : '<div class="admin-glossario-secao-vazia">Nenhum termo nesta seção ainda.</div>'}
+          </div>` : ''}
         </div>`;
     });
+
+    // Termos órfãos: categoria não corresponde a nenhuma seção cadastrada
+    // (ex: dado importado antes de uma seção existir, ou seção renomeada)
+    const orfaos = _glossarioCache.filter(t => !_glossarioSecoesCache.includes(t.categoria) && passaBusca(t));
+    if (orfaos.length) {
+      html += `
+        <div class="admin-glossario-secao admin-glossario-secao-sem aberta">
+          <div class="admin-glossario-secao-head" style="cursor:default">
+            <span class="admin-glossario-secao-nome">⚠️ Sem seção</span>
+            <span class="admin-glossario-secao-count">${orfaos.length}</span>
+          </div>
+          <div class="admin-glossario-secao-body">
+            ${orfaos.map(t => `
+              <div class="admin-glossario-row">
+                <div class="admin-glossario-info">
+                  <div class="admin-glossario-termo">${_esc(t.termo)} <span class="admin-glossario-cat">${_esc(t.categoria || '—')}</span></div>
+                  <div class="admin-glossario-def">${_esc(t.def)}</div>
+                </div>
+                <div class="admin-glossario-actions">
+                  <button class="admin-btn-sm" onclick="ADMIN.abrirModalGlossario('${t.id}')">✏️</button>
+                  <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.excluirTermoGlossario('${t.id}')">🗑️</button>
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }
+
+    if (!html) html = `<div class="admin-empty">Nenhum termo encontrado.</div>`;
     lista.innerHTML = html;
   }
 
-  function abrirModalGlossario(id) {
+  /* ── SEÇÕES ─────────────────────────────────────── */
+  function abrirModalSecaoGlossario() {
+    document.getElementById('admin-secao-glossario-nome').value = '';
+    document.getElementById('admin-modal-secao-glossario').style.display = 'flex';
+  }
+
+  function fecharModalSecaoGlossario() {
+    document.getElementById('admin-modal-secao-glossario').style.display = 'none';
+  }
+
+  async function salvarSecaoGlossario() {
+    const nome = document.getElementById('admin-secao-glossario-nome')?.value?.trim();
+    if (!nome) { _showAdminToast('Digite o nome da seção.', true); return; }
+    if (_glossarioSecoesCache.some(s => s.toLowerCase() === nome.toLowerCase())) {
+      _showAdminToast('Já existe uma seção com esse nome.', true); return;
+    }
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Criando seção…'],
+      executar: async () => {
+        const novasSecoes = [..._glossarioSecoesCache, nome];
+        await _setSecoesGlossario(novasSecoes);
+        _glossarioSecoesCache = novasSecoes;
+        _glossarioSecoesAbertas.add(nome);
+        _registrarAuditoria(`Seção "${nome}" criada no glossário`);
+      },
+      sucesso: 'Seção criada!',
+      onSucesso: () => { fecharModalSecaoGlossario(); _popularSelectCategorias(); _renderGlossario(); },
+    });
+  }
+
+  async function excluirSecaoGlossario(nome) {
+    const temTermos = _glossarioCache.some(t => t.categoria === nome);
+    if (temTermos) {
+      _showAdminToast('Mova ou remova os termos dessa seção antes de excluí-la.', true);
+      return;
+    }
+    const ok = await _confirmar({
+      titulo: 'Remover seção',
+      mensagem: `Remover a seção "${nome}"? Ela está vazia, então nada além dela será apagado.`,
+      labelOk: 'Remover',
+      perigoso: true,
+    });
+    if (!ok) return;
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Removendo seção…'],
+      executar: async () => {
+        const novasSecoes = _glossarioSecoesCache.filter(s => s !== nome);
+        await _setSecoesGlossario(novasSecoes);
+        _glossarioSecoesCache = novasSecoes;
+        _glossarioSecoesAbertas.delete(nome);
+        _registrarAuditoria(`Seção "${nome}" removida do glossário`);
+      },
+      sucesso: 'Seção removida.',
+      onSucesso: () => { _popularSelectCategorias(); _renderGlossario(); },
+    });
+  }
+
+  /* ── TERMOS ─────────────────────────────────────── */
+  function abrirModalGlossario(id, secaoPadrao) {
+    if (!_glossarioSecoesCache.length) {
+      _showAdminToast('Crie uma seção primeiro.', true);
+      return;
+    }
     _glossarioEditandoId = id || null;
     const item = id ? _glossarioCache.find(t => t.id === id) : null;
 
     document.getElementById('admin-glossario-modal-titulo').textContent = item ? '✏️ Editar Termo' : '📖 Novo Termo';
-    document.getElementById('admin-glossario-termo').value     = item?.termo     || '';
-    document.getElementById('admin-glossario-categoria').value = item?.categoria || '';
-    document.getElementById('admin-glossario-def').value       = item?.def       || '';
+    document.getElementById('admin-glossario-termo').value = item?.termo || '';
+    document.getElementById('admin-glossario-def').value   = item?.def   || '';
+    _popularSelectCategorias();
+    document.getElementById('admin-glossario-categoria').value = item?.categoria || secaoPadrao || _glossarioSecoesCache[0];
 
     document.getElementById('admin-modal-glossario').style.display = 'flex';
   }
@@ -2633,12 +2854,12 @@ const ADMIN = (() => {
 
   async function salvarTermoGlossario() {
     const termo     = document.getElementById('admin-glossario-termo')?.value?.trim();
-    const categoria = document.getElementById('admin-glossario-categoria')?.value?.trim();
+    const categoria = document.getElementById('admin-glossario-categoria')?.value;
     const def       = document.getElementById('admin-glossario-def')?.value?.trim();
 
     if (!termo)     { _showAdminToast('Digite o termo.', true); return; }
     if (!def)       { _showAdminToast('Digite a definição.', true); return; }
-    if (!categoria) { _showAdminToast('Digite ou selecione uma categoria.', true); return; }
+    if (!categoria) { _showAdminToast('Selecione uma seção.', true); return; }
 
     // Editando: mantém o mesmo id do documento. Criando: gera slug a partir do termo,
     // e evita colisão com um termo diferente que já use o mesmo slug.
@@ -2683,6 +2904,54 @@ const ADMIN = (() => {
         _registrarAuditoria(`Termo "${nome}" removido do glossário`);
       },
       sucesso: 'Termo removido.',
+      onSucesso: () => carregarGlossario(),
+    });
+  }
+
+  /* ── IMPORTAÇÃO DOS TERMOS PADRÃO ────────────────── */
+  async function importarGlossarioPadrao() {
+    const ok = await _confirmar({
+      titulo: 'Importar termos padrão',
+      mensagem: 'Isso cria as seções e termos que já existem hoje no código (cerca de 90 termos). Termos que já existirem no Firestore com o mesmo nome são pulados, não sobrescritos. Continuar?',
+      labelOk: 'Importar',
+    });
+    if (!ok) return;
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Criando seções…', 'Importando termos…'],
+      executar: async () => {
+        // 1) Garante que todas as seções padrão existam
+        const secoesPadrao = _GLOSSARIO_PADRAO_SECOES.map(s => s.categoria);
+        const secoesAtuais = await _getSecoesGlossario();
+        const novasSecoes = [...secoesAtuais];
+        secoesPadrao.forEach(s => { if (!novasSecoes.includes(s)) novasSecoes.push(s); });
+        if (novasSecoes.length !== secoesAtuais.length) await _setSecoesGlossario(novasSecoes);
+        _glossarioSecoesCache = novasSecoes;
+        novasSecoes.forEach(s => _glossarioSecoesAbertas.add(s));
+
+        // 2) Descobre quais termos já existem (por id) para não sobrescrever edições
+        const res = await _query({ structuredQuery: { from: [{ collectionId: 'glossario' }] } });
+        const idsExistentes = new Set((Array.isArray(res) ? res : [])
+          .filter(r => r.document)
+          .map(r => r.document.name.split('/').pop()));
+
+        let importados = 0;
+        for (const secao of _GLOSSARIO_PADRAO_SECOES) {
+          for (const t of secao.termos) {
+            const id = _slugTermo(t.termo);
+            if (idsExistentes.has(id)) continue;  // já existe — não sobrescreve
+            await _patch(`glossario/${id}`, {
+              termo:     { stringValue: t.termo },
+              categoria: { stringValue: secao.categoria },
+              def:       { stringValue: t.def },
+            });
+            idsExistentes.add(id);
+            importados++;
+          }
+        }
+        _registrarAuditoria(`Importação padrão do glossário: ${importados} termo(s) adicionados`);
+      },
+      sucesso: 'Importação concluída!',
       onSucesso: () => carregarGlossario(),
     });
   }
@@ -3470,6 +3739,8 @@ const ADMIN = (() => {
     carregarDashboard, mudarPeriodoDash,
     carregarHistorias, toggleHistoria,
     carregarGlossario, filtrarGlossario, abrirModalGlossario, fecharModalGlossario, salvarTermoGlossario, excluirTermoGlossario,
+    toggleSecaoGlossario, abrirModalSecaoGlossario, fecharModalSecaoGlossario, salvarSecaoGlossario, excluirSecaoGlossario,
+    importarGlossarioPadrao,
     carregarFeedback,
     carregarSessoes,
     filtrarLogs,
