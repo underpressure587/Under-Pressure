@@ -63,6 +63,7 @@
         <button class="admin-nav-btn"        data-sec="podio"        onclick="ADMIN.irParaSecao('podio')">🏆 Pódio</button>
         <button class="admin-nav-btn"        data-sec="dashboard"    onclick="ADMIN.irParaSecao('dashboard')">📈 Dashboard</button>
         <button class="admin-nav-btn"        data-sec="historias"    onclick="ADMIN.irParaSecao('historias')">🎮 Histórias</button>
+        <button class="admin-nav-btn"        data-sec="glossario"    onclick="ADMIN.irParaSecao('glossario')">📖 Glossário</button>
         <button class="admin-nav-btn"        data-sec="feedback"     onclick="ADMIN.irParaSecao('feedback')">💬 Feedback</button>
         <button class="admin-nav-btn"        data-sec="sessoes"      onclick="ADMIN.irParaSecao('sessoes')">🖥️ Sessões</button>
         <button class="admin-nav-btn"        data-sec="versao"       onclick="ADMIN.irParaSecao('versao')">🔖 Versão</button>
@@ -202,6 +203,15 @@
         <div id="admin-sec-historias" class="admin-section" style="display:none">
           <div class="admin-historias-info">Ative ou desative histórias em tempo real — sem precisar de deploy.</div>
           <div id="admin-historias-lista"><div class="admin-loading"></div></div>
+        </div>
+
+        <div id="admin-sec-glossario" class="admin-section" style="display:none">
+          <div class="admin-historias-info">Adicione, edite ou remova termos técnicos do jogo — sem precisar de deploy.</div>
+          <div class="admin-busca-row">
+            <input type="text" id="admin-glossario-busca" class="admin-input" placeholder="Buscar termo..." oninput="ADMIN.filtrarGlossario(this.value)">
+            <button class="admin-btn admin-btn-ok" style="white-space:nowrap" onclick="ADMIN.abrirModalGlossario()">+ Novo termo</button>
+          </div>
+          <div id="admin-glossario-lista"><div class="admin-loading"></div></div>
         </div>
 
         <!-- ══ FEEDBACK ══ -->
@@ -547,6 +557,25 @@
       <div class="admin-modal-foot">
         <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2);text-transform:none;letter-spacing:0" onclick="ADMIN.fecharModalInbox()">Cancelar</button>
         <button class="admin-btn admin-btn-ok" onclick="ADMIN.enviarMensagemInbox()">📨 Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-modal-glossario" class="admin-modal-overlay" style="display:none">
+    <div class="admin-modal-card">
+      <div class="admin-modal-head">
+        <span id="admin-glossario-modal-titulo" class="admin-modal-title">📖 Novo Termo</span>
+        <button class="admin-modal-close" onclick="ADMIN.fecharModalGlossario()">✕</button>
+      </div>
+      <div class="admin-modal-body">
+        <input type="text" id="admin-glossario-termo" class="admin-input" placeholder="Termo (ex: SLA, ARR, Churn...)">
+        <input type="text" id="admin-glossario-categoria" class="admin-input" list="admin-glossario-categorias-lista" placeholder="Categoria (ex: Finanças e Investimento)">
+        <datalist id="admin-glossario-categorias-lista"></datalist>
+        <textarea id="admin-glossario-def" placeholder="Definição do termo..." class="admin-input admin-textarea" style="min-height:110px"></textarea>
+      </div>
+      <div class="admin-modal-foot">
+        <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2);text-transform:none;letter-spacing:0" onclick="ADMIN.fecharModalGlossario()">Cancelar</button>
+        <button class="admin-btn admin-btn-ok" onclick="ADMIN.salvarTermoGlossario()">💾 Salvar</button>
       </div>
     </div>
   </div>

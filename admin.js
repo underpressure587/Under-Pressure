@@ -1870,6 +1870,7 @@ const ADMIN = (() => {
     if (id === 'podio')        carregarPodioAdmin();
     if (id === 'dashboard')    carregarDashboard();
     if (id === 'historias')    carregarHistorias();
+    if (id === 'glossario')    carregarGlossario();
     if (id === 'feedback')     carregarFeedback();
     if (id === 'sessoes')      carregarSessoes();
     if (id === 'versao')       carregarVersao();
@@ -2517,6 +2518,172 @@ const ADMIN = (() => {
         _registrarAuditoria(ativa ? `História ${chave} ativada` : `História ${chave} desativada`);
       },
       sucesso: ativa ? 'História ativada com sucesso!' : 'História desativada.',
+    });
+  }
+
+  /* ════════════════════════════════════════════════════
+     GLOSSÁRIO
+  ════════════════════════════════════════════════════ */
+  const _GLOSSARIO_CATEGORIAS_SUGERIDAS = [
+    'Indicadores e Mecânicas do Jogo', 'Finanças e Investimento',
+    'Tecnologia e Produto', 'Operações e Logística',
+    'RH e Gestão de Pessoas', 'Regulatório e Jurídico', 'Mercado e Estratégia',
+  ];
+
+  let _glossarioCache = [];   // [{id, termo, def, categoria}]
+  let _glossarioBusca = '';
+  let _glossarioEditandoId = null;  // null = criando novo termo
+
+  function _slugTermo(termo) {
+    return String(termo)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // remove acentos
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80) || `termo-${Date.now()}`;
+  }
+
+  async function carregarGlossario() {
+    const lista = document.getElementById('admin-glossario-lista');
+    lista.innerHTML = '<div class="admin-loading"></div>';
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'glossario' }],
+          orderBy: [
+            { field: { fieldPath: 'categoria' }, direction: 'ASCENDING' },
+            { field: { fieldPath: 'termo' },     direction: 'ASCENDING' },
+          ],
+        }
+      });
+      _glossarioCache = (Array.isArray(res) ? res : [])
+        .filter(r => r.document)
+        .map(r => ({ id: r.document.name.split('/').pop(), ..._parseFields(r.document.fields) }));
+
+      // Preenche o datalist de categorias com as já usadas + sugeridas
+      const cats = new Set(_GLOSSARIO_CATEGORIAS_SUGERIDAS);
+      _glossarioCache.forEach(t => t.categoria && cats.add(t.categoria));
+      const dl = document.getElementById('admin-glossario-categorias-lista');
+      if (dl) dl.innerHTML = [...cats].map(c => `<option value="${_esc(c)}">`).join('');
+
+      _renderGlossario();
+    } catch(e) {
+      _showAdminError('admin-glossario-lista', 'Erro: ' + e.message);
+    }
+  }
+
+  function filtrarGlossario(termo) {
+    _glossarioBusca = (termo || '').trim().toLowerCase();
+    _renderGlossario();
+  }
+
+  function _renderGlossario() {
+    const lista = document.getElementById('admin-glossario-lista');
+    if (!lista) return;
+
+    const filtrados = _glossarioBusca
+      ? _glossarioCache.filter(t =>
+          (t.termo || '').toLowerCase().includes(_glossarioBusca) ||
+          (t.categoria || '').toLowerCase().includes(_glossarioBusca))
+      : _glossarioCache;
+
+    if (!filtrados.length) {
+      lista.innerHTML = `<div class="admin-empty">${_glossarioCache.length ? 'Nenhum termo encontrado.' : 'Nenhum termo cadastrado ainda — clique em "+ Novo termo" para adicionar.'}</div>`;
+      return;
+    }
+
+    let categoriaAtual = null;
+    let html = '';
+    filtrados.forEach(t => {
+      if (t.categoria !== categoriaAtual) {
+        categoriaAtual = t.categoria;
+        html += `<div class="admin-sec-title">${_esc(categoriaAtual || 'Sem categoria')}</div>`;
+      }
+      html += `
+        <div class="admin-glossario-row">
+          <div class="admin-glossario-info">
+            <div class="admin-glossario-termo">${_esc(t.termo)}</div>
+            <div class="admin-glossario-def">${_esc(t.def)}</div>
+          </div>
+          <div class="admin-glossario-actions">
+            <button class="admin-btn-sm" onclick="ADMIN.abrirModalGlossario('${t.id}')">✏️ Editar</button>
+            <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.excluirTermoGlossario('${t.id}')">🗑️</button>
+          </div>
+        </div>`;
+    });
+    lista.innerHTML = html;
+  }
+
+  function abrirModalGlossario(id) {
+    _glossarioEditandoId = id || null;
+    const item = id ? _glossarioCache.find(t => t.id === id) : null;
+
+    document.getElementById('admin-glossario-modal-titulo').textContent = item ? '✏️ Editar Termo' : '📖 Novo Termo';
+    document.getElementById('admin-glossario-termo').value     = item?.termo     || '';
+    document.getElementById('admin-glossario-categoria').value = item?.categoria || '';
+    document.getElementById('admin-glossario-def').value       = item?.def       || '';
+
+    document.getElementById('admin-modal-glossario').style.display = 'flex';
+  }
+
+  function fecharModalGlossario() {
+    document.getElementById('admin-modal-glossario').style.display = 'none';
+    _glossarioEditandoId = null;
+  }
+
+  async function salvarTermoGlossario() {
+    const termo     = document.getElementById('admin-glossario-termo')?.value?.trim();
+    const categoria = document.getElementById('admin-glossario-categoria')?.value?.trim();
+    const def       = document.getElementById('admin-glossario-def')?.value?.trim();
+
+    if (!termo)     { _showAdminToast('Digite o termo.', true); return; }
+    if (!def)       { _showAdminToast('Digite a definição.', true); return; }
+    if (!categoria) { _showAdminToast('Digite ou selecione uma categoria.', true); return; }
+
+    // Editando: mantém o mesmo id do documento. Criando: gera slug a partir do termo,
+    // e evita colisão com um termo diferente que já use o mesmo slug.
+    const id = _glossarioEditandoId || (() => {
+      let base = _slugTermo(termo);
+      let candidato = base;
+      let i = 2;
+      while (_glossarioCache.some(t => t.id === candidato)) { candidato = `${base}-${i++}`; }
+      return candidato;
+    })();
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', _glossarioEditandoId ? 'Atualizando termo…' : 'Criando termo…'],
+      executar: async () => {
+        await _patch(`glossario/${id}`, {
+          termo:     { stringValue: termo },
+          categoria: { stringValue: categoria },
+          def:       { stringValue: def },
+        });
+        _registrarAuditoria(_glossarioEditandoId ? `Termo "${termo}" do glossário editado` : `Termo "${termo}" adicionado ao glossário`);
+      },
+      sucesso: _glossarioEditandoId ? 'Termo atualizado!' : 'Termo adicionado!',
+      onSucesso: () => { fecharModalGlossario(); carregarGlossario(); },
+    });
+  }
+
+  async function excluirTermoGlossario(id) {
+    const item = _glossarioCache.find(t => t.id === id);
+    const nome = item?.termo || id;
+    const ok = await _confirmar({
+      titulo: 'Remover termo',
+      mensagem: `Remover "${nome}" do glossário? Essa ação não pode ser desfeita.`,
+      labelOk: 'Remover',
+      perigoso: true,
+    });
+    if (!ok) return;
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', 'Removendo termo…'],
+      executar: async () => {
+        await _delete(`glossario/${id}`);
+        _registrarAuditoria(`Termo "${nome}" removido do glossário`);
+      },
+      sucesso: 'Termo removido.',
+      onSucesso: () => carregarGlossario(),
     });
   }
 
@@ -3302,6 +3469,7 @@ const ADMIN = (() => {
     carregarVersao, salvarChangelog, publicarChangelogJogadores, selecionarDuracaoChangelog, apagarChangelogJogadores,
     carregarDashboard, mudarPeriodoDash,
     carregarHistorias, toggleHistoria,
+    carregarGlossario, filtrarGlossario, abrirModalGlossario, fecharModalGlossario, salvarTermoGlossario, excluirTermoGlossario,
     carregarFeedback,
     carregarSessoes,
     filtrarLogs,

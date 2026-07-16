@@ -801,6 +801,29 @@ a { color: inherit; text-decoration: none; }
 .admin-historia-badge.inativa { background: var(--bg4); color: var(--t3); }
 
 /* ════════════════════════════════════════════════
+   GLOSSÁRIO
+════════════════════════════════════════════════ */
+.admin-glossario-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+.admin-glossario-info { flex: 1; min-width: 0; }
+.admin-glossario-termo {
+  font-size: .84rem; font-weight: 700; color: var(--t1);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.admin-glossario-cat {
+  font-size: .6rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--gold);
+  background: rgba(255,215,120,.1); border: 1px solid var(--gold-bd, rgba(255,215,120,.25));
+  padding: 2px 8px; border-radius: 10px;
+}
+.admin-glossario-def {
+  font-size: .74rem; color: var(--t3); margin-top: 4px; line-height: 1.4;
+}
+.admin-glossario-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ════════════════════════════════════════════════
    FEEDBACK
 ════════════════════════════════════════════════ */
 .admin-feedback-media { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px 0 14px; }
