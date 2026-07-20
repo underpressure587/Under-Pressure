@@ -237,6 +237,7 @@ async function _boot() {
     document.body.appendChild(confirmar);
   }
   _carregarVersaoAtual(); // carrega versão atual em background
+  _sincronizarGlossarioCloud(); // atualiza o glossário com a versão mais recente da nuvem, em background
 
   // Sempre sai da screen-loading imediatamente
   const saved = LS.get(SK.PLAYER);
@@ -2408,7 +2409,10 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
 /* ════════════════════════════════════════════════════
    GLOSSÁRIO
 ════════════════════════════════════════════════════ */
-const GLOSSARIO_SECOES = [
+// Conjunto padrão, embarcado no código — funciona 100% offline e é usado
+// enquanto a versão vinda da nuvem (Firestore, editável pelo Painel de
+// Controle) ainda não foi baixada/cacheada. Ver _sincronizarGlossarioCloud().
+const _GLOSSARIO_SECOES_PADRAO = [
   { categoria: "Indicadores e Mecânicas do Jogo", termos: [
     { termo:"SLA", def:"Acordo de Nível de Serviço (Service Level Agreement). Define metas de prazo e qualidade entre fornecedor e cliente. Ex: entregar 95% dos pedidos em até 48h." },
     { termo:"NPS", def:"Nota de lealdade dos clientes (Net Promoter Score). Calculado pela pergunta: 'De 0 a 10, quanto você recomendaria esta empresa?' Acima de 70 é excelente." },
@@ -2500,11 +2504,94 @@ const GLOSSARIO_SECOES = [
   ]},
 ];
 
+// Dado "ativo" que o jogo realmente usa em tela — começa como o padrão
+// embarcado, mas é substituído (a) por qualquer cache local salvo de uma
+// sincronização anterior, e depois (b) pela versão mais nova vinda do
+// Firestore assim que a sincronização em background terminar.
+let GLOSSARIO_SECOES = _GLOSSARIO_SECOES_PADRAO;
+
 // Lista plana derivada das seções, mantida para qualquer código legado
 // que ainda espere o formato antigo (array simples de {termo, def}).
-const GLOSSARIO_TERMOS = GLOSSARIO_SECOES.flatMap(s => s.termos);
+let GLOSSARIO_TERMOS = GLOSSARIO_SECOES.flatMap(s => s.termos);
 
+const GLOSSARIO_CACHE_KEY = 'gsp_glossario_cache_v1';
 
+// Aplica um novo conjunto de seções como o dado ativo do glossário,
+// recalculando tudo que depende dele (lista plana, ordenação por tamanho
+// de termo usada na marcação inline, e a UI se estiver aberta na tela).
+function _aplicarGlossario(secoes) {
+  GLOSSARIO_SECOES = secoes;
+  GLOSSARIO_TERMOS = GLOSSARIO_SECOES.flatMap(s => s.termos);
+  _glossarioTermosOrdenados = null; // força reordenar na próxima marcação
+  const overlay = document.getElementById('overlay-glossary');
+  if (overlay && overlay.classList.contains('active')) {
+    _renderGlossarioTabs();
+    const busca = document.getElementById('glossary-search');
+    _renderGlossario(busca ? busca.value : '');
+  }
+}
+
+// Carrega, de forma síncrona, o último glossário cacheado localmente
+// (salvo por uma sincronização anterior com o Firestore). Chamado uma vez
+// no boot, antes de qualquer tela aparecer — assim o jogo já usa a versão
+// mais recente conhecida mesmo sem internet, sem esperar rede nenhuma.
+function _carregarGlossarioCache() {
+  const cache = LS.get(GLOSSARIO_CACHE_KEY);
+  if (cache?.secoes?.length) _aplicarGlossario(cache.secoes);
+}
+
+// Busca a versão mais atual do glossário no Firestore (leitura pública,
+// não exige login — funciona inclusive para convidados) e, se vier
+// diferente/mais completa que a atual, atualiza o dado ativo e o cache
+// local. Roda em background e nunca bloqueia a tela: se falhar (sem
+// internet, projeto ainda sem termos cadastrados etc.) o jogo simplesmente
+// continua com o que já tinha (cache local ou o padrão embarcado).
+async function _sincronizarGlossarioCloud() {
+  try {
+    const [rSecoes, rTermos] = await Promise.all([
+      fetch(`${_FS_BASE}/config/glossarioSecoes`),
+      fetch(`${_FS_BASE}/glossario:runQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'glossario' }] } }),
+      }),
+    ]);
+    if (!rSecoes.ok || !rTermos.ok) return;
+
+    const docSecoes = await rSecoes.json();
+    const nomesSecoes = (docSecoes?.fields?.nomes?.arrayValue?.values || [])
+      .map(v => v.stringValue).filter(Boolean);
+
+    const linhas = await rTermos.json();
+    const termosPlano = (Array.isArray(linhas) ? linhas : [])
+      .filter(l => l.document)
+      .map(l => {
+        const f = l.document.fields || {};
+        return { termo: f.termo?.stringValue || '', def: f.def?.stringValue || '', categoria: f.categoria?.stringValue || '' };
+      })
+      .filter(t => t.termo && t.def);
+
+    if (!nomesSecoes.length || !termosPlano.length) return; // nuvem ainda vazia — mantém o que já está ativo
+
+    const secoes = nomesSecoes
+      .map(categoria => ({ categoria, termos: termosPlano.filter(t => t.categoria === categoria) }))
+      .filter(s => s.termos.length > 0);
+
+    // Termos cuja categoria não corresponde a nenhuma seção conhecida
+    // (ex: seção renomeada/removida no painel) ainda entram no jogo, só
+    // que agrupados numa seção genérica, para não sumir silenciosamente.
+    const orfaos = termosPlano.filter(t => !nomesSecoes.includes(t.categoria));
+    if (orfaos.length) secoes.push({ categoria: 'Outros', termos: orfaos });
+
+    if (!secoes.length) return;
+
+    _aplicarGlossario(secoes);
+    LS.set(GLOSSARIO_CACHE_KEY, { secoes, ts: Date.now() });
+  } catch (e) {
+    // Offline ou erro de rede — silencioso, o jogo segue com o dado que já tinha.
+  }
+}
+_carregarGlossarioCache(); // aplica o cache local (se houver) assim que o script carrega
 
 let _glossarioAbaAtiva = "todos";
 
