@@ -2541,11 +2541,16 @@ function _carregarGlossarioCache() {
 }
 
 // Busca a versão mais atual do glossário no Firestore (leitura pública,
-// não exige login — funciona inclusive para convidados) e, se vier
-// diferente/mais completa que a atual, atualiza o dado ativo e o cache
-// local. Roda em background e nunca bloqueia a tela: se falhar (sem
-// internet, projeto ainda sem termos cadastrados etc.) o jogo simplesmente
-// continua com o que já tinha (cache local ou o padrão embarcado).
+// não exige login — funciona inclusive para convidados). Chamada (a) uma
+// vez em background no boot, e (b) toda vez que o jogador abre a tela do
+// glossário — nesse caso sempre busca de novo, na hora, mesmo que já
+// tenha sincronizado antes na sessão.
+//   • Achou termos na nuvem e é diferente do que está na tela → troca.
+//   • Achou termos na nuvem e é igual ao que já está na tela → não faz nada.
+//   • Nuvem sem seções ou sem termos (zerada no painel) → volta pro
+//     glossário padrão embarcado no código, e limpa o cache local.
+//   • Sem internet ou erro de rede → não mexe em nada, mantém o que já
+//     estava na tela (cache local ou o padrão).
 async function _sincronizarGlossarioCloud() {
   try {
     const [rSecoes, rTermos] = await Promise.all([
@@ -2553,10 +2558,15 @@ async function _sincronizarGlossarioCloud() {
       fetch(`${_FS_BASE}:runQuery`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'glossario' }] } }),
+        body: JSON.stringify({
+          structuredQuery: {
+            from: [{ collectionId: 'glossario' }],
+            orderBy: [{ field: { fieldPath: 'termo' }, direction: 'ASCENDING' }],
+          }
+        }),
       }),
     ]);
-    if (!rSecoes.ok || !rTermos.ok) return;
+    if (!rSecoes.ok || !rTermos.ok) return; // sem internet/erro — mantém o que já está ativo
 
     const docSecoes = await rSecoes.json();
     const nomesSecoes = (docSecoes?.fields?.nomes?.arrayValue?.values || [])
@@ -2571,22 +2581,30 @@ async function _sincronizarGlossarioCloud() {
       })
       .filter(t => t.termo && t.def);
 
-    if (!nomesSecoes.length || !termosPlano.length) return; // nuvem ainda vazia — mantém o que já está ativo
+    let novoConjunto;
+    if (!nomesSecoes.length || !termosPlano.length) {
+      // Nuvem zerada (sem seções ou sem termos) — volta pro padrão embarcado.
+      novoConjunto = _GLOSSARIO_SECOES_PADRAO;
+    } else {
+      const secoes = nomesSecoes
+        .map(categoria => ({ categoria, termos: termosPlano.filter(t => t.categoria === categoria) }))
+        .filter(s => s.termos.length > 0);
 
-    const secoes = nomesSecoes
-      .map(categoria => ({ categoria, termos: termosPlano.filter(t => t.categoria === categoria) }))
-      .filter(s => s.termos.length > 0);
+      // Termos cuja categoria não corresponde a nenhuma seção conhecida
+      // (ex: seção renomeada/removida no painel) ainda entram no jogo, só
+      // que agrupados numa seção genérica, para não sumir silenciosamente.
+      const orfaos = termosPlano.filter(t => !nomesSecoes.includes(t.categoria));
+      if (orfaos.length) secoes.push({ categoria: 'Outros', termos: orfaos });
 
-    // Termos cuja categoria não corresponde a nenhuma seção conhecida
-    // (ex: seção renomeada/removida no painel) ainda entram no jogo, só
-    // que agrupados numa seção genérica, para não sumir silenciosamente.
-    const orfaos = termosPlano.filter(t => !nomesSecoes.includes(t.categoria));
-    if (orfaos.length) secoes.push({ categoria: 'Outros', termos: orfaos });
+      novoConjunto = secoes.length ? secoes : _GLOSSARIO_SECOES_PADRAO;
+    }
 
-    if (!secoes.length) return;
+    // Só troca (e só re-renderiza) se for realmente diferente do que já está na tela.
+    if (JSON.stringify(novoConjunto) === JSON.stringify(GLOSSARIO_SECOES)) return;
 
-    _aplicarGlossario(secoes);
-    LS.set(GLOSSARIO_CACHE_KEY, { secoes, ts: Date.now() });
+    _aplicarGlossario(novoConjunto);
+    if (novoConjunto === _GLOSSARIO_SECOES_PADRAO) LS.remove(GLOSSARIO_CACHE_KEY);
+    else LS.set(GLOSSARIO_CACHE_KEY, { secoes: novoConjunto, ts: Date.now() });
   } catch (e) {
     // Offline ou erro de rede — silencioso, o jogo segue com o dado que já tinha.
   }
@@ -2652,7 +2670,7 @@ function filtrarGlossario(valor) {
   _renderGlossario(valor);
 }
 
-function openGlossary() {
+async function openGlossary() {
   const el=document.getElementById("overlay-glossary");
   _abrirOverlay('overlay-glossary');
   const busca = document.getElementById('glossary-search');
@@ -2660,6 +2678,11 @@ function openGlossary() {
   _glossarioAbaAtiva = "todos";
   _renderGlossarioTabs();
   _renderGlossario('');
+  // Toda vez que o glossário é aberto, busca de novo no Firestore. Se vier
+  // algo diferente do que já está na tela, troca sozinho (_aplicarGlossario
+  // re-renderiza); se não vier nada de diferente, ou a busca falhar, a tela
+  // que já foi aberta acima continua exatamente como está.
+  await _sincronizarGlossarioCloud();
 }
 function closeGlossary() { const el=document.getElementById("overlay-glossary"); _fecharOverlay('overlay-glossary'); }
 
