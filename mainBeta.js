@@ -2550,7 +2550,7 @@ async function _sincronizarGlossarioCloud() {
   try {
     const [rSecoes, rTermos] = await Promise.all([
       fetch(`${_FS_BASE}/config/glossarioSecoes`),
-      fetch(`${_FS_BASE}/glossario:runQuery`, {
+      fetch(`${_FS_BASE}:runQuery`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'glossario' }] } }),
