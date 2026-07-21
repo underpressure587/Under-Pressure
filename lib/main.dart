@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'theme/app_theme.dart';
 import 'services/toast_service.dart';
+import 'services/glossario_service.dart';
 import 'screens/logo_video_screen.dart';
 
 void main() async {
@@ -31,6 +32,11 @@ void main() async {
           'https://under-pressure-49320-default-rtdb.firebaseio.com',
     ),
   );
+
+  // Aplica o glossário salvo em cache (se houver) antes de qualquer tela
+  // abrir. A busca por uma versão mais nova na nuvem acontece depois,
+  // toda vez que a tela do glossário é aberta (GlossarioScreen.initState).
+  await GlossarioService.carregarCache();
 
   runApp(const UnderPressureApp());
 }
