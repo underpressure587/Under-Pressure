@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
 
   Map<String, dynamic>? _playerData;
+  bool _fotoOn = false;
   _FbStatus _fbStatus = _FbStatus.connecting;
   int? _fbPing;
   Timer? _pingTimer;
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     _setupAnimations();
     _loadPlayer();
+    _loadFotoPref();
     _checkSession();
     _doPing();
     _pingTimer = Timer.periodic(
@@ -62,6 +64,12 @@ class _HomeScreenState extends State<HomeScreen>
     final data =
         await FirestoreService.getDoc('usuarios/${user.uid}');
     if (mounted) setState(() => _playerData = data);
+  }
+
+  Future<void> _loadFotoPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    final on = prefs.getBool('cfg_foto_on') ?? false;
+    if (mounted) setState(() => _fotoOn = on);
   }
 
   Future<void> _checkSession() async {
@@ -114,14 +122,15 @@ class _HomeScreenState extends State<HomeScreen>
   String get _initial =>
       _playerName.isNotEmpty ? _playerName[0] : '?';
 
-  String? get _photoUrl => _playerData?['fotoUrl'] as String?;
+  String? get _photoUrl =>
+      _fotoOn ? AuthService.currentUser?.photoURL : null;
 
   // ── Navegação ─────────────────────────────────────────
   void _push(Widget screen, {bool reload = false}) =>
       Navigator.push(context,
               MaterialPageRoute(builder: (_) => screen))
           .then((_) {
-        if (reload) { _loadPlayer(); _checkSession(); }
+        if (reload) { _loadPlayer(); _loadFotoPref(); _checkSession(); }
       });
 
   void _irParaSector() =>
@@ -258,8 +267,6 @@ class _HomeScreenState extends State<HomeScreen>
 
           // ── Tools ─────────────────────────────────
           Row(mainAxisSize: MainAxisSize.min, children: [
-            _StatusBadge(status: _fbStatus, ping: _fbPing),
-            const SizedBox(width: 6),
             _GhostBtn(
                 onTap: () {},
                 child: const Icon(Icons.mail_outline_rounded,
@@ -272,10 +279,10 @@ class _HomeScreenState extends State<HomeScreen>
                     style: AppTheme.syne(
                         size: 13,
                         weight: FontWeight.w700,
-                        color: AppTheme.t2))),
+                        color: AppTheme.primary))),
             const SizedBox(width: 6),
             _GhostBtn(
-                onTap: () => _push(const ConfigScreen()),
+                onTap: () => _push(const ConfigScreen(), reload: true),
                 child: const Icon(Icons.settings_outlined,
                     size: 16, color: AppTheme.t2)),
           ]),
@@ -468,14 +475,10 @@ class _HomeScreenState extends State<HomeScreen>
                       mainAxisAlignment:
                           MainAxisAlignment.center,
                       children: [
-                        ShaderMask(
-                          shaderCallback: (b) =>
-                              AppTheme.goldGradient
-                                  .createShader(b),
-                          child: const Icon(
-                              Icons.play_arrow_rounded,
-                              size: 40,
-                              color: Colors.white),
+                        const Icon(
+                          Icons.play_arrow_rounded,
+                          size: 40,
+                          color: AppTheme.primary,
                         ),
                         const SizedBox(height: 6),
                         Text(
