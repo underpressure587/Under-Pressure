@@ -382,17 +382,10 @@ class _HomeScreenState extends State<HomeScreen>
   // ══ CENTER ═══════════════════════════════════════════
   Widget _buildCenter() {
     return Container(
-      // Radial glow de fundo idêntico ao web
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.center,
-          radius: 0.75,
-          colors: [
-            AppTheme.primaryGlow.withOpacity(0.18),
-            Colors.transparent,
-          ],
-        ),
-      ),
+      // Sem glow de fundo aqui: no site mobile, .home-center não tem
+      // background radial-gradient (isso só existe na versão desktop).
+      // Esse gradiente extra era o que somava com o highlight interno do
+      // botão e gerava o borrão branco sobre o ícone de play.
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
