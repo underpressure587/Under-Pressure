@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
@@ -19,9 +20,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _data;
   List<Map<String, dynamic>> _hist = [];
   bool _loading = true;
+  bool _fotoOn = false;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() { super.initState(); _load(); _loadFotoPref(); }
+
+  Future<void> _loadFotoPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    final on = prefs.getBool('cfg_foto_on') ?? false;
+    if (mounted) setState(() => _fotoOn = on);
+  }
 
   Future<void> _load() async {
     final uid = AuthService.currentUser?.uid;
@@ -39,7 +47,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String get _nome => (_data?['nome'] as String?) ?? AuthService.currentUser?.displayName ?? 'Jogador';
   String get _email => AuthService.currentUser?.email ?? '';
-  String? get _photoUrl => _data?['fotoUrl'] as String?;
+  String? get _photoUrl =>
+      _fotoOn ? AuthService.currentUser?.photoURL : null;
   bool   get _isGuest => AuthService.currentUser?.isAnonymous == true;
   String get _uid => AuthService.currentUser?.uid ?? '';
   String get _shortId => _uid.length >= 8 ? '#${_uid.substring(0, 8).toUpperCase()}' : '';

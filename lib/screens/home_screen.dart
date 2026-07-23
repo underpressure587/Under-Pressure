@@ -15,6 +15,70 @@ import 'config_screen.dart';
 
 enum _FbStatus { connecting, online, offline }
 
+// Botão principal "Iniciar Mandato" — montado uma única vez (não fica
+// dentro do rebuild da animação dos anéis). O gradiente é forçado a
+// ficar preso num círculo perfeito via ClipOval (numa camada separada
+// da sombra), pra garantir que nada vaze pra fora do formato circular.
+class _StartButtonCore extends StatelessWidget {
+  const _StartButtonCore();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 172,
+      height: 172,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: AppTheme.primaryGlow, blurRadius: 50),
+          const BoxShadow(
+              color: Color(0xB3000000),
+              blurRadius: 40,
+              offset: Offset(0, 12)),
+        ],
+      ),
+      child: ClipOval(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0, -0.3),
+              radius: 0.85,
+              colors: [
+                Colors.white.withOpacity(0.07),
+                AppTheme.bg2,
+                Colors.black.withOpacity(0.3),
+              ],
+              stops: const [0, 0.45, 1],
+            ),
+            border: Border.all(color: Colors.white.withOpacity(0.06)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.play_arrow_rounded,
+                size: 40,
+                color: AppTheme.primary,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'INICIAR\nMANDATO',
+                textAlign: TextAlign.center,
+                style: AppTheme.syne(
+                  size: 11,
+                  weight: FontWeight.w800,
+                  color: AppTheme.t2,
+                  letterSpacing: 0.14 * 11,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -382,14 +446,10 @@ class _HomeScreenState extends State<HomeScreen>
   // ══ CENTER ═══════════════════════════════════════════
   Widget _buildCenter() {
     return Container(
-      // Sem glow de fundo aqui: no site mobile, .home-center não tem
-      // background radial-gradient (isso só existe na versão desktop).
-      // Esse gradiente extra era o que somava com o highlight interno do
-      // botão e gerava o borrão branco sobre o ícone de play.
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // "UNDER PRESSURE" acima
+          // "UNDER PRESSURE" acima — igual ao ::before do site
           Text(
             'UNDER PRESSURE',
             style: AppTheme.syne(
@@ -401,33 +461,42 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           const SizedBox(height: 18),
 
-          // Botão circular com anéis
+          // Botão circular com anéis — refeito do zero. O botão principal
+          // (que tem a sombra dourada de 50px de blur) é montado UMA VEZ
+          // só, via o parâmetro `child` do AnimatedBuilder, e não é
+          // reconstruído a cada frame da animação dos anéis — só os
+          // anéis finos (sem blur, só borda) são redesenhados a cada
+          // frame. Um blur pesado sendo recalculado a cada frame junto
+          // com uma animação contínua é o padrão clássico que gera esse
+          // tipo de borrão/artefato no Impeller.
           GestureDetector(
             onTap: _irParaSector,
             child: AnimatedBuilder(
               animation: _ringCtrl,
-              builder: (_, __) => SizedBox(
+              child: const _StartButtonCore(),
+              builder: (_, child) => SizedBox(
                 width: 196,
                 height: 196,
                 child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                  // Anel exterior
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.primary
-                            .withOpacity(_ring1.value * 0.55),
-                        width: 1.5,
+                  alignment: Alignment.center,
+                  children: [
+                    // Anel exterior
+                    Container(
+                      width: 196,
+                      height: 196,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppTheme.primary
+                              .withOpacity(_ring1.value * 0.55),
+                          width: 1.5,
+                        ),
                       ),
                     ),
-                  ),
-                  // Anel interior reverso
-                  Positioned(
-                    left: 12, right: 12,
-                    top: 12, bottom: 12,
-                    child: Container(
+                    // Anel interior reverso
+                    Container(
+                      width: 184,
+                      height: 184,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
@@ -437,57 +506,9 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ),
                     ),
-                  ),
-                  // Botão principal
-                  Container(
-                    width: 172, height: 172,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        center: const Alignment(0, -0.3),
-                        colors: [
-                          Colors.white.withOpacity(0.07),
-                          AppTheme.bg2,
-                          Colors.black.withOpacity(0.3),
-                        ],
-                        stops: const [0, 0.45, 1],
-                      ),
-                      border: Border.all(
-                          color: Colors.white.withOpacity(0.06)),
-                      boxShadow: [
-                        BoxShadow(
-                            color: AppTheme.primaryGlow,
-                            blurRadius: 50),
-                        const BoxShadow(
-                            color: Color(0xB3000000),
-                            blurRadius: 40,
-                            offset: Offset(0, 12)),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.play_arrow_rounded,
-                          size: 40,
-                          color: AppTheme.primary,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'INICIAR\nMANDATO',
-                          textAlign: TextAlign.center,
-                          style: AppTheme.syne(
-                            size: 11,
-                            weight: FontWeight.w800,
-                            color: AppTheme.t2,
-                            letterSpacing: 0.14 * 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ]),
+                    child!,
+                  ],
+                ),
               ),
             ),
           ),

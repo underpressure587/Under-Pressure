@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_widgets.dart';
 import 'home_screen.dart';
+import 'glossario_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -95,13 +96,10 @@ class _LandingScreenState extends State<_LandingScreen>
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
             child: Row(children: [
               _GhostBtn(
-                icon: Icons.fullscreen_rounded,
-                onTap: () {},
-              ),
-              const SizedBox(width: 6),
-              _GhostBtn(
                 label: '?',
-                onTap: () {},
+                color: AppTheme.primary,
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const GlossarioScreen())),
               ),
             ]),
           ),
@@ -582,9 +580,10 @@ class _GlowButton extends StatelessWidget {
 class _GhostBtn extends StatelessWidget {
   final IconData? icon;
   final String? label;
+  final Color? color;
   final VoidCallback onTap;
 
-  const _GhostBtn({this.icon, this.label, required this.onTap});
+  const _GhostBtn({this.icon, this.label, this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -599,12 +598,12 @@ class _GhostBtn extends StatelessWidget {
         ),
         child: Center(
           child: icon != null
-              ? Icon(icon, size: 16, color: AppTheme.t2)
+              ? Icon(icon, size: 16, color: color ?? AppTheme.t2)
               : Text(label ?? '',
                   style: AppTheme.syne(
                       size: 13,
                       weight: FontWeight.w700,
-                      color: AppTheme.t2)),
+                      color: color ?? AppTheme.t2)),
         ),
       ),
     );
