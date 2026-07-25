@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../services/inbox_service.dart';
+import 'inbox_screen.dart';
 import 'login_screen.dart';
 import 'sector_screen.dart';
 import 'profile_screen.dart';
@@ -29,12 +31,13 @@ class _StartButtonCore extends StatelessWidget {
       height: 172,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(color: AppTheme.primaryGlow, blurRadius: 50),
-          const BoxShadow(
-              color: Color(0xB3000000),
-              blurRadius: 40,
-              offset: Offset(0, 12)),
+        // Sombra pequena só pra dar profundidade — blur baixo de
+        // propósito. Blur grande (50px) é o que causava o borrão: é um
+        // problema conhecido do motor de renderização do Flutter com
+        // sombras grandes/empilhadas em círculos.
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x59000000), blurRadius: 14, offset: Offset(0, 8)),
         ],
       ),
       child: ClipOval(
@@ -50,7 +53,10 @@ class _StartButtonCore extends StatelessWidget {
               ],
               stops: const [0, 0.45, 1],
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.06)),
+            // Borda dourada sólida no lugar do brilho borrado — os anéis
+            // pulsando ao redor já carregam o efeito de destaque.
+            border: Border.all(
+                color: AppTheme.primary.withOpacity(0.55), width: 1.5),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -109,6 +115,7 @@ class _HomeScreenState extends State<HomeScreen>
     _doPing();
     _pingTimer = Timer.periodic(
         const Duration(seconds: 30), (_) => _doPing());
+    InboxService.iniciar();
   }
 
   void _setupAnimations() {
@@ -170,6 +177,7 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     _ringCtrl.dispose();
     _pingTimer?.cancel();
+    InboxService.parar();
     super.dispose();
   }
 
@@ -331,10 +339,43 @@ class _HomeScreenState extends State<HomeScreen>
 
           // ── Tools ─────────────────────────────────
           Row(mainAxisSize: MainAxisSize.min, children: [
-            _GhostBtn(
-                onTap: () {},
-                child: const Icon(Icons.mail_outline_rounded,
-                    size: 16, color: AppTheme.t2)),
+            ValueListenableBuilder<List<Mensagem>>(
+              valueListenable: InboxService.mensagens,
+              builder: (context, lista, _) {
+                final naoLidas = lista.where((m) => !m.lida).length;
+                return Stack(clipBehavior: Clip.none, children: [
+                  _GhostBtn(
+                      onTap: () => _push(const InboxScreen()),
+                      child: const Icon(Icons.mail_outline_rounded,
+                          size: 16, color: AppTheme.t2)),
+                  if (naoLidas > 0)
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 1),
+                        constraints:
+                            const BoxConstraints(minWidth: 16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.err,
+                          borderRadius: BorderRadius.circular(99),
+                          border:
+                              Border.all(color: AppTheme.bg, width: 1.5),
+                        ),
+                        child: Text(
+                          naoLidas > 9 ? '9+' : '$naoLidas',
+                          textAlign: TextAlign.center,
+                          style: AppTheme.inter(
+                              size: 9,
+                              weight: FontWeight.w700,
+                              color: Colors.white),
+                        ),
+                      ),
+                    ),
+                ]);
+              },
+            ),
             const SizedBox(width: 6),
             _GhostBtn(
                 onTap: () =>

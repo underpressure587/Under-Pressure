@@ -159,6 +159,66 @@ class FirestoreService {
     return [];
   }
 
+  // ── QUERY subcoleção (ex: usuarios/{uid}/mensagens) ───
+  static Future<List<Map<String, dynamic>>> querySubcollection(
+    String parentPath,
+    String collection, {
+    int? limit,
+  }) async {
+    try {
+      final tok = await _token();
+      if (tok == null) return [];
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $tok',
+      };
+      final Map<String, dynamic> structuredQuery = {
+        'from': [
+          {'collectionId': collection}
+        ],
+      };
+      if (limit != null) structuredQuery['limit'] = limit;
+
+      final r = await http
+          .post(
+            Uri.parse('$_fsBase/$parentPath:runQuery'),
+            headers: headers,
+            body: jsonEncode({'structuredQuery': structuredQuery}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (r.statusCode >= 200 && r.statusCode < 300) {
+        final list = jsonDecode(r.body) as List;
+        return list
+            .where((e) => e is Map && e['document'] != null)
+            .map((e) {
+              final doc = e['document'] as Map<String, dynamic>;
+              final parsed = _parseDoc(doc);
+              final name = doc['name'] as String? ?? '';
+              parsed['_id'] = name.split('/').last;
+              return parsed;
+            })
+            .toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  // ── DELETE documento ───────────────────────────────────
+  static Future<bool> deleteDoc(String path) async {
+    try {
+      final tok = await _token();
+      if (tok == null) return false;
+      final r = await http
+          .delete(Uri.parse('$_fsBase/$path'),
+              headers: {'Authorization': 'Bearer $tok'})
+          .timeout(const Duration(seconds: 10));
+      return r.statusCode >= 200 && r.statusCode < 300;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ── Parse Firestore REST → mapa simples ───────────────
   static Map<String, dynamic> _parseDoc(Map<String, dynamic> doc) {
     final fields = doc['fields'] as Map<String, dynamic>? ?? {};
