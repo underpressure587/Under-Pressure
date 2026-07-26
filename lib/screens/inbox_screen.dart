@@ -18,6 +18,18 @@ String _formatarData(int ts) {
   return '${p2(d.day)}/${p2(d.month)} ${p2(d.hour)}:${p2(d.minute)}';
 }
 
+// O Firestore representa datas de dois jeitos diferentes dependendo de
+// como foram gravadas: `integerValue` (millis desde epoch, usado nas
+// mensagens) ou `timestampValue` (string ISO 8601, usado no changelog).
+// Essa função aceita os dois formatos, pra nunca quebrar a tela
+// independente de qual tipo o campo tiver no Firestore.
+int _parseFsTimestamp(dynamic v) {
+  if (v == null) return 0;
+  if (v is num) return v.toInt();
+  if (v is String) return DateTime.tryParse(v)?.millisecondsSinceEpoch ?? 0;
+  return 0;
+}
+
 class InboxScreen extends StatefulWidget {
   const InboxScreen({super.key});
 
@@ -42,7 +54,7 @@ class _InboxScreenState extends State<InboxScreen> {
   Future<void> _carregarChangelog() async {
     final doc = await FirestoreService.getDoc('config/changelog');
     final agora = DateTime.now().millisecondsSinceEpoch;
-    final expiraEm = (doc?['expiraEm'] as num?)?.toInt() ?? 0;
+    final expiraEm = _parseFsTimestamp(doc?['expiraEm']);
     if (mounted) {
       setState(() {
         _changelog = (doc != null && (expiraEm == 0 || expiraEm > agora))
@@ -386,7 +398,7 @@ class _PainelNovidades extends StatelessWidget {
     }
     final titulo = changelog!['titulo'] as String? ?? 'Novidades';
     final texto = changelog!['texto'] as String? ?? '';
-    final ts = (changelog!['ts'] as num?)?.toInt() ?? 0;
+    final ts = _parseFsTimestamp(changelog!['ts']);
 
     return ListView(
       padding: const EdgeInsets.all(20),

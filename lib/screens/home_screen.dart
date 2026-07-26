@@ -18,9 +18,11 @@ import 'config_screen.dart';
 enum _FbStatus { connecting, online, offline }
 
 // Botão principal "Iniciar Mandato" — montado uma única vez (não fica
-// dentro do rebuild da animação dos anéis). O gradiente é forçado a
-// ficar preso num círculo perfeito via ClipOval (numa camada separada
-// da sombra), pra garantir que nada vaze pra fora do formato circular.
+// dentro do rebuild da animação dos anéis). Sem gradiente, sombra ou
+// clip — só cor sólida + borda, de propósito: são as duas tentativas
+// anteriores (sombra de blur grande, depois gradiente com ClipOval) que
+// causaram os artefatos visuais. Isso aqui é o mínimo que o Flutter
+// garante renderizar certo em qualquer aparelho.
 class _StartButtonCore extends StatelessWidget {
   const _StartButtonCore();
 
@@ -31,55 +33,30 @@ class _StartButtonCore extends StatelessWidget {
       height: 172,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        // Sombra pequena só pra dar profundidade — blur baixo de
-        // propósito. Blur grande (50px) é o que causava o borrão: é um
-        // problema conhecido do motor de renderização do Flutter com
-        // sombras grandes/empilhadas em círculos.
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x59000000), blurRadius: 14, offset: Offset(0, 8)),
-        ],
+        color: AppTheme.bg2,
+        border: Border.all(
+            color: AppTheme.primary.withOpacity(0.55), width: 1.5),
       ),
-      child: ClipOval(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(0, -0.3),
-              radius: 0.85,
-              colors: [
-                Colors.white.withOpacity(0.07),
-                AppTheme.bg2,
-                Colors.black.withOpacity(0.3),
-              ],
-              stops: const [0, 0.45, 1],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.play_arrow_rounded,
+            size: 40,
+            color: AppTheme.primary,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'INICIAR\nMANDATO',
+            textAlign: TextAlign.center,
+            style: AppTheme.syne(
+              size: 11,
+              weight: FontWeight.w800,
+              color: AppTheme.t2,
+              letterSpacing: 0.14 * 11,
             ),
-            // Borda dourada sólida no lugar do brilho borrado — os anéis
-            // pulsando ao redor já carregam o efeito de destaque.
-            border: Border.all(
-                color: AppTheme.primary.withOpacity(0.55), width: 1.5),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.play_arrow_rounded,
-                size: 40,
-                color: AppTheme.primary,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'INICIAR\nMANDATO',
-                textAlign: TextAlign.center,
-                style: AppTheme.syne(
-                  size: 11,
-                  weight: FontWeight.w800,
-                  color: AppTheme.t2,
-                  letterSpacing: 0.14 * 11,
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

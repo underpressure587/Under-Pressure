@@ -46,14 +46,24 @@ class Mensagem {
         id: f['_id'] as String? ?? '',
         texto: f['texto'] as String? ?? '',
         de: f['de'] as String? ?? 'admin',
-        ts: (f['ts'] as num?)?.toInt() ?? 0,
+        ts: _parseTs(f['ts']),
         lida: f['lida'] as bool? ?? false,
         confirmada: f['confirmada'] as bool? ?? false,
         categoria: f['categoria'] as String? ?? 'geral',
         fixada: f['fixada'] as bool? ?? false,
         exigirConfirmacao: f['exigirConfirmacao'] as bool? ?? false,
-        expiraEm: (f['expiraEm'] as num?)?.toInt() ?? 0,
+        expiraEm: _parseTs(f['expiraEm']),
       );
+
+  // Aceita tanto integerValue (millis) quanto timestampValue (string ISO
+  // 8601) — o Firestore representa datas dos dois jeitos dependendo de
+  // como o campo foi gravado.
+  static int _parseTs(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toInt();
+    if (v is String) return DateTime.tryParse(v)?.millisecondsSinceEpoch ?? 0;
+    return 0;
+  }
 }
 
 /// Caixa de entrada — mensagens/comunicados enviados pelo admin, guardados
