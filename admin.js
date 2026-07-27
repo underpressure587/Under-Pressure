@@ -166,8 +166,13 @@ const ADMIN = (() => {
         if (result) {
           const uids  = Array.isArray(result.uids)  ? result.uids  : [];
           const owner = typeof result.owner === 'string' ? result.owner : '';
-          _adminUids  = uids;
-          _adminOwner = owner;
+          _adminUids       = uids;
+          _adminOwner      = owner;
+          // Carrega permissões/nomes já nessa checagem inicial — antes disso,
+          // ficavam em branco até o admin entrar na aba Config, deixando
+          // qualquer restrição de permissão sem efeito até lá.
+          _adminPermissoes = (result.permissoes && typeof result.permissoes === 'object') ? result.permissoes : {};
+          _adminNomes      = (result.nomes      && typeof result.nomes      === 'object') ? result.nomes      : {};
           const isAdmin = !!(uids.includes(uid) || uid === owner);
           console.log('[ADMIN] verificarAdmin RTDB | uid:', uid, '| uids:', uids, '| owner:', owner, '| isAdmin:', isAdmin);
           return isAdmin;
@@ -188,8 +193,10 @@ const ADMIN = (() => {
       }
       const uids  = _val(doc.fields?.uids)  || [];
       const owner = _val(doc.fields?.owner) || '';
-      _adminUids  = uids;
-      _adminOwner = owner;
+      _adminUids       = uids;
+      _adminOwner      = owner;
+      _adminPermissoes = _val(doc.fields?.permissoes) || {};
+      _adminNomes      = _val(doc.fields?.nomes)      || {};
       const isAdmin = !!(uids.includes(uid) || uid === owner);
       console.log('[ADMIN] verificarAdmin Firestore | uid:', uid, '| uids:', uids, '| owner:', owner, '| isAdmin:', isAdmin);
       return isAdmin;
@@ -197,6 +204,17 @@ const ADMIN = (() => {
       console.error('[ADMIN] verificarAdmin Firestore também falhou:', e?.message, e);
       return false;
     }
+  }
+
+  // Chamada uma vez, logo após verificarAdmin confirmar acesso — aplica as
+  // permissões já carregadas na navegação ANTES da primeira tela aparecer,
+  // e liga o listener ao vivo + o polling de 30s pro resto da sessão.
+  // Antes, as duas coisas só começavam a valer se o admin entrasse na aba
+  // Config primeiro.
+  function iniciarSessaoAdmin() {
+    _aplicarPermissoesNav();
+    carregarAdmins();
+    _iniciarPollingAdmin();
   }
 
   /* ── VISÃO GERAL ────────────────────────────────── */
@@ -1758,6 +1776,15 @@ const ADMIN = (() => {
         if (meUID !== ownerLive && minhasPerms && minhasPerms.length === 0) {
           _mostrarOverlaySemPermissao();
           throw new Error('403: sem permissões ativas');
+        }
+
+        // Tem permissões, mas não pra ESTA seção especificamente — ter
+        // alguma permissão não bastava antes; precisa ser a permissão
+        // certa pra ação que está sendo executada agora.
+        if (meUID !== ownerLive && minhasPerms && !minhasPerms.includes(_currentSection)) {
+          _adminPermissoes = permsLive;
+          _aplicarPermissoesNav();
+          throw new Error(`403: sem permissão para a seção "${_currentSection}"`);
         }
 
         // Atualiza estado local para refletir mudanças ocorridas durante a sessão
@@ -3716,7 +3743,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
   }
 
   return {
-    verificarAdmin, verificarBan, _getBanInfo, verificarMensagemGlobal, toggleLiberado,
+    verificarAdmin, iniciarSessaoAdmin, verificarBan, _getBanInfo, verificarMensagemGlobal, toggleLiberado,
     carregarManutencao, buscarJogadorManutencao, abrirModalLiberar, fecharModalLiberar, confirmarLiberar,
     irParaSecao,
     carregarJogadores, verHistoricoJogador, toggleBan,

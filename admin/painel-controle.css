@@ -99,6 +99,27 @@ a { color: inherit; text-decoration: none; }
   z-index: 999;
 }
 
+#boot-loading {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+  background: var(--bg);
+  z-index: 1000; /* acima do login-screen — cobre tudo até a verificação terminar */
+}
+.boot-loading-mark {
+  width: 56px; height: 56px; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 0 0 1px var(--line2);
+}
+.boot-loading-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.boot-loading-spinner {
+  width: 22px; height: 22px;
+  border: 2.5px solid var(--bg3); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin .8s linear infinite;
+}
+.boot-loading-etapa {
+  font-size: .78rem; color: var(--t3); letter-spacing: .02em;
+}
+
 .login-eyebrow {
   font-family: var(--serif);
   font-size: .65rem; font-weight: 700;

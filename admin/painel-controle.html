@@ -9,6 +9,21 @@
 <body>
 
 <!-- ══════════════════════════════════════════════
+     TELA DE CARREGAMENTO INICIAL
+     Cobre tudo (inclusive a tela de login) até o login E as
+     permissões da sessão serem confirmados. Evita a tela de
+     login "piscar" pra quem já está logado, e garante que o
+     painel só aparece depois da verificação real, não antes.
+══════════════════════════════════════════════ -->
+<div id="boot-loading">
+  <div class="boot-loading-mark">
+    <img src="/logo.jpg" alt="Under Pressure">
+  </div>
+  <div class="boot-loading-spinner"></div>
+  <div class="boot-loading-etapa" id="boot-loading-etapa">Verificando login…</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
      TELA DE LOGIN
 ══════════════════════════════════════════════ -->
 <div id="login-screen">
@@ -791,7 +806,17 @@ window.GSPAuth = {
 };
 
 /* ── Helpers UI ── */
+function bootLoadingEtapa(texto) {
+  const el = document.getElementById('boot-loading-etapa');
+  if (el) el.textContent = texto;
+}
+function hideBootLoading() {
+  const el = document.getElementById('boot-loading');
+  if (el) el.style.display = 'none';
+}
+
 function showLogin(err) {
+  hideBootLoading();
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   if (err) {
@@ -801,6 +826,7 @@ function showLogin(err) {
 }
 
 function showApp(user) {
+  hideBootLoading();
   document.getElementById('login-screen').style.display = 'none';
   const app = document.getElementById('app');
   app.style.display = 'flex';
@@ -835,6 +861,8 @@ getRedirectResult(auth).catch(() => {});
 onAuthStateChanged(auth, async user => {
   if (!user) { showLogin(); return; }
 
+  bootLoadingEtapa('Carregando sessão e permissões…');
+
   /* Aguarda admin.js carregar (script regular, sem module) */
   let t = 0;
   while (!window.ADMIN && t < 60) {
@@ -846,12 +874,20 @@ onAuthStateChanged(auth, async user => {
     return;
   }
 
+  /* verificarAdmin já carrega uids/owner/permissões/nomes nessa mesma
+     checagem — a sessão só é liberada depois que isso volta confirmado,
+     não antes (é essa espera que essa tela de carregamento representa). */
   const ok = await window.ADMIN.verificarAdmin(user.uid);
   if (!ok) {
     await signOut(auth);
     showLogin('Acesso restrito a administradores autorizados.');
     return;
   }
+
+  /* Aplica as permissões carregadas ANTES da primeira tela aparecer, e já
+     deixa o listener de permissões ativo pro resto da sessão — não só
+     quando o admin entrar em Config. */
+  window.ADMIN.iniciarSessaoAdmin();
 
   showApp(user);
 });
