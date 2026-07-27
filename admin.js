@@ -144,6 +144,77 @@ const ADMIN = (() => {
   function _fsInt(v)  { return { integerValue: String(parseInt(v)) }; }
 
   /* ── VERIFICAR ADMIN ────────────────────────────── */
+  const _SECOES = [
+    { id: 'visao-geral', label: '📊 Geral'      },
+    { id: 'dashboard',   label: '📈 Dashboard'   },
+    { id: 'jogadores',   label: '👥 Jogadores'   },
+    { id: 'podio',       label: '🏆 Pódio'       },
+    { id: 'sessoes',     label: '🖥️ Sessões'     },
+    { id: 'historias',   label: '🎮 Histórias'   },
+    { id: 'glossario',   label: '📖 Glossário'   },
+    { id: 'modo-sala',   label: '🏫 Modo Sala'   },
+    { id: 'mensagens',   label: '✉️ Mensagens'   },
+    { id: 'feedback',    label: '💬 Feedback'    },
+    { id: 'versao',      label: '🔖 Versão'      },
+    { id: 'config',      label: '⚙️ Config'      },
+    { id: 'manutencao',  label: '🔓 Manutenção'  },
+    { id: 'admins',      label: '👑 Admins'      },
+    { id: 'auditoria',   label: '📋 Auditoria'   },
+    { id: 'logs',        label: '🐛 Logs'        },
+  ];
+
+  // Agrupamento das seções em categorias — espelha o hub de cards da tela
+  // inicial do painel. Cada categoria vira uma página com sub-navegação
+  // própria, montada dinamicamente a partir daqui.
+  const _CATEGORIAS = [
+    { id: 'analise',     label: '📊 Análise',          secoes: ['visao-geral', 'dashboard'] },
+    { id: 'jogadores',   label: '👥 Jogadores',        secoes: ['jogadores', 'podio', 'sessoes'] },
+    { id: 'conteudo',    label: '🎮 Conteúdo do Jogo', secoes: ['historias', 'glossario'] },
+    { id: 'modo-sala',   label: '🏫 Modo Sala',        secoes: ['modo-sala'] },
+    { id: 'comunicacao', label: '✉️ Comunicação',      secoes: ['mensagens', 'feedback', 'versao'] },
+    { id: 'sistema',     label: '🔧 Sistema',          secoes: ['config', 'manutencao', 'admins', 'auditoria', 'logs'] },
+  ];
+
+  let _categoriaAtiva = null;
+
+  function _minhasPermissoes() {
+    const meUID = window._player?.uid || '';
+    if (!meUID || meUID === _adminOwner) return null; // dono/sem uid = sem restrição
+    return Array.isArray(_adminPermissoes[meUID]) ? _adminPermissoes[meUID] : null;
+  }
+
+  function abrirCategoria(catId) {
+    const cat = _CATEGORIAS.find(c => c.id === catId);
+    if (!cat) return;
+
+    const perms = _minhasPermissoes();
+    const secoesVisiveis = cat.secoes.filter(id => !perms || perms.includes(id));
+    if (!secoesVisiveis.length) return; // sem nenhuma seção liberada nessa categoria
+
+    _categoriaAtiva = catId;
+
+    document.getElementById('admin-hub').style.display = 'none';
+    document.getElementById('admin-subnav').style.display = 'flex';
+    document.getElementById('admin-nav-cat-titulo').textContent = cat.label;
+
+    const wrap = document.getElementById('admin-subnav-botoes');
+    wrap.innerHTML = secoesVisiveis.map(id => {
+      const s = _SECOES.find(s => s.id === id);
+      return `<button class="admin-nav-btn" data-sec="${id}" onclick="ADMIN.irParaSecao('${id}')">${s ? s.label : id}</button>`;
+    }).join('');
+
+    irParaSecao(secoesVisiveis[0]);
+  }
+
+  function irParaHub() {
+    _categoriaAtiva = null;
+    _pararPollingSecao();
+    document.querySelectorAll('.admin-section').forEach(el => el.style.display = 'none');
+    document.getElementById('admin-subnav').style.display = 'none';
+    document.getElementById('admin-subnav-botoes').innerHTML = '';
+    document.getElementById('admin-hub').style.display = 'grid';
+  }
+
   async function verificarAdmin(uid) {
     if (!uid) { console.warn('[ADMIN] verificarAdmin chamado sem uid'); return false; }
 
@@ -1881,8 +1952,8 @@ const ADMIN = (() => {
     _currentSection = id;
 
     // Para listeners RTDB de seções que não são a ativa
-    if (id !== 'config')  { if (_configUnsubscribe) { _configUnsubscribe(); _configUnsubscribe = null; } }
-    if (id !== 'config')  { if (_auditUnsubscribe)  { _auditUnsubscribe();  _auditUnsubscribe  = null; } }
+    if (id !== 'config')    { if (_configUnsubscribe) { _configUnsubscribe(); _configUnsubscribe = null; } }
+    if (id !== 'auditoria') { if (_auditUnsubscribe)  { _auditUnsubscribe();  _auditUnsubscribe  = null; } }
 
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
@@ -1902,7 +1973,8 @@ const ADMIN = (() => {
     if (id === 'sessoes')      carregarSessoes();
     if (id === 'versao')       carregarVersao();
     if (id === 'logs')         carregarLogs();
-    if (id === 'config')       { carregarConfigGlobal(); carregarAuditLog(); }
+    if (id === 'config')       carregarConfigGlobal();
+    if (id === 'auditoria')    carregarAuditLog();
     if (id === 'mensagens')    carregarMensagens();
     if (id === 'manutencao')   carregarManutencao();
 
@@ -3345,21 +3417,6 @@ const _GLOSSARIO_PADRAO_SECOES = [
     } catch(e) { /* não crítico */ }
   }
 
-  const _SECOES = [
-    { id: 'visao-geral', label: '📊 Geral'      },
-    { id: 'jogadores',   label: '👥 Jogadores'   },
-    { id: 'mensagens',   label: '✉️ Mensagens'   },
-    { id: 'podio',       label: '🏆 Pódio'       },
-    { id: 'dashboard',   label: '📈 Dashboard'   },
-    { id: 'historias',   label: '🎮 Histórias'   },
-    { id: 'feedback',    label: '💬 Feedback'    },
-    { id: 'sessoes',     label: '🖥️ Sessões'     },
-    { id: 'versao',      label: '🔖 Versão'      },
-    { id: 'logs',        label: '🐛 Logs'        },
-    { id: 'config',      label: '⚙️ Config'      },
-    { id: 'manutencao',  label: '🔓 Manutenção'  },
-  ];
-
   async function carregarAdmins() {
     // Cancela listener anterior
     if (_adminsUnsubscribe) { _adminsUnsubscribe(); _adminsUnsubscribe = null; }
@@ -3503,8 +3560,9 @@ const _GLOSSARIO_PADRAO_SECOES = [
   function _aplicarPermissoesNav() {
     const meUID = window._player?.uid || '';
     if (!meUID || meUID === _adminOwner) {
-      // Owner: garante que todos os botões aparecem
-      document.querySelectorAll('.admin-nav-btn').forEach(btn => btn.style.display = '');
+      // Owner: garante que tudo aparece
+      document.querySelectorAll('.admin-hub-card').forEach(c => c.style.display = '');
+      document.querySelectorAll('#admin-subnav-botoes .admin-nav-btn').forEach(b => b.style.display = '');
       _esconderOverlayBloqueio();
       return;
     }
@@ -3519,16 +3577,25 @@ const _GLOSSARIO_PADRAO_SECOES = [
 
     _esconderOverlayBloqueio();
 
-    document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+    // Cards do hub — uma categoria só some se NENHUMA seção dela for permitida
+    document.querySelectorAll('.admin-hub-card').forEach(card => {
+      const cat = _CATEGORIAS.find(c => c.id === card.dataset.cat);
+      const temAlguma = !perms || (cat && cat.secoes.some(id => perms.includes(id)));
+      card.style.display = temAlguma ? '' : 'none';
+    });
+
+    // Botões da categoria aberta agora, se houver uma
+    document.querySelectorAll('#admin-subnav-botoes .admin-nav-btn').forEach(btn => {
       const sec = btn.dataset.sec;
       // null = sem restrição definida ainda → mostra tudo
       btn.style.display = (!perms || perms.includes(sec)) ? '' : 'none';
     });
 
-    // Se a seção atual não é mais permitida, redireciona para a primeira disponível
-    const primeiraBtnVisivel = document.querySelector('.admin-nav-btn:not([style*="none"])');
-    if (perms && !perms.includes(_currentSection) && primeiraBtnVisivel) {
-      primeiraBtnVisivel.click();
+    // Se a seção atual não é mais permitida, redireciona
+    if (perms && _categoriaAtiva && !perms.includes(_currentSection)) {
+      const primeiraBtnVisivel = document.querySelector('#admin-subnav-botoes .admin-nav-btn:not([style*="none"])');
+      if (primeiraBtnVisivel) primeiraBtnVisivel.click();
+      else irParaHub(); // nenhuma seção dessa categoria continua permitida
     }
   }
 
@@ -3745,7 +3812,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
   return {
     verificarAdmin, iniciarSessaoAdmin, verificarBan, _getBanInfo, verificarMensagemGlobal, toggleLiberado,
     carregarManutencao, buscarJogadorManutencao, abrirModalLiberar, fecharModalLiberar, confirmarLiberar,
-    irParaSecao,
+    irParaSecao, irParaHub, abrirCategoria,
     carregarJogadores, verHistoricoJogador, toggleBan,
     filtrarJogadores, exportarCSVJogadores, exportarCSVPodio,
     removerDoPodio, resetarPodioPorSetor, resetarPodioTotal,

@@ -70,21 +70,39 @@
   <div class="admin-shell">
     <div class="admin-mobile-layout">
 
-      <!-- Navegação -->
-      <nav class="admin-nav" role="navigation" aria-label="Seções do painel">
-        <button class="admin-nav-btn active" data-sec="visao-geral"  onclick="ADMIN.irParaSecao('visao-geral')">📊 Geral</button>
-        <button class="admin-nav-btn"        data-sec="jogadores"    onclick="ADMIN.irParaSecao('jogadores')">👥 Jogadores</button>
-        <button class="admin-nav-btn"        data-sec="mensagens"    onclick="ADMIN.irParaSecao('mensagens')" id="nav-btn-mensagens">✉️ Mensagens</button>
-        <button class="admin-nav-btn"        data-sec="podio"        onclick="ADMIN.irParaSecao('podio')">🏆 Pódio</button>
-        <button class="admin-nav-btn"        data-sec="dashboard"    onclick="ADMIN.irParaSecao('dashboard')">📈 Dashboard</button>
-        <button class="admin-nav-btn"        data-sec="historias"    onclick="ADMIN.irParaSecao('historias')">🎮 Histórias</button>
-        <button class="admin-nav-btn"        data-sec="glossario"    onclick="ADMIN.irParaSecao('glossario')">📖 Glossário</button>
-        <button class="admin-nav-btn"        data-sec="feedback"     onclick="ADMIN.irParaSecao('feedback')">💬 Feedback</button>
-        <button class="admin-nav-btn"        data-sec="sessoes"      onclick="ADMIN.irParaSecao('sessoes')">🖥️ Sessões</button>
-        <button class="admin-nav-btn"        data-sec="versao"       onclick="ADMIN.irParaSecao('versao')">🔖 Versão</button>
-        <button class="admin-nav-btn"        data-sec="logs"         onclick="ADMIN.irParaSecao('logs')">🐛 Logs</button>
-        <button class="admin-nav-btn"        data-sec="config"       onclick="ADMIN.irParaSecao('config')">⚙️ Config</button>
-        <button class="admin-nav-btn"        data-sec="manutencao"   onclick="ADMIN.irParaSecao('manutencao')">🔓 Manutenção</button>
+      <!-- Navegação: hub de categorias -->
+      <div id="admin-hub" class="admin-hub">
+        <button class="admin-hub-card" data-cat="analise" onclick="ADMIN.abrirCategoria('analise')">
+          <span class="admin-hub-icon">📊</span>
+          <span class="admin-hub-label">Análise</span>
+        </button>
+        <button class="admin-hub-card" data-cat="jogadores" onclick="ADMIN.abrirCategoria('jogadores')">
+          <span class="admin-hub-icon">👥</span>
+          <span class="admin-hub-label">Jogadores</span>
+        </button>
+        <button class="admin-hub-card" data-cat="conteudo" onclick="ADMIN.abrirCategoria('conteudo')">
+          <span class="admin-hub-icon">🎮</span>
+          <span class="admin-hub-label">Conteúdo do Jogo</span>
+        </button>
+        <button class="admin-hub-card" data-cat="modo-sala" onclick="ADMIN.abrirCategoria('modo-sala')">
+          <span class="admin-hub-icon">🏫</span>
+          <span class="admin-hub-label">Modo Sala</span>
+        </button>
+        <button class="admin-hub-card" data-cat="comunicacao" onclick="ADMIN.abrirCategoria('comunicacao')">
+          <span class="admin-hub-icon">✉️</span>
+          <span class="admin-hub-label">Comunicação</span>
+        </button>
+        <button class="admin-hub-card" data-cat="sistema" onclick="ADMIN.abrirCategoria('sistema')">
+          <span class="admin-hub-icon">🔧</span>
+          <span class="admin-hub-label">Sistema</span>
+        </button>
+      </div>
+
+      <!-- Navegação: dentro de uma categoria (botões injetados por admin.js) -->
+      <nav class="admin-nav" id="admin-subnav" role="navigation" aria-label="Seções da categoria" style="display:none">
+        <button class="admin-nav-btn admin-nav-voltar" onclick="ADMIN.irParaHub()">← Categorias</button>
+        <div class="admin-nav-cat-titulo" id="admin-nav-cat-titulo"></div>
+        <div id="admin-subnav-botoes" class="admin-subnav-botoes"></div>
       </nav>
 
       <!-- Corpo -->
@@ -343,6 +361,7 @@
             <div class="admin-toggle-row">
               <div>
                 <label class="admin-label" style="margin-bottom:0">Modo Manutenção</label>
+                <div style="font-size:.72rem;color:var(--t3)">Horário, mensagem e liberados ficam na aba Manutenção</div>
               </div>
               <label class="admin-switch"><input type="checkbox" id="admin-manutencao"><span class="admin-switch-track"></span></label>
             </div>
@@ -355,46 +374,31 @@
               <label class="admin-switch"><input type="checkbox" id="admin-modo-sala"><span class="admin-switch-track"></span></label>
             </div>
 
-            <!-- Agendamento -->
-            <div class="admin-sec-title" style="border-top:none;padding-top:4px">⏰ Agendamento de Manutenção</div>
-            <div class="admin-agendamento-row">
-              <div class="admin-agendamento-field"><label class="admin-label">Início</label><input type="time" id="admin-manut-inicio" class="admin-input"></div>
-              <div class="admin-agendamento-field"><label class="admin-label">Fim</label><input type="time" id="admin-manut-fim" class="admin-input"></div>
-            </div>
-
-            <!-- Mensagem overlay -->
-            <div>
-              <label class="admin-label">💬 Mensagem no overlay de manutenção</label>
-              <textarea id="admin-manut-mensagem" class="admin-input" rows="2" placeholder="Ex: Voltamos em breve! Previsão: 14h00." style="resize:vertical;font-size:.82rem;line-height:1.4;min-height:60px"></textarea>
-            </div>
-
-            <!-- Liberar UID -->
-            <div>
-              <label class="admin-label" style="margin-bottom:6px">🔓 Liberar jogador durante manutenção</label>
-              <button class="admin-btn" style="width:100%;background:var(--bg3);border:1px solid var(--line2);color:var(--t1);text-transform:none;letter-spacing:0;font-weight:600;justify-content:flex-start;padding:12px 16px" onclick="ADMIN.irParaSecao('manutencao')">
-                🔓 Gerenciar liberações → aba Manutenção
-              </button>
-            </div>
-
             <!-- Salvar config -->
             <button id="btn-salvar-config" class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()" style="width:100%;margin-top:4px">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
               Salvar Configurações
             </button>
 
-            <!-- Audit log -->
-            <div class="admin-sec-title" style="margin-top:8px">📋 Log de Auditoria</div>
-            <div id="admin-audit-log"><div class="admin-empty">Sem registros.</div></div>
+          </div>
+        </div>
 
-            <!-- Admins -->
-            <div class="admin-sec-title" style="margin-top:8px">👑 UIDs com acesso admin</div>
+        <!-- ══ ADMINS ══ -->
+        <div id="admin-sec-admins" class="admin-section" style="display:none">
+          <div class="admin-config-form">
+            <div class="admin-historias-info">Quem tem acesso ao painel, e o que cada um pode fazer nele.</div>
             <div id="admin-admins-lista"></div>
             <div class="admin-uid-add-row">
               <input id="admin-novo-uid" class="admin-input" placeholder="Colar UID do Firebase..." style="flex:1">
               <button class="admin-btn admin-btn-ok" onclick="ADMIN.adicionarAdmin()" style="flex-shrink:0">+ Adicionar</button>
             </div>
-
           </div>
+        </div>
+
+        <!-- ══ AUDITORIA ══ -->
+        <div id="admin-sec-auditoria" class="admin-section" style="display:none">
+          <div class="admin-historias-info">Registro de ações realizadas por admins no painel.</div>
+          <div id="admin-audit-log"><div class="admin-empty">Sem registros.</div></div>
         </div>
 
         <!-- ══ MANUTENÇÃO ══ -->
@@ -403,13 +407,39 @@
             ⚠ MANUTENÇÃO ATIVA — jogadores liberados abaixo continuam com acesso normal
           </div>
 
-          <div class="admin-busca-row">
+          <!-- Agendamento -->
+          <div class="admin-sec-title" style="border-top:none;padding-top:4px">⏰ Agendamento</div>
+          <div class="admin-agendamento-row">
+            <div class="admin-agendamento-field"><label class="admin-label">Início</label><input type="time" id="admin-manut-inicio" class="admin-input"></div>
+            <div class="admin-agendamento-field"><label class="admin-label">Fim</label><input type="time" id="admin-manut-fim" class="admin-input"></div>
+          </div>
+
+          <!-- Mensagem overlay -->
+          <div>
+            <label class="admin-label">💬 Mensagem no overlay de manutenção</label>
+            <textarea id="admin-manut-mensagem" class="admin-input" rows="2" placeholder="Ex: Voltamos em breve! Previsão: 14h00." style="resize:vertical;font-size:.82rem;line-height:1.4;min-height:60px"></textarea>
+          </div>
+
+          <button class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()" style="width:100%;margin:8px 0 4px">
+            💾 Salvar Horário e Mensagem
+          </button>
+
+          <div class="admin-busca-row" style="margin-top:8px">
             <input id="admin-manut-busca" class="admin-input" placeholder="Buscar jogador por nome, e-mail ou UID..." oninput="ADMIN.buscarJogadorManutencao(this.value)">
           </div>
           <div id="admin-manut-busca-resultado"></div>
 
           <div class="admin-sec-title">🔓 Jogadores liberados da manutenção</div>
           <div id="admin-manut-liberados-lista"><div class="admin-loading"></div></div>
+        </div>
+
+        <!-- ══ MODO SALA (em breve) ══ -->
+        <div id="admin-sec-modo-sala" class="admin-section" style="display:none">
+          <div class="admin-em-breve">
+            <span class="admin-em-breve-icone">🏫</span>
+            <div class="admin-em-breve-titulo">Em breve</div>
+            <div class="admin-em-breve-texto">Visibilidade e controle das salas de aula (salas ativas, participantes, histórico) vai aparecer aqui.</div>
+          </div>
         </div>
 
       </main><!-- /admin-body -->
@@ -850,7 +880,7 @@ function showApp(user) {
 
   /* Inicia painel */
   if (window.ADMIN) {
-    window.ADMIN.irParaSecao('visao-geral');
+    window.ADMIN.irParaHub();
   }
 }
 
