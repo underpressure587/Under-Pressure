@@ -388,7 +388,7 @@
           <div class="admin-config-form">
             <div class="admin-historias-info">Quem tem acesso ao painel, e o que cada um pode fazer nele.</div>
             <div id="admin-admins-lista"></div>
-            <div class="admin-uid-add-row">
+            <div class="admin-uid-add-row" id="admin-uid-add-row" style="display:none">
               <input id="admin-novo-uid" class="admin-input" placeholder="Colar UID do Firebase..." style="flex:1">
               <button class="admin-btn admin-btn-ok" onclick="ADMIN.adicionarAdmin()" style="flex-shrink:0">+ Adicionar</button>
             </div>
@@ -729,7 +729,7 @@
 
   <!-- Overlay: admin sem nenhuma permissão ativa -->
   <div id="admin-overlay-sem-permissao"
-    style="display:none;position:absolute;inset:0;z-index:900;background:rgba(9,9,14,.92);backdrop-filter:blur(6px);
+    style="display:none;position:fixed;inset:0;z-index:99990;background:rgba(9,9,14,.92);backdrop-filter:blur(6px);
            align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
     <div style="background:var(--bg1);border:1px solid var(--gold-bd);border-radius:var(--r3);
                 padding:32px 28px;max-width:400px;width:100%;text-align:center;
@@ -877,11 +877,6 @@ function showApp(user) {
     nome:  user.displayName || user.email || 'Admin',
     email: user.email || '',
   };
-
-  /* Inicia painel */
-  if (window.ADMIN) {
-    window.ADMIN.irParaHub();
-  }
 }
 
 /* ── Fluxo de autenticação ── */
@@ -916,10 +911,12 @@ onAuthStateChanged(auth, async user => {
 
   /* Aplica as permissões carregadas ANTES da primeira tela aparecer, e já
      deixa o listener de permissões ativo pro resto da sessão — não só
-     quando o admin entrar em Config. */
-  window.ADMIN.iniciarSessaoAdmin();
+     quando o admin entrar em Config. Se o acesso ficou bloqueado (zero
+     permissões), a tela de aviso já está visível — não abre o hub por cima. */
+  const bloqueado = window.ADMIN.iniciarSessaoAdmin();
 
   showApp(user);
+  if (!bloqueado) window.ADMIN.irParaHub();
 });
 
 /* ── Botão login ── */

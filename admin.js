@@ -281,11 +281,14 @@ const ADMIN = (() => {
   // permissões já carregadas na navegação ANTES da primeira tela aparecer,
   // e liga o listener ao vivo + o polling de 30s pro resto da sessão.
   // Antes, as duas coisas só começavam a valer se o admin entrasse na aba
-  // Config primeiro.
+  // Config primeiro. Retorna true se o acesso ficou bloqueado (zero
+  // permissões) — o chamador não deve abrir o hub por cima disso.
   function iniciarSessaoAdmin() {
     _aplicarPermissoesNav();
     carregarAdmins();
     _iniciarPollingAdmin();
+    const ov = document.getElementById('admin-overlay-sem-permissao');
+    return !!(ov && ov.style.display !== 'none');
   }
 
   /* ── VISÃO GERAL ────────────────────────────────── */
@@ -629,6 +632,11 @@ const ADMIN = (() => {
 
   /* ── CONFIGURAÇÕES GLOBAIS ──────────────────────── */
   async function adicionarAdmin() {
+    const meUID = window._player?.uid || '';
+    if (meUID !== _adminOwner) {
+      _showAdminToast('Só o 👑 owner pode adicionar novos admins.', true);
+      return;
+    }
     const input = document.getElementById('admin-novo-uid');
     const uid   = input?.value?.trim();
     if (!uid) { _showAdminToast('Digite um UID válido.', true); return; }
@@ -642,21 +650,30 @@ const ADMIN = (() => {
       ],
       executar: async () => {
         const uids = [..._adminUids, uid];
+        // Admin novo começa sem NENHUMA permissão — o dono libera seção por
+        // seção depois, em vez de vir com acesso total por padrão.
+        const novasPermissoes = { ..._adminPermissoes, [uid]: [] };
         const tok  = await _token();
-        const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids`, {
+        const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids&updateMask.fieldPaths=permissoes`, {
           method: 'PATCH',
           headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ fields: {
-            uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } }
+            uids: { arrayValue: { values: uids.map(u => ({ stringValue: u })) } },
+            permissoes: { mapValue: { fields: Object.fromEntries(
+              Object.entries(novasPermissoes).map(([k, v]) => [k, {
+                arrayValue: { values: (v || []).map(s => ({ stringValue: s })) }
+              }])
+            )}}
           }})
         });
         if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
-        _adminUids = uids;
+        _adminUids       = uids;
+        _adminPermissoes = novasPermissoes;
         await _rtdbSyncAdmins(uids, _adminOwner);
         if (input) input.value = '';
         _registrarAuditoria(`Admin adicionado: ${uid.slice(0,8)}`);
       },
-      sucesso: 'Admin adicionado com sucesso!',
+      sucesso: 'Admin adicionado com sucesso! Ele começa sem nenhuma seção liberada — use "⚙️ Permissões" pra dar acesso.',
       onSucesso: () => _renderAdminLista(),
     });
   }
@@ -3512,6 +3529,10 @@ const _GLOSSARIO_PADRAO_SECOES = [
     const lista = document.getElementById('admin-admins-lista');
     if (!lista) return;
     const meUID = window._player?.uid || '';
+
+    const addRow = document.getElementById('admin-uid-add-row');
+    if (addRow) addRow.style.display = (meUID === _adminOwner) ? 'flex' : 'none';
+
     if (!_adminUids.length) {
       lista.innerHTML = '<div class="admin-empty">Nenhum admin cadastrado.</div>';
       return;
@@ -3603,23 +3624,35 @@ const _GLOSSARIO_PADRAO_SECOES = [
   function _mostrarOverlayAcessoRevogado() {
     let ov = document.getElementById('admin-overlay-revogado');
     if (!ov) return;
+    document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+    const hub = document.getElementById('admin-hub');
+    const sub = document.getElementById('admin-subnav');
+    if (hub) hub.style.display = 'none';
+    if (sub) sub.style.display = 'none';
     ov.style.display = 'flex';
   }
 
   function _mostrarOverlaySemPermissao() {
     let ov = document.getElementById('admin-overlay-sem-permissao');
     if (!ov) return;
-    // Esconde o conteúdo principal mas não o nav (admin ainda está logado)
+    // Esconde o conteúdo principal (hub, sub-navegação e seção aberta)
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
-    document.querySelectorAll('.admin-nav-btn').forEach(b => b.style.display = 'none');
+    const hub = document.getElementById('admin-hub');
+    const sub = document.getElementById('admin-subnav');
+    if (hub) hub.style.display = 'none';
+    if (sub) sub.style.display = 'none';
     ov.style.display = 'flex';
   }
 
   function _esconderOverlayBloqueio() {
     const ov1 = document.getElementById('admin-overlay-revogado');
     const ov2 = document.getElementById('admin-overlay-sem-permissao');
+    const estavaBloqueado = (ov1 && ov1.style.display !== 'none') || (ov2 && ov2.style.display !== 'none');
     if (ov1) ov1.style.display = 'none';
     if (ov2) ov2.style.display = 'none';
+    // Só força volta ao hub se estava mesmo bloqueado antes — evita
+    // interromper a navegação normal do dono a cada verificação de rotina.
+    if (estavaBloqueado) irParaHub();
   }
 
   /* ── POLLING: revogação imediata de acesso ──────── */
