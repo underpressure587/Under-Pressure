@@ -3676,6 +3676,30 @@ const _GLOSSARIO_PADRAO_SECOES = [
     }
   }
 
+  function _atualizarContadorPermissoes() {
+    const total    = document.querySelectorAll('#admin-modal-body input[data-perm]').length;
+    const marcadas = document.querySelectorAll('#admin-modal-body input[data-perm]:checked').length;
+    const totalEl  = document.getElementById('admin-perm-contador');
+    if (totalEl) totalEl.textContent = `${marcadas}/${total} seções ativas`;
+
+    document.querySelectorAll('[data-cat-contador]').forEach(el => {
+      const catId       = el.dataset.catContador;
+      const doGrupo      = document.querySelectorAll(`#admin-modal-body input[data-cat-grupo="${catId}"]`);
+      const marcadasCat = document.querySelectorAll(`#admin-modal-body input[data-cat-grupo="${catId}"]:checked`).length;
+      el.textContent = `marcar ${marcadasCat}/${doGrupo.length}`;
+    });
+  }
+
+  function _marcarTodasPermissoes() {
+    document.querySelectorAll('#admin-modal-body input[data-perm]').forEach(c => c.checked = true);
+    _atualizarContadorPermissoes();
+  }
+
+  function _marcarCategoriaPermissoes(catId) {
+    document.querySelectorAll(`#admin-modal-body input[data-cat-grupo="${catId}"]`).forEach(c => c.checked = true);
+    _atualizarContadorPermissoes();
+  }
+
   function abrirPermissoes(uid) {
     const meUID = window._player?.uid || '';
     if (meUID !== _adminOwner) {
@@ -3684,7 +3708,6 @@ const _GLOSSARIO_PADRAO_SECOES = [
     }
     const perms      = Array.isArray(_adminPermissoes[uid]) ? _adminPermissoes[uid] : _SECOES.map(s => s.id);
     const nomeExib   = _adminNomes[uid] || uid.slice(0, 14) + '…';
-    const temTodasPerms = perms.length === _SECOES.length;
     const modal = document.getElementById('admin-modal');
     const body  = document.getElementById('admin-modal-body');
     if (!modal || !body) return;
@@ -3698,22 +3721,41 @@ const _GLOSSARIO_PADRAO_SECOES = [
           Editando acesso de <strong style="color:var(--t1)">${nomeExib}</strong>
           <span style="display:block;font-size:.68rem;font-family:var(--mono);color:var(--t3);margin-top:2px">${uid}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="font-size:.75rem;color:var(--t3)">${perms.length}/${_SECOES.length} seções ativas</span>
-          <button onclick="(function(){
-              document.querySelectorAll('#admin-modal-body input[data-perm]').forEach(c=>c.checked=true);
-            })()" style="font-size:.7rem;background:transparent;border:none;color:var(--gold);cursor:pointer;padding:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:.75rem;color:var(--t3)" id="admin-perm-contador">${perms.length}/${_SECOES.length} seções ativas</span>
+          <button onclick="ADMIN._marcarTodasPermissoes()" style="font-size:.7rem;background:transparent;border:none;color:var(--gold);cursor:pointer;padding:0">
             Marcar todas
           </button>
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${_SECOES.map(s => `
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--line);transition:border-color .15s"
-              onmouseover="this.style.borderColor='var(--line2)'" onmouseout="this.style.borderColor='var(--line)'">
-              <input type="checkbox" data-perm="${s.id}" ${perms.includes(s.id) ? 'checked' : ''}
-                style="width:15px;height:15px;accent-color:var(--gold);flex-shrink:0">
-              <span style="font-size:.84rem;color:var(--t1)">${s.label}</span>
-            </label>`).join('')}
+        <div style="display:flex;flex-direction:column;gap:14px">
+          ${_CATEGORIAS.map(cat => {
+            const idsCategoria = cat.secoes;
+            const marcadasNaCategoria = idsCategoria.filter(id => perms.includes(id)).length;
+            return `
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-size:.72rem;font-weight:700;color:var(--t2);letter-spacing:.02em">${cat.label}</span>
+                <button onclick="ADMIN._marcarCategoriaPermissoes('${cat.id}')" data-cat-contador="${cat.id}"
+                  style="font-size:.64rem;background:transparent;border:none;color:var(--t3);cursor:pointer;padding:0">
+                  marcar ${marcadasNaCategoria}/${idsCategoria.length}
+                </button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                ${idsCategoria.map(id => {
+                  const s = _SECOES.find(s => s.id === id);
+                  if (!s) return '';
+                  return `
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--line);transition:border-color .15s"
+                    onmouseover="this.style.borderColor='var(--line2)'" onmouseout="this.style.borderColor='var(--line)'">
+                    <input type="checkbox" data-perm="${s.id}" data-cat-grupo="${cat.id}" ${perms.includes(s.id) ? 'checked' : ''}
+                      onchange="ADMIN._atualizarContadorPermissoes()"
+                      style="width:15px;height:15px;accent-color:var(--gold);flex-shrink:0">
+                    <span style="font-size:.84rem;color:var(--t1)">${s.label}</span>
+                  </label>`;
+                }).join('')}
+              </div>
+            </div>`;
+          }).join('')}
         </div>
         <div style="display:flex;gap:8px;margin-top:16px">
           <button class="admin-btn admin-btn-ok" style="flex:1" onclick="ADMIN.salvarPermissoes('${uid}')">✅ Salvar</button>
@@ -3818,6 +3860,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     removerDoPodio, resetarPodioPorSetor, resetarPodioTotal,
     carregarConfigGlobal, salvarConfigGlobal,
     adicionarAdmin, removerAdmin, carregarAdmins, abrirPermissoes, salvarPermissoes,
+    _marcarTodasPermissoes, _marcarCategoriaPermissoes, _atualizarContadorPermissoes,
     _iniciarPollingAdmin, _pararPollingAdmin, _verificarAcessoAdmin,
     _sincronizarConfigLive, _pararPollingSecao,
     limparAuditLog,
