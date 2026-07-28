@@ -234,9 +234,9 @@ const ADMIN = (() => {
           }, { onlyOnce: true });
         });
         console.log('[ADMIN] verificarAdmin via RTDB — dados recebidos:', JSON.stringify(result));
-        if (result) {
+        if (result && typeof result.owner === 'string' && result.owner) {
           const uids  = Array.isArray(result.uids)  ? result.uids  : [];
-          const owner = typeof result.owner === 'string' ? result.owner : '';
+          const owner = result.owner;
           _adminUids       = uids;
           _adminOwner      = owner;
           // Carrega permissões/nomes já nessa checagem inicial — antes disso,
@@ -3439,6 +3439,14 @@ const _GLOSSARIO_PADRAO_SECOES = [
     if (_adminsUnsubscribe) { _adminsUnsubscribe(); _adminsUnsubscribe = null; }
 
     const _aplicarDadosAdmins = async (uids, owner, permissoes, nomes) => {
+      // Nunca aplica um estado sem dono — isso nunca é legítimo (o dono
+      // sempre existe), então só pode ser dado vazio/ainda-não-escrito.
+      // Aplicar isso trancaria todo mundo, incluindo o dono real, por engano.
+      if (!owner) {
+        console.warn('[ADMIN] carregarAdmins: dado sem "owner" recebido — ignorado (provável nó vazio, não estado real)');
+        return;
+      }
+
       const meUID  = window._player?.uid  || '';
       const meNome = window._player?.nome || '';
 
@@ -3467,30 +3475,50 @@ const _GLOSSARIO_PADRAO_SECOES = [
       if (permAntes !== permDepois) _aplicarPermissoesNav();
     };
 
+    // Busca os dados no Firestore (fonte da verdade) — usado quando o RTDB
+    // ainda não tem nada gravado no caminho, ou dá erro de permissão.
+    const _fallbackFirestore = async () => {
+      try {
+        const doc = await _get('config/admins');
+        await _aplicarDadosAdmins(
+          _val(doc.fields?.uids)       || [],
+          _val(doc.fields?.owner)      || '',
+          _val(doc.fields?.permissoes) || {},
+          _val(doc.fields?.nomes)      || {}
+        );
+        return true;
+      } catch(e) {
+        console.warn('[ADMIN] carregarAdmins: fallback Firestore falhou:', e);
+        return false;
+      }
+    };
+
     if (window.GSPRtdb) {
       // ── RTDB: tempo real — qualquer mudança em config/admins reflete aqui ─
       const { db, ref, onValue } = window.GSPRtdb;
       const admRef = ref(db, 'config/admins');
       _adminsUnsubscribe = onValue(admRef, async (snapshot) => {
-        const dados = snapshot.val() || {};
+        const dados = snapshot.val();
+        // Nó vazio/nunca escrito no RTDB não é "zero admins" de verdade —
+        // é só a falta de sincronização ainda. Busca do Firestore em vez
+        // de aplicar isso como se fosse o estado real (era isso que
+        // trancava o dono fora quando a leitura passava a funcionar mas
+        // não havia dado nenhum gravado ali ainda).
+        if (!dados || !Array.isArray(dados.uids) || !dados.uids.length) {
+          const ok = await _fallbackFirestore();
+          if (ok) await _rtdbSyncAdmins(_adminUids, _adminOwner);
+          return;
+        }
         await _aplicarDadosAdmins(
-          Array.isArray(dados.uids) ? dados.uids : [],
+          dados.uids,
           dados.owner || '',
           dados.permissoes || {},
           dados.nomes      || {}
         );
       }, async () => {
-        // Fallback Firestore
-        try {
-          const doc = await _get('config/admins');
-          await _aplicarDadosAdmins(
-            _val(doc.fields?.uids)       || [],
-            _val(doc.fields?.owner)      || '',
-            _val(doc.fields?.permissoes) || {},
-            _val(doc.fields?.nomes)      || {}
-          );
-          await _rtdbSyncAdmins(_adminUids, _adminOwner);
-        } catch(e) { console.warn('[ADMIN] carregarAdmins fallback:', e); }
+        // Erro de leitura no RTDB (ex: sem permissão) — mesmo fallback
+        const ok = await _fallbackFirestore();
+        if (ok) await _rtdbSyncAdmins(_adminUids, _adminOwner);
       });
     } else {
       // Sem RTDB: Firestore REST
