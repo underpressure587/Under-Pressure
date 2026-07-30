@@ -3494,32 +3494,21 @@ const _GLOSSARIO_PADRAO_SECOES = [
     };
 
     if (window.GSPRtdb) {
-      // ── RTDB: tempo real — qualquer mudança em config/admins reflete aqui ─
+      // RTDB agora serve só de "aviso" de que algo mudou em config/admins —
+      // nunca como fonte do dado em si. O campo permissoes ali só fica
+      // atualizado quando a escrita no RTDB funciona (pode falhar por
+      // regra), então confiar nele direto fazia uma permissão recém-
+      // revogada "voltar sozinha" quando o RTDB reconectava (ex: trocou de
+      // wifi pra dados, saiu e voltou do app) e reenviava o dado antigo.
+      // Toda vez que dispara — sucesso ou erro — revalida direto no
+      // Firestore, que nunca fica desatualizado.
       const { db, ref, onValue } = window.GSPRtdb;
       const admRef = ref(db, 'config/admins');
-      _adminsUnsubscribe = onValue(admRef, async (snapshot) => {
-        const dados = snapshot.val();
-        // Nó vazio/nunca escrito no RTDB não é "zero admins" de verdade —
-        // é só a falta de sincronização ainda. Busca do Firestore em vez
-        // de aplicar isso como se fosse o estado real (era isso que
-        // trancava o dono fora quando a leitura passava a funcionar mas
-        // não havia dado nenhum gravado ali ainda).
-        if (!dados || !Array.isArray(dados.uids) || !dados.uids.length) {
-          const ok = await _fallbackFirestore();
-          if (ok) await _rtdbSyncAdmins(_adminUids, _adminOwner);
-          return;
-        }
-        await _aplicarDadosAdmins(
-          dados.uids,
-          dados.owner || '',
-          dados.permissoes || {},
-          dados.nomes      || {}
-        );
-      }, async () => {
-        // Erro de leitura no RTDB (ex: sem permissão) — mesmo fallback
+      const _revalidar = async () => {
         const ok = await _fallbackFirestore();
         if (ok) await _rtdbSyncAdmins(_adminUids, _adminOwner);
-      });
+      };
+      _adminsUnsubscribe = onValue(admRef, _revalidar, _revalidar);
     } else {
       // Sem RTDB: Firestore REST
       try {
