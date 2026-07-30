@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../widgets/app_widgets.dart';
 import '../services/toast_service.dart';
+import '../services/update_service.dart';
 
 class ConfigScreen extends StatefulWidget {
   const ConfigScreen({super.key});
@@ -18,6 +19,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
   bool _statusOn    = true;
   String _nomeAtual = '';
   bool _salvando    = false;
+  bool _verificandoUpdate = false;
 
   @override
   void initState() {
@@ -140,6 +142,26 @@ class _ConfigScreenState extends State<ConfigScreen> {
 
   bool get _isGoogle => AuthService.currentUser?.providerData
       .any((p) => p.providerId == 'google.com') ?? false;
+
+  Future<void> _verificarAtualizacao() async {
+    setState(() => _verificandoUpdate = true);
+    try {
+      final disponivel = await UpdateService.hasUpdate();
+      if (!disponivel) {
+        if (mounted) ToastService.sucesso('Você já está na versão mais recente.');
+        return;
+      }
+      if (mounted) ToastService.aviso('Baixando atualização...');
+      await UpdateService.downloadUpdate();
+      if (mounted) {
+        ToastService.sucesso('Atualização baixada! Feche e abra o app pra aplicar.');
+      }
+    } catch (_) {
+      if (mounted) ToastService.erroCritico('Erro ao verificar atualização.');
+    } finally {
+      if (mounted) setState(() => _verificandoUpdate = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -264,10 +286,23 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   iconColor: const Color(0xFFF97316),
                   icon: Icons.play_arrow_rounded,
                   label: 'Rever tutorial',
-                  isLast: true,
                   trailing: TextButton(
                     onPressed: () => ToastService.aviso('Tutorial em breve!'),
                     child: Text('Ver',
+                        style: AppTheme.inter(size: 12, weight: FontWeight.w600,
+                            color: AppTheme.primary)),
+                  ),
+                ),
+                _ConfigItem(
+                  iconBg: const Color(0x1F6366F1),
+                  iconColor: const Color(0xFF6366F1),
+                  icon: Icons.system_update_alt_rounded,
+                  label: 'Verificar atualizações',
+                  desc: _verificandoUpdate ? 'Verificando...' : 'Baixa correções sem reinstalar',
+                  isLast: true,
+                  trailing: TextButton(
+                    onPressed: _verificandoUpdate ? null : _verificarAtualizacao,
+                    child: Text(_verificandoUpdate ? '...' : 'Verificar',
                         style: AppTheme.inter(size: 12, weight: FontWeight.w600,
                             color: AppTheme.primary)),
                   ),
