@@ -1,0 +1,42 @@
+name: Shorebird Bootstrap (rodar uma vez)
+
+on:
+  workflow_dispatch:
+
+env:
+  SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+jobs:
+  bootstrap:
+    name: 🐦 Gerar gradlew + shorebird.yaml
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
+
+      - name: Regenerate Android platform files (gradlew etc.)
+        run: flutter create . --platforms=android --project-name=under_pressure
+
+      - name: Shorebird init
+        run: shorebird init
+
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add android/gradlew android/gradlew.bat android/gradle shorebird.yaml
+          git diff --cached --quiet && echo "Nada novo para commitar" || git commit -m "chore: bootstrap gradlew + shorebird.yaml"
+          git push

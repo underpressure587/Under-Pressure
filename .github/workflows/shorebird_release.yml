@@ -1,16 +1,18 @@
-name: Build APK
+name: Shorebird Release
 
 on:
   push:
-    branches:
-      - app
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
-jobs:
-  build:
-    name: Build Release APK
-    runs-on: ubuntu-latest
+env:
+  SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
+jobs:
+  release-android:
+    name: 🤖 Shorebird Release Android
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,22 +23,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - name: Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
         with:
-          flutter-version: '3.44.3'
-          channel: 'stable'
-
-      - name: Flutter pub get
-        run: flutter pub get
-
-      - name: Generate launcher icons
-        run: dart run flutter_launcher_icons
-        continue-on-error: true
+          cache: true
 
       - name: Decode keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
 
       - name: Write key.properties
         run: |
@@ -47,17 +40,21 @@ jobs:
           keyPassword=${{ secrets.KEYSTORE_PASSWORD }}
           EOF
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons
+        continue-on-error: true
+
+      - name: Shorebird Release
+        run: shorebird release android --artifact=apk --no-confirm
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: under-pressure-release
+          name: under-pressure-shorebird-release
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
 
-      - name: Create Release
+      - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
