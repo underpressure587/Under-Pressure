@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
+import '../services/update_service.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 import 'manutencao_screen.dart';
@@ -91,6 +92,20 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _runChecks() async {
     if (mounted) setState(() { _erro = false; _tentando = true; });
+
+    // Passo 0: Verificação de atualização (Shorebird)
+    _setMsg('Verificando atualizações...', 0.05);
+    try {
+      final disponivel = await UpdateService.hasUpdate()
+          .timeout(const Duration(seconds: 5));
+      if (disponivel) {
+        _setMsg('Baixando atualização...', 0.1);
+        await UpdateService.downloadUpdate()
+            .timeout(const Duration(seconds: 15));
+      }
+    } catch (_) {
+      // Sem internet, timeout ou Shorebird indisponível: nunca bloqueia o app
+    }
 
     // Passo 1: Firebase Core
     _setMsg('Verificando Firebase...', 0.15);
