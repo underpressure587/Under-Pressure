@@ -306,7 +306,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   iconColor: const Color(0xFF6366F1),
                   icon: Icons.system_update_alt_rounded,
                   label: 'Verificar atualizações',
-                  desc: _verificandoUpdate ? 'Verificando...' : 'Baixa correções sem reinstalar',
+                  desc: _verificandoUpdate ? 'Verificando...' : 'Verifica se há novidades no app',
                   isLast: true,
                   trailing: TextButton(
                     onPressed: _verificandoUpdate ? null : _verificarAtualizacao,
