@@ -6,6 +6,7 @@ import '../services/firestore_service.dart';
 import '../widgets/app_widgets.dart';
 import '../services/toast_service.dart';
 import '../services/update_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class ConfigScreen extends StatefulWidget {
   const ConfigScreen({super.key});
@@ -20,11 +21,18 @@ class _ConfigScreenState extends State<ConfigScreen> {
   String _nomeAtual = '';
   bool _salvando    = false;
   bool _verificandoUpdate = false;
+  String _versaoApp = '';
 
   @override
   void initState() {
     super.initState();
     _load();
+    _carregarVersao();
+  }
+
+  Future<void> _carregarVersao() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) setState(() => _versaoApp = info.version);
   }
 
   Future<void> _load() async {
@@ -310,7 +318,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
               ]),
               const SizedBox(height: 24),
 
-              Center(child: Text('v6.0 · Under Pressure · Beta',
+              Center(child: Text(
+                  _versaoApp.isEmpty ? 'Under Pressure' : 'v$_versaoApp · Under Pressure',
                   style: AppTheme.inter(size: 11, color: AppTheme.t3))),
               const SizedBox(height: 8),
             ]),
