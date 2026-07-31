@@ -24,6 +24,6 @@ jobs:
         uses: shorebirdtech/setup-shorebird@v1
 
       - name: Patch Android
-        run: shorebird patch android --release-version=1.0.0+1 --force
+        run: shorebird patch android --release-version=1.0.0+1
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
