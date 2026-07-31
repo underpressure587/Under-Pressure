@@ -9,6 +9,9 @@ on:
 env:
   SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
+permissions:
+  contents: write
+
 jobs:
   release-android:
     name: 🤖 Shorebird Release Android
