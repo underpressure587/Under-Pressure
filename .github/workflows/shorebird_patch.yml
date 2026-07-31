@@ -2,7 +2,7 @@ name: Shorebird Patch
 
 on:
   push:
-    branches: [main]
+    branches: [app]
     paths:
       - 'lib/**'
       - 'pubspec.yaml'

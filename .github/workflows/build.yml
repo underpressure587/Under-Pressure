@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - app
+    paths-ignore:
+      - 'lib/**'
+      - 'pubspec.yaml'
   workflow_dispatch:
 
 jobs:
