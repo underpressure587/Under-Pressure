@@ -17,7 +17,6 @@ class ConfigScreen extends StatefulWidget {
 class _ConfigScreenState extends State<ConfigScreen> {
   bool _fotoOn      = false;
   bool _cloudOn     = true;
-  bool _statusOn    = true;
   String _nomeAtual = '';
   bool _salvando    = false;
   bool _verificandoUpdate = false;
@@ -41,7 +40,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
     setState(() {
       _fotoOn   = prefs.getBool('cfg_foto_on')   ?? false;
       _cloudOn  = prefs.getBool('cfg_cloud_on')  ?? true;
-      _statusOn = prefs.getBool('cfg_status_on') ?? true;
       _nomeAtual = user?.displayName ?? '';
     });
   }
@@ -50,7 +48,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('cfg_foto_on',   _fotoOn);
     await prefs.setBool('cfg_cloud_on',  _cloudOn);
-    await prefs.setBool('cfg_status_on', _statusOn);
   }
 
   void _editarNome() {
@@ -276,17 +273,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   trailing: _Toggle(
                     value: _cloudOn,
                     onChanged: (v) { setState(() => _cloudOn = v); _salvarPrefs(); },
-                  ),
-                ),
-                _ConfigItem(
-                  iconBg: const Color(0x1F22C55E),
-                  iconColor: const Color(0xFF22C55E),
-                  icon: Icons.circle_outlined,
-                  label: 'Mostrar status online',
-                  desc: 'Exibe conexão e ping no menu',
-                  trailing: _Toggle(
-                    value: _statusOn,
-                    onChanged: (v) { setState(() => _statusOn = v); _salvarPrefs(); },
                   ),
                 ),
                 _ConfigItem(
