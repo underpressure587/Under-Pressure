@@ -24,6 +24,13 @@ jobs:
       - name: Setup Shorebird
         uses: shorebirdtech/setup-shorebird@v1
 
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons
+        continue-on-error: true
+
       - name: Patch Android
         run: shorebird patch android --release-version=1.0.0+1
         env:
