@@ -32,6 +32,6 @@ jobs:
         continue-on-error: true
 
       - name: Patch Android
-        run: shorebird patch android --release-version=1.0.0+1
+        run: shorebird patch android --release-version=latest
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}

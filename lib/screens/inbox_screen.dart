@@ -411,9 +411,10 @@ class _PainelNovidades extends StatelessWidget {
             border: Border.all(color: AppTheme.line2),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(titulo,
+                  textAlign: TextAlign.center,
                   style: AppTheme.syne(
                       size: 14,
                       weight: FontWeight.w700,
@@ -421,10 +422,12 @@ class _PainelNovidades extends StatelessWidget {
               if (ts > 0) ...[
                 const SizedBox(height: 4),
                 Text(_formatarData(ts),
+                    textAlign: TextAlign.center,
                     style: AppTheme.inter(size: 10, color: AppTheme.t3)),
               ],
               const SizedBox(height: 10),
               Text(texto,
+                  textAlign: TextAlign.center,
                   style: AppTheme.inter(
                       size: 13, color: AppTheme.t2, height: 1.6)),
             ],
