@@ -146,7 +146,7 @@ class _LandingScreenState extends State<_LandingScreen>
 
                 // Eyebrow
                 Text(
-                  'S I M U L A Ç Ã O  E X E C U T I V A  ·  B E T A',
+                  'S I M U L A Ç Ã O  E X E C U T I V A',
                   style: AppTheme.inter(
                     size: 10,
                     color: AppTheme.t2.withOpacity(0.8),
