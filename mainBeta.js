@@ -949,39 +949,93 @@ function lancarJogo() {
    INTRO
 ════════════════════════════════════════════════════ */
 let _introCache = null;
+let _introSlideAtual = 0;
 
 function mostrarIntro(state, empresa) {
   _aplicarTemaSetor(state.sector);
   mostrarTela("screen-intro");
   const intro = state.introAtual;
   if (!intro) { comecaJogo(); return; }
-  _introCache = { intro, empresa, sector: state.sector, situacao: state.situacaoAtual };
+  _introCache = { intro, empresa, sector: state.sector, situacao: state.situacaoAtual, state };
+  _introSlideAtual = 0;
+
   document.getElementById("intro-badge").textContent     = intro.badge || empresa.nome || state.sector;
   document.getElementById("intro-titulo").textContent    = intro.badge || intro.titulo || "Bem-vindo";
   document.getElementById("intro-subtitulo").textContent = intro.subtitulo || "";
-  const secoes = document.getElementById("intro-secoes");
-  if (secoes) secoes.innerHTML = (intro.secoes || []).map(s => `
-    <div class="intro-secao">
-      <div class="intro-secao-header">
-        <span class="intro-secao-icone">${s.icone||"📌"}</span>
-        <span class="intro-secao-titulo">${s.titulo}</span>
-      </div>
-      <div class="intro-secao-corpo">${s.corpo}</div>
-    </div>`).join("");
+
+  const secoes = intro.secoes || [];
+  const container = document.getElementById("intro-secoes");
+  if (container) {
+    container.innerHTML = secoes.map((s, i) => `
+      <div class="intro-secao" data-idx="${i}" ${i === 0 ? "" : "hidden"}>
+        <div class="intro-secao-header">
+          <span class="intro-secao-icone">${s.icone||"📌"}</span>
+          <span class="intro-secao-titulo">${s.titulo}</span>
+        </div>
+        <div class="intro-secao-corpo">${s.corpo}</div>
+        <button class="intro-secao-avancar" onclick="BetaUI.introAvancar()">
+          ${i < secoes.length - 1 ? "Continuar  →" : "Ver situação atual  →"}
+        </button>
+      </div>`).join("");
+  }
+
+  _renderIntroDots(secoes.length);
+
+  // Crise/indicadores/CTA só aparecem depois da última seção (igual ao app)
   const criseEl = document.getElementById("intro-crise");
-  const crise   = state.situacaoAtual;
-  if (crise && criseEl) {
+  if (criseEl) criseEl.style.display = "none";
+  const previewEl = document.getElementById("intro-indicators-preview");
+  if (previewEl) previewEl.innerHTML = "";
+  const ctaEl = document.getElementById("intro-cta");
+  if (ctaEl) ctaEl.style.display = "none";
+
+  // Sem seções: pula direto para a situação/CTA
+  if (secoes.length === 0) _introMostrarFinal();
+}
+
+function _renderIntroDots(total) {
+  const el = document.getElementById("intro-dots");
+  if (!el) return;
+  if (total <= 1) { el.innerHTML = ""; return; }
+  el.innerHTML = Array.from({ length: total }, (_, i) =>
+    `<span class="intro-dot${i === _introSlideAtual ? " ativo" : ""}"></span>`
+  ).join("");
+}
+
+function introAvancar() {
+  const secoes = _introCache?.intro?.secoes || [];
+  const atual = document.querySelector(`.intro-secao[data-idx="${_introSlideAtual}"]`);
+  if (atual) atual.hidden = true;
+
+  _introSlideAtual++;
+
+  if (_introSlideAtual < secoes.length) {
+    const proxima = document.querySelector(`.intro-secao[data-idx="${_introSlideAtual}"]`);
+    if (proxima) proxima.hidden = false;
+    _renderIntroDots(secoes.length);
+  } else {
+    _introMostrarFinal();
+  }
+}
+
+function _introMostrarFinal() {
+  if (!_introCache) return;
+  const { situacao, state } = _introCache;
+
+  const criseEl = document.getElementById("intro-crise");
+  if (situacao && criseEl) {
     criseEl.style.display = "";
     criseEl.innerHTML = `
       <div class="intro-crise-header">
         <span class="intro-crise-badge">⚠ CRISE ATIVA</span>
-        <span class="intro-crise-titulo">${crise.titulo}</span>
+        <span class="intro-crise-titulo">${situacao.titulo}</span>
       </div>
-      <div class="intro-crise-texto">${crise.historia}</div>`;
+      <div class="intro-crise-texto">${situacao.historia}</div>`;
   } else if (criseEl) { criseEl.style.display = "none"; }
+
   const preview = document.getElementById("intro-indicators-preview");
   if (preview) {
-    preview.innerHTML = Object.entries(state.indicators).map(([k, v]) => {
+    preview.innerHTML = Object.entries(state?.indicators || {}).map(([k, v]) => {
       const cor = BetaIndicadores.corNivel(v);
       return `<div class="intro-ind-item">
         <span>${BetaIndicadores.LABELS[k]||k}</span>
@@ -989,6 +1043,9 @@ function mostrarIntro(state, empresa) {
       </div>`;
     }).join("");
   }
+
+  const ctaEl = document.getElementById("intro-cta");
+  if (ctaEl) ctaEl.style.display = "";
 }
 
 function comecaJogo() {
@@ -5059,7 +5116,7 @@ window.BetaUI = {
   irParaSetores, irParaPodio, irParaHistoricoJogos,
   irParaPerfil, filtrarPodio, _copiarId,
   restaurarSessao, descartarSessao,
-  selecionarSetor, lancarJogo, comecaJogo,
+  selecionarSetor, lancarJogo, comecaJogo, introAvancar,
   mudarTab, escolher, avancar, reiniciar,
   openGlossary, closeGlossary, filtrarGlossario, selecionarAbaGlossario, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus, toggleMostrarStatus,
   toggleFullscreen, voltar,
