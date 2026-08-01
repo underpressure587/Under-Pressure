@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'theme/app_theme.dart';
 import 'services/toast_service.dart';
 import 'services/glossario_service.dart';
+import 'widgets/maintenance_gate.dart';
 import 'screens/logo_video_screen.dart';
 
 void main() async {
@@ -52,6 +53,8 @@ class UnderPressureApp extends StatelessWidget {
       navigatorKey: ToastService.navigatorKey,
       theme: AppTheme.theme,
       home: const LogoVideoScreen(),
+      builder: (context, child) =>
+          MaintenanceGate(child: child ?? const SizedBox()),
     );
   }
 }

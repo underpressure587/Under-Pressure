@@ -7,7 +7,6 @@ import '../theme/app_theme.dart';
 import '../services/update_service.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
-import 'manutencao_screen.dart';
 
 // Usa REST direto igual ao app admin — evita problema de gRPC/região do Firestore SDK
 const _projectId = 'under-pressure-49320';
@@ -144,34 +143,13 @@ class _SplashScreenState extends State<SplashScreen>
       await FirebaseAuth.instance.signOut();
     } catch (_) {}
 
-    // Passo 4: Manutenção
+    // Passo 4: Auth → destino
     _setMsg('Verificando status do servidor...', 0.75);
     await Future.delayed(const Duration(milliseconds: 300));
 
-    Widget destino;
-    try {
-      final uid       = FirebaseAuth.instance.currentUser?.uid;
-      final manut     = config?['manutencao'] == true;
-      final liberados = config?['liberados'];
-      final lista     = liberados is Map
-          ? (liberados['values'] as List? ?? [])
-              .map((e) => (e as Map)['stringValue']?.toString() ?? '')
-              .toList()
-          : <String>[];
-      final liberado  = uid != null && lista.contains(uid);
-
-      if (manut && !liberado) {
-        destino = const ManutencaoScreen();
-      } else {
-        destino = FirebaseAuth.instance.currentUser != null
-            ? const HomeScreen()
-            : const LoginScreen();
-      }
-    } catch (_) {
-      destino = FirebaseAuth.instance.currentUser != null
-          ? const HomeScreen()
-          : const LoginScreen();
-    }
+    final destino = FirebaseAuth.instance.currentUser != null
+        ? const HomeScreen()
+        : const LoginScreen();
 
     _setMsg('Pronto!', 1.0);
     await Future.delayed(const Duration(milliseconds: 350));
