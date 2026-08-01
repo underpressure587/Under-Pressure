@@ -197,11 +197,10 @@ function _abrirOverlay(id) {
   // a animação do card interno). Mantém consistência com mostrarTela().
   void el.offsetHeight;
   el.classList.add('active');
-  // Aplica cor do setor só se estiver numa tela de jogo
-  const TELAS_JOGO = ['screen-intro','screen-game','screen-feedback','screen-result'];
-  const telaAtiva = document.querySelector('.screen.active');
-  const emJogo = telaAtiva && TELAS_JOGO.includes(telaAtiva.id);
-  const sector = emJogo ? (document.getElementById('app')?.getAttribute('data-sector') || null) : null;
+  // Aplica a cor do tema atual (sempre que #app tiver um setor definido,
+  // não só durante o jogo — ex: telas de criação de empresa também
+  // já aplicam o tema em #app antes do jogo começar)
+  const sector = document.getElementById('app')?.getAttribute('data-sector') || null;
   if (sector) el.setAttribute('data-sector', sector);
   else el.removeAttribute('data-sector');
 }
