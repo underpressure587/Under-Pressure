@@ -41,7 +41,7 @@ class _MaintenanceGateState extends State<MaintenanceGate> {
   @override
   Widget build(BuildContext context) {
     final uid = AuthService.currentUser?.uid;
-    final bloqueado = _estado?.bloqueiaUid(uid) ?? false;
+    final bloqueado = uid != null && (_estado?.bloqueiaUid(uid) ?? false);
 
     return Stack(
       children: [
