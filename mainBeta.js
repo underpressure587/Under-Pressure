@@ -989,7 +989,7 @@ function mostrarIntro(state, empresa) {
   const criseEl = document.getElementById("intro-crise");
   if (criseEl) criseEl.style.display = "none";
   const previewEl = document.getElementById("intro-indicators-preview");
-  if (previewEl) previewEl.innerHTML = "";
+  if (previewEl) { previewEl.innerHTML = ""; previewEl.style.display = "none"; }
   const ctaEl = document.getElementById("intro-cta");
   if (ctaEl) ctaEl.style.display = "none";
 
@@ -1009,6 +1009,7 @@ function _introRenderIndicadores() {
         <span style="color:${cor};font-weight:700">${v}/20</span>
       </div>`;
     }).join("");
+    preview.style.display = "";
   }
 }
 
@@ -1060,6 +1061,8 @@ function introVoltar() {
   if (_introSlideAtual >= secoes.length) {
     const criseEl = document.getElementById("intro-crise");
     if (criseEl) criseEl.style.display = "none";
+    const previewEl = document.getElementById("intro-indicators-preview");
+    if (previewEl) previewEl.style.display = "none";
     const ctaEl = document.getElementById("intro-cta");
     if (ctaEl) ctaEl.style.display = "none";
   } else {
