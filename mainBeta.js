@@ -991,29 +991,17 @@ function mostrarIntro(state, empresa) {
   // Sem seções: pula direto para a situação/CTA
   if (secoes.length === 0) { _introMostrarFinal(); return; }
 
-  // Desktop: a coluna lateral (crise + indicadores) tem espaço reservado
-  // fixo no layout — mostra ela desde já, em vez de deixar vazia até o
-  // fim dos slides (o botão "Iniciar Mandato" continua bloqueado até lá)
+  // Desktop: a coluna lateral de indicadores tem espaço reservado fixo
+  // no layout — mostra ela desde já, em vez de deixar vazia até o fim
+  // dos slides. A crise continua escondida até o fim, em qualquer tela.
   if (window.matchMedia("(min-width: 800px)").matches) {
-    _introRenderPainelSituacao();
+    _introRenderIndicadores();
   }
 }
 
-function _introRenderPainelSituacao() {
+function _introRenderIndicadores() {
   if (!_introCache) return;
-  const { situacao, state } = _introCache;
-
-  const criseEl = document.getElementById("intro-crise");
-  if (situacao && criseEl) {
-    criseEl.style.display = "";
-    criseEl.innerHTML = `
-      <div class="intro-crise-header">
-        <span class="intro-crise-badge">⚠ CRISE ATIVA</span>
-        <span class="intro-crise-titulo">${situacao.titulo}</span>
-      </div>
-      <div class="intro-crise-texto">${situacao.historia}</div>`;
-  } else if (criseEl) { criseEl.style.display = "none"; }
-
+  const { state } = _introCache;
   const preview = document.getElementById("intro-indicators-preview");
   if (preview) {
     preview.innerHTML = Object.entries(state?.indicators || {}).map(([k, v]) => {
@@ -1024,6 +1012,21 @@ function _introRenderPainelSituacao() {
       </div>`;
     }).join("");
   }
+}
+
+function _introRenderCrise() {
+  if (!_introCache) return;
+  const { situacao } = _introCache;
+  const criseEl = document.getElementById("intro-crise");
+  if (situacao && criseEl) {
+    criseEl.style.display = "";
+    criseEl.innerHTML = `
+      <div class="intro-crise-header">
+        <span class="intro-crise-badge">⚠ CRISE ATIVA</span>
+        <span class="intro-crise-titulo">${situacao.titulo}</span>
+      </div>
+      <div class="intro-crise-texto">${situacao.historia}</div>`;
+  } else if (criseEl) { criseEl.style.display = "none"; }
 }
 
 function _renderIntroDots(total) {
@@ -1053,7 +1056,8 @@ function introAvancar() {
 
 function _introMostrarFinal() {
   if (!_introCache) return;
-  _introRenderPainelSituacao();
+  _introRenderIndicadores();
+  _introRenderCrise();
   const ctaEl = document.getElementById("intro-cta");
   if (ctaEl) ctaEl.style.display = "";
 }
