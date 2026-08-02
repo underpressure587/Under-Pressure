@@ -1024,6 +1024,7 @@ function _introRenderPainelSituacao() {
       </div>`;
     }).join("");
   }
+}
 
 function _renderIntroDots(total) {
   const el = document.getElementById("intro-dots");
