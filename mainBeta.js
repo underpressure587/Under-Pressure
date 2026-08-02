@@ -989,8 +989,41 @@ function mostrarIntro(state, empresa) {
   if (ctaEl) ctaEl.style.display = "none";
 
   // Sem seções: pula direto para a situação/CTA
-  if (secoes.length === 0) _introMostrarFinal();
+  if (secoes.length === 0) { _introMostrarFinal(); return; }
+
+  // Desktop: a coluna lateral (crise + indicadores) tem espaço reservado
+  // fixo no layout — mostra ela desde já, em vez de deixar vazia até o
+  // fim dos slides (o botão "Iniciar Mandato" continua bloqueado até lá)
+  if (window.matchMedia("(min-width: 800px)").matches) {
+    _introRenderPainelSituacao();
+  }
 }
+
+function _introRenderPainelSituacao() {
+  if (!_introCache) return;
+  const { situacao, state } = _introCache;
+
+  const criseEl = document.getElementById("intro-crise");
+  if (situacao && criseEl) {
+    criseEl.style.display = "";
+    criseEl.innerHTML = `
+      <div class="intro-crise-header">
+        <span class="intro-crise-badge">⚠ CRISE ATIVA</span>
+        <span class="intro-crise-titulo">${situacao.titulo}</span>
+      </div>
+      <div class="intro-crise-texto">${situacao.historia}</div>`;
+  } else if (criseEl) { criseEl.style.display = "none"; }
+
+  const preview = document.getElementById("intro-indicators-preview");
+  if (preview) {
+    preview.innerHTML = Object.entries(state?.indicators || {}).map(([k, v]) => {
+      const cor = BetaIndicadores.corNivel(v);
+      return `<div class="intro-ind-item">
+        <span>${BetaIndicadores.LABELS[k]||k}</span>
+        <span style="color:${cor};font-weight:700">${v}/20</span>
+      </div>`;
+    }).join("");
+  }
 
 function _renderIntroDots(total) {
   const el = document.getElementById("intro-dots");
@@ -1019,30 +1052,7 @@ function introAvancar() {
 
 function _introMostrarFinal() {
   if (!_introCache) return;
-  const { situacao, state } = _introCache;
-
-  const criseEl = document.getElementById("intro-crise");
-  if (situacao && criseEl) {
-    criseEl.style.display = "";
-    criseEl.innerHTML = `
-      <div class="intro-crise-header">
-        <span class="intro-crise-badge">⚠ CRISE ATIVA</span>
-        <span class="intro-crise-titulo">${situacao.titulo}</span>
-      </div>
-      <div class="intro-crise-texto">${situacao.historia}</div>`;
-  } else if (criseEl) { criseEl.style.display = "none"; }
-
-  const preview = document.getElementById("intro-indicators-preview");
-  if (preview) {
-    preview.innerHTML = Object.entries(state?.indicators || {}).map(([k, v]) => {
-      const cor = BetaIndicadores.corNivel(v);
-      return `<div class="intro-ind-item">
-        <span>${BetaIndicadores.LABELS[k]||k}</span>
-        <span style="color:${cor};font-weight:700">${v}/20</span>
-      </div>`;
-    }).join("");
-  }
-
+  _introRenderPainelSituacao();
   const ctaEl = document.getElementById("intro-cta");
   if (ctaEl) ctaEl.style.display = "";
 }
