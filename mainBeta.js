@@ -972,9 +972,14 @@ function mostrarIntro(state, empresa) {
           <span class="intro-secao-titulo">${s.titulo}</span>
         </div>
         <div class="intro-secao-corpo">${s.corpo}</div>
-        <button class="intro-secao-avancar" onclick="BetaUI.introAvancar()">
-          ${i < secoes.length - 1 ? "Continuar  →" : "Ver situação atual  →"}
-        </button>
+        <div class="intro-secao-nav">
+          ${i > 0
+            ? `<button class="intro-secao-voltar" onclick="BetaUI.introVoltar()">← Voltar</button>`
+            : `<span></span>`}
+          <button class="intro-secao-avancar" onclick="BetaUI.introAvancar()">
+            ${i < secoes.length - 1 ? "Continuar  →" : "Ver situação atual  →"}
+          </button>
+        </div>
       </div>`).join("");
   }
 
@@ -989,14 +994,7 @@ function mostrarIntro(state, empresa) {
   if (ctaEl) ctaEl.style.display = "none";
 
   // Sem seções: pula direto para a situação/CTA
-  if (secoes.length === 0) { _introMostrarFinal(); return; }
-
-  // Desktop: a coluna lateral de indicadores tem espaço reservado fixo
-  // no layout — mostra ela desde já, em vez de deixar vazia até o fim
-  // dos slides. A crise continua escondida até o fim, em qualquer tela.
-  if (window.matchMedia("(min-width: 800px)").matches) {
-    _introRenderIndicadores();
-  }
+  if (secoes.length === 0) _introMostrarFinal();
 }
 
 function _introRenderIndicadores() {
@@ -1054,12 +1052,36 @@ function introAvancar() {
   }
 }
 
+function introVoltar() {
+  const secoes = _introCache?.intro?.secoes || [];
+  if (_introSlideAtual <= 0) return;
+
+  // Se estava na tela final (situação/indicadores/CTA), volta pro último slide
+  if (_introSlideAtual >= secoes.length) {
+    const criseEl = document.getElementById("intro-crise");
+    if (criseEl) criseEl.style.display = "none";
+    const ctaEl = document.getElementById("intro-cta");
+    if (ctaEl) ctaEl.style.display = "none";
+  } else {
+    const atual = document.querySelector(`.intro-secao[data-idx="${_introSlideAtual}"]`);
+    if (atual) atual.hidden = true;
+  }
+
+  _introSlideAtual--;
+  const anterior = document.querySelector(`.intro-secao[data-idx="${_introSlideAtual}"]`);
+  if (anterior) anterior.hidden = false;
+  _renderIntroDots(secoes.length);
+}
+
 function _introMostrarFinal() {
   if (!_introCache) return;
   _introRenderIndicadores();
   _introRenderCrise();
   const ctaEl = document.getElementById("intro-cta");
   if (ctaEl) ctaEl.style.display = "";
+  const voltarEl = document.getElementById("intro-cta-voltar");
+  const secoes = _introCache?.intro?.secoes || [];
+  if (voltarEl) voltarEl.style.display = secoes.length > 0 ? "" : "none";
 }
 
 function comecaJogo() {
@@ -5130,7 +5152,7 @@ window.BetaUI = {
   irParaSetores, irParaPodio, irParaHistoricoJogos,
   irParaPerfil, filtrarPodio, _copiarId,
   restaurarSessao, descartarSessao,
-  selecionarSetor, lancarJogo, comecaJogo, introAvancar,
+  selecionarSetor, lancarJogo, comecaJogo, introAvancar, introVoltar,
   mudarTab, escolher, avancar, reiniciar,
   openGlossary, closeGlossary, filtrarGlossario, selecionarAbaGlossario, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus, toggleMostrarStatus,
   toggleFullscreen, voltar,
