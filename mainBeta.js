@@ -977,7 +977,7 @@ function mostrarIntro(state, empresa) {
             ? `<button class="intro-secao-voltar" onclick="BetaUI.introVoltar()">← Voltar</button>`
             : `<span></span>`}
           <button class="intro-secao-avancar" onclick="BetaUI.introAvancar()">
-            ${i < secoes.length - 1 ? "Continuar  →" : "Ver situação atual  →"}
+            ${i < secoes.length - 1 ? "Continuar  →" : (state.situacaoAtual ? "Ver crise ativa  →" : "Ver situação atual  →")}
           </button>
         </div>
       </div>`).join("");
