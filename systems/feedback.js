@@ -1,7 +1,4 @@
-/* ═══════════════════════════════════════════════════════
-   BETA · FEEDBACK · v5.0
-   Inclui melhor alternativa para aprendizagem comparativa.
-═══════════════════════════════════════════════════════ */
+
 
 
 const BetaFeedback = (() => {
@@ -13,9 +10,9 @@ const BetaFeedback = (() => {
                         efeitosFinais, eventoAtivo, history, storyState, storyStateAnterior,
                         efeitosGestor, stakeholderReacao, melhorAlternativa }) {
 
-        // Monta o texto de análise:
-        // 1. Ensinamento da choice (específico para a alternativa escolhida)
-        // 2. Contexto da avaliação (explica fase, urgência, tendência) — separado por linha
+        
+        
+        
         const ensinamentoBase = choice.ensinamento || '';
         const textoContexto   = contextoAvaliacao  || '';
 
@@ -35,7 +32,7 @@ ${textoContexto}`;
             escolhaTexto: choice.text,
             efeitos:      efeitosFinais,
             ensinamento,
-            contextoAvaliacao: textoContexto, // exposto separado para UI usar se quiser
+            contextoAvaliacao: textoContexto, 
             eventoAtivo,
             historico:    history.slice(-3).reverse(),
             novasFlags:       _detectarNovasFlags(storyState, storyStateAnterior),

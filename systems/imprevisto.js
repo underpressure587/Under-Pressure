@@ -1,22 +1,11 @@
-/* ═══════════════════════════════════════════════════════
-   BETA · IMPREVISTO · v5.0
-   Eventos com gestorEffects, pesos por gestor e flags.
-═══════════════════════════════════════════════════════ */
+
 
 const BetaImprevisto = (() => {
 
-    /* ── Limite máximo de multiplicador por setor (Bug #6 FIX) ─────────
-       Impede que um único imprevisto zere um indicador numa rodada só.
-       Ex.: rotatividade tinha rh:2.5 → com choice rh:-8 → -20 (colapso).
-       Cap em 2.0 para negativos garante no máximo -16 num indicador (8×2),
-       e o clamp [0,20] de _clampIndicadores ainda protege o valor final.    */
+    
     const MULT_CAP = 2.0;
 
-    /* ── Pool de imprevistos com modifiers por setor (Bug #5 FIX) ──────
-       Cada evento define modifier separado por setor, usando apenas as
-       chaves que existem naquele setor. Setores sem entry usam "default".
-       Isso resolve o problema silencioso onde modifiers de indicadores
-       inexistentes (ex.: reputacao em logística) não tinham efeito algum. */
+    
     const POOL = [
         {
             id: "greve",
@@ -76,7 +65,7 @@ const BetaImprevisto = (() => {
             id: "rotatividade",
             titulo: "🚪 Alta Rotatividade",
             descricao: "Muitas saídas simultâneas. O indicador de pessoas está hipersensível.",
-            // Cap em 2.0 (antes era 2.5 — podia zerar indicador numa rodada)
+            
             modifierPorSetor: {
                 default: { rh: 2.0 },
             },
@@ -100,7 +89,7 @@ const BetaImprevisto = (() => {
             id: "reconhecimento_setor",
             titulo: "🏅 Reconhecimento do Setor",
             descricao: "A empresa foi citada positivamente pela mídia especializada.",
-            // reputacao e marca não existem em logística/indústria — usa clientes como proxy
+            
             modifierPorSetor: {
                 tecnologia: { reputacao: 1.5, clientes: 1.2 },
                 varejo:     { marca: 1.5, clientes: 1.2 },
@@ -112,13 +101,12 @@ const BetaImprevisto = (() => {
         },
     ];
 
-    /* ── Resolve o modifier correto para um evento+setor ────────────────
-       Prioridade: modifierPorSetor[sector] → modifierPorSetor.default → modifier legado */
+    
     function _resolverModifier(ev, sector) {
         if (ev.modifierPorSetor) {
             return ev.modifierPorSetor[sector] || ev.modifierPorSetor.default || {};
         }
-        // Compatibilidade com estrutura legada (modifier flat)
+        
         return ev.modifier || {};
     }
 
@@ -134,9 +122,7 @@ const BetaImprevisto = (() => {
             return sortear(currentRound, storyState, gestor, sector);
         }
 
-        /* ── Emite o evento com modifier já resolvido para o setor ─────
-           BetaImpacto.calcular() lê ev.modifier, então injetamos o
-           modifier correto (por setor) no objeto retornado.             */
+        
         const _emitir = (ev) => {
             const modifier = _resolverModifier(ev, sector);
             return { ...ev, modifier, expiresAt: currentRound + ev.duracao - 1 };
@@ -156,7 +142,7 @@ const BetaImprevisto = (() => {
         const poolPonderado = disponiveis.map(ev => {
             let peso = 1;
 
-            // Pesos por flags
+            
             if (flags.includes("lideranca_toxica")      && ev.id === "rotatividade")         peso = 4;
             if (flags.includes("rh_negligenciado")      && ev.id === "greve")                peso = 3;
             if (flags.includes("ignorou_seguranca")     && ev.id === "auditoria")            peso = 4;
@@ -165,11 +151,11 @@ const BetaImprevisto = (() => {
             if (flags.includes("crescimento_saudavel")  && ev.id === "investidor")           peso = 3;
             if (flags.includes("investiu_em_inovacao")  && ev.id === "viral_positivo")       peso = 3;
 
-            // Pesos pelo estado do gestor
+            
             if (esg >= 7 && ev.id === "greve")          peso *= 1.5;
             if (capPol <= 3 && ev.id === "auditoria")   peso *= 2;
 
-            // Reputação modula eventos positivos/negativos
+            
             if (reputacao === "toxica" && (ev.id === "investidor" || ev.id === "viral_positivo" || ev.id === "reconhecimento_setor")) {
                 peso = 0;
             }
@@ -195,8 +181,7 @@ const BetaImprevisto = (() => {
 
     function resetar() { _usedIds.clear(); }
 
-    /* ── Labels de indicadores para exibição no banner ──
-       Mapeamento completo de todos os setores.             */
+    
     const _LABELS_IND = {
         financeiro:    "💰 Financeiro",
         rh:            "👥 RH",
@@ -218,8 +203,7 @@ const BetaImprevisto = (() => {
         inovacao:      "🔬 Inovação",
     };
 
-    /* Indicadores válidos por setor — usado para filtrar o modifier
-       e mostrar apenas os que de fato existem no setor ativo.       */
+    
     const _IND_POR_SETOR = {
         tecnologia: ["financeiro","rh","clientes","qualidade","produtividade","reputacao","inovacao","seguranca"],
         varejo:     ["financeiro","rh","clientes","processos","margem","estoque","marca","digital"],
@@ -227,11 +211,7 @@ const BetaImprevisto = (() => {
         industria:  ["financeiro","rh","clientes","processos","seguranca","manutencao","qualidade","conformidade"],
     };
 
-    /**
-     * Retorna string descrevendo quais indicadores o imprevisto amplifica,
-     * filtrada para o setor atual. Ex: "💰 Financeiro ×2 · 👥 RH ×1.5"
-     * Se nenhum modifier bater o setor, retorna string vazia.
-     */
+    
     function descricaoIndicadores(ev, sector) {
         const modifier = _resolverModifier(ev, sector);
         if (!modifier || !Object.keys(modifier).length) return "";
@@ -245,10 +225,7 @@ const BetaImprevisto = (() => {
         return partes.join(" · ");
     }
 
-    /**
-     * Retorna string descrevendo os efeitos no gestor do imprevisto.
-     * Ex: "Cap. Político −1 · Esgotamento +1"
-     */
+    
     function descricaoGestor(ev) {
         if (!ev?.gestorEffects) return "";
         const labels = {

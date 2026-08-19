@@ -1,26 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   BETA · VAREJO · ROUNDS v6.0
-   Estrutura: 3 histórias × 15 rodadas × 3 fases
-   Indicadores: financeiro, rh, clientes, processos,
-                margem, estoque, marca, digital
-   Sistema de sorteio: diagnostico(5→3) pressao(5→4) decisao(5→3)
-═══════════════════════════════════════════════════════════════════ */
+
 
 const VarejoRounds = [
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [0] · Rede Omnichannel — Margem em queda
-   Contexto: rede de 38 lojas físicas, R$180M de receita,
-   e-commerce em 14%, margem caindo de 8,3% para 5,1%,
-   6 lojas no vermelho, estoque parado de R$4,2M.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · Os Números Não Fecham
-     Contexto: primeiro dia, diretora financeira apresenta
-     a queda de margem dos últimos 18 meses.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Os Números Não Fecham",
     description: "Ana, sua diretora financeira, apresenta os resultados do trimestre: margem operacional caiu de 8,3% para 5,1% em 18 meses. As lojas físicas respondem por 86% da receita mas concentram 94% dos custos. O e-commerce cresce 23% ao ano mas ainda não cobre a perda de margem do físico. Por onde começa o diagnóstico?",
@@ -59,11 +44,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O Ranking das Lojas
-     Contexto: mapeamento revela 8 lojas gerando 71% do lucro
-     e 6 lojas com resultado negativo há mais de 12 meses.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Ranking das Lojas",
     description: "O mapeamento revelou: das 38 lojas, 8 respondem por 71% do lucro. 6 lojas têm resultado negativo há mais de 12 meses. O gerente regional defende que as lojas deficitárias ainda têm 'valor estratégico de presença'. O contrato de aluguel de três delas vence em 60 dias.",
@@ -101,11 +82,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · O Time de Vendas Está Desmotivado
-     Contexto: 62% do time se sente ameaçado pelo e-commerce,
-     rotatividade subiu de 28% para 47% ao ano.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Time de Vendas Está Desmotivado",
     description: "A pesquisa de clima aponta: 62% do time de vendas das lojas físicas se sente 'ameaçado' pelo crescimento do e-commerce. Os melhores vendedores estão saindo. O índice de rotatividade do time comercial subiu de 28% para 47% ao ano.",
@@ -145,11 +122,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · O Problema do Estoque
-     Contexto: R$4,2M parados há 90 dias, ruptura em 18%
-     contra benchmark de 8%, previsão manual por loja.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Problema do Estoque",
     description: "O relatório de inventário revela: R$ 4,2 milhões em produtos parados há mais de 90 dias. A previsão de demanda é feita manualmente por cada gerente de loja. Resultado: lojas com excesso em alguns SKUs e ruptura em outros. O índice de ruptura médio está em 18% — acima do benchmark de 8%.",
@@ -188,11 +161,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · O E-commerce Não Converte
-     Contexto: 280k visitantes mensais, conversão de 1,4%
-     contra benchmark de 2,8%, site lento, frete caro.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O E-commerce Não Converte",
     description: "O site tem 280.000 visitantes mensais mas converte apenas 1,4% — a média do varejo nacional é 2,8%. O time de TI aponta: tempo de carregamento médio de 6,2 segundos no mobile, frete caro e sem opção de retirada em loja. O canal digital cresce em visitas mas não em receita.",
@@ -230,11 +199,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · O Marketplace Gigante Chega ao Seu Segmento
-     Contexto: Mercado Livre lança categoria específica
-     para o seu nicho com frete grátis e entrega em 24h.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Marketplace Gigante Chega ao Seu Segmento",
     description: "O Mercado Livre acaba de lançar uma categoria específica para o seu segmento com frete grátis para compras acima de R$ 80 e entrega em 24h via Mercado Envios. Em duas semanas, três dos seus maiores fornecedores já estão vendendo diretamente na plataforma — com preços 12% menores que os seus.",
@@ -273,11 +238,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · O Fornecedor Estratégico Aumenta 22%
-     Contexto: principal fornecedor reajusta preço em 22%
-     por pressão cambial, representa 31% do mix.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Fornecedor Estratégico Aumenta 22%",
     description: "Seu principal fornecedor — responsável por 31% do seu mix de produtos — comunica reajuste de 22% por pressão cambial e aumento de custos de matéria-prima. Você tem 30 dias para responder. Repassar integralmente para o consumidor em um momento de concorrência acirrada é arriscado. Absorver significa destruir margem.",
@@ -316,11 +277,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · Crise de Imagem: Reclamação Viral
-     Contexto: vídeo de cliente com produto com defeito
-     viraliza com 800k visualizações em 48 horas.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Crise de Imagem: Reclamação Viral",
     description: "Um cliente filmou uma reclamação sobre produto com defeito que viraliza com 800 mil visualizações em 48 horas. A mídia local cobre o caso. Sua nota de avaliação no Google caiu de 4,3 para 3,8 em dois dias. O produto em questão é de um fornecedor parceiro há 8 anos.",
@@ -359,11 +316,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · Black Friday: O Maior Risco do Ano
-     Contexto: Black Friday em 3 semanas, sistema de pagamento
-     instável, estoque insuficiente nos produtos âncora.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Black Friday: O Maior Risco do Ano",
     description: "A Black Friday é daqui a 3 semanas — representa 18% do faturamento anual. O time de TI alerta: o sistema de pagamento online teve 3 instabilidades no último mês. O estoque dos produtos âncora — os que puxam o tráfego — está em apenas 60% do necessário. Qualquer falha pode destruir um ano de construção de imagem digital.",
@@ -402,11 +355,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO · O Gerente Regional Pede Demissão
-     Contexto: seu melhor gerente regional — responsável por
-     12 lojas e 45% da receita — recebe proposta da concorrência.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Gerente Regional Pede Demissão",
     description: "Roberto, seu melhor gerente regional — responsável por 12 lojas e 45% da receita — chega com uma proposta da concorrência: aumento de 40% e um pacote de bônus por resultado. Ele construiu as relações com os melhores fornecedores locais e lidera um time de 180 pessoas. Perdê-lo agora, no meio da reestruturação, pode ser catastrófico.",
@@ -448,11 +397,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · Fechar ou Transformar as Lojas Deficitárias
-     Contexto: após 6 meses de reestruturação, 4 lojas ainda
-     no vermelho. Decisão definitiva não pode mais ser adiada.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Fechar ou Transformar: A Decisão Definitiva",
     description: "Após 6 meses de intervenção, 4 lojas ainda operam no vermelho. O conselho quer uma decisão definitiva: fechar tudo que não vira em 90 dias ou converter em outro formato. A comunidade local de uma das cidades já iniciou uma campanha nas redes contra o possível fechamento — a loja está lá há 18 anos.",
@@ -491,11 +436,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · A Proposta de Fusão
-     Contexto: rede concorrente regional propõe fusão que
-     dobraria a escala mas exigiria ceder controle operacional.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Proposta de Fusão",
     description: "Uma rede concorrente regional — 22 lojas, mesma geografia, segmento complementar — propõe fusão. A operação combinada teria escala para negociar melhores condições com fornecedores e dividir custos de TI. A contrapartida: você teria 51% mas o CEO da outra rede assumiria a diretoria de operações.",
@@ -535,11 +476,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · Marca Própria ou Curadoria Premium
-     Contexto: empresa de consultoria apresenta dois caminhos
-     opostos para diferenciação frente aos marketplaces.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Marca Própria ou Curadoria Premium",
     description: "A consultoria apresenta dois caminhos opostos: lançar uma linha de marca própria em 3 categorias estratégicas — margem 8pp maior, mas risco de aceitação e custo de desenvolvimento — ou se reposicionar como varejo de curadoria premium, reduzindo o mix para 20% dos SKUs atuais e focando em produtos com alto valor percebido.",
@@ -579,11 +516,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · O Investidor Quer Abrir o Capital
-     Contexto: fundo de private equity propõe aportar R$30M
-     em troca de 35% e um roadmap de IPO em 4 anos.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Investidor Quer Abrir o Capital",
     description: "Um fundo de private equity propõe aportar R$ 30 milhões em troca de 35% da empresa e um roadmap de IPO em 4 anos. O dinheiro resolveria a questão de capital de giro e financiaria a expansão digital. A contrapartida: governança formal, metas trimestrais rígidas e um CFO indicado pelo fundo.",
@@ -623,11 +556,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO CRÍTICA · O Futuro da Rede
-     Contexto: rodada final — qual varejo você quer ser
-     nos próximos 5 anos?
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Futuro da Rede: Qual Varejo Você Quer Ser?",
     description: "Após um ano de decisões difíceis, a rede está em melhor forma — mas o mercado segue se transformando. O conselho pede um plano estratégico para os próximos 5 anos. Três caminhos claros estão na mesa. Cada um exige um perfil de empresa diferente — e nem todos são compatíveis com o que você construiu até aqui.",
@@ -670,17 +599,10 @@ const VarejoRounds = [
 
 ],
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [1] · Rede de Farmácias — Concorrência Nacional
-   Contexto: 24 lojas em Fortaleza, R$110M receita, 27 anos,
-   duas redes nacionais abriram 31 lojas na região em 18 meses,
-   preços 15% menores, receita caiu 11%, 4 lojas no vermelho.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · As Redes Nacionais Chegaram
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "As Redes Nacionais Chegaram",
     description: "Duas grandes redes nacionais abriram 31 lojas na sua região em 18 meses, com preços até 15% abaixo dos seus. A receita caiu 11% no semestre. Seu time de farmacêuticos — principal diferencial — recebe ofertas 20% acima do seu salário atual. Por onde você começa o contra-ataque?",
@@ -718,9 +640,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O Farmacêutico Quer Sair
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Farmacêutico Que Segura Tudo Quer Sair",
     description: "Dr. Marcos, seu farmacêutico mais experiente — 14 anos na rede, responsável por 3 lojas e pelo programa de acompanhamento de pacientes crônicos com 2.400 clientes cadastrados — recebeu uma proposta 25% maior de uma das redes nacionais. Perdê-lo pode fazer a base de pacientes crônicos migrar junto.",
@@ -759,9 +679,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · O Sistema de Estoque É do Século Passado
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Sistema de Estoque É do Século Passado",
     description: "O sistema de gestão de estoque foi implementado há 11 anos e gera rupturas frequentes nos produtos de maior giro. O índice de ruptura está em 14% — a rede nacional vizinha entrega qualquer produto em até 2 horas por app. Seu fornecedor de sistema oferece upgrade por R$280 mil. Existe também opção de software SaaS moderno por R$8 mil/mês.",
@@ -799,9 +717,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · O Ticket Médio Caiu 17%
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Ticket Médio Caiu 17%",
     description: "O ticket médio por cliente recuou de R$ 98 para R$ 81 no último semestre. A análise mostra duas causas: clientes comprando apenas os itens em promoção e migrando o restante para as redes nacionais; e a queda de medicamentos de referência em favor dos genéricos, que têm margem 40% menor.",
@@ -839,9 +755,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · O Programa de Fidelidade Não Fideliza
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Programa de Fidelidade Não Fideliza",
     description: "O programa de fidelidade tem 94 mil clientes cadastrados, mas apenas 31% compraram mais de uma vez no último trimestre. A análise mostra: os pontos vencem em 90 dias, o aplicativo trava com frequência e 67% dos clientes não sabe quantos pontos tem. A rede nacional lançou um programa com cashback imediato e integração com Pix.",
@@ -880,9 +794,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · A Rede Nacional Abre Loja na Porta
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Rede Nacional Abre Loja na Porta da Sua Melhor Unidade",
     description: "A maior rede nacional acaba de inaugurar uma loja de 800m² a 200 metros da sua unidade mais rentável — que responde por 22% de toda a receita da rede. A nova loja tem delivery em 1 hora, estacionamento e uma farmácia de manipulação. Nas primeiras 2 semanas, o movimento da sua loja caiu 18%.",
@@ -921,9 +833,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · Vigilância Sanitária Autua Duas Lojas
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Vigilância Sanitária Autua Duas Lojas",
     description: "A Vigilância Sanitária autua duas lojas por armazenamento irregular de medicamentos termolábeis — produtos que precisam de refrigeração. A multa total é R$ 85 mil e uma das lojas pode ter a licença suspensa. A mídia local cobriu o caso. Ao mesmo tempo, a rede nacional usa o episódio em publicidade comparativa.",
@@ -962,9 +872,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · O Plano de Saúde Quer Credenciar Só as Nacionais
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Plano de Saúde Quer Credenciar Só as Redes Nacionais",
     description: "O principal plano de saúde da região — com 180 mil beneficiários — anuncia que vai credenciar apenas farmácias com mais de 50 lojas a partir do próximo ano. Isso eliminaria seu credenciamento e 28% da sua receita que vem de reembolsos de plano. O prazo para recurso é de 60 dias.",
@@ -1004,9 +912,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · Desabastecimento Nacional de Medicamento Chave
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Desabastecimento Nacional de Medicamento Chave",
     description: "Um medicamento para hipertensão — o mais prescrito da sua base de 2.400 pacientes crônicos — entra em desabastecimento nacional por problema na cadeia de produção. Seus pacientes estão ligando desesperados. A rede nacional vizinha conseguiu estoque do importado com preço 180% maior. Você tem contato com um distribuidor paralelo de procedência duvidosa.",
@@ -1045,9 +951,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO · A Rede Nacional Faz Proposta para Comprar Você
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Rede Nacional Faz Proposta para Comprar Você",
     description: "A maior rede nacional faz uma oferta formal de aquisição: R$ 42 milhões pela operação completa — 3,8x o faturamento anual. A oferta é 30% acima do que qualquer avaliação interna projetou. Mas o comprador deixa claro: os farmacêuticos atuais serão mantidos por 12 meses, após isso a política de RH segue o padrão nacional.",
@@ -1088,9 +992,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · Reposicionamento Total ou Defesa Gradual
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Reposicionamento Total ou Defesa Gradual",
     description: "Com 18 meses de pressão competitiva, a situação está estabilizada mas não revertida. O conselho apresenta dois caminhos opostos: reposicionar completamente a rede como farmácia de saúde integrada — com consultórios, teleconsulta e serviços pagos — ou executar uma defesa gradual mantendo o modelo atual mas com operação mais enxuta.",
@@ -1129,9 +1031,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · O Modelo de Franquia
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Transformar em Franquia para Ganhar Escala",
     description: "Uma consultoria especializada em franquias apresenta um modelo: transformar a rede em franquia regional permitiria chegar a 80 lojas em 3 anos sem capital próprio. Os franqueados entram com o investimento, você entra com a marca, o sistema e o know-how. O risco: manter o padrão de atendimento que é o seu diferencial.",
@@ -1171,9 +1071,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · Farmácia de Manipulação Própria
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Abrir Farmácia de Manipulação Própria",
     description: "Seu farmacêutico sênior propõe um projeto: abrir uma farmácia de manipulação própria integrada às lojas. Custo inicial R$ 1,2 milhão, retorno previsto em 30 meses. A margem de manipulados é 3x maior que a de medicamentos industriais e cria um diferencial que as redes nacionais não têm. O risco: regulatório, operacional e de capital.",
@@ -1213,9 +1111,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · Programa de Saúde Preventiva com Planos
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Parceria com Operadora para Programa de Saúde Preventiva",
     description: "Uma operadora de plano de saúde regional propõe criar um programa de saúde preventiva usando sua rede de farmácias como ponto de contato: aferição, orientação farmacêutica, alertas de adesão ao tratamento. O pagamento seria por resultado — quanto menor o custo hospitalar dos beneficiários, maior o repasse para a farmácia.",
@@ -1255,9 +1151,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO CRÍTICA · O Legado: Qual Farmácia Você Quer Ser
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Legado: Qual Farmácia Você Quer Ser",
     description: "Dois anos após a chegada das redes nacionais, a situação se estabilizou. O conselho pede a visão de longo prazo: qual é o papel da sua rede nos próximos 10 anos? Você pode manter o modelo atual, se transformar em plataforma de saúde ou se posicionar como a alternativa regional consciente às grandes corporações.",
@@ -1298,17 +1192,10 @@ const VarejoRounds = [
 
 ],
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [2] · Atacarejo Regional — Expansão Desequilibrada
-   Contexto: 7 lojas no interior de MG, R$420M receita, 980 func,
-   3 lojas abaixo do break-even, dívida 2,8x EBITDA,
-   Atacadão e Assaí expandindo para a região.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · A Conta da Expansão Chegou
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Conta da Expansão Chegou",
     description: "Em 3 anos você dobrou de 2 para 7 lojas. Agora o banco pede reunião: a dívida está em 2,8x o EBITDA — o limite do covenant é 3x. Se passar disso, o banco pode declarar vencimento antecipado. Três das sete lojas ainda operam abaixo do ponto de equilíbrio. O CFO apresenta três cenários. Qual você escolhe para começar a estabilização?",
@@ -1348,9 +1235,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · A Taxa de Perdas Dobrou
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Taxa de Perdas Dobrou",
     description: "A taxa de perdas — quebra e furto — subiu de 1,4% para 2,9% da receita. Em uma operação de R$ 420 milhões, isso representa R$ 6,3 milhões a mais sendo desperdiçado por ano. O time de segurança está sobrecarregado. Nas três lojas novas, onde os processos ainda não estão consolidados, a taxa chega a 4,1%.",
@@ -1388,9 +1273,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · O Time de Gestão Está No Limite
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Time de Gestão Está No Limite",
     description: "A pesquisa de clima revela: 78% dos gerentes de loja dizem ter 'processos insuficientes' para tomar decisões. O time que gerenciava 2 lojas agora opera 7 sem estrutura adicional. Dois gerentes regionais pediram demissão no último trimestre. O diretor de operações trabalha 14 horas por dia e está no limite do esgotamento.",
@@ -1429,9 +1312,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · Mix de Produto Errado nas Lojas Novas
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Mix de Produto Errado nas Lojas Novas",
     description: "A análise das 3 lojas deficitárias revela o problema central: o mix de produtos foi copiado das 2 lojas originais — que atendem uma região com perfil de renda e hábito de compra diferente. Nas cidades novas, 40% dos SKUs têm giro abaixo do mínimo rentável. Mas os pedidos de compra são centralizados e o fornecedor exige pedido mínimo alto.",
@@ -1470,9 +1351,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · O Pequeno Comerciante Está Sumindo
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Pequeno Comerciante Está Sumindo",
     description: "O atacarejo sempre atendeu dois públicos: consumidor final e pequenos comerciantes, que representavam 38% do faturamento. Nos últimos 6 meses, a participação do comerciante caiu para 24%. A análise revela: as plataformas de atacado digital — iFood Shop, Jüssi, CashMe — entregam na porta do comerciante com preço competitivo.",
@@ -1511,9 +1390,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · Atacadão Abre a 3km da Sua Loja Principal
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Atacadão Abre a 3km da Sua Loja Principal",
     description: "O Atacadão inaugura uma loja de 8.000m² a 3km da sua unidade principal — que responde por 35% da receita total da rede. A loja tem estacionamento para 400 carros, galeria de serviços e preços em alguns SKUs âncora 8% abaixo dos seus. Na primeira semana, o movimento da sua loja caiu 22%.",
@@ -1551,9 +1428,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · Greve dos Caminhoneiros Paralisa o Abastecimento
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Greve dos Caminhoneiros Paralisa o Abastecimento",
     description: "Uma greve nacional de caminhoneiros entra no 5º dia sem sinal de resolução. Seu estoque de produtos de alto giro — arroz, óleo, frango, açúcar — tem apenas 4 dias de cobertura. Os concorrentes nacionais, com CDs regionais maiores, têm 15 dias de cobertura. Clientes estão comprando em pânico e o estoque está evaporando.",
@@ -1593,9 +1468,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · Funcionário Aciona a Justiça do Trabalho
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Ação Trabalhista Coletiva Ameaça a Operação",
     description: "Um grupo de 47 funcionários das lojas novas entra com ação trabalhista coletiva: alegam horas extras não pagas, ausência de equipamentos de proteção e assédio de um gerente regional. O passivo estimado é R$ 2,8 milhões. O caso vaza para a mídia local. Um dos fornecedores pede garantias antes de renovar o contrato.",
@@ -1635,9 +1508,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · Inflação Corrói o Poder de Compra do Cliente
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Inflação Corrói o Poder de Compra do Seu Cliente",
     description: "A inflação do ano acumulou 9,2% e o consumidor de menor renda — seu principal cliente — está comprando menos e trocando para itens mais baratos. O ticket médio caiu 14% em volume (o que você vende) mas subiu 6% em valor (por causa dos preços maiores). Sua margem operacional caiu de 3,8% para 2,1%.",
@@ -1676,9 +1547,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO · O Assaí Propõe Adquirir 3 das Suas Lojas
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Assaí Propõe Adquirir 3 das Suas Lojas",
     description: "O Assaí faz uma proposta direta: comprar as 3 lojas novas que ainda não atingiram break-even por R$ 18 milhões — preço justo pelo ativo, mas abaixo do custo de investimento. Com esse dinheiro você quitaria 60% da dívida. A operação ficaria com 4 lojas — as 2 originais e mais 2 das novas que já estão lucrativas.",
@@ -1718,9 +1587,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · Consolidar ou Crescer de Novo
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Consolidar ou Crescer de Novo",
     description: "Após 18 meses de estabilização, a dívida está em 1,8x EBITDA e as 4 lojas remanescentes são lucrativas. O banco, surpreso com a recuperação, oferece nova linha de crédito para expansão. Um ponto excelente em uma cidade vizinha está disponível por 3 anos de aluguel antecipado. A equipe está dividida.",
@@ -1760,9 +1627,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · Vertical de Açougue e Peixaria Próprios
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Vertical de Açougue e Peixaria Próprios",
     description: "Um consultor de varejo apresenta uma oportunidade: criar açougue e peixaria com corte próprio dentro das lojas — o produto mais rentável e fidelizador do atacarejo. A margem de perecíveis com processamento próprio é 4x maior que a de não-perecíveis. O investimento em equipamentos e profissionais é R$ 1,4 milhão por loja.",
@@ -1801,9 +1666,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · Plataforma Digital B2B para Comerciantes
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Plataforma Digital B2B: Atacarejo no App",
     description: "Um startup de tecnologia propõe construir uma plataforma B2B para pedidos de comerciantes: app, site, pagamento online e entrega em 24h. O investimento é R$ 800 mil no primeiro ano. O potencial: recuperar os 14pp de participação de comerciantes perdidos para os atacados digitais. O risco: competência digital que a empresa nunca desenvolveu.",
@@ -1842,9 +1705,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · Certificação de Sustentabilidade
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Maior Cliente B2B Exige Certificação ESG",
     description: "Sua maior rede de restaurantes cliente — representa R$ 8,2 milhões em compras anuais — comunica que a partir do próximo ano vai priorizar fornecedores com certificação de sustentabilidade. Sem a certificação, você pode perder o contrato. O processo de certificação leva 18 meses e custa R$ 340 mil em adaptações.",
@@ -1884,9 +1745,7 @@ const VarejoRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO CRÍTICA · O Legado do Atacarejo Regional
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Legado: Que Atacarejo Você Quer Deixar",
     description: "Cinco anos após a crise de expansão, as 4 lojas são rentáveis e a rede tem reputação sólida na região. O Atacadão e o Assaí estão presentes, mas você sobreviveu e se diferenciou. O conselho pergunta: qual é a próxima fase? Você pode crescer de novo, vender no auge ou se tornar referência regional de forma diferente.",
@@ -1929,4 +1788,4 @@ const VarejoRounds = [
 
 ]
 
-]; // fim VarejoRounds
+]; 

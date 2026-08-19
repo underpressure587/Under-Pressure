@@ -1,13 +1,9 @@
-/**
- * extrair.js
- * Separa o bundle.js de volta nos arquivos fonte originais.
- * Uso: node extrair.js
- */
+
 
 const fs   = require('fs');
 const path = require('path');
 
-// Mapeamento: marcador no bundle → caminho real do arquivo
+
 const MAPA = {
   'core/state.js':                  'Core/state.js',
   'core/indicadores.js':            'Core/indicadores.js',
@@ -35,7 +31,7 @@ const MAPA = {
 const bundle = fs.readFileSync('bundle.js', 'utf8');
 const linhas = bundle.split('\n');
 
-// Encontra onde cada seção começa
+
 const secoes = [];
 linhas.forEach((linha, i) => {
   const match = linha.match(/^\/\* --(.+?)-- \*\//);
@@ -46,7 +42,7 @@ linhas.forEach((linha, i) => {
 
 console.log(`\n📦 ${secoes.length} arquivos encontrados no bundle.js\n`);
 
-// Extrai cada seção e salva no arquivo correspondente
+
 secoes.forEach((secao, idx) => {
   const inicio  = secao.linha + 1;
   const fim     = idx + 1 < secoes.length ? secoes[idx + 1].linha : linhas.length;
@@ -58,7 +54,7 @@ secoes.forEach((secao, idx) => {
     return;
   }
 
-  // Garante que a pasta existe
+  
   const pasta = path.dirname(destino);
   if (pasta !== '.' && !fs.existsSync(pasta)) {
     fs.mkdirSync(pasta, { recursive: true });

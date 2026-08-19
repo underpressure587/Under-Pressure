@@ -27,7 +27,7 @@ const PROJECT_ID = "under-pressure-49320";
 
 let app, auth, googleProvider;
 let _firebaseReady = false;
-let _cachedAuthUser = undefined; // undefined = ainda não resolveu, null = sem usuário
+let _cachedAuthUser = undefined; 
 
 async function _getToken() {
   if (!auth) return null;
@@ -45,7 +45,7 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
     initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
     googleProvider = new GoogleAuthProvider();
 
-    // Realtime Database — presença em tempo real
+    
     if (firebaseConfig.databaseURL && !firebaseConfig.databaseURL.startsWith('COLE_AQUI')) {
       try {
         const rtdb = getDatabase(app);
@@ -58,10 +58,10 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
       window.GSPRtdb = null;
     }
     _firebaseReady = true;
-    // Captura usuário imediatamente ao inicializar
+    
     let _redirectDone = false;
     onAuthStateChanged(auth, (user) => {
-      // Só atualiza após o redirect ter sido processado
+      
       if (_redirectDone) {
         _cachedAuthUser = user || null;
       } else if (user) {
@@ -76,7 +76,7 @@ if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("COLE_AQUI")) {
         const nome = u.displayName || u.email?.split('@')[0] || 'Jogador';
         const player = { uid: u.uid, nome, email: u.email, tipo: 'user' };
         try { localStorage.setItem('gsp_player', JSON.stringify(player)); } catch(e) {}
-        // Avisa o _boot imediatamente via evento
+        
         window.dispatchEvent(new CustomEvent('gsp-redirect-login', { detail: player }));
       } else {
         if (_cachedAuthUser === undefined) _cachedAuthUser = null;
@@ -152,7 +152,7 @@ window.GSPAuth = {
 
   async waitForAuthReady() {
     if (!_firebaseReady || !auth) return null;
-    // Aguarda cache ser preenchido (onAuthStateChanged + getRedirectResult)
+    
     let t = 0;
     while (_cachedAuthUser === undefined && t < 80) {
       await new Promise(r => setTimeout(r, 100));
@@ -163,7 +163,7 @@ window.GSPAuth = {
 
   async _salvarPerfil(user, nome) {
     try {
-      // Aguarda token ficar disponível (até 5s)
+      
       let token = null;
       for (let i = 0; i < 10; i++) {
         token = await _getToken();
@@ -172,7 +172,7 @@ window.GSPAuth = {
       }
       if (!token) { console.warn("[GSP] _salvarPerfil: sem token"); return; }
 
-      // Verifica se já existe um nome customizado salvo no Firestore
+      
       const getUrl = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + user.uid;
       let nomeParaSalvar = nome || '';
       try {
@@ -180,12 +180,12 @@ window.GSPAuth = {
         if (res.ok) {
           const doc = await res.json();
           const nomeSalvo = doc?.fields?.nome?.stringValue;
-          // Se já tem nome customizado no Firestore, preserva
+          
           if (nomeSalvo && nomeSalvo.trim() !== '') nomeParaSalvar = nomeSalvo;
         }
-      } catch(e) { /* usa nome do Google mesmo */ }
+      } catch(e) {  }
 
-      // FIX: apenas nome e email — nunca sobrescrever mandatos/melhorScore (resetaria stats do jogador)
+      
       const url = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + user.uid + "?updateMask.fieldPaths=nome&updateMask.fieldPaths=email";
       const body = { fields: {
         nome:  { stringValue: nomeParaSalvar },
@@ -193,7 +193,7 @@ window.GSPAuth = {
       }};
       await fetch(url, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
-      // Atualiza localStorage com nome preservado
+      
       try {
         const lsPlayer = JSON.parse(localStorage.getItem('gsp_player') || '{}');
         if (lsPlayer?.uid === user.uid) {
@@ -205,13 +205,13 @@ window.GSPAuth = {
   },
 };
 
-// Retorna o nome da empresa do melhor score geral
+
 function _melhorEmpresa(melhorPorSetor) {
   if (!melhorPorSetor) return '';
   return Object.values(melhorPorSetor)
     .sort((a, b) => b.score - a.score)[0]?.companyName || '';
 }
-// Retorna o setor do melhor score geral
+
 function _melhorSetor(melhorPorSetor) {
   if (!melhorPorSetor) return '';
   return Object.entries(melhorPorSetor)
@@ -276,7 +276,7 @@ window.GSPSync = {
     const token = await _getToken();
     if (!token) throw new Error('sem auth');
 
-    // 1. Salva no histórico
+    
     const urlHist = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + "/historico";
     const bodyHist = { fields: {
       player:      { stringValue:  entrada.player      || '' },
@@ -290,10 +290,10 @@ window.GSPSync = {
     const r = await fetch(urlHist, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(bodyHist) });
     if (!r.ok) { const t = await r.text(); throw new Error('HTTP ' + r.status + ': ' + t.slice(0,100)); }
 
-    // 2. Atualiza mandatos e melhorScore em /usuarios/{uid}
+    
     try {
       const urlPerfil = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid;
-      // Lê valores atuais
+      
       const getRes = await fetch(urlPerfil, { headers: { 'Authorization': 'Bearer ' + token } });
       let mandatosAtual = 0;
       let melhorScoreAtual = 0;
@@ -337,7 +337,7 @@ window.GSPSync = {
           limit: maximo
         }
       };
-      // runQuery deve ser feito no contexto do usuário para subcoleção
+      
       const urlUser = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/usuarios/" + uid + ":runQuery";
       const res = await fetch(urlUser, {
         method: 'POST',
@@ -524,12 +524,10 @@ window.GSPSync = {
 };
 
 
-/* ════════════════════════════════════════════════════
-   GSPSalas — Sprint 1: Sala básica
-════════════════════════════════════════════════════ */
+
 window.GSPSalas = {
 
-  /* ── Helpers internos ── */
+  
   _url(path) {
     return "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/" + path;
   },
@@ -562,21 +560,18 @@ window.GSPSalas = {
   },
 
   _gerarCodigo() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sem I,O,0,1 — evita confusão visual
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; 
     let cod = '';
     for (let i = 0; i < 6; i++) cod += chars[Math.floor(Math.random() * chars.length)];
     return cod;
   },
 
-  /* ── criarSala ──────────────────────────────────────
-     Só admins podem criar. Verifica /config/admins antes.
-     Retorna { codigo, ...dadosSala } ou lança erro.
-  ──────────────────────────────────────────────────── */
+  
   async criarSala({ uid, nomeSala, modoSetor, setorFixo, limiteGrupos, minMembros, maxMembros }) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
 
-    // Verifica se é admin
+    
     const adminRes = await fetch(this._url('config/admins'), {
       headers: { 'Authorization': 'Bearer ' + token }
     });
@@ -585,14 +580,14 @@ window.GSPSalas = {
     const uids = adminData.fields?.uids?.arrayValue?.values?.map(v => v.stringValue) || [];
     if (!uids.includes(uid)) throw new Error('sem_permissao');
 
-    // Gera código único (tenta até 5 vezes)
+    
     let codigo = null;
     for (let i = 0; i < 5; i++) {
       const tentativa = this._gerarCodigo();
       const check = await fetch(this._url('salas/' + tentativa), {
         headers: { 'Authorization': 'Bearer ' + token }
       });
-      if (!check.ok) { codigo = tentativa; break; } // 404 = livre
+      if (!check.ok) { codigo = tentativa; break; } 
     }
     if (!codigo) throw new Error('codigo_indisponivel');
 
@@ -602,7 +597,7 @@ window.GSPSalas = {
       criadaEm:    Date.now(),
       ativa:       true,
       arquivada:   false,
-      modoSetor:   modoSetor   || 'livre',      // 'livre' | 'fixo'
+      modoSetor:   modoSetor   || 'livre',      
       setorFixo:   setorFixo   || '',
       limiteGrupos: limiteGrupos || 4,
       minMembros:   minMembros   || 2,
@@ -611,7 +606,7 @@ window.GSPSalas = {
       podioVisivel: false,
     })};
 
-    // Adiciona criadaEm como timestamp real
+    
     body.fields.criadaEm = { timestampValue: new Date().toISOString() };
 
     const res = await fetch(this._url('salas/' + codigo), {
@@ -624,10 +619,7 @@ window.GSPSalas = {
     return { codigo, nomeSala, modoSetor, setorFixo, limiteGrupos, minMembros, maxMembros };
   },
 
-  /* ── carregarSala ───────────────────────────────────
-     Valida e retorna dados da sala pelo código.
-     Lança 'sala_nao_encontrada' ou 'sala_inativa'.
-  ──────────────────────────────────────────────────── */
+  
   async carregarSala(codigo) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
@@ -649,15 +641,12 @@ window.GSPSalas = {
     return { codigo: cod, ...sala };
   },
 
-  /* ── entrarSala ─────────────────────────────────────
-     Registra o jogador como membro da sala.
-     Salva em salas/{codigo}/membros/{uid}
-  ──────────────────────────────────────────────────── */
+  
   async entrarSala(codigo, { uid, nome }) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
 
-    // Confirma que sala existe e está ativa
+    
     await this.carregarSala(codigo);
 
     const cod = codigo.toUpperCase().trim();
@@ -673,16 +662,14 @@ window.GSPSalas = {
     return true;
   },
 
-  /* ── carregarMembrosSala ────────────────────────────
-     Retorna lista de membros da sala via runQuery.
-  ──────────────────────────────────────────────────── */
+  
   async carregarMembrosSala(codigo) {
     const token = await _getToken();
     if (!token) return [];
 
     const cod = (codigo || '').toUpperCase().trim();
     const url = this._url('salas/' + cod + '/membros:runQuery').replace('/membros:runQuery', ':runQuery');
-    // runQuery na subcoleção membros
+    
     const runUrl = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/default/documents/salas/" + cod + ":runQuery";
 
     const res = await fetch(runUrl, {
@@ -703,10 +690,7 @@ window.GSPSalas = {
       .map(r => this._fromFields(r.document.fields || {}));
   },
 
-  /* ── encerrarSala ───────────────────────────────────
-     Marca sala como inativa e arquivada.
-     Só o criadoPor ou admin pode encerrar.
-  ──────────────────────────────────────────────────── */
+  
   async encerrarSala(codigo, uid) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
@@ -714,7 +698,7 @@ window.GSPSalas = {
     const cod = (codigo || '').toUpperCase().trim();
     const sala = await this.carregarSala(cod);
     if (sala.criadaPor !== uid) {
-      // Verifica se é admin
+      
       const adminRes = await fetch(this._url('config/admins'), {
         headers: { 'Authorization': 'Bearer ' + token }
       });
@@ -743,9 +727,7 @@ window.GSPSalas = {
     return true;
   },
 
-  /* ── carregarPodioSala ──────────────────────────────
-     Retorna pódio de grupos de um ciclo específico.
-  ──────────────────────────────────────────────────── */
+  
   async carregarPodioSala(codigo, ciclo = 1) {
     const token = await _getToken();
     if (!token) return [];
@@ -780,10 +762,7 @@ window.GSPSalas = {
       .sort((a, b) => b.score - a.score);
   },
 
-  /* ── salvarNoPodioSala ──────────────────────────────
-     Salva resultado de uma partida colaborativa no pódio da sala.
-     docId = codigo_grupo para deduplicar por grupo+ciclo.
-  ──────────────────────────────────────────────────── */
+  
   async salvarNoPodioSala(codigo, { grupo, cor, membros, score, sector, ciclo, resumo }) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
@@ -792,13 +771,13 @@ window.GSPSalas = {
     const docId   = encodeURIComponent(grupo + '_ciclo' + ciclo);
     const url     = this._url('salas/' + cod + '/podio/' + docId);
 
-    // Lê score atual para manter só o melhor
+    
     let melhorScore = score;
     const getRes = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
     if (getRes.ok) {
       const atual = await getRes.json();
       const scoreAtual = parseInt(atual.fields?.score?.integerValue || 0);
-      if (scoreAtual >= score) return true; // já tem score melhor, não sobrescreve
+      if (scoreAtual >= score) return true; 
       melhorScore = score;
     }
 
@@ -823,31 +802,25 @@ window.GSPSalas = {
   },
 };
 
-/* ════════════════════════════════════════════════════
-   GSPSalas — Sprint 2: Grupos
-════════════════════════════════════════════════════ */
+
 Object.assign(window.GSPSalas, {
 
-  /* ── criarGrupo ─────────────────────────────────────
-     Jogador cria um grupo novo na sala.
-     Ele vira o líder automaticamente (primeiro a entrar).
-     Valida limite de grupos definido pelo anfitrião.
-  ──────────────────────────────────────────────────── */
+  
   async criarGrupo(codigo, { uid, nome, nomeGrupo, cor }) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
 
     const cod = (codigo || '').toUpperCase().trim();
 
-    // Carrega config da sala para verificar limite
+    
     const sala = await this.carregarSala(cod);
     if (!sala.aberta && sala.aberta !== undefined) throw new Error('sala_fechada');
 
-    // Conta grupos existentes
+    
     const gruposExist = await this.carregarGrupos(cod);
     if (gruposExist.length >= (sala.limiteGrupos || 99)) throw new Error('limite_grupos');
 
-    // Verifica se nome já existe
+    
     const nomeNorm = (nomeGrupo || '').trim();
     if (!nomeNorm) throw new Error('nome_invalido');
     if (gruposExist.some(g => g.nomeGrupo?.toLowerCase() === nomeNorm.toLowerCase())) {
@@ -874,15 +847,12 @@ Object.assign(window.GSPSalas, {
     });
     if (!res.ok) { const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t.slice(0,100)); }
 
-    // Registra membro no grupo
+    
     await this._registrarMembroGrupo(cod, nomeNorm, uid, nome);
     return { nomeGrupo: nomeNorm, cor, lider: uid };
   },
 
-  /* ── entrarGrupo ────────────────────────────────────
-     Jogador entra em grupo existente.
-     Valida maxMembros da sala.
-  ──────────────────────────────────────────────────── */
+  
   async entrarGrupo(codigo, { uid, nome, nomeGrupo }) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
@@ -892,22 +862,22 @@ Object.assign(window.GSPSalas, {
     const docId   = encodeURIComponent((nomeGrupo || '').trim());
     const urlGrupo = this._url('salas/' + cod + '/grupos/' + docId);
 
-    // Lê grupo atual
+    
     const getRes = await fetch(urlGrupo, { headers: { 'Authorization': 'Bearer ' + token } });
     if (!getRes.ok) throw new Error('grupo_nao_encontrado');
     const data = await getRes.json();
     const f    = data.fields || {};
 
-    // Checa limite de membros
+    
     const membrosAtuais = (f.membros?.arrayValue?.values || []).map(v => v.stringValue);
-    if (membrosAtuais.includes(uid)) return true; // já está no grupo
+    if (membrosAtuais.includes(uid)) return true; 
     if (membrosAtuais.length >= (sala.maxMembros || 99)) throw new Error('grupo_cheio');
 
-    // Verifica se statusCiclo permite entrada
+    
     const status = f.statusCiclo?.stringValue || 'aguardando';
     if (status === 'jogando') throw new Error('partida_em_curso');
 
-    // Adiciona uid ao array membros
+    
     membrosAtuais.push(uid);
     const urlPatch = urlGrupo + '?updateMask.fieldPaths=membros';
     const body = { fields: {
@@ -925,9 +895,7 @@ Object.assign(window.GSPSalas, {
     return true;
   },
 
-  /* ── _registrarMembroGrupo ──────────────────────────
-     Salva em salas/{cod}/membros/{uid} o grupo do jogador.
-  ──────────────────────────────────────────────────── */
+  
   async _registrarMembroGrupo(cod, nomeGrupo, uid, nome) {
     const token = await _getToken();
     if (!token) return;
@@ -941,9 +909,7 @@ Object.assign(window.GSPSalas, {
     }).catch(() => {});
   },
 
-  /* ── carregarGrupos ─────────────────────────────────
-     Lista todos os grupos da sala com contagem de membros.
-  ──────────────────────────────────────────────────── */
+  
   async carregarGrupos(codigo) {
     const token = await _getToken();
     if (!token) return [];
@@ -981,9 +947,7 @@ Object.assign(window.GSPSalas, {
       });
   },
 
-  /* ── transferirLideranca ────────────────────────────
-     Líder atual ou anfitrião transfere liderança para outro membro.
-  ──────────────────────────────────────────────────── */
+  
   async transferirLideranca(codigo, nomeGrupo, { solicitanteUid, novoLiderUid, novoLiderNome }) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
@@ -993,7 +957,7 @@ Object.assign(window.GSPSalas, {
     const docId  = encodeURIComponent((nomeGrupo || '').trim());
     const url    = this._url('salas/' + cod + '/grupos/' + docId);
 
-    // Lê grupo
+    
     const getRes = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
     if (!getRes.ok) throw new Error('grupo_nao_encontrado');
     const data = await getRes.json();
@@ -1004,7 +968,7 @@ Object.assign(window.GSPSalas, {
     const isLider    = liderAtual === solicitanteUid;
     if (!isLider && !isAnfitriao) throw new Error('sem_permissao');
 
-    // Verifica se novo líder é membro
+    
     const membros = (f.membros?.arrayValue?.values || []).map(v => v.stringValue);
     if (!membros.includes(novoLiderUid)) throw new Error('nao_e_membro');
 
@@ -1023,16 +987,14 @@ Object.assign(window.GSPSalas, {
     return true;
   },
 
-  /* ── moverMembro ────────────────────────────────────
-     Anfitrião move um jogador de grupo (remove do atual, entra no novo).
-  ──────────────────────────────────────────────────── */
+  
   async moverMembro(codigo, { uid, grupoAtual, grupoDestino }) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
 
     const cod = (codigo || '').toUpperCase().trim();
 
-    // Remove do grupo atual
+    
     if (grupoAtual) {
       const urlAtual = this._url('salas/' + cod + '/grupos/' + encodeURIComponent(grupoAtual));
       const getRes   = await fetch(urlAtual, { headers: { 'Authorization': 'Bearer ' + token } });
@@ -1050,7 +1012,7 @@ Object.assign(window.GSPSalas, {
       }
     }
 
-    // Entra no grupo destino
+    
     if (grupoDestino) {
       await this.entrarGrupo(cod, { uid, nomeGrupo: grupoDestino });
     }
@@ -1058,14 +1020,10 @@ Object.assign(window.GSPSalas, {
   },
 });
 
-/* ════════════════════════════════════════════════════
-   GSPSalas — Sprints 3-6: Lobby, Votação, Ciclo, Admin
-════════════════════════════════════════════════════ */
+
 Object.assign(window.GSPSalas, {
 
-  /* ── criarPartida ───────────────────────────────────
-     Cria doc da partida colaborativa em salas/{cod}/partidas/{id}
-  ──────────────────────────────────────────────────── */
+  
   async criarPartida(codigo, { grupo, sector, totalRodadas, timerSegundos, ciclo, jogadores }) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
@@ -1105,9 +1063,7 @@ Object.assign(window.GSPSalas, {
     return id;
   },
 
-  /* ── carregarEstadoPartida ──────────────────────────
-     Lê estado atual da partida (polling).
-  ──────────────────────────────────────────────────── */
+  
   async carregarEstadoPartida(codigo, partidaId) {
     const token = await _getToken();
     if (!token) return null;
@@ -1144,9 +1100,7 @@ Object.assign(window.GSPSalas, {
     };
   },
 
-  /* ── patchPartida ───────────────────────────────────
-     Atualiza campos específicos da partida via PATCH.
-  ──────────────────────────────────────────────────── */
+  
   async patchPartida(codigo, partidaId, fields) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
@@ -1163,27 +1117,23 @@ Object.assign(window.GSPSalas, {
     return true;
   },
 
-  /* ── heartbeat ──────────────────────────────────────
-     Marca jogador como online. Chama a cada 5s.
-  ──────────────────────────────────────────────────── */
+  
   async heartbeat(codigo, partidaId, uid) {
     try {
       const estado = await this.carregarEstadoPartida(codigo, partidaId);
       if (!estado) return;
       const online = estado.online || {};
       online[uid]  = Date.now();
-      // Remove jogadores offline (>15s sem heartbeat)
+      
       const agora  = Date.now();
       Object.keys(online).forEach(k => { if (agora - online[k] > 15000) delete online[k]; });
       await this.patchPartida(codigo, partidaId, {
         online: { stringValue: JSON.stringify(online) }
       });
-    } catch(e) { /* silencioso — heartbeat não pode travar a UI */ }
+    } catch(e) {  }
   },
 
-  /* ── registrarVoto ──────────────────────────────────
-     Salva voto do jogador. Detecta se todos votaram → chama processarRodada.
-  ──────────────────────────────────────────────────── */
+  
   async registrarVoto(codigo, partidaId, uid, opcao) {
     const estado = await this.carregarEstadoPartida(codigo, partidaId);
     if (!estado || estado.status !== 'votando') return false;
@@ -1196,7 +1146,7 @@ Object.assign(window.GSPSalas, {
       votos: { stringValue: JSON.stringify(votos) }
     });
 
-    // Verifica se todos os jogadores online votaram
+    
     const online   = estado.online || {};
     const onlineIds= Object.keys(online).filter(k => Date.now() - online[k] < 15000);
     const votaram  = onlineIds.filter(k => votos[k]);
@@ -1207,13 +1157,10 @@ Object.assign(window.GSPSalas, {
     return true;
   },
 
-  /* ── _tentarProcessarRodada ─────────────────────────
-     Flag processando:true para evitar duplicação.
-     Calcula decisão majoritária e avança estado.
-  ──────────────────────────────────────────────────── */
+  
   async _tentarProcessarRodada(codigo, partidaId) {
     try {
-      // Trava processamento
+      
       const estado = await this.carregarEstadoPartida(codigo, partidaId);
       if (!estado || estado.processando) return;
 
@@ -1223,9 +1170,9 @@ Object.assign(window.GSPSalas, {
 
       const votos   = estado.votos || {};
       const jogadores = estado.jogadores || {};
-      const lider   = Object.keys(jogadores)[0]; // primeiro = líder
+      const lider   = Object.keys(jogadores)[0]; 
 
-      // Conta votos — suporta string ('A') e objeto ({letra:'A', confianca:'moderado'})
+      
       const contagem = {};
       Object.values(votos).forEach(v => {
         const letra = typeof v === 'object' ? v.letra : v;
@@ -1253,17 +1200,14 @@ Object.assign(window.GSPSalas, {
       });
     } catch(e) {
       console.error('[GSPSalas] _tentarProcessarRodada:', e.message);
-      // Destravar em caso de erro
+      
       try {
         await this.patchPartida(codigo, partidaId, { processando: { booleanValue: false } });
       } catch(e2) {}
     }
   },
 
-  /* ── avancarRodada ──────────────────────────────────
-     Após revelar decisão, aplica efeitos e avança rodada.
-     Chamado pelo cliente após animação de revelação.
-  ──────────────────────────────────────────────────── */
+  
   async avancarRodada(codigo, partidaId, { novaRodada, indicators, score, situacaoAtual, status, fase, faseInicio, faseDuracao, votos, sinais, decisaoFinal, papeis }) {
     const fields = {
       rodadaAtual:   { integerValue: String(novaRodada) },
@@ -1284,9 +1228,7 @@ Object.assign(window.GSPSalas, {
     await this.patchPartida(codigo, partidaId, fields);
   },
 
-  /* ── iniciarPartida ─────────────────────────────────
-     Muda status para em_jogo + define timerInicio.
-  ──────────────────────────────────────────────────── */
+  
   async iniciarPartida(codigo, partidaId, { sector, indicators, situacaoAtual, fase, faseInicio, faseDuracao, papeis }) {
     await this.patchPartida(codigo, partidaId, {
       status:        { stringValue: 'votando' },
@@ -1303,10 +1245,7 @@ Object.assign(window.GSPSalas, {
     });
   },
 
-  /* ── avancarFase ────────────────────────────────────
-     Avança a fase interna da rodada (alerta→deliberacao→votacao→revelacao→impacto→placar).
-     Chamado pelo líder após timer esgotar.
-  ──────────────────────────────────────────────────── */
+  
   async avancarFase(codigo, partidaId, { fase, faseInicio, faseDuracao, decisaoFinal, indicators, placarGrupos }) {
     const fields = {
       fase:       { stringValue: fase || 'votacao' },
@@ -1316,7 +1255,7 @@ Object.assign(window.GSPSalas, {
     if (decisaoFinal !== undefined) fields.decisaoFinal = { stringValue: decisaoFinal || '' };
     if (indicators   !== undefined) fields.indicators   = { stringValue: JSON.stringify(indicators) };
     if (placarGrupos !== undefined) fields.placarGrupos = { stringValue: JSON.stringify(placarGrupos) };
-    // Na transição para votacao: limpa votos e sinais
+    
     if (fase === 'votacao') {
       fields.votos  = { stringValue: '{}' };
       fields.sinais = { stringValue: '{}' };
@@ -1324,9 +1263,7 @@ Object.assign(window.GSPSalas, {
     await this.patchPartida(codigo, partidaId, fields);
   },
 
-  /* ── registrarSinal ─────────────────────────────────
-     Salva sinal de comunicação do jogador (ex: 🔴 Risco alto).
-  ──────────────────────────────────────────────────── */
+  
   async registrarSinal(codigo, partidaId, uid, sinalId) {
     if (!uid || !sinalId) return false;
     try {
@@ -1341,9 +1278,7 @@ Object.assign(window.GSPSalas, {
     } catch(e) { return false; }
   },
 
-  /* ── registrarVotoCompleto ──────────────────────────
-     Salva voto com objeto {letra, confianca}. Detecta todos votaram → processa.
-  ──────────────────────────────────────────────────── */
+  
   async registrarVotoCompleto(codigo, partidaId, uid, { letra, confianca }) {
     const estado = await this.carregarEstadoPartida(codigo, partidaId);
     if (!estado || estado.status !== 'votando') return false;
@@ -1356,7 +1291,7 @@ Object.assign(window.GSPSalas, {
       votos: { stringValue: JSON.stringify(votos) }
     });
 
-    // Verifica se todos os online votaram
+    
     const online    = estado.online || {};
     const onlineIds = Object.keys(online).filter(k => Date.now() - online[k] < 15000);
     const votaram   = onlineIds.filter(k => votos[k]?.letra);
@@ -1367,15 +1302,13 @@ Object.assign(window.GSPSalas, {
     return true;
   },
 
-  /* ── encerrarPartida ────────────────────────────────
-     Marca partida encerrada e salva no pódio.
-  ──────────────────────────────────────────────────── */
+  
   async encerrarPartida(codigo, partidaId, { grupo, cor, membros, score, sector, ciclo, resumo }) {
     await this.patchPartida(codigo, partidaId, {
       status: { stringValue: 'encerrada' },
       score:  { integerValue: String(score) },
     });
-    // Atualiza statusCiclo do grupo
+    
     const cod   = (codigo || '').toUpperCase().trim();
     const docId = encodeURIComponent((grupo || '').trim());
     await this.patchPartida(codigo, docId + '_status', {}).catch(() => {});
@@ -1389,22 +1322,18 @@ Object.assign(window.GSPSalas, {
         });
       }
     } catch(e) {}
-    // Salva no pódio da sala
+    
     await this.salvarNoPodioSala(codigo, { grupo, cor, membros, score, sector, ciclo, resumo });
   },
 
-  /* ── verificarTodosGruposConcluiram ─────────────────
-     Retorna true se todos os grupos têm statusCiclo=concluido.
-  ──────────────────────────────────────────────────── */
+  
   async verificarTodosGruposConcluiram(codigo) {
     const grupos = await this.carregarGrupos(codigo);
     if (!grupos.length) return false;
     return grupos.every(g => g.statusCiclo === 'concluido');
   },
 
-  /* ── revelarPodio ───────────────────────────────────
-     Anfitrião revela o pódio (podioVisivel: true).
-  ──────────────────────────────────────────────────── */
+  
   async revelarPodio(codigo, uid) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
@@ -1419,9 +1348,7 @@ Object.assign(window.GSPSalas, {
     });
   },
 
-  /* ── liberarNovoCiclo ───────────────────────────────
-     Anfitrião reseta statusCiclo de todos os grupos e incrementa cicloAtual.
-  ──────────────────────────────────────────────────── */
+  
   async liberarNovoCiclo(codigo, uid) {
     const token = await _getToken();
     if (!token) throw new Error('sem_auth');
@@ -1439,7 +1366,7 @@ Object.assign(window.GSPSalas, {
       });
     }));
 
-    // Incrementa ciclo e oculta pódio
+    
     const novoCiclo = (sala.cicloAtual || 1) + 1;
     const urlSala   = this._url('salas/' + cod) +
       '?updateMask.fieldPaths=cicloAtual&updateMask.fieldPaths=podioVisivel';
@@ -1453,9 +1380,7 @@ Object.assign(window.GSPSalas, {
     });
   },
 
-  /* ── listarSalasAdmin ───────────────────────────────
-     Admin lista todas as salas ativas/arquivadas.
-  ──────────────────────────────────────────────────── */
+  
   async listarSalasAdmin() {
     const token = await _getToken();
     if (!token) return [];
@@ -1489,7 +1414,7 @@ Object.assign(window.GSPSalas, {
     });
   },
 
-  /* ── adminPausarPartida / adminEncerrarPartida ───── */
+  
   async adminPausarPartida(codigo, partidaId) {
     await this.patchPartida(codigo, partidaId, {
       status: { stringValue: 'pausada' }

@@ -1,7 +1,4 @@
-/* ═══════════════════════════════════════════════════════
-   BETA · EMPRESA · Tecnologia
-   3 histórias de intro — 1 sorteada por jogo
-═══════════════════════════════════════════════════════ */
+
 
 const EmpresaTecnologia = {
     id:   "tecnologia",
@@ -11,10 +8,10 @@ const EmpresaTecnologia = {
     tag:  "tecnologia",
     dica: "Startups vivem de inovação e velocidade. Cuide do time — engenheiros insatisfeitos pedem demissão.",
 
-    /* ── Array de intros (sorteado pelo engine) ─────── */
+    
     intros: [
 
-        /* ── 1 ─────────────────────────────────────── */
+        
         {
             badge:     "Startup de Tecnologia · SaaS B2B",
             subtitulo: "Você acaba de assumir a gestão. O relógio já está correndo.",
@@ -44,7 +41,7 @@ const EmpresaTecnologia = {
             rodape: "Você tem {totalRounds} rodadas para tomar decisões e conduzir a empresa ao resultado."
         },
 
-        /* ── 2 ─────────────────────────────────────── */
+        
         {
             badge:     "EdTech · Ensino Digital B2C",
             subtitulo: "O boom acabou. Agora é hora de construir um negócio de verdade.",
@@ -74,7 +71,7 @@ const EmpresaTecnologia = {
             rodape: "Você tem {totalRounds} rodadas para tomar decisões e definir o futuro da empresa."
         },
 
-        /* ── 3 ─────────────────────────────────────── */
+        
         {
             badge:     "Scale-up de IA · Automação Corporativa",
             subtitulo: "O produto funciona. O problema é que o mercado ainda não sabe disso.",
@@ -104,5 +101,5 @@ const EmpresaTecnologia = {
             rodape: "Você tem {totalRounds} rodadas para transformar o potencial em resultado real."
         }
 
-    ] /* fim de intros[] */
+    ] 
 };

@@ -1,13 +1,10 @@
-/* ════════════════════════════════════════════════════
-   UNDER PRESSURE · PAINEL DE CONTROLE
-   admin/painel-controle.css — isolado do jogo principal
-════════════════════════════════════════════════════ */
+
 
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ══ TOKENS ══════════════════════════════════════ */
+
 :root {
-  /* Fundos */
+  
   --bg:   #09090E;
   --bg1:  #0F1018;
   --bg2:  #141620;
@@ -15,12 +12,12 @@
   --bg4:  #20243A;
   --card: rgba(255,255,255,.035);
 
-  /* Bordas */
+  
   --line:  rgba(255,255,255,.055);
   --line2: rgba(255,255,255,.09);
   --line3: rgba(255,255,255,.16);
 
-  /* Tema dourado admin */
+  
   --gold:       #C9973A;
   --gold2:      #E8BC6A;
   --gold-glow:  rgba(201,151,58,.18);
@@ -28,55 +25,55 @@
   --gold-bd:    rgba(201,151,58,.22);
   --gold-grad:  linear-gradient(135deg, #C9973A 0%, #E8BC6A 60%, #C9973A 100%);
 
-  /* Status */
+  
   --ok:   #22C55E;
   --warn: #F59E0B;
   --err:  #EF4444;
   --err2: #DC2626;
 
-  /* Texto */
+  
   --t1: #F2EFE9;
   --t2: #8A8799;
   --t3: #4A4858;
   --t4: #303040;
 
-  /* Fontes */
+  
   --serif: 'Syne', system-ui, sans-serif;
   --sans:  'Inter', system-ui, sans-serif;
   --mono:  'SF Mono', 'Fira Code', monospace;
 
-  /* Spacing */
+  
   --sp1: 8px;
   --sp2: 16px;
   --sp3: 24px;
   --sp4: 32px;
 
-  /* Raios */
+  
   --r:    8px;
   --r2:   12px;
   --r3:   18px;
   --r4:   24px;
   --rpill: 999px;
 
-  /* Sombras */
+  
   --sh1: 0 1px 3px rgba(0,0,0,.4);
   --sh2: 0 4px 16px rgba(0,0,0,.5);
   --sh3: 0 8px 40px rgba(0,0,0,.65);
   --sh-gold: 0 0 24px rgba(201,151,58,.15), 0 4px 16px rgba(0,0,0,.5);
 
-  /* Layout */
+  
   --nav-w: 210px;
   --top-h: 54px;
 }
 
-/* ══ RESET ═══════════════════════════════════════ */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; background: var(--bg); color: var(--t1); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow: hidden; }
 button { font-family: var(--sans); cursor: pointer; color: inherit; }
 textarea, input { font-family: var(--sans); }
 a { color: inherit; text-decoration: none; }
 
-/* ══ ANIMAÇÕES ═══════════════════════════════════ */
+
 @keyframes fadeIn    { from { opacity: 0 } to { opacity: 1 } }
 @keyframes slideUp   { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: translateY(0) } }
 @keyframes popIn     { from { opacity: 0; transform: scale(.94) } to { opacity: 1; transform: scale(1) } }
@@ -86,9 +83,7 @@ a { color: inherit; text-decoration: none; }
 @keyframes pulse-err { 0%,100% { border-color: rgba(239,68,68,.35) } 50% { border-color: rgba(239,68,68,.75) } }
 @keyframes dot-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
 
-/* ════════════════════════════════════════════════
-   TELA DE LOGIN
-════════════════════════════════════════════════ */
+
 #login-screen {
   position: fixed; inset: 0;
   display: flex; flex-direction: column;
@@ -104,7 +99,7 @@ a { color: inherit; text-decoration: none; }
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 20px;
   background: var(--bg);
-  z-index: 1000; /* acima do login-screen — cobre tudo até a verificação terminar */
+  z-index: 1000; 
 }
 .boot-loading-mark {
   width: 56px; height: 56px; border-radius: 16px; overflow: hidden;
@@ -198,18 +193,14 @@ a { color: inherit; text-decoration: none; }
   font-size: .72rem; color: var(--t3); text-align: center;
 }
 
-/* ════════════════════════════════════════════════
-   APP WRAPPER
-════════════════════════════════════════════════ */
+
 #app {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-/* ════════════════════════════════════════════════
-   TOPBAR
-════════════════════════════════════════════════ */
+
 .admin-topbar {
   height: var(--top-h);
   display: flex; align-items: center; justify-content: space-between;
@@ -283,18 +274,14 @@ a { color: inherit; text-decoration: none; }
 }
 .topbar-sair:hover { border-color: var(--err); color: var(--err); }
 
-/* ════════════════════════════════════════════════
-   SHELL (nav + conteúdo)
-════════════════════════════════════════════════ */
+
 .admin-shell {
   flex: 1;
   display: flex;
   overflow: hidden;
 }
 
-/* ════════════════════════════════════════════════
-   NAV LATERAL / HORIZONTAL
-════════════════════════════════════════════════ */
+
 .admin-nav {
   display: flex;
   overflow-x: auto;
@@ -332,9 +319,7 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 2px 10px var(--gold-glow);
 }
 
-/* ════════════════════════════════════════════════
-   HUB DE CATEGORIAS
-════════════════════════════════════════════════ */
+
 .admin-hub {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -365,7 +350,7 @@ a { color: inherit; text-decoration: none; }
   text-align: center; letter-spacing: .01em;
 }
 
-/* Sub-navegação (dentro de uma categoria) */
+
 #admin-subnav {
   display: flex; flex-direction: column;
   gap: 8px;
@@ -389,7 +374,7 @@ a { color: inherit; text-decoration: none; }
 }
 .admin-subnav-botoes::-webkit-scrollbar { display: none; }
 
-/* Placeholder "Em breve" */
+
 .admin-em-breve {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
@@ -406,9 +391,7 @@ a { color: inherit; text-decoration: none; }
   flex: 1; overflow: hidden;
 }
 
-/* ════════════════════════════════════════════════
-   BODY / CONTEÚDO
-════════════════════════════════════════════════ */
+
 .admin-body {
   flex: 1;
   overflow-y: auto;
@@ -422,9 +405,7 @@ a { color: inherit; text-decoration: none; }
 
 .admin-section { animation: fadeIn .22s ease; }
 
-/* ════════════════════════════════════════════════
-   CARDS VISÃO GERAL
-════════════════════════════════════════════════ */
+
 .admin-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -451,9 +432,7 @@ a { color: inherit; text-decoration: none; }
   margin-top: 4px; text-transform: uppercase; letter-spacing: .07em;
 }
 
-/* ════════════════════════════════════════════════
-   SEÇÃO TITLE
-════════════════════════════════════════════════ */
+
 .admin-sec-title {
   font-size: .65rem; font-weight: 700; letter-spacing: .12em;
   text-transform: uppercase; color: var(--t3);
@@ -462,17 +441,13 @@ a { color: inherit; text-decoration: none; }
   margin-top: 10px;
 }
 
-/* ════════════════════════════════════════════════
-   AO VIVO
-════════════════════════════════════════════════ */
+
 .admin-aovivo-row {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 0; border-bottom: 1px solid var(--line);
 }
 
-/* ════════════════════════════════════════════════
-   JOGADORES
-════════════════════════════════════════════════ */
+
 .admin-busca-row {
   display: flex; gap: 8px; margin-bottom: 10px; align-items: center;
 }
@@ -517,9 +492,7 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: .04em;
 }
 
-/* ════════════════════════════════════════════════
-   PÓDIO
-════════════════════════════════════════════════ */
+
 .admin-reset-row { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
 
 .admin-podio-row {
@@ -539,9 +512,7 @@ a { color: inherit; text-decoration: none; }
   -webkit-text-fill-color: transparent; background-clip: text;
 }
 
-/* ════════════════════════════════════════════════
-   DROPDOWN
-════════════════════════════════════════════════ */
+
 .admin-dropdown { position: relative; flex: 1; }
 .admin-dropdown-trigger {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -572,15 +543,13 @@ a { color: inherit; text-decoration: none; }
 .admin-dropdown-item:hover { background: var(--gold-bg); color: var(--t1); }
 .admin-dropdown-item.active { color: var(--gold); font-weight: 600; }
 
-/* ════════════════════════════════════════════════
-   CONFIG
-════════════════════════════════════════════════ */
+
 .admin-config-form { display: flex; flex-direction: column; gap: 16px; }
 .admin-label { font-size: .76rem; font-weight: 600; color: var(--t2); margin-bottom: 4px; display: block; }
 .admin-textarea { min-height: 80px; resize: vertical; }
 .admin-toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 
-/* Toggle switch */
+
 .admin-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
 .admin-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
 .admin-switch-track {
@@ -596,7 +565,7 @@ a { color: inherit; text-decoration: none; }
 .admin-switch input:checked + .admin-switch-track { background: var(--err); border-color: var(--err2); }
 .admin-switch input:checked + .admin-switch-track::after { transform: translateX(20px); background: #fff; }
 
-/* Manutenção banner */
+
 .admin-manutencao-banner {
   display: flex; align-items: center; gap: 8px;
   background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
@@ -605,7 +574,7 @@ a { color: inherit; text-decoration: none; }
   animation: pulse-err 2s ease-in-out infinite;
 }
 
-/* Checkbox versão crítica */
+
 #versao-critica-check {
   appearance: none; -webkit-appearance: none;
   width: 17px; height: 17px;
@@ -621,7 +590,7 @@ a { color: inherit; text-decoration: none; }
   transform: rotate(45deg);
 }
 
-/* UID admin */
+
 .admin-uid-row {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 0; border-bottom: 1px solid var(--line);
@@ -632,19 +601,17 @@ a { color: inherit; text-decoration: none; }
 }
 .admin-uid-add-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
 
-/* Agendamento */
+
 .admin-agendamento-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 4px 0; }
 .admin-agendamento-field { display: flex; flex-direction: column; gap: 4px; }
 
-/* Audit log */
+
 .admin-audit-row { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: .78rem; color: var(--t2); line-height: 1.5; }
 .admin-audit-row:last-child { border-bottom: none; }
 .admin-audit-quem   { font-weight: 600; color: var(--t1); }
 .admin-audit-quando { color: var(--t4); font-size: .7rem; }
 
-/* ════════════════════════════════════════════════
-   BOTÕES
-════════════════════════════════════════════════ */
+
 .admin-btn {
   padding: 10px 16px; border-radius: var(--r); border: none;
   font-size: .78rem; font-weight: 700; letter-spacing: .04em;
@@ -679,9 +646,7 @@ a { color: inherit; text-decoration: none; }
 }
 .admin-btn-csv:hover { border-color: var(--gold-bd); color: var(--t1); }
 
-/* ════════════════════════════════════════════════
-   INPUTS
-════════════════════════════════════════════════ */
+
 .admin-input {
   width: 100%; padding: 10px 14px;
   background: var(--bg3); border: 1px solid var(--line2);
@@ -692,9 +657,7 @@ a { color: inherit; text-decoration: none; }
 .admin-input:focus { outline: none; border-color: var(--gold); }
 .admin-input::placeholder { color: var(--t3); }
 
-/* ════════════════════════════════════════════════
-   ESTADOS
-════════════════════════════════════════════════ */
+
 .admin-loading {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   color: var(--t3); padding: 28px; font-size: .82rem; letter-spacing: .03em;
@@ -706,9 +669,7 @@ a { color: inherit; text-decoration: none; }
 }
 .admin-empty { text-align: center; color: var(--t3); padding: 28px; font-size: .82rem; }
 
-/* ════════════════════════════════════════════════
-   TOAST
-════════════════════════════════════════════════ */
+
 .admin-toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   padding: 10px 22px; border-radius: var(--rpill);
@@ -720,9 +681,7 @@ a { color: inherit; text-decoration: none; }
 .admin-toast-ok  { background: var(--gold-grad); color: #0A0800; }
 .admin-toast-err { background: var(--err); color: #fff; }
 
-/* ════════════════════════════════════════════════
-   MODAIS
-════════════════════════════════════════════════ */
+
 .admin-modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.85);
@@ -762,7 +721,7 @@ a { color: inherit; text-decoration: none; }
 }
 .admin-modal-foot .admin-btn { flex: 1; }
 
-/* Preview mensagem */
+
 .admin-modal-preview {
   background: var(--bg3); border: 1px solid var(--gold-bd);
   border-radius: var(--r2); padding: 12px 14px;
@@ -773,16 +732,14 @@ a { color: inherit; text-decoration: none; }
 }
 .admin-preview-toast { font-size: .84rem; color: var(--t1); line-height: 1.5; }
 
-/* Modal histórico genérico */
+
 .admin-hist-row { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .admin-hist-empresa { flex: 1; font-size: .82rem; color: var(--t1); }
 .admin-hist-setor   { color: var(--t3); font-size: .72rem; }
 .admin-hist-score   { font-size: .85rem; font-weight: 700; color: var(--gold); }
 .admin-hist-data    { font-size: .72rem; color: var(--t3); }
 
-/* ════════════════════════════════════════════════
-   MODAL BAN
-════════════════════════════════════════════════ */
+
 .admin-ban-player-card {
   display: flex; align-items: center; gap: 12px;
   background: var(--bg2); border: 1px solid var(--line2);
@@ -829,9 +786,7 @@ a { color: inherit; text-decoration: none; }
 .admin-ban-hist-motivo { flex: 1; color: var(--t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-ban-hist-data   { color: var(--t3); flex-shrink: 0; }
 
-/* ════════════════════════════════════════════════
-   MENSAGEM CATEGORIA BUTTONS
-════════════════════════════════════════════════ */
+
 .admin-msg-cat-btn {
   background: var(--bg3); border: 1px solid var(--line2); color: var(--t2);
   padding: 5px 12px; border-radius: var(--rpill); font-size: .74rem;
@@ -842,9 +797,7 @@ a { color: inherit; text-decoration: none; }
   color: #0A0800; font-weight: 700;
 }
 
-/* ════════════════════════════════════════════════
-   DASHBOARD
-════════════════════════════════════════════════ */
+
 .admin-dash-periodo { display: flex; gap: 6px; margin-bottom: 14px; }
 .admin-periodo-btn {
   background: transparent; border: 1px solid var(--line2);
@@ -878,9 +831,7 @@ a { color: inherit; text-decoration: none; }
 .admin-dash-rod          { font-size: .78rem; color: var(--t3); min-width: 34px; }
 .admin-dash-abandono-pct { font-size: .82rem; font-weight: 700; color: var(--t1); min-width: 36px; }
 
-/* ════════════════════════════════════════════════
-   HISTÓRIAS
-════════════════════════════════════════════════ */
+
 .admin-historias-info { font-size: .78rem; color: var(--t3); margin-bottom: 12px; line-height: 1.6; }
 .admin-historia-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .admin-historia-info { flex: 1; }
@@ -890,9 +841,7 @@ a { color: inherit; text-decoration: none; }
 .admin-historia-badge.ativa   { background: rgba(34,197,94,.12); color: #22c55e; }
 .admin-historia-badge.inativa { background: var(--bg4); color: var(--t3); }
 
-/* ════════════════════════════════════════════════
-   GLOSSÁRIO
-════════════════════════════════════════════════ */
+
 .admin-glossario-row {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 12px 0; border-bottom: 1px solid var(--line);
@@ -934,9 +883,7 @@ a { color: inherit; text-decoration: none; }
 .admin-glossario-secao-vazia { color: var(--t3); font-size: .76rem; padding: 4px 0 12px; }
 .admin-glossario-secao-sem { border-color: rgba(239,68,68,.25); }
 
-/* ════════════════════════════════════════════════
-   FEEDBACK
-════════════════════════════════════════════════ */
+
 .admin-feedback-media { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px 0 14px; }
 .admin-feedback-nota     { font-size: 2.8rem; font-weight: 800; font-family: var(--serif); color: var(--gold); }
 .admin-feedback-estrelas { font-size: 1.2rem; color: var(--gold); letter-spacing: 2px; }
@@ -953,9 +900,7 @@ a { color: inherit; text-decoration: none; }
 .admin-feedback-recente-estrelas{ font-size: .85rem; color: var(--gold); }
 .admin-feedback-recente-texto   { font-size: .78rem; color: var(--t2); line-height: 1.5; }
 
-/* ════════════════════════════════════════════════
-   SESSÕES
-════════════════════════════════════════════════ */
+
 .admin-sessoes-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .admin-sessoes-badge  {
   background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.2);
@@ -971,9 +916,7 @@ a { color: inherit; text-decoration: none; }
 .admin-sessao-detalhe { font-size: .72rem; color: var(--t3); margin-top: 2px; }
 .admin-sessao-tempo   { font-size: .72rem; color: var(--t4); font-family: var(--mono); }
 
-/* ════════════════════════════════════════════════
-   VERSÃO
-════════════════════════════════════════════════ */
+
 .admin-versao-body { display: flex; flex-direction: column; gap: 12px; }
 .admin-versao-card {
   background: var(--bg2); border: 1px solid var(--gold-bd);
@@ -1034,9 +977,7 @@ a { color: inherit; text-decoration: none; }
 .admin-versao-hist-log    { font-size: .8rem; color: var(--t2); line-height: 1.55; }
 .admin-versao-hist-hash   { font-size: .68rem; color: var(--t4); font-family: var(--mono); margin-top: 4px; }
 
-/* ════════════════════════════════════════════════
-   LOGS
-════════════════════════════════════════════════ */
+
 .admin-logs-filtros { display: flex; gap: 6px; margin-bottom: 10px; }
 .admin-log-row      { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .admin-log-header   { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
@@ -1047,9 +988,7 @@ a { color: inherit; text-decoration: none; }
 .admin-log-msg   { font-size: .8rem; color: var(--t1); margin-bottom: 2px; }
 .admin-log-meta  { font-size: .7rem; color: var(--t3); }
 
-/* ════════════════════════════════════════════════
-   CONTEÚDO (setores)
-════════════════════════════════════════════════ */
+
 .admin-conteudo-row {
   background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r2);
   padding: 12px; margin-bottom: 8px; display: flex; gap: 12px; align-items: center;
@@ -1057,9 +996,7 @@ a { color: inherit; text-decoration: none; }
 .admin-conteudo-setor { flex: 1; font-size: .85rem; font-weight: 700; color: var(--t1); }
 .admin-conteudo-stat  { font-size: .75rem; color: var(--t2); flex-shrink: 0; }
 
-/* ════════════════════════════════════════════════
-   DESKTOP ≥ 800px — NAV LATERAL FIXA
-════════════════════════════════════════════════ */
+
 @media (min-width: 800px) {
   .admin-shell { flex-direction: row; }
   .admin-mobile-layout { flex-direction: row; flex: 1; overflow: hidden; }
@@ -1081,11 +1018,9 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
-/* ════════════════════════════════════════════════
-   FEEDBACK DE OPERAÇÃO — overlay de loading/resultado
-════════════════════════════════════════════════ */
 
-/* Ícone central: estados */
+
+
 .aof-icon { transition: background .3s, border-color .3s, color .3s; }
 
 .aof-icon.aof-loading {
@@ -1103,7 +1038,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--err);
 }
 
-/* Itens de etapa */
+
 .aof-item {
   display: flex;
   align-items: center;
@@ -1126,11 +1061,11 @@ a { color: inherit; text-decoration: none; }
 }
 .aof-item-txt { line-height: 1.4; }
 
-/* Estado: pendente (cinza) */
+
 .aof-item.aof-pending .aof-item-dot { opacity: .4; }
 .aof-item.aof-pending .aof-item-txt  { opacity: .4; }
 
-/* Estado: em execução (dourado + pulso) */
+
 .aof-item.aof-running {
   color: var(--t1);
 }
@@ -1144,7 +1079,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 600;
 }
 
-/* Estado: concluído (verde) */
+
 .aof-item.aof-done {
   color: var(--t2);
 }
@@ -1154,7 +1089,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--ok);
 }
 
-/* Estado: falha (vermelho) */
+
 .aof-item.aof-fail {
   color: var(--err);
 }
@@ -1164,7 +1099,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--err);
 }
 
-/* Botões do footer */
+
 .aof-btn {
   padding: 10px 18px;
   border-radius: var(--r2);
@@ -1198,7 +1133,7 @@ a { color: inherit; text-decoration: none; }
 }
 .aof-btn-ghost:hover { background: var(--bg4); }
 
-/* ── Botão resetar setor: estado habilitado quando setor ativo ── */
+
 #btn-resetar-setor:not([disabled]) {
   opacity: 1;
   cursor: pointer;

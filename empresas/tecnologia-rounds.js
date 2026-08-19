@@ -1,38 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   BETA · TECNOLOGIA · ROUNDS EXCLUSIVOS — HISTÓRIA [0]
-   Startup SaaS B2B · Dívida técnica, rotatividade e churn
 
-   INDICADORES (8 — padronizados com os demais setores):
-     financeiro    💰  Saúde do caixa / ARR / burn rate
-     rh            👥  Engajamento e moral do time
-     clientes      ⭐  NPS / retenção / churn dos clientes
-     qualidade     🎯  Estabilidade / bugs / dívida técnica
-     produtividade ⚡  Velocidade de entrega / output
-     reputacao     📣  Imagem no mercado / percepção de marca
-     inovacao      🔬  P&D / diferenciais / roadmap técnico
-     seguranca     🦺  LGPD / vulnerabilidades / compliance
-
-   FASES NARRATIVAS:
-     R1–R5   → Diagnóstico: você descobre a extensão real da crise
-     R6–R10  → Pressão: as consequências chegam de fora e de dentro
-     R11–R15 → Decisão crítica: o futuro da empresa é definido
-═══════════════════════════════════════════════════════════════════ */
 
 const TecnologiaRounds = [
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [0] · SaaS B2B — Dívida técnica, rotatividade e churn
-   Contexto: startup de 67 pessoas, ARR R$4,2M, NPS 71 em queda,
-   3 sêniores saíram em 30 dias, churn subindo de 2,1% para 3,8%,
-   concorrentes entraram com preço 20% menor.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · O Crash de Segunda-Feira
-     Contexto: primeiro dia útil após assumir a gestão.
-     A plataforma cai às 9h — o pior horário possível.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Crash de Segunda-Feira",
     description: "Seu primeiro dia como gestor responsável. Às 9h07, o sistema de monitoramento dispara: a plataforma está fora do ar. Duzentos e trinta clientes não conseguem acessar. O canal de suporte explode com mensagens. O CTO Pedro chega correndo: 'É o módulo de autenticação — o mesmo que está na nossa lista de dívida técnica há 14 meses. Estimamos 3 a 5 horas para restaurar.' Qual é a sua primeira decisão?",
@@ -71,11 +44,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O Dev que Sabe Demais
-     Contexto: 4 dias após o crash. O time ainda está abalado.
-     O único engenheiro que domina o módulo crítico quer sair.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Dev que Sabe Demais",
     description: "André, o único engenheiro que conhece profundamente o módulo de pagamentos — responsável por 38% do ARR — bate à sua porta: 'Preciso de 3 semanas de férias. Estou esgotado desde o crash.' Você consulta o Pedro: 'Se André sair agora, qualquer problema nesse módulo vai nos parar por dias. Ele nunca documentou nada.' Você tem 24 horas para responder a André.",
@@ -115,11 +84,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · Produto vs. Engenharia
-     Contexto: 2ª semana. O conflito estrutural vem à tona.
-     Roadmap travado entre novas features e dívida técnica.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Reunião que Virou uma Briga",
     description: "Reunião de planejamento quinzenal. Juliana, head de Produto, apresenta um roadmap com 11 novas features para os próximos 60 dias. Pedro interrompe: 'Impossível. Com a dívida técnica atual, cada nova feature vai demorar 3× mais e vai criar 2× mais bugs. Precisamos de pelo menos 6 semanas só para estabilizar.' Juliana rebate: 'Enquanto isso, o concorrente vai lançar 4 features e a gente vai perder mais deals.' A reunião para. Todo mundo olha para você.",
@@ -153,11 +118,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · O Dashboard de Churn
-     Contexto: fim da 2ª semana. Dados de cancelamento chegam.
-     O CS mapeia os motivos com precisão cirúrgica.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Dashboard de Churn",
     description: "Marina, head de Customer Success, apresenta o relatório da semana: 31 clientes cancelaram em 7 dias — o maior número em 18 meses. Ela traz os motivos mapeados: 68% citam lentidão e instabilidade da plataforma; 19% citam que o concorrente ofereceu preço menor; 13% citam atendimento demorado. 'Temos um problema técnico que está gerando um problema comercial,' ela conclui. 'E se não agirmos em 30 dias, vamos perder mais 80 clientes.' Como você responde?",
@@ -191,11 +152,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · Os Quatro que Querem Sair
-     Contexto: 3ª semana. O sinal mais grave chega do time.
-     Um dev sênior traz um alerta que ninguém quer ouvir.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Os Quatro que Querem Sair",
     description: "Gabriel, um dos seus engenheiros mais antigos, pede uma conversa reservada. Ele é direto: 'Não vim pedir demissão — vim te avisar que quatro colegas estão olhando para fora. Dois já têm entrevistas marcadas. O problema não é salário. É que estamos mantendo um sistema que regride e não há sinal de que vai mudar.' Você tem a informação antes que se torne uma crise pública. O que você faz com ela?",
@@ -229,11 +186,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · O Recrutador da Concorrência
-     Contexto: 4ª semana. A pressão vem de fora.
-     A startup concorrente recruta ativamente seu time.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Recrutador da Concorrência",
     description: "Um recrutador da startup concorrente entrou em contato com seis engenheiros do seu time pelo LinkedIn — incluindo Pedro, seu CTO. As mensagens foram encaminhadas para você por dois deles. A proposta tem salário 35% maior e bônus de assinatura. O timing é cirúrgico: acontece exatamente na semana em que seu time está mais fragilizado. Pedro menciona casualmente que 'a mensagem chegou para ele também.'",
@@ -267,11 +220,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · A Falha de Segurança
-     Contexto: 5ª semana. Chega o alerta mais crítico até agora.
-     Uma vulnerabilidade real, com janela de 24 horas para decidir.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Falha de Segurança",
     description: "Um pesquisador de segurança independente envia um e-mail direto para você — não para o suporte: 'Encontrei uma vulnerabilidade de injeção SQL no endpoint de relatórios da sua API. Dados de aproximadamente 4.200 clientes podem ter sido expostos nos últimos 21 dias. Tenho as evidências. Dou 24 horas para uma resposta antes de publicar no meu blog.' Pedro confirma: a falha é real. O time de segurança estima 6 a 8 horas para corrigir completamente.",
@@ -305,11 +254,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · O Contrato que Muda Tudo
-     Contexto: 6ª semana. Uma oportunidade enorme aparece.
-     Mas o timing é o pior possível.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Contrato que Muda Tudo",
     description: "Beatriz, sua head comercial, chega eufórica: 'A rede Mercato Varejo quer assinar um contrato de R$ 900 mil anuais — nosso maior deal em toda a história. Mas eles exigem 3 customizações profundas na plataforma entregues em 90 dias e um SLA de 99,9% de uptime garantido por contrato.' Pedro é categórico: 'Com a plataforma nesse estado, 99,9% de uptime é impossível. E as customizações levam no mínimo 120 dias com qualidade. Se prometemos e não entregamos, vira processo.' O prazo para responder ao Mercato é amanhã.",
@@ -346,11 +291,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · O Ultimato dos Investidores
-     Contexto: 7ª semana. A pressão financeira chega formalmente.
-     Os investidores da Série A estabelecem condição para a Série B.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Ultimato dos Investidores",
     description: "Você recebe um memo formal dos investidores da Série A: 'Monitoramos os números de churn com preocupação crescente. Nossa condição para participar da Série B é clara: o churn mensal precisa cair para abaixo de 2,5% em 60 dias. Se não, não renovamos nossa posição e indicaremos ao conselho a contratação de um CEO profissional.' É a primeira vez que a palavra 'substituição' aparece num documento formal. Pedro e Beatriz estão com você. Como você responde?",
@@ -385,11 +326,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · DECISÃO CRÍTICA · O Pivot para IA
-     Contexto: 8ª semana. Uma proposta radical divide a liderança.
-     Um dos sócios fundadores quer mudar tudo.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Pivot para IA",
     description: "Rafael, cofundador e diretor técnico sênior, apresenta em reunião de diretoria: 'Vamos perder para os concorrentes se continuarmos nesse produto. Minha proposta é pivotarmos para IA generativa nos próximos 6 meses — abandonar a plataforma atual e desenvolver um produto completamente novo. Tenho 3 clientes enterprise que já disseram que pagariam por isso.' Pedro é contra: 'Nossa equipe não tem expertise em IA. Vai precisar de contratações massivas que não temos dinheiro para fazer.' Beatriz concorda com Rafael. Você precisa decidir.",
@@ -423,11 +360,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · A Oferta de Aquisição
-     Contexto: 9ª semana. Uma empresa americana entra em cena.
-     Decisão com impacto permanente no futuro da empresa.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Oferta de Aquisição",
     description: "Um email chega diretamente para você — enviado pelo CEO da TechBridge, uma empresa americana de software com presença em 14 países: 'Temos acompanhado o crescimento de vocês no mercado brasileiro de SaaS B2B. Gostaríamos de propor uma conversa sobre aquisição. Nossa oferta indicativa é de R$ 28 milhões por 100% da empresa.' O múltiplo é de 6,7× o ARR atual — acima da média do mercado. Rafael quer aceitar imediatamente. Pedro quer rejeitar. Os investidores querem discutir.",
@@ -467,11 +400,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · A Investigação da ANPD
-     Contexto: 10ª semana. A falha de segurança tem consequências.
-     A regulação chega com peso institucional.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Investigação da ANPD",
     description: "A Autoridade Nacional de Proteção de Dados abre formalmente um processo administrativo referente ao incidente de segurança de três semanas atrás. O prazo para apresentar a defesa é de 15 dias úteis. Ao mesmo tempo, dois clientes enterprise recebem o aviso da ANPD diretamente e enviam notificações de rescisão contratual. O jurídico estima que a multa pode variar entre R$ 180 mil e R$ 1,2 milhão dependendo da qualidade da resposta apresentada. Pedro apresenta um plano técnico de adequação que custaria R$ 220 mil e levaria 8 semanas.",
@@ -506,11 +435,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · O CTO Vai Embora
-     Contexto: 11ª semana. A perda mais crítica possível.
-     Pedro anuncia que vai criar a própria startup.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O CTO Vai Embora",
     description: "Pedro pede uma reunião reservada. Ele é direto: 'Tenho um cofounder, uma ideia que valida uma hipótese de mercado que eu acredito muito, e um angel que já confirmou R$ 500 mil de seed. Vou sair para criar essa startup. Meu prazo é 30 dias.' Pedro está há 3 anos na empresa. Ele é o principal arquiteto de tudo que vocês construíram. Sem ele, o conhecimento técnico da plataforma cai dramaticamente. Você tem 30 dias para reagir.",
@@ -544,11 +469,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · O Lançamento que Não Está Pronto
-     Contexto: 13ª semana. A nova versão da plataforma quase pronta.
-     A pressão por lançar conflita com a qualidade necessária.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Lançamento que Não Está Pronto",
     description: "A nova versão da plataforma — desenvolvida pelos últimos 10 semanas — está 85% concluída. O novo líder técnico Lucas apresenta o estado: 'Temos 43 bugs abertos, sendo 8 classificados como críticos. Com o time atual, precisamos de mais 5 semanas para fechar tudo com qualidade. Mas se lançarmos agora, os clientes vão sentir os problemas e vai parecer a versão anterior.' Os investidores já anunciaram o lançamento para os clientes enterprise como marco do plano. Beatriz diz que esperar mais 5 semanas vai custar 3 contratos que estão condicionados ao lançamento.",
@@ -582,11 +503,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO CRÍTICA · O Board Meeting Final
-     Contexto: 15ª semana. Tudo culmina aqui.
-     A direção dos próximos 2 anos precisa ser definida hoje.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Board Meeting Final",
     description: "Reunião do conselho. Na sala: os dois investidores da Série A, Rafael (cofundador), Lucas (novo líder técnico), Beatriz (comercial) e você. Os investidores colocam a questão diretamente na mesa: 'A empresa sobreviveu à crise. Mas o mercado não vai esperar por uma empresa em modo de recuperação indefinidamente. Precisamos definir hoje: qual é a estratégia dos próximos 24 meses?' Quatro caminhos foram apresentados previamente em documento. Agora é a hora da decisão.",
@@ -624,29 +541,13 @@ const TecnologiaRounds = [
   }
 
 ]
-/* Histórias [1] e [2] adicionadas abaixo */
 
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [1] · EdTech · Ensino Digital B2C
-   Contexto: plataforma de 94k assinantes (era 180k), R$22M ARR,
-   95 colaboradores, 8 meses de runway, CAC triplicou, LTV encolheu.
-   Pivô B2C→B2B em análise. Time de conteúdo sobrecarregado.
 
-   INDICADORES: financeiro:9, rh:4, clientes:7, qualidade:6,
-                produtividade:5, reputacao:8, inovacao:7, seguranca:6
 
-   ATENÇÃO: clima já começa em 4 (baixo). Qualquer decisão que ignore
-   o time de conteúdo pode desencadear a interdependência:
-   clima≤5 → produtividade-2 → qualidade-2 → clientes-2 → financeiro-2
-══════════════════════════════════════════════════════════════════ */
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · O Relatório dos 8 Meses
-     Contexto: primeiro dia focado nos números reais.
-     O CFO apresenta o runway e o cenário.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Relatório dos 8 Meses",
     description: "Carla, sua CFO, coloca os números na mesa: runway de 8 meses, CAC de R$187 por assinante (era R$62 há 18 meses), LTV médio caído de R$940 para R$410. A base saiu de 180k para 94k assinantes. 'Temos duas opções estruturais', ela diz. 'Cortar custos para chegar ao break-even no B2C — ou pivotar para B2B corporativo, onde o ticket é 12x maior mas o ciclo de venda é de 90 dias.' Por onde você começa?",
@@ -686,10 +587,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O Time de Conteúdo no Limite
-     Contexto: clima em 4. O head de conteúdo pede reunião urgente.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Time de Conteúdo no Limite",
     description: "Rafael, head de conteúdo e um dos fundadores originais, pede reunião. 'O time está produzindo 4 cursos por mês com a estrutura de 1 curso por mês. Três pessoas estão de atestado por ansiedade. Se não contratar ou redistribuir, vou perder mais dois sêniors até o final do mês.' O clima já está em nível crítico. Qualquer nova queda vai arrastar produtividade e qualidade junto.",
@@ -728,10 +626,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · O Cliente que Cancela e Explica
-     Contexto: entrevistas de cancelamento revelam padrão claro.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Cliente que Cancela e Explica",
     description: "As entrevistas de cancelamento revelaram três padrões dominantes: 60% cancela por 'falta de tempo para estudar' (conteúdo muito longo), 25% por 'não consigo aplicar no trabalho' (teoria sem prática), 15% por preço frente a alternativas gratuitas. O head de produto propõe reformular os cursos em módulos de 8 minutos com projetos práticos. O time de conteúdo estima 4 meses de trabalho para reformular o catálogo atual.",
@@ -770,10 +665,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · A Plataforma Que Ficou Para Trás
-     Contexto: a tecnologia da plataforma tem 3 anos sem refactor.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Plataforma Que Ficou Para Trás",
     description: "O relatório técnico chega: a plataforma tem performance média de 4,8 segundos para carregar no mobile — o benchmark do setor é 1,8s. O app iOS tem nota 3,2 na App Store. O CTO Eduardo estima 3 meses de refatoração para atingir o padrão atual do mercado. 'É dívida técnica que acumulamos quando crescemos rápido durante a pandemia', ele explica. 'Cada semana que postergamos custa mais para resolver depois.'",
@@ -812,10 +704,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · O Fundo de Corporate Venture
-     Contexto: oportunidade de capital surge com exigências.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Fundo de Corporate Venture",
     description: "O fundo de corporate venture de um grande grupo educacional quer investir R$8M por 25% da empresa. A condição: a empresa precisa pivotar para B2B e atender prioritariamente o grupo controlador por 3 anos. O cheque resolve o runway, mas o pivô forçado pode desalinhar o time e limitar o mercado endereçável no futuro. Seu investidor-anjo atual aconselha cautela.",
@@ -856,10 +745,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · O Head de Produto Quer Sair
-     Contexto: pressão externa começa. Liderança ameaçada.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Head de Produto Quer Sair",
     description: "Tatiana, sua head de produto, pede uma conversa difícil: 'Recebi uma oferta de uma startup financiada para ser CPO. Salário 40% acima. Posso ficar se houver um caminho claro para o produto daqui — mas não consigo trabalhar com a incerteza atual.' Tatiana tem 4 anos de empresa e domina toda a visão de produto. Reposicioná-la levaria meses.",
@@ -899,10 +785,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · Coursera Anuncia Expansão no Brasil
-     Contexto: competidor internacional entra com força.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Coursera Anuncia Expansão no Brasil",
     description: "O Coursera anunciou parceria com 8 universidades brasileiras e planos de localizar todo o catálogo em português até o próximo semestre. A precificação será de R$59/mês — R$40 abaixo da sua assinatura atual. A imprensa especializada já faz comparações diretas. Três investidores-anjos que você está prospectando enviaram o artigo com a pergunta: 'Como vocês respondem a isso?'",
@@ -940,10 +823,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · O Resultado do Piloto B2B
-     Contexto: 3 empresas testaram a plataforma para treinamento.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Resultado do Piloto B2B",
     description: "O piloto B2B com 3 empresas terminou. Os resultados são mistos: a empresa A vai contratar (R$180k/ano, 200 licenças), a empresa B quer mais customização antes de decidir, a empresa C achou 'caro para o que entrega'. O ticket médio do B2B seria 11x o do B2C, mas o ciclo de venda foi de 4 meses. Com o runway atual, quantos ciclos de 4 meses você consegue financiar?",
@@ -983,10 +863,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · A Crise de Retenção Chega ao Pico
-     Contexto: churn mensal subindo. Dados de coorte preocupam.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Crise de Retenção Chega ao Pico",
     description: "Os dados de coorte mostram que o churn no 3º mês de assinatura está em 41% — era 18% há dois anos. O head de CS Marcos propõe uma iniciativa de 'sucesso do aluno': check-ins semanais automatizados, trilhas personalizadas e gamificação de progresso. Custo de implementação: R$340k em tecnologia e 3 meses de trabalho. Impacto estimado: redução de 12% no churn mensal.",
@@ -1024,9 +901,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · DECISÃO CRÍTICA · O Investidor Anjo Cobra Uma Posição
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Investidor Anjo Cobra Uma Posição",
     description: "Seu principal investidor-anjo, Henrique, que aportou R$1,2M na fundação, pede uma reunião. Ele é direto: 'Você tem 5 meses de runway. Eu posso participar de um bridge de R$3M se você me apresentar uma estratégia clara — B2C reformulado com métricas de retenção, ou B2B com pipeline documentado. Não posso apostar em 'ainda estamos descobrindo'.' Você tem 7 dias para responder.",
@@ -1068,9 +943,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · O Momento do Pivô
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Momento do Pivô",
     description: "Com o bridge aprovado e 9 meses de runway restantes, você precisa definir a alocação dos recursos. O board tem duas posições: metade quer 80% do time focado no B2B para chegar a R$500k MRR em 8 meses. A outra metade quer reformar o produto B2C e recuperar a base. O head de produto alerta: 'Não temos gente para os dois com excelência. Qualquer que seja a escolha, precisamos de 100% de comprometimento.'",
@@ -1111,9 +984,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · A Plataforma ou o Conteúdo?
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Plataforma ou o Conteúdo?",
     description: "O orçamento de produto para o próximo semestre precisa ser alocado. O CTO quer R$1,2M para refatorar a plataforma e lançar um app nativo. O head de conteúdo quer R$1M para produzir 40 novos cursos com instrutores de referência. O CFO diz que há R$1,5M disponível para produto no total — não para os dois. Cada área garante que o sucesso da empresa depende da sua prioridade.",
@@ -1152,9 +1023,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · O Acordo com Empresa de RH
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Acordo com Empresa de RH",
     description: "A maior empresa de consultoria de RH do Brasil quer fazer uma parceria de distribuição: eles incluem sua plataforma nos pacotes de benefícios de 80 clientes corporativos. Em troca, desconto de 40% no valor da licença e split de receita de 30% para eles. O volume potencial é de 12.000 usuários novos — mas a financeiro por usuário cai para 42% do atual.",
@@ -1194,9 +1063,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · A Reestruturação do Time
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Reestruturação do Time",
     description: "Com a direção estratégica definida, é hora de alinhar o time ao novo modelo. O CEO de RH sugere reestruturação: desligar 18 pessoas que não fazem parte do caminho escolhido e contratar 12 perfis específicos para B2B. O CFO aponta que o custo da reestruturação (indenizações + seleção) é de R$820k — mas a economia anual é de R$600k.",
@@ -1237,9 +1104,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO FINAL · O Futuro da EdTech
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Futuro da EdTech",
     description: "Você chegou ao final do ciclo estratégico. A empresa sobreviveu à crise de runway, tomou decisões difíceis e precisa agora definir como crescer de forma sustentável. Os dados do último trimestre mostram sinais de estabilização. O board pede uma visão para os próximos 3 anos.",
@@ -1276,24 +1141,10 @@ const TecnologiaRounds = [
 
 ],
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [2] · Scale-up de IA · Automação Corporativa
-   Contexto: 40 clientes, R$6,8M ARR, 58 funcionários (maioria
-   cientistas de dados), pipeline travado — 60% em "avaliação técnica"
-   há mais de 90 dias, 4 vendedores sem experiência enterprise.
 
-   INDICADORES: financeiro:9, rh:4, clientes:7, qualidade:6,
-                produtividade:5, reputacao:8, inovacao:7, seguranca:6
-
-   ATENÇÃO: inovacao alta (7) é o principal ativo.
-   Clima baixo (4) é o principal risco.
-   O maior perigo é deixar o produto técnico sobrecarregar as vendas.
-══════════════════════════════════════════════════════════════════ */
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · O Pipeline Travado
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Pipeline Travado",
     description: "Marcos, seu head de vendas, apresenta o mapa do pipeline: 24 oportunidades em negociação, R$4,2M em valor potencial. Mas 60% está em 'avaliação técnica' há mais de 90 dias sem avançar. Ele explica: 'As demos são boas tecnicamente, mas os decisores de negócio — CFOs e CHROs — saem sem entender o ROI concreto. Eles precisam de números, não de arquitetura de IA.' Qual é o diagnóstico e o plano?",
@@ -1332,9 +1183,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · A Demo que Afasta
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Demo que Afasta",
     description: "Você assiste a uma gravação de demo. O que vê: 45 minutos de arquitetura de IA, gráficos de acurácia de modelos e terminologia técnica que o CHRO da empresa claramente não acompanhou. No final, ele pergunta: 'Isso funciona com o nosso sistema de RH?' A resposta do cientista de dados foi uma explicação de 10 minutos sobre APIs de integração. O CHRO agradeceu e nunca mais respondeu.",
@@ -1372,9 +1221,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · O Concorrente Enterprise Chega
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Concorrente Enterprise Chega",
     description: "Um prospect que estava em negociação avançada informa que vai assinar com a Workday, que acaba de lançar um módulo de automação de RH com IA generativa integrado ao ERP deles. 'É mais caro, mas elimina o risco de integração,' explica o CPO da empresa prospect. Dois outros prospects enviaram mensagens similares na semana. O mercado está observando como você posiciona a empresa diante dos grandes players.",
@@ -1412,9 +1259,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · O Cientista de Dados que Quer Mudar
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Cientista de Dados que Quer Mudar",
     description: "Felipe, seu melhor cientista de dados, pede uma conversa: 'Passamos 3 anos construindo modelos que funcionam — e a empresa não consegue vender. Estou recebendo proposta do Mercado Livre para trabalhar em escala real. Aqui sinto que o meu trabalho não chega ao cliente.' Dois outros cientistas demonstram frustração similar em reuniões. O clima está em nível crítico e a produtividade do time técnico ameaça cair.",
@@ -1454,9 +1299,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · O Cliente que Cancelou com Dados
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Cliente que Cancelou com Dados",
     description: "A empresa Lógica RH, uma das primeiras clientes, notificou cancelamento após 18 meses. O motivo surpreende: 'A acurácia dos modelos é ótima. O problema é que não conseguimos usar o produto no dia a dia — a interface é complexa demais para os nossos analistas de RH.' O relatório interno revela que 60% das features do produto nunca foram usadas pelos clientes existentes.",
@@ -1494,9 +1337,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · A Vertical Certa
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Vertical Certa",
     description: "O board pede uma decisão sobre verticalização. O produto atual atende RH e compliance em qualquer setor — mas sem profundidade em nenhum. Três verticais emergem como candidatas: varejo (maior volume de clientes, ticket menor), financeiro (ticket maior, ciclo de venda mais longo, regulação complexa) e manufatura (cadeia de conformidade trabalhista intensa, menor concorrência de IA).",
@@ -1535,9 +1376,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · SAP Anuncia Módulo Concorrente
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "SAP Anuncia Módulo Concorrente",
     description: "A SAP anunciou o SAP SuccessFactors AI Automation — módulo que automatiza compliance trabalhista e processos de RH, integrado nativamente ao ERP. Preço: incluído nos contratos enterprise existentes. Seis dos seus 40 clientes usam SAP. Três já enviaram e-mail perguntando se faz sentido continuar com você. A imprensa especializada publicou: 'SAP torna startups de automação de RH obsoletas?'",
@@ -1577,9 +1416,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · O Cliente Âncora Quer Mais
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Cliente Âncora Quer Mais",
     description: "A Construtora Andrade, seu maior cliente (R$780k/ano), quer expandir o uso para mais 3 plantas industriais — mas em troca pede desconto de 35% no contrato expandido e features exclusivas de compliance para o setor de construção civil. A expansão geraria R$1,4M adicionais por ano, mas as features exclusivas exigem 4 meses de desenvolvimento dedicado.",
@@ -1619,9 +1456,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · O Modelo de IA Generativa Entra em Cena
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Modelo de IA Generativa Entra em Cena",
     description: "O mercado está em euforia com IA generativa e clientes potenciais estão perguntando se o produto usa 'ChatGPT' ou algo similar. Sua tecnologia usa modelos preditivos clássicos — mais confiáveis para compliance, mas menos 'sexy' no pitch. O CTO propõe integrar um modelo de linguagem para criar uma interface conversacional. Custo: R$520k e 3 meses. O risco: latência e alucinações do LLM em contexto de compliance.",
@@ -1660,9 +1495,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · DECISÃO CRÍTICA · O Round de Investimento Bate à Porta
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Round de Investimento Bate à Porta",
     description: "Um fundo de venture capital especializado em IA B2B quer liderar uma rodada Serie A de R$18M com valuation de R$60M. A due diligence vai começar em 2 semanas. Os pontos de atenção que o fundo levantou: pipeline com baixa taxa de conversão, clima do time em nível baixo e concentração de receita nos 5 maiores clientes (64% do ARR). Você tem 2 semanas para preparar as respostas.",
@@ -1702,9 +1535,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · O Partnership Estratégico
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Partnership Estratégico",
     description: "A consultoria EY quer fazer um partnership de go-to-market: eles indicam a sua plataforma para os clientes deles em troca de 15% de comissão e exclusividade de integração com os projetos de transformação de RH deles. Volume potencial: 30 novos clientes por ano. A exclusividade, porém, impede parcerias com outras consultorias pelo prazo de 2 anos.",
@@ -1744,9 +1575,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · A Simplificação do Produto
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Simplificação do Produto",
     description: "O diagnóstico de UX confirmou: 60% das features nunca são usadas. O head de produto propõe uma reformulação radical — reduzir o produto para as 40% de features mais usadas e criar uma experiência completamente nova e intuitiva. O CTO alerta: 'A reformulação vai gerar breaking changes para 8 clientes que usam as features que vamos remover.' O head de produto responde: '8 clientes em 40 é o custo de evoluir.'",
@@ -1785,9 +1614,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · A Equipe de Customer Success
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Equipe de Customer Success",
     description: "O churn dos últimos 6 meses foi de 14% — muito acima dos 7% que o modelo financeiro suporta. O head de CS identifica a causa: clientes contratam animados mas ficam sem suporte depois do onboarding. 'Precisamos de 4 CSMs dedicados. Hoje atendo 40 clientes sozinho.' A contratação custa R$520k/ano. O CFO apresenta o contra-argumento: 'Cada cliente que sai tira R$170k do ARR. 14% de churn custa R$950k/ano.'",
@@ -1826,9 +1653,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · A Aquisição Surge
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Aquisição Surge",
     description: "A Totvs, maior empresa de software de gestão da América Latina, fez uma proposta de aquisição: R$42M por 80% da empresa, com earnout de R$12M se as metas dos próximos 2 anos forem atingidas. A oferta é 6,2x o ARR atual. Os fundadores originais têm posições diferentes: dois querem vender (o produto escala com a base de clientes da Totvs), um quer manter a independência.",
@@ -1869,9 +1694,7 @@ const TecnologiaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO FINAL · O Futuro da IA Corporativa
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Futuro da IA Corporativa",
     description: "O pipeline desbloqueou, o time está mais engajado e o produto ganhou clareza. Você precisa agora definir a estratégia de longo prazo: onde quer estar em 3 anos e como chegar lá.",
@@ -1908,5 +1731,5 @@ const TecnologiaRounds = [
 
 ]
 
-]; // fim TecnologiaRounds
+]; 
 

@@ -1,41 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   BETA · INDÚSTRIA · ROUNDS EXCLUSIVOS
-   Sistema de Sorteio:
-     Diagnóstico    → 5 candidatas → 3 selecionadas  (R1–R5)
-     Pressão        → 5 candidatas → 4 selecionadas  (R6–R10)
-     Decisão Crítica→ 5 candidatas → 3 selecionadas  (R11–R15)
-   R10 = Gatilho Estratégico → abre a fase Decisão Crítica
 
-   INDICADORES (8 — exclusivos do setor Indústria):
-     financeiro   💰  Caixa / receita / penalidades contratuais
-     seguranca    🦺  Acidentes / MTE / índice de frequência
-     qualidade    🔧  Especificação / rejeições / defeitos
-     manutencao   ⚙️   Estado dos equipamentos / paradas
-     rh           👷  Engajamento / rotatividade / afastamentos
-     processos    📋  Eficiência operacional / fluxos
-     conformidade 📜  ISO / certificações / auditorias
-     clientes     🤝  Carteira / contratos / retenção
-
-   FASES NARRATIVAS:
-     R1–R5   → Diagnóstico: a extensão real da crise se revela
-     R6–R10  → Pressão: consequências chegam de fora e de dentro
-     R11–R15 → Decisão Crítica: o futuro da planta é definido
-═══════════════════════════════════════════════════════════════════ */
 
 const IndustriaRounds = [
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [0] · Metalúrgica — ISO em risco, segurança no limite
-   Contexto: 310 funcionários, 8.400m², R$68M faturamento,
-   índice de acidentes 18,4 (dobro do benchmark), ISO 9001 sob risco,
-   prensa hidráulica principal falhou (60% da produção),
-   engenheiro sênior de manutenção prestes a se aposentar.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · O Primeiro Dia na Fábrica
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Primeiro Dia na Fábrica",
     description: "Seu primeiro dia como gestor responsável. Durante o tour pela planta com o supervisor de produção, você nota: um operador trabalhando sem EPI completo, uma máquina de usinagem com proteção lateral removida e uma faixa amarela de interdição ignorada por todos. Ao perguntar ao supervisor, ele encolhe os ombros: 'É assim há anos. Todo mundo já se acostumou.' O índice de acidentes está em 18,4 — o dobro do benchmark do setor. O que você faz no final desse primeiro dia?",
@@ -73,9 +43,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O Engenheiro que Vai Embora
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Engenheiro que Vai Embora",
     description: "Raimundo, 61 anos, engenheiro de manutenção com 19 anos de empresa, anuncia que vai se aposentar em 4 meses. Ele é o único que conhece a fundo o funcionamento da prensa hidráulica principal — a mesma que falhou na semana passada e que responde por 60% da produção. 'Tenho tudo na cabeça,' ele diz. 'Nunca precisei documentar porque sempre estava aqui.' O supervisor de manutenção é honesto: 'Se o Raimundo sair sem transferir o conhecimento, ficamos cegos nessa máquina.'",
@@ -113,9 +81,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · A Auditoria ISO que Chegou
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Auditoria ISO que Chegou",
     description: "O auditor do organismo certificador chega para a auditoria de manutenção da ISO 9001. Em três horas de visita, ele identifica quatro não-conformidades maiores: registros de calibração de instrumentos desatualizados, procedimentos de controle de qualidade não seguidos na linha 3, rastreabilidade de lotes incompleta em 23% dos registros e treinamentos obrigatórios em atraso para 41 funcionários. 'Vocês têm 90 dias para corrigir ou a certificação é suspensa,' ele comunica ao final. Como você responde?",
@@ -154,9 +120,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · A Prensa que Para de Novo
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Prensa que Para de Novo",
     description: "Três semanas após a última falha, a prensa hidráulica principal para novamente. Desta vez, o técnico que tentou fazer a manutenção emergencial identifica o problema em 6 horas — mas ao abrir o equipamento, encontra algo preocupante: desgaste avançado em componentes que deveriam ter sido substituídos há pelo menos 18 meses segundo o manual do fabricante. Raimundo, chamado ao local, confirma: 'Eu sabia que estava desgastado. Mas a peça importada custava R$87 mil e sempre dava para segurar mais um pouco.' A produção está parada há 8 horas.",
@@ -195,9 +159,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · O Relatório do MTE
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Relatório do MTE",
     description: "Um fiscal do Ministério do Trabalho e Emprego realiza visita de rotina e lavra auto de infração por três irregularidades: ausência de PPRA atualizado, laudo de insalubridade vencido e equipamentos sem a manutenção preventiva documentada exigida pela NR-12. A multa somada é de R$142 mil. Mais grave: o fiscal inclui na notificação uma recomendação de interdição parcial da linha 2 caso as irregularidades não sejam sanadas em 30 dias. A linha 2 responde por 28% da produção.",
@@ -235,9 +197,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · O Acidente Grave
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Acidente Grave",
     description: "Na segunda-feira de manhã, um operador da linha 1 sofre um esmagamento de dois dedos ao tentar desobstruir uma prensa sem seguir o procedimento de bloqueio de energia. Ele é levado ao hospital. A análise preliminar aponta: a proteção da máquina havia sido removida na semana anterior para facilitar um ajuste e não foi recolocada. Nenhum supervisor registrou ou corrigiu a irregularidade. O SESMT é acionado e a linha 1 é paralisada pelo próprio time de segurança. Como você age nas primeiras 2 horas?",
@@ -277,9 +237,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · O Cliente Automotivo Audita
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Cliente Automotivo Audita",
     description: "A Montadora Horizonte — responsável por 34% da receita da empresa — anuncia auditoria de segundo partido em sua planta. A data é daqui a 20 dias. O gerente de qualidade avisa em particular: 'Se eles virem o estado atual da documentação de rastreabilidade e os registros de calibração, vamos reprovar. E reprovação em auditoria de montadora com frequência resulta em suspensão de fornecedor.' Uma suspensão pela Montadora Horizonte significaria perda imediata de R$23 milhões em receita anual.",
@@ -318,9 +276,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · A Proposta de Automação
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Proposta de Automação",
     description: "Um fabricante de equipamentos apresenta uma proposta de automação parcial da linha 2: substituir dois postos de trabalho manuais por braços robóticos, reduzindo o risco de acidente nesses pontos em 85% e aumentando a capacidade produtiva em 22%. O custo: R$1,4 milhões, payback estimado de 26 meses. O sindicato dos metalúrgicos já soube da proposta e o representante sindical pede uma reunião urgente: 'Dois trabalhadores vão perder o emprego?'",
@@ -359,9 +315,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · A Alta do Aço
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Alta do Aço",
     description: "O preço do aço carbono — principal matéria-prima da empresa — subiu 31% nos últimos 60 dias por combinação de alta cambial e redução de oferta do mercado doméstico. O CFO apresenta o impacto: se os contratos atuais forem mantidos no preço original, a margem bruta cai de 18% para 9% no próximo trimestre. Três grandes clientes têm contratos com cláusula de reajuste semestral. Os demais têm contratos anuais fechados. O que você decide?",
@@ -399,9 +353,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO / GATILHO · O Contrato que Define o Futuro
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Contrato que Define o Futuro",
     description: "A Montadora Horizonte comunica uma decisão estratégica: está consolidando sua base de fornecedores de componentes estruturais de 8 para 3 empresas nos próximos 18 meses. A empresa que ficar nessa base receberá um contrato de R$41 milhões anuais por 5 anos — mais que o dobro do contrato atual. A condição: passar em uma auditoria técnica em 45 dias, apresentar plano de investimento em automação e tecnologia, e ter o índice de acidentes abaixo de 8,0 (atualmente em 18,4). Duas outras metalúrgicas concorrentes estão disputando as mesmas vagas. O que você prioriza para os próximos 45 dias?",
@@ -440,9 +392,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · O Plano de Investimento
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Plano de Investimento",
     description: "Para o contrato de R$41M com a Montadora Horizonte, você precisa apresentar um plano de investimento em tecnologia e automação. O CFO confirma: a empresa tem capacidade para um investimento de até R$3,5 milhões nos próximos 12 meses. Três opções estão na mesa: (A) Automação da linha 2 com robótica colaborativa — R$2,8M, ganho de 30% de capacidade; (B) Sistema MES (Manufacturing Execution System) para rastreabilidade em tempo real — R$1,9M; (C) Renovação completa do parque de maquinário da linha 1 — R$3,2M, elimina 70% do risco de paradas.",
@@ -480,9 +430,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · A Renovação da ISO
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Renovação da ISO",
     description: "O prazo de 90 dias da ISO 9001 chegou. O auditor retorna. Das quatro não-conformidades, três foram completamente corrigidas. A quarta — rastreabilidade de lotes completa em 100% dos registros — ainda está em 91%. O auditor apresenta as opções: manter a certificação com uma não-conformidade menor registrada e prazo de 30 dias para a última correção; ou suspender a certificação preventivamente até a resolução total. Dois clientes têm contratos que exigem ISO ativa. O que você decide?",
@@ -521,9 +469,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · O Novo Contrato e a Equipe
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Novo Contrato e a Equipe",
     description: "A Montadora Horizonte confirma: a empresa passou na auditoria e está selecionada como um dos três fornecedores consolidados. O contrato de R$41M começa em 6 meses. Para atender o volume, a empresa precisará contratar entre 60 e 80 funcionários adicionais e abrir um segundo turno completo. O sindicato já está de olho nas condições do novo turno. O RH alerta: 'O mercado de mão de obra qualificada para metalúrgica no interior está apertado — vamos disputar com outras fábricas.' Como você planeja a expansão de equipe?",
@@ -561,9 +507,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · O Concorrente que Aparece
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Concorrente que Aparece",
     description: "Uma metalúrgica de capital chinês anuncia a abertura de uma planta a 80 km da sua no próximo ano, com capacidade 2,5x maior e custo operacional estimado 28% menor por peça. Dois dos seus cinco principais clientes já foram visitados pelos representantes da empresa chinesa. O conselho de administração quer uma resposta estratégica. O que você apresenta como posicionamento da empresa para os próximos 3 anos?",
@@ -602,9 +546,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO FINAL · O Futuro da Fábrica
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Futuro da Fábrica",
     description: "Com o contrato da Montadora Horizonte confirmado, a ISO regularizada e o índice de acidentes em trajetória de queda, você precisa definir o posicionamento estratégico da planta para os próximos 3 anos. O contexto: pressão ESG crescente dos clientes, concorrente asiático chegando, mercado de trabalho metalúrgico apertado e oportunidade de expansão para outros setores além do automotivo.",
@@ -641,18 +583,10 @@ const IndustriaRounds = [
 
 ],
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [1] · Embalagens Plásticas — Adequação ESG urgente
-   Contexto: 430 funcionários, duas plantas no Paraná, R$94M
-   faturamento, exigência de 30% de insumos reciclados pelos clientes,
-   conversão de linha custa R$8-12M e leva 6-10 meses,
-   cliente-âncora enviou carta formal com prazo de adequação.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · A Carta do Cliente
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Carta do Cliente",
     description: "Você assume a gestão e, na primeira semana, encontra uma carta formal do Grupo Alimentar Nacional — responsável por 22% da receita — sobre sua mesa. A carta é clara: a empresa tem 8 meses para apresentar embalagens com pelo menos 30% de conteúdo reciclado, ou será aberta licitação para novos fornecedores. O consultor ESG contratado há 3 meses diz que a conversão de uma linha leva entre 6 e 10 meses. Qual é seu primeiro movimento?",
@@ -690,9 +624,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O Engenheiro de Processo Fala
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Engenheiro de Processo Fala",
     description: "O engenheiro de processo mais experiente da empresa pede uma reunião reservada. Ele apresenta um diagnóstico técnico que ninguém havia formalizado: 'A linha A da planta 1 pode ser convertida para 30% de reciclado em 5 meses por R$6,8M. A linha B da planta 2 vai levar 9 meses e custar R$11,2M. Mas tem algo que ninguém te contou: a resina reciclada disponível no mercado tem variabilidade de qualidade que pode aumentar o índice de rejeição em até 18% nas primeiras semanas.' Como você responde a esse diagnóstico?",
@@ -731,9 +663,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · A Regulamentação Avança
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Regulamentação Avança",
     description: "O governo federal publica a regulamentação definitiva da Política Nacional de Resíduos Sólidos para embalagens plásticas: a partir do próximo ano, toda embalagem plástica rígida para uso alimentício precisará ter no mínimo 15% de conteúdo reciclado ou pagará uma taxa de R$0,08 por unidade produzida. A sua empresa produz em média 180 milhões de unidades por ano. O CFO calcula: 'Se não convertermos nenhuma linha, a taxa vai custar R$14,4M anuais — mais do que o custo de conversão.' Como você usa esse dado na gestão?",
@@ -771,9 +701,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · O Fornecedor de Resina Problemas
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Fornecedor de Resina Problema",
     description: "O fornecedor de resina reciclada selecionado após o piloto entrega o primeiro lote de produção com 23% de variação na densidade do material — fora da especificação técnica acordada. O resultado: 14% de rejeição no primeiro mês de operação da linha convertida, embalagens com espessura irregular que passaram pelo controle de qualidade mas foram devolvidas por dois clientes. O fornecedor alega que o problema é 'sazonalidade da matéria-prima'. Como você age?",
@@ -811,9 +739,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · A Segunda Carta
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Segunda Carta",
     description: "Cinco meses após a primeira carta, o Grupo Alimentar Nacional envia uma segunda comunicação. O tom é diferente: 'Reconhecemos o progresso nas embalagens da linha A, mas o prazo de 8 meses está chegando ao fim e ainda há produtos críticos do nosso portfólio sem solução ESG. Temos uma reunião de conselho em 60 dias onde decidiremos a base de fornecedores para os próximos 3 anos. Precisamos de uma apresentação sobre o plano completo de adequação.' Como você se prepara para essa apresentação?",
@@ -851,9 +777,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · O Segundo Cliente Entra em Cena
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Segundo Cliente Entra em Cena",
     description: "A rede Higiene Brasil — responsável por 19% da receita — envia comunicação formal com exigência similar à do Grupo Alimentar Nacional, mas com prazo mais apertado: 5 meses para apresentar embalagem com 25% de reciclado nos 3 produtos de maior volume. O problema: a linha A recém-convertida está operando com capacidade plena para o Grupo Alimentar. Atender a Higiene Brasil significa dividir a capacidade da linha A — ou iniciar antes do previsto a conversão da linha B, que custará R$11,2M.",
@@ -891,9 +815,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · O Acidente Químico na Linha
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Acidente Químico na Linha",
     description: "Durante a operação com resina reciclada na linha A, um vazamento de aditivo plastificante expõe três operadores a vapores acima do limite de tolerância. Ninguém foi hospitalizado, mas o SESMT interdita o setor de mistura de compostos por 48 horas. A investigação revela que o procedimento de segurança para o novo aditivo — necessário para processar a resina reciclada — não foi atualizado quando a linha foi convertida. Como você age?",
@@ -932,9 +854,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · O Banco Questiona
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Banco Questiona",
     description: "O banco que financia 40% do capital de giro da empresa solicita uma reunião. O gerente de conta apresenta uma nova exigência: a partir do próximo semestre, a linha de crédito estará condicionada a um relatório ESG auditado externamente. 'Nossa política de crédito passou a exigir critérios de sustentabilidade para renovação de limites em todos os clientes do setor industrial,' explica ele. 'Empresas sem relatório ESG auditado vão ter seu limite reduzido em 30%.' Um corte de 30% no capital de giro afetaria diretamente a capacidade de pagar fornecedores de resina.",
@@ -973,9 +893,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · O Concorrente Anuncia
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Concorrente Anuncia",
     description: "Um concorrente direto — a Embal Sul — anuncia em release à imprensa que completou a conversão de 100% das suas linhas para insumos reciclados e obteve certificação ISCC (International Sustainability & Carbon Certification). Dois dias depois, o Grupo Alimentar Nacional envia e-mail parabenizando a Embal Sul pelo anúncio e, na mesma mensagem, reforça o prazo da sua empresa: 'Reiteramos a importância do cronograma acordado.' O time comercial está inquieto. Como você responde internamente e externamente?",
@@ -1013,9 +931,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO / GATILHO · A Decisão do Conselho do Cliente
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Decisão do Conselho do Cliente",
     description: "O conselho do Grupo Alimentar Nacional se reúne. A empresa apresentou o progresso da linha A, o cronograma da linha B e a certificação em andamento. A decisão chega 3 dias depois: a empresa foi mantida na base de fornecedores — mas com uma condição nova: os contratos para os próximos 3 anos virão com cláusula de performance ESG trimestral, incluindo metas de redução de emissão de carbono além da porcentagem de reciclado. 'Queremos um parceiro que cresça junto com nossa agenda, não apenas que cumpra o mínimo.' É uma vitória — e um novo nível de exigência. Como você responde?",
@@ -1054,9 +970,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · A Linha B
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Linha B",
     description: "Com o contrato do Grupo Alimentar Nacional garantido e a Higiene Brasil exigindo resposta, é hora de decidir sobre a conversão da linha B. Três cenários financeiros estão na mesa: (A) Financiamento bancário de R$11,2M com 48 meses de amortização; (B) Leasing do equipamento convertido com opção de compra ao final de 5 anos — R$280k/mês; (C) Parceria com o Grupo Alimentar Nacional que co-investe R$5M em troca de exclusividade de 40% da capacidade da linha B por 3 anos.",
@@ -1095,9 +1009,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · O Relatório de Carbono
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Relatório de Carbono",
     description: "O consultor de carbono finaliza o inventário de emissões da empresa: escopo 1 e 2 estão mapeados. O resultado revela que 67% das emissões vêm do consumo de energia elétrica das linhas de produção. O consultor apresenta três caminhos para redução: (A) Migração para energia solar — investimento de R$3,1M, redução de 45% das emissões em 18 meses; (B) Compra de créditos de carbono para compensar as emissões atuais — R$380k/ano; (C) Negociação de contrato de energia renovável certificada com a concessionária — R$120k/ano adicional.",
@@ -1135,9 +1047,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · O Mercado de Exportação
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Mercado de Exportação",
     description: "Um distribuidor europeu de embalagens sustentáveis visita a planta e apresenta uma proposta: exportar 15% da capacidade da linha A para o mercado europeu, onde embalagens com conteúdo reciclado certificado ISCC têm margem 35% maior do que no mercado doméstico. A condição: a certificação ISCC precisa estar concluída em 4 meses. O gerente de exportações diz: 'É a maior oportunidade de margem que já vi para esse produto.' O time de produção diz: 'Vai apertar a capacidade para os clientes nacionais.'",
@@ -1176,9 +1086,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · O Modelo de Negócio ESG
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Modelo de Negócio ESG",
     description: "Com duas linhas convertidas, certificação ISCC em andamento e relatório de carbono publicado, o conselho discute uma questão estratégica: a empresa deve posicionar a conversão ESG como diferencial comercial e cobrar prêmio de preço, ou manter os mesmos preços e usar a sustentabilidade como argumento de retenção de clientes? O CFO apresenta os números: a conversão aumentou o custo unitário em R$0,043 por embalagem. O cliente paga o mesmo. A margem caiu 2,1 pontos percentuais.",
@@ -1216,9 +1124,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO FINAL · O Futuro da Embalagem
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Futuro da Embalagem",
     description: "Com as duas linhas convertidas, certificação ISCC e relatório de carbono publicado, a empresa está em posição estratégica que nenhum concorrente local atingiu. O conselho discute o posicionamento para os próximos 3 anos em um mercado que vai exigir mais, não menos, sustentabilidade.",
@@ -1255,18 +1161,10 @@ const IndustriaRounds = [
 
 ],
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [2] · Química — Autuação IBAMA, planta em regime parcial
-   Contexto: 280 funcionários, ABC paulista, R$71M faturamento,
-   autuação IBAMA R$4,1M por descarte irregular, planta em
-   regime parcial, responsável ambiental pediu demissão,
-   dois clientes sinalizaram revisão de contrato.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · A Autuação no Dia 1
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Autuação no Dia 1",
     description: "Você assume a gestão com a autuação do IBAMA de R$4,1 milhões já formalizada e a planta operando em regime parcial. O responsável ambiental pediu demissão no dia seguinte à autuação — levando consigo o conhecimento de todos os processos de descarte. O gerente de produção é direto: 'Sem o ambiental, não sei o que posso ou não posso fazer. Metade da linha está parada por precaução.' Qual é o seu primeiro movimento?",
@@ -1305,9 +1203,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O Laudo Técnico
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Laudo Técnico",
     description: "O consultor ambiental contratado em emergência passa 5 dias na planta e entrega o diagnóstico: o descarte irregular não foi um evento isolado — foi prática sistemática por pelo menos 18 meses. O tanque de resíduo que era descartado na área de proteção era usado por três processos diferentes de produção. A restauração da área afetada vai custar entre R$800k e R$1,2M adicionais à multa de R$4,1M. 'O bom é que é reversível,' diz o consultor. 'O ruim é que vai levar de 12 a 18 meses.' Como você responde ao diagnóstico?",
@@ -1346,9 +1242,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · A Imprensa Regional
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Imprensa Regional",
     description: "O jornal regional mais lido do ABC publica uma matéria com o título 'Indústria química descarta resíduo tóxico em área protegida há 18 meses'. A reportagem tem fotos do local, a cópia do auto de infração e a declaração de dois moradores da área que relatam odores. O portal de notícias da cidade já tem 340 compartilhamentos. O telefone do departamento de comunicação não para de tocar. Você não tem departamento de comunicação — a empresa nunca precisou de um. O que você faz?",
@@ -1387,9 +1281,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · O Time Interno Desorientado
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Time Interno Desorientado",
     description: "Uma semana após a matéria, 12 funcionários pediram transferência de departamento ou mudança de função para não trabalhar nos processos ligados ao descarte. Três operadores seniores com 8 a 14 anos de casa pediram demissão, alegando 'vergonha de trabalhar na empresa'. O supervisor de turno mais respeitado da planta convoca você para uma conversa particular: 'As pessoas não sabem se a empresa vai fechar. Precisam ouvir algo.' O que você comunica ao time?",
@@ -1428,9 +1320,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · Os Clientes Pedem Posição
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "Os Clientes Pedem Posição",
     description: "Os dois clientes que sinalizaram revisão de contrato pedem uma reunião formal. Eles querem entender: a empresa tem capacidade de entregar os produtos com regularidade? A situação ambiental vai gerar interdição total da planta? Há risco de embargo pelo IBAMA? Eles têm R$12,4M anuais em contratos com a empresa e precisam de resposta antes do fim do mês para suas próprias decisões de fornecimento. O que você apresenta nessa reunião?",
@@ -1468,9 +1358,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · O Embargo Parcial
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Embargo Parcial",
     description: "O IBAMA emite uma ordem de embargo parcial: os três processos que geravam o resíduo descartado irregularmente ficam suspensos até a conclusão do TAC. Esses três processos representam 38% da capacidade produtiva da planta. Você tem 5 dias para organizar a operação com 62% da capacidade e comunicar os clientes sobre os impactos de prazo e volume. Quatro contratos têm cláusula de penalidade por atraso. O que você prioriza?",
@@ -1509,9 +1397,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · O Sindicato e a Segurança
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Sindicato e a Segurança",
     description: "O sindicato dos químicos convoca reunião formal e apresenta uma demanda: realização de laudo independente de segurança ocupacional em todos os setores da planta — não apenas nos embargados — antes de retomada da operação plena. 'Nossos associados têm direito de saber se estavam trabalhando em ambiente de risco há 18 meses,' diz o representante. O médico do trabalho da empresa alerta: 'Um laudo independente pode revelar outras irregularidades que não foram levantadas pelo IBAMA.' Como você responde?",
@@ -1550,9 +1436,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · O Alto do Dólar
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Alto do Dólar",
     description: "O dólar atinge o maior nível histórico. Seus principais insumos — solventes e aditivos importados — encarecem 31% de um mês para o outro. A empresa já está operando a 62% da capacidade por causa do embargo. O CFO apresenta o cenário: 'Se não ajustarmos preço ou cortarmos custos em 30 dias, vamos ter o pior resultado trimestral da história da empresa.' Mas qualquer reajuste de preço precisa ser negociado com clientes que já estão avaliando sair. O que você decide?",
@@ -1590,9 +1474,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · O Responsável Ambiental Retorna
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Responsável Ambiental Retorna",
     description: "O responsável técnico ambiental que pediu demissão no dia seguinte à autuação entra em contato. Ele quer uma reunião. Você marca para o dia seguinte. Na reunião, ele é direto: 'Eu alertei a diretoria anterior sobre o risco do descarte há 11 meses. Tenho e-mails. Fui ignorado. Sai porque não me sentia responsável por algo que eu tinha tentado evitar.' Ele está aberto a retornar — mas com uma condição: quer que o episódio seja formalmente reconhecido pela empresa e que a área ambiental passe a ter poder de veto em decisões operacionais.",
@@ -1632,9 +1514,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO / GATILHO · O TAC é Assinado
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O TAC é Assinado",
     description: "O Termo de Ajuste de Conduta com o IBAMA é assinado: multa reduzida para R$2,6M (de R$4,1M), cronograma de restauração de 16 meses com vistorias trimestrais, e retomada gradual dos processos embargados a partir do 3º mês mediante comprovação de adequação. O embargo é suspenso. A planta pode retomar operação plena em 3 meses. Os dois clientes que sinalizaram saída confirmam que vão aguardar o retorno da capacidade plena. É uma virada — mas o que vem a seguir vai definir se a empresa realmente mudou ou se voltará ao mesmo padrão. O que você anuncia como próximo passo estratégico?",
@@ -1673,9 +1553,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · O Sistema de Gestão Ambiental
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Sistema de Gestão Ambiental",
     description: "Com o TAC assinado e o responsável ambiental de volta, o consultor apresenta três caminhos para a gestão ambiental da planta: (A) ISO 14001 — certificação internacional de sistema de gestão ambiental, 12 meses, R$280k; (B) Sistema interno de gestão de resíduos com auditorias semestrais independentes — R$90k/ano sem certificação; (C) Certificação EMAS (europeia, mais exigente que a ISO) — 18 meses, R$420k, abre mercado de exportação para Europa.",
@@ -1713,9 +1591,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · A Tecnologia de Processo
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Tecnologia de Processo",
     description: "O responsável ambiental apresenta uma descoberta técnica durante o processo de revisão dos processos embargados: existe uma tecnologia de destilação a vácuo que recupera 78% dos solventes usados nos três processos, transformando resíduo em matéria-prima reaproveitável. O investimento: R$1,8M. O retorno estimado: redução de 65% no custo de descarte de resíduos e R$380k/ano em solventes recuperados. 'Além de resolver o problema ambiental, dá dinheiro,' resume ele.",
@@ -1754,9 +1630,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · A Reconquista dos Clientes
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Reconquista dos Clientes",
     description: "Com a operação retomada e o TAC em andamento, é hora de trabalhar a carteira de clientes. O gerente comercial mapeia: os dois que ficaram precisam de confirmação de capacidade plena; há 4 clientes potenciais que foram abordados no passado mas recusaram por falta de certificação ambiental; e um ex-cliente — que saiu durante a crise — indicou que pode retornar se houver evidências de mudança real. Como você prioriza a estratégia comercial?",
@@ -1794,9 +1668,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · A Oferta de Compra
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Oferta de Compra",
     description: "Um grupo químico multinacional de capital europeu apresenta uma proposta de aquisição de 60% da empresa por R$28M. A avaliação é 30% abaixo do que seria considerado justo antes da autuação — mas o grupo argumenta que está comprando 'o negócio e o problema, não o negócio sem o problema'. Em contrapartida, oferece acesso a tecnologia de processo, certificações europeias e uma carteira de clientes multinacionais. O sócio-fundador quer a sua posição.",
@@ -1836,9 +1708,7 @@ const IndustriaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO FINAL · O Futuro da Química
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Futuro da Química",
     description: "Com o TAC em execução, a certificação ISO 14001 em andamento, a tecnologia de recuperação de solventes instalada e a carteira de clientes estabilizada, você precisa definir o posicionamento estratégico para os próximos 3 anos. A empresa que sobreviveu à autuação tem agora uma história e uma estrutura que a maioria dos concorrentes não tem. Onde você vai competir?",
@@ -1875,4 +1745,4 @@ const IndustriaRounds = [
 
 ]
 
-]; // fim IndustriaRounds
+]; 

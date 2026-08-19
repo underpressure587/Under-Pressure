@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════
-   BETA · EMPRESA · Logística
-═══════════════════════════════════════════════════════ */
+
 
 const EmpresaLogistica = {
     id:   "logistica",
@@ -40,7 +38,7 @@ const EmpresaLogistica = {
             rodape: "Você tem {totalRounds} rodadas para recolocar a operação nos trilhos antes que os clientes percam a confiança."
         },
 
-        /* ── 2 ─────────────────────────────────────── */
+        
         {
             badge:     "Logística Refrigerada · Cadeia do Frio",
             subtitulo: "Uma falha na cadeia do frio não é apenas prejuízo — é risco sanitário.",
@@ -70,7 +68,7 @@ const EmpresaLogistica = {
             rodape: "Você tem {totalRounds} rodadas para reconquistar a confiança e modernizar a operação."
         },
 
-        /* ── 3 ─────────────────────────────────────── */
+        
         {
             badge:     "Fulfillment de E-commerce · Operação Omnichannel",
             subtitulo: "O contrato com o marketplace maior do Brasil começou. A operação não estava pronta.",

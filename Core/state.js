@@ -1,20 +1,17 @@
-/* ═══════════════════════════════════════════════════════
-   BETA · STATE · Estado centralizado do jogo beta
-   v5.0 — 8 indicadores por setor, situações filtradas por setor
-═══════════════════════════════════════════════════════ */
+
 
 const BetaState = (() => {
     let _state = null;
 
     function _indicadoresBase(sector, introIndex = 0) {
-        // Tecnologia tem valores iniciais por história pois cada contexto
-        // começa em situações muito diferentes (SaaS saudável vs EdTech em crise vs Scale-up IA)
+        
+        
         const TECNOLOGIA_POR_HISTORIA = [
-            // [0] SaaS B2B — empresa crescendo, time ainda relativamente ok
+            
             { financeiro: 9, rh: 7, clientes: 7, qualidade: 6, produtividade: 7, reputacao: 8, inovacao: 7, seguranca: 6 },
-            // [1] EdTech — time sobrecarregado, clima/rh crítico (runway 8 meses)
+            
             { financeiro: 9, rh: 4, clientes: 7, qualidade: 6, produtividade: 5, reputacao: 8, inovacao: 7, seguranca: 6 },
-            // [2] Scale-up IA — produto bom, pipeline travado, vendas fracas
+            
             { financeiro: 9, rh: 6, clientes: 7, qualidade: 6, produtividade: 6, reputacao: 8, inovacao: 7, seguranca: 6 },
         ];
 
@@ -42,7 +39,7 @@ const BetaState = (() => {
             groupName,
             companyName,
 
-            indicators: _indicadoresBase(sector, 0), // introIndex=0 como padrão; engine chama aplicarIndicadoresHistoria() logo após
+            indicators: _indicadoresBase(sector, 0), 
 
             currentRound:  0,
             totalRounds:   15,
@@ -59,10 +56,10 @@ const BetaState = (() => {
             gestor: {
                 reputacaoInterna: 5,
                 capitalPolitico:  7,
-                esgotamento:      0,  // FIX: gestor inicia sem esgotamento — mandato começa fresco
+                esgotamento:      0,  
             },
 
-            // Evolução da crise inicial: null | "melhorando" | "resolvida" | "piorando"
+            
             situacaoStatus: null,
 
             stakeholderLog: [],
@@ -74,7 +71,7 @@ const BetaState = (() => {
                 flags:            [],
                 conquistas:       [],
                 traumas:          [],
-                flagMotivos:      {},   // guarda o motivo textual de cada flag
+                flagMotivos:      {},   
             }
         };
         return _state;
@@ -91,7 +88,7 @@ const BetaState = (() => {
         });
     }
 
-    // BUG 12 FIX: limita o histórico a maxEntries para evitar crescimento ilimitado de memória
+    
     function addHistory(entry, maxEntries = 100) {
         _state.history.push(entry);
         if (_state.history.length > maxEntries) {
@@ -146,7 +143,7 @@ const BetaState = (() => {
     function getGestor()              { return _state.gestor; }
     function setSituacaoStatus(s)     { _state.situacaoStatus = s; }
 
-    // BUG #3 FIX: restaura estado completo salvo pelo _salvarSessao
+    
     function restore(saved) {
         _state = {
             sector:        saved.sector,
@@ -160,7 +157,7 @@ const BetaState = (() => {
             history:       [...(saved.history || [])],
             activeEvents:  JSON.parse(JSON.stringify(saved.activeEvents || [])),
             storyState:    (() => {
-                // BUG FIX: garante todos os campos do storyState mesmo em saves parciais/antigos
+                
                 const ss = saved.storyState || {};
                 return JSON.parse(JSON.stringify({
                     faseEmpresa:       ss.faseEmpresa      || "fundacao",
@@ -176,14 +173,14 @@ const BetaState = (() => {
             companyInfo:   saved.companyInfo   || null,
             situacaoStatus: saved.situacaoStatus || null,
             stakeholderLog: saved.stakeholderLog || [],
-            gameRounds:    [],   // será re-carregado pelo engine
+            gameRounds:    [],   
             phase:         "playing",
         };
         return _state;
     }
 
-    // Chamado pelo engine após sortear o introIndex,
-    // garante que cada história começa com os indicadores corretos
+    
+    
     function aplicarIndicadoresHistoria(introIndex) {
         if (!_state) return;
         _state.indicators = _indicadoresBase(_state.sector, introIndex);

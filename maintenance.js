@@ -1,16 +1,4 @@
-/* ════════════════════════════════════════════════════
-   maintenance.js  —  Under Pressure
-   Versão simplificada — sem lógica de admin.
 
-   Responsabilidades:
-   - Polling de manutenção via REST público (sem auth)
-   - Overlay de manutenção (mostrar / esconder)
-   - Ban de jogadores
-   - Mensagem global + forçar atualização + version.json
-
-   Bloqueia TODOS igualmente quando manutenção ativa.
-   admin-studio.html é arquivo separado, nunca afetado.
-════════════════════════════════════════════════════ */
 
 (function () {
 
@@ -21,9 +9,7 @@
   const PROJECT = 'under-pressure-49320';
   const FS      = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/default/documents`;
 
-  /* ════════════════════════════════════════════════
-     VERIFICAÇÃO FIRESTORE — REST público, sem auth
-  ════════════════════════════════════════════════ */
+  
   async function _buscarConfigGlobal() {
     try {
       const r = await fetch(`${FS}/config/global?key=${API_KEY}`);
@@ -46,9 +32,7 @@
     } catch(e) { return null; }
   }
 
-  /* ════════════════════════════════════════════════
-     OVERLAY
-  ════════════════════════════════════════════════ */
+  
   function mostrarOverlay(msgExtra) {
     const el = document.getElementById('overlay-manutencao');
     if (!el) return;
@@ -59,7 +43,7 @@
       else            extra.style.display = 'none';
     }
 
-    /* Botão salvar só aparece se houver jogo em curso */
+    
     const btnSalvar = document.getElementById('manut-btn-salvar');
     const emJogo = !!(typeof BetaState !== 'undefined' && BetaState.get());
     if (btnSalvar) btnSalvar.style.display = emJogo ? 'block' : 'none';
@@ -80,15 +64,13 @@
     if (typeof sair === 'function') sair();
   }
 
-  /* ════════════════════════════════════════════════
-     TICK ÚNICO — compartilhado por logado e convidado
-  ════════════════════════════════════════════════ */
+  
   async function _tick(uid) {
     try {
       const cfg = await _buscarConfigGlobal();
       if (!cfg) return;
 
-      /* 1. Manutenção — bloqueia todos, exceto uids liberados explicitamente */
+      
       const estaLiberado = !!(uid && cfg.liberados.includes(uid));
       if (cfg.manutencao && !estaLiberado) {
         mostrarOverlay(cfg.mensagem || '');
@@ -97,27 +79,27 @@
 
       esconderOverlay();
 
-      /* Daqui para baixo só faz sentido para usuários logados */
+      
       if (!uid) return;
 
-      /* 2. Ban */
+      
       if (window.ADMIN) {
         const banido = await window.ADMIN.verificarBan(uid).catch(() => false);
         if (banido) {
           if (typeof _mostrarOverlayBan === 'function') {
             _mostrarOverlayBan(uid);
           } else if (typeof _forcarSaida === 'function') {
-            // Fallback caso o overlay não esteja disponível por algum motivo
+            
             _forcarSaida('🚫 Sua conta foi suspensa pelo administrador.');
           }
           return;
         }
       }
 
-      /* 3. Modo sala */
+      
       if (typeof _atualizarModoSala === 'function') _atualizarModoSala(cfg);
 
-      /* 4. Mensagem global */
+      
       const ultima = window._ultimaMensagemGlobal || '';
       if (cfg.mensagem && cfg.mensagem !== ultima) {
         window._ultimaMensagemGlobal = cfg.mensagem;
@@ -125,7 +107,7 @@
       }
 
 
-      /* 6. Nova versão via version.json — só verifica se ainda não mostrou o toast */
+      
       if (window._versaoAtual && !window._updateToastVisible) {
         try {
           const rv = await fetch('/version.json?t=' + Date.now());
@@ -135,15 +117,13 @@
               if (typeof _mostrarToastAtualizacao === 'function') _mostrarToastAtualizacao(false);
             }
           }
-        } catch(e) { /* ignora erros de rede */ }
+        } catch(e) {  }
       }
 
-    } catch(e) { /* ignora erros de rede temporários */ }
+    } catch(e) {  }
   }
 
-  /* ════════════════════════════════════════════════
-     POLLING CONVIDADO — só manutenção
-  ════════════════════════════════════════════════ */
+  
   function iniciarPollingConvidado() {
     pararPollingConvidado();
     _tick(null);
@@ -154,9 +134,7 @@
     if (_guestPollInterval) { clearInterval(_guestPollInterval); _guestPollInterval = null; }
   }
 
-  /* ════════════════════════════════════════════════
-     POLLING GLOBAL (usuário logado)
-  ════════════════════════════════════════════════ */
+  
   async function iniciarPolling(uid) {
     pararPolling();
     if (!uid) return;
@@ -168,7 +146,7 @@
     if (_globalPollInterval) { clearInterval(_globalPollInterval); _globalPollInterval = null; }
   }
 
-  /* ── API pública ─────────────────────────────────── */
+  
   window.Maintenance = {
     iniciarPolling,
     pararPolling,
@@ -177,7 +155,7 @@
     mostrarOverlay,
     esconderOverlay,
     salvarSair,
-    /* stub vazio — mantido para não quebrar chamadas legadas no mainBeta */
+    
     setAdminCheckPending: () => {},
   };
 

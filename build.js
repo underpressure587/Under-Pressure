@@ -1,13 +1,9 @@
-/**
- * build.js
- * Junta todos os arquivos fonte e gera o bundle.js.
- * Uso: node build.js
- */
+
 
 const fs   = require('fs');
 const path = require('path');
 
-// Ordem exata dos arquivos para o bundle
+
 const ORDEM = [
   { marcador: 'core/state.js',                  arquivo: 'Core/state.js' },
   { marcador: 'core/indicadores.js',            arquivo: 'Core/indicadores.js' },
@@ -58,7 +54,7 @@ if (erros > 0) {
   process.exit(1);
 }
 
-// Backup do bundle anterior
+
 if (fs.existsSync('bundle.js')) {
   fs.copyFileSync('bundle.js', 'bundle.backup.js');
   console.log('\n💾 Backup salvo em bundle.backup.js');

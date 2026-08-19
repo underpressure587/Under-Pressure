@@ -1,22 +1,10 @@
-/* ═══════════════════════════════════════════════════════
-   BETA · STORY ENGINE · Motor narrativo BitLife-style
-   v5.0 — estilo mais preciso, gestor_de_crise calibrado,
-           traumas no epílogo, flags com contexto.
-═══════════════════════════════════════════════════════ */
+
 
 
 const StoryEngine = (() => {
 
-    /* ══════════════════════════════════════════════════
-       1. AVALIAÇÃO DE FASE
-    ══════════════════════════════════════════════════ */
-    /* BUG C FIX: thresholds recalibrados para 10 rodadas (índices 0–9).
-       O bloco "else" (round > 11) era inalcançável — o jogo encerra no round 9.
-       Nova distribuição:
-         Rounds 0–3 → fundacao    (fase diagnóstico)
-         Rounds 4–6 → crescimento / crise (fase pressão)
-         Rounds 7–9 → consolidacao / expansao / crise (fase decisão crítica)
-       "expansao" agora alcançável na reta final com média >= 14 e sem críticos. */
+    
+    
     function avaliarFase(state) {
         const round    = state.currentRound;
         const vals     = Object.values(state.indicators);
@@ -29,7 +17,7 @@ const StoryEngine = (() => {
         } else if (round <= 6) {
             fase = (criticos >= 2 || media <= 5) ? "crise" : "crescimento";
         } else {
-            // Fase de decisão crítica (rounds 7–9)
+            
             if      (criticos >= 2 || media <= 5)  fase = "crise";
             else if (media >= 14 && criticos === 0) fase = "expansao";
             else if (media >= 11)                   fase = "consolidacao";
@@ -39,13 +27,11 @@ const StoryEngine = (() => {
         if (state.storyState.faseEmpresa !== fase) BetaState.setFase(fase);
     }
 
-    /* ══════════════════════════════════════════════════
-       2. REGISTRO DE FLAGS (com motivo contextual)
-    ══════════════════════════════════════════════════ */
+    
     function registrarFlags(choice, state, avaliacao) {
         const { history, indicators, storyState } = state;
 
-        // Liderança tóxica: 3 decisões RUINS com RH negativo
+        
         const ruinsClima = history.filter(h =>
             h.avaliacao === "ruim" && h.efeitos?.rh < 0
         );
@@ -55,13 +41,13 @@ const StoryEngine = (() => {
             BetaState.addTrauma("Ambiente interno corroído por decisões que ignoraram as pessoas.");
         }
 
-        // Ignorou segurança
+        
         if (choice.effects?.seguranca < 0 || choice.effects?.seguranca_viaria < 0) {
             BetaState.addFlag("ignorou_seguranca", "Decisão que reduziu a segurança");
         }
 
-        // Crescimento sem caixa: 3 decisões RUINS com financeiro negativo
-        // (exclui investimentos estratégicos — só conta ruim com financeiro < 0)
+        
+        
         const ruinsFinanceiro = history.filter(h =>
             h.avaliacao === "ruim" && (h.efeitos?.financeiro ?? 0) < 0
         );
@@ -70,7 +56,7 @@ const StoryEngine = (() => {
                 `${ruinsFinanceiro.length} decisões ruins drenaram o caixa`);
         }
 
-        // Demissão em massa: 2 decisões com impacto severo em RH
+        
         const demissoes = history.filter(h =>
             h.efeitos?.rh < -2 &&
             (h.efeitos?.produtividade < 0 || h.efeitos?.processos < 0)
@@ -81,10 +67,10 @@ const StoryEngine = (() => {
             BetaState.addTrauma("Demissões em massa deixaram cicatrizes na cultura.");
         }
 
-        // RH negligenciado: BUG D FIX — verifica as últimas 5 rodadas, não o histórico inteiro.
-        // Antes: boasRH.length === 0 sobre TODO history → se o jogador foi bom com RH na
-        // rodada 2 e negligenciou nas rodadas 3–9, a flag nunca disparava.
-        // Agora: se nas últimas 5 rodadas não houve nenhuma decisão boa com RH → flag.
+        
+        
+        
+        
         const ultimas5RH = history.slice(-5);
         const boasRHRecentes = ultimas5RH.filter(h =>
             h.avaliacao === "boa" && h.efeitos?.rh > 0
@@ -94,21 +80,21 @@ const StoryEngine = (() => {
                 "Nenhuma decisão favoreceu o time nas últimas 5 rodadas");
         }
 
-        // Crescimento saudável: 5 consecutivas boas
+        
         const ultimas5 = history.slice(-5);
         if (ultimas5.length === 5 && ultimas5.every(h => h.avaliacao === "boa")) {
             BetaState.addFlag("crescimento_saudavel");
             BetaState.addConquista("Sequência de 5 decisões excelentes.");
         }
 
-        // Investiu em inovação: 3 efeitos positivos em inovação
+        
         const inovacoes = history.filter(h => (h.efeitos?.inovacao ?? 0) > 0);
         if (inovacoes.length >= 3) {
             BetaState.addFlag("investiu_em_inovacao");
             BetaState.addConquista("Cultura de inovação estabelecida.");
         }
 
-        // Gestor de crise: trauma anterior + maioria dos indicadores recuperados (>= n-2)
+        
         const nInd = Object.keys(indicators).length;
         const recuperados = Object.values(indicators).filter(v => v >= 7).length;
         const traumasExistem = storyState.traumas.length > 0;
@@ -117,7 +103,7 @@ const StoryEngine = (() => {
             BetaState.addConquista("Empresa recuperada de situação crítica.");
         }
 
-        // Gestor esgotado (para narrativa)
+        
         const { gestor } = state;
         if (gestor.esgotamento >= 7 && !storyState.flags.includes("gestor_esgotado")) {
             BetaState.addFlag("gestor_esgotado", "Esgotamento chegou a nível crítico");
@@ -128,7 +114,7 @@ const StoryEngine = (() => {
         _registrarEstilo(choice, state);
     }
 
-    /* ── Helper: reputação de mercado ─────────────────── */
+    
     function _atualizarReputacao(state) {
         const { indicators, storyState } = state;
         const imgExterna   = indicators.reputacao ?? indicators.clientes ?? indicators.marca ?? 0;
@@ -146,7 +132,7 @@ const StoryEngine = (() => {
         if (storyState.reputacaoMercado !== novaRep) BetaState.setReputacao(novaRep);
     }
 
-    /* ── Helper: estilo de gestão (mais preciso) ──────── */
+    
     function _registrarEstilo(choice, state) {
         const efeitos = choice.effects || {};
         const vals    = Object.values(efeitos);
@@ -155,12 +141,12 @@ const StoryEngine = (() => {
         const posCount = vals.filter(v => v > 0).length;
 
         let estilo;
-        // Caótico: mais negativos que positivos e soma negativa
+        
         if (negCount > posCount && soma < 0) {
             estilo = "caotico";
         }
-        // Agressivo: soma alta (indica decisão de alto impacto nos dois sentidos
-        // com saldo líquido positivo alto, ou decisões de grande risco/retorno)
+        
+        
         else if (soma >= 6 || (posCount >= 2 && soma >= 4)) {
             estilo = "agressivo";
         }
@@ -171,9 +157,7 @@ const StoryEngine = (() => {
         BetaState.addEstiloGestao(estilo);
     }
 
-    /* ══════════════════════════════════════════════════
-       3. FILTRO DE CHOICES POR PRÉ-CONDIÇÕES
-    ══════════════════════════════════════════════════ */
+    
     function choicesDisponiveis(round, storyState, indicators) {
         return round.choices.filter(choice => {
             const req = choice.requisitos;
@@ -210,11 +194,9 @@ const StoryEngine = (() => {
         });
     }
 
-    /* ══════════════════════════════════════════════════
-       4. GERAÇÃO DE EPÍLOGO
-    ══════════════════════════════════════════════════ */
+    
     function gerarEpilogo(storyState, history, score, scoreGestor, gestor) {
-        // BUG FIX: garante fallback para saves antigos sem os campos do storyState
+        
         const flags           = storyState?.flags           || [];
         const estiloGestao    = storyState?.estiloGestao    || [];
         const conquistas      = storyState?.conquistas      || [];
@@ -241,11 +223,11 @@ const StoryEngine = (() => {
         const esg    = gestor?.esgotamento ?? 5;
         const capPol = gestor?.capitalPolitico ?? 5;
 
-        // Mandato encerrado antecipadamente
+        
         if (esg >= 9 && score >= 60)    return "😮‍💨 O Gestor que se Perdeu no Caminho";
         if (capPol <= 1 && score >= 55) return "🏛️ Bom para a Empresa, Fatal para o Mandato";
 
-        // Negativos por flags
+        
         if (flags.includes("lideranca_toxica") && flags.includes("demissao_em_massa"))
             return "😤 O Gestor do Caos";
         if (flags.includes("ignorou_seguranca") && reputacao === "toxica")
@@ -255,12 +237,12 @@ const StoryEngine = (() => {
         if (totalRuins > totalBoas && score < 40)
             return "🌪️ O Capitão do Naufrágio";
 
-        // Cruzamento empresa + gestor
+        
         if (score >= 70 && sg >= 70)  return "🌟 O Gestor Completo";
         if (score >= 70 && sg < 45)   return "⚙️ Eficiente, mas a que Custo?";
         if (score < 45 && sg >= 70)   return "🧭 O Gestor que Sobreviveu ao Naufrágio";
 
-        // Positivos por flags
+        
         if (flags.includes("gestor_de_crise") && score >= 65)
             return "🔥 O Fênix da Gestão";
         if (flags.includes("crescimento_saudavel") && flags.includes("investiu_em_inovacao"))
@@ -270,7 +252,7 @@ const StoryEngine = (() => {
         if (flags.includes("investiu_em_inovacao") && score >= 60)
             return "💡 O Inovador Consistente";
 
-        // Por estilo
+        
         if (estilo === "agressivo" && score >= 55) return "⚡ O Gestor de Alta Performance";
         if (estilo === "agressivo" && score < 55)  return "🎲 O Apostador Serial";
         if (estilo === "prudente"  && score >= 60) return "🧩 O Estrategista Cuidadoso";
@@ -287,13 +269,13 @@ const StoryEngine = (() => {
         const rep = gestor?.reputacaoInterna ?? 5;
         const cap = gestor?.capitalPolitico ?? 5;
 
-        // Abertura
+        
         if (score >= 75)      partes.push("A empresa atravessou o período com solidez e saiu fortalecida.");
         else if (score >= 50) partes.push("A empresa sobreviveu, mas carrega marcas das decisões ao longo do caminho.");
         else if (score >= 30) partes.push("A empresa chegou ao fim do período fragilizada, com muito a reconstruir.");
         else                  partes.push("A trajetória foi marcada por erros acumulados que comprometeram o futuro da empresa.");
 
-        // Estilo de gestão
+        
         const estiloTexto = {
             agressivo: "A liderança apostou alto e moveu rápido — às vezes rápido demais.",
             prudente:  "As decisões foram ponderadas, priorizando estabilidade sobre velocidade.",
@@ -301,12 +283,12 @@ const StoryEngine = (() => {
         };
         partes.push(estiloTexto[estilo] || "");
 
-        // Traumas — agora aparecem no epílogo
+        
         if (traumas.length > 0) {
             partes.push(`Momentos difíceis deixaram marca: ${traumas.join(" ")}`.trimEnd());
         }
 
-        // Desfecho pessoal do gestor
+        
         if (esg >= 8) {
             partes.push("O mandato cobrou um preço alto pessoalmente: o esgotamento acumulado deixou marcas que vão além do cargo.");
         } else if (esg <= 3) {
@@ -325,7 +307,7 @@ const StoryEngine = (() => {
             partes.push("A equipe interna reconhece a liderança com respeito genuíno — o ativo mais raro e mais valioso de qualquer gestor.");
         }
 
-        // Cruzamento score empresa × gestor
+        
         if (sg >= 75 && score >= 65) {
             partes.push("Resultado raro: empresa e gestor saíram fortalecidos. Esse alinhamento define uma liderança de referência.");
         } else if (sg < 40 && score >= 65) {
@@ -334,30 +316,30 @@ const StoryEngine = (() => {
             partes.push("O gestor preservou sua posição, mas a empresa ficou para trás — vitória de mandato que poucos reconhecem como tal.");
         }
 
-        // Placar decisório
+        
         if (totalBoas > totalRuins * 2) {
             partes.push(`Decisório consistente: ${totalBoas} boas decisões contra apenas ${totalRuins} equivocadas.`);
         } else if (totalRuins > totalBoas) {
             partes.push(`O placar decisório foi desfavorável: ${totalRuins} decisões problemáticas superaram as ${totalBoas} acertadas.`);
         }
 
-        // Flags negativas
+        
         if (flags.includes("lideranca_toxica"))      partes.push("O ambiente interno foi corroído por decisões que priorizaram resultados acima das pessoas.");
         if (flags.includes("ignorou_seguranca"))     partes.push("Vulnerabilidades de segurança ignoradas criaram riscos que ainda assombram a empresa.");
         if (flags.includes("crescimento_sem_caixa")) partes.push("A ambição de crescer superou o controle financeiro — uma lição cara.");
         if (flags.includes("demissao_em_massa"))     partes.push("Ondas de demissão deixaram cicatrizes profundas na cultura organizacional.");
 
-        // Flags positivas
+        
         if (flags.includes("gestor_de_crise"))       partes.push("Em momentos críticos, a liderança mostrou capacidade de reversão.");
         if (flags.includes("investiu_em_inovacao"))  partes.push("O compromisso com inovação plantou sementes que beneficiarão a empresa nos próximos anos.");
         if (flags.includes("crescimento_saudavel"))  partes.push("Houve um período de excelência decisória que serve como referência para o futuro.");
 
-        // Conquistas
+        
         if (conquistas.length > 0) {
             partes.push(`Marcos conquistados: ${conquistas.join(" · ")}`);
         }
 
-        // Fechamento reputação
+        
         const repTexto = {
             boa:      "O mercado olha para a empresa com respeito.",
             instavel: "A reputação no mercado ainda é incerta — reconstruir confiança será o próximo desafio.",

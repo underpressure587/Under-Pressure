@@ -1,43 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   BETA · LOGÍSTICA · ROUNDS EXCLUSIVOS
-   Sistema de Sorteio:
-     Diagnóstico    → 5 candidatas → 3 selecionadas  (R1–R5)
-     Pressão        → 5 candidatas → 4 selecionadas  (R6–R10)
-     Decisão Crítica→ 5 candidatas → 3 selecionadas  (R11–R15)
-   R10 = Gatilho Estratégico → abre a fase Decisão Crítica
 
-   INDICADORES (8 — exclusivos do setor Logística):
-     financeiro   💰  Caixa / receita / penalidades contratuais
-     sla          📦  Pontualidade / cumprimento de prazo
-     frota        🚛  Estado dos veículos / manutenção
-     tecnologia   💻  TMS / roteirização / sistemas de rastreio
-     rh           👥  Time / rotatividade / engajamento
-     processos    ⚙️   Eficiência operacional / fluxos internos
-     seguranca    🛡️   Acidentes / compliance / auditoria
-     clientes     🤝  Carteira / contratos / retenção
-
-   FASES NARRATIVAS:
-     R1–R5   → Diagnóstico: a extensão real da crise se revela
-     R6–R10  → Pressão: consequências chegam de fora e de dentro
-     R11–R15 → Decisão Crítica: o futuro da operação é definido
-═══════════════════════════════════════════════════════════════════ */
 
 const LogisticaRounds = [
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [0] · Last-Mile Delivery — SLA em colapso
-   Contexto: 420 entregadores, 8 CDs, faturamento R$52M,
-   31% das entregas fora do prazo, cliente que representa 38% da
-   receita com cláusula de SLA no contrato, TMS desatualizado,
-   rotatividade de 68% ao ano.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · A Ligação das 7h da Manhã
-     Contexto: primeiro dia na gestão.
-     O maior cliente liga antes mesmo do expediente começar.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Ligação das 7h da Manhã",
     description: "Seu celular toca às 7h03. É o diretor de operações da GrandeMart — seu maior cliente, responsável por 38% da receita. A voz está tensa: 'Tivemos 17 entregas atrasadas só ontem. Meu contrato prevê multa de 0,5% do faturamento por dia acima de 10% de atraso. Quero uma reunião hoje às 14h com plano de ação.' Você tem até as 9h para se preparar. O que você faz primeiro?",
@@ -76,11 +44,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O TMS que Nunca Funcionou Direito
-     Contexto: 4 dias de diagnóstico.
-     O sistema de roteirização revela um problema estrutural.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O TMS que Nunca Funcionou Direito",
     description: "Após 4 dias de análise, o coordenador de TI apresenta o diagnóstico do sistema de gestão de transporte: o TMS atual tem 7 anos, não integra com GPS em tempo real, gera rotas estáticas que ignoram trânsito e janelas de entrega, e o fornecedor encerrou o suporte em 2022. '60% dos atrasos têm raiz no sistema de roteirização,' ele conclui. 'Mas uma substituição completa leva de 4 a 8 meses.' Como você decide avançar?",
@@ -118,11 +82,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · A Reunião dos Coordenadores
-     Contexto: 2ª semana. O diagnóstico humano chega.
-     A equipe de coordenadores revela o que os dados não mostram.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Reunião dos Coordenadores",
     description: "Você convoca os 8 coordenadores de CD para uma reunião de escuta. O que emerge surpreende: a rotatividade de 68% ao ano entre entregadores criou um gap crítico de experiência nas rotas — entregadores novos levam 40% mais tempo nas mesmas rotas. 'Estamos sempre treinando alguém que vai embora em 3 meses,' diz a coordenadora do CD Leste. 'O salário está abaixo do mercado há 2 anos. A concorrência paga R$300 a mais por mês.' Qual é a sua resposta a esse diagnóstico?",
@@ -161,11 +121,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · A Frota que Envelhece
-     Contexto: 3ª semana. O relatório de manutenção chega.
-     Os números de frota revelam um risco operacional silencioso.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Frota que Envelhece",
     description: "O responsável de manutenção apresenta o diagnóstico da frota: média de 9,2 anos por veículo, 23% com algum nível de irregularidade de manutenção, e o custo de corretiva nos últimos 6 meses superou o custo de preventiva em 3,7x. 'Estamos gastando para apagar incêndio, não para preveni-lo,' ele resume. 'Em 3 dos nossos 8 CDs, os veículos quebram na rua pelo menos uma vez por semana.' Qual é a sua prioridade?",
@@ -203,11 +159,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · O Cliente que Ameaça Sair
-     Contexto: fim da 3ª semana. O diagnóstico externo chega.
-     A GrandeMart formaliza a insatisfação antes do prazo combinado.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Cliente que Ameaça Sair",
     description: "A GrandeMart antecipa a reunião e envia e-mail formal: '27 atrasos nas últimas 2 semanas. Estamos avaliando dois fornecedores alternativos. Temos uma chamada na sexta para decidir se renovamos ou rescindimos o contrato.' Eles representam 38% da sua receita. A reunião de sexta é daqui a 3 dias. O que você leva para essa conversa?",
@@ -246,11 +198,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · O Motorista Acidentado
-     Contexto: 4ª semana. A pressão vem de um evento externo.
-     Um acidente com veículo da frota coloca a empresa na berlinda.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Motorista Acidentado",
     description: "Uma van de entrega colide com um carro de passeio na Marginal Pinheiros. O motorista da empresa está bem, mas o outro veículo teve perda total e o condutor foi hospitalizado. A perícia vai apontar que a van tinha um defeito de freio registrado na checklist há 11 dias, sem resolução. O acidente vai virar notícia local. Um repórter já ligou para a assessoria perguntando sobre a manutenção da frota. Como você age nas próximas 2 horas?",
@@ -289,11 +237,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · O Sindicato Bate à Porta
-     Contexto: 5ª semana. A pressão vem de dentro.
-     O sindicato dos transportadores abre negociação formal.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Sindicato Bate à Porta",
     description: "O sindicato dos transportadores solicita reunião formal e apresenta uma pauta: reajuste salarial de 18%, seguro de vida melhorado, substituição de veículos com mais de 10 anos e implantação de pausas de descanso formalizadas. 'Temos 180 assinaturas de motoristas dispostos a cruzar os braços se não houver resposta em 10 dias,' diz o representante. O jurídico trabalhista confirma: a pauta é legítima e a empresa está vulnerável em pelo menos dois pontos.",
@@ -332,11 +276,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · O Contrato que Você Não Pode Perder
-     Contexto: 6ª semana. Uma oportunidade e um risco chegam juntos.
-     Um segundo grande cliente entra em contato — mas há um porém.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Contrato que Você Não Pode Perder",
     description: "A FreshBox, startup de e-commerce de alimentos frescos, quer fechar um contrato de R$8M anuais — o que reduziria a dependência da GrandeMart de 38% para 22% da receita. A reunião comercial foi ótima. Mas o diretor de operações deles é direto: 'Precisamos de SLA de 24h em 3 cidades e rastreamento em tempo real para o cliente final. Vocês conseguem entregar isso em 60 dias?' Seu time diz que, com a operação atual, levaria 90 dias. O que você responde?",
@@ -374,11 +314,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · A Auditoria Surpresa
-     Contexto: 7ª semana. Pressão regulatória chegando.
-     O Detran anuncia fiscalização nas frotas comerciais da região.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Auditoria Surpresa",
     description: "O Detran anuncia que realizará blitz em frotas comerciais da Grande São Paulo nos próximos 15 dias como parte de uma operação estadual. Seu responsável de frota é direto: 'Temos 34 veículos com alguma irregularidade documental ou de manutenção. Se pegarem 10 deles na blitz, temos multa, apreensão e possível interdição dos CDs envolvidos.' Você tem 15 dias. O que você prioriza?",
@@ -417,11 +353,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO / GATILHO ESTRATÉGICO · O Ultimato da GrandeMart
-     Contexto: 8ª semana. O momento decisivo chega.
-     A GrandeMart apresenta o ultimato que abre o ato final.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Ultimato da GrandeMart",
     description: "A GrandeMart convoca uma reunião de alto nível. Seu diretor de supply chain é direto: 'Temos uma proposta de outro operador logístico com SLA de 98% garantido e rastreamento em tempo real. Para renovar com vocês em 60 dias, precisamos de três coisas: novo TMS integrado ao nosso sistema, rastreamento GPS para o cliente final e SLA acima de 95% nas próximas 4 semanas. Se não, rescindimos o contrato.' Você sabe que atender os três pontos em 4 semanas é extremamente desafiador. O que você decide?",
@@ -460,11 +392,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · A Escolha do Novo TMS
-     Contexto: 9ª semana. A decisão de tecnologia que define o futuro.
-     Três fornecedores em mesa, cada um com uma proposta diferente.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Escolha do Novo TMS",
     description: "Três fornecedores apresentaram propostas de TMS: (A) solução robusta, 6 meses de implementação, R$2,8M de contrato, integração nativa com o sistema da GrandeMart; (B) solução SaaS rápida, 6 semanas de implantação, R$180k/ano, mas sem integração nativa — precisa de desenvolvimento adicional; (C) parceria com startup de ex-engenheiros da Loggi, implementação em 4 semanas, R$90k/ano, sem histórico de cliente enterprise. Você tem que decidir hoje.",
@@ -502,11 +430,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · A Reestruturação da Equipe
-     Contexto: 10ª semana. A decisão mais difícil sobre pessoas.
-     Crescer mantendo a equipe atual ou reestruturar para o novo modelo?
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Reestruturação da Equipe",
     description: "Com o novo TMS, a operação vai mudar profundamente. O consultor de RH apresenta o diagnóstico: 3 dos 8 coordenadores de CD não têm perfil para gerir operação baseada em dados e tecnologia. 'Eles são excelentes na operação tradicional,' ele diz, 'mas no novo modelo vão ser um gargalo.' Ao mesmo tempo, você precisa de 2 analistas de dados operacionais que o mercado não tem em abundância. Como você decide sobre o time?",
@@ -545,11 +469,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · A Diversificação da Carteira
-     Contexto: 11ª semana. A decisão estratégica de longo prazo.
-     Reduzir a dependência da GrandeMart ou focar e crescer com ela?
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Diversificação da Carteira",
     description: "Com a operação se estabilizando, você precisa decidir o rumo estratégico: a GrandeMart, mesmo renovando, ainda vai representar 30% da receita. O diretor comercial apresenta duas estratégias opostas: (A) Ir a fundo na GrandeMart — tornar-se o operador mais integrado que eles têm, buscar 100% do volume deles; (B) Diversificar agressivamente — fechar pelo menos 8 contratos novos de R$2-5M nos próximos 12 meses para chegar a um teto de 15% por cliente.",
@@ -588,11 +508,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · O Investidor Aparece
-     Contexto: 12ª semana. Uma oportunidade muda o cenário.
-     Um fundo de private equity propõe entrada na empresa.
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Investidor Aparece",
     description: "Um fundo de PE especializado em logística propõe adquirir 40% da empresa por R$18M — o que daria capital para renovar a frota integralmente, implementar o TMS da melhor opção e contratar a equipe analítica necessária. Em troca: assento no conselho, meta de crescimento de 35% ao ano e cláusula de saída em 4 anos. O sócio-fundador quer ouvir sua recomendação antes de responder.",
@@ -632,11 +548,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO FINAL · O Futuro da Operação
-     Contexto: 13ª semana. O horizon de longo prazo.
-     Onde estará a empresa em 3 anos?
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Futuro da Operação",
     description: "Com a operação estabilizada, o contrato GrandeMart renovado e o capital ou a organização interna alinhados, você precisa definir o posicionamento estratégico para os próximos 3 anos. Onde a empresa vai competir e como vai se diferenciar num mercado cada vez mais tecnológico e competitivo?",
@@ -673,17 +585,10 @@ const LogisticaRounds = [
 
 ],
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [1] · Cadeia do Frio Refrigerada — Falha na cadeia do frio
-   Contexto: 190 colaboradores, 87 veículos refrigerados, 3 armazéns
-   SP-RJ-BH, R$38M faturamento, falha de sensor = R$620k de
-   medicamentos devolvidos, auditoria farmacêutica acionada.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · A Devolução de R$ 620 mil
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Devolução de R$ 620 mil",
     description: "Você assume a gestão no dia seguinte à devolução de R$620 mil em medicamentos pela rede farmacêutica FarmaPlus. O diretor comercial te chama: 'Eles ativaram a cláusula de auditoria. Temos 15 dias para apresentar um plano de correção antes que decidam pela rescisão. Esse contrato vale R$9M anuais.' Qual é o seu primeiro movimento?",
@@ -722,9 +627,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O Mapa dos Sensores
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Mapa dos Sensores",
     description: "O responsável de qualidade apresenta o levantamento: 18% da frota refrigerada — 16 veículos de 87 — tem sistemas de monitoramento de temperatura desatualizados ou com falhas documentadas. 'Eu reportei isso há 4 meses,' ele diz com voz tensa. 'O investimento foi adiado duas vezes.' O problema é sistêmico, não isolado. Como você responde a esse diagnóstico interno?",
@@ -763,9 +666,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · O Protocolo que Não Existia
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Protocolo que Não Existia",
     description: "O auditor da FarmaPlus realiza a primeira visita e faz uma pergunta que trava a sala: 'Qual é o protocolo de ação quando um sensor de temperatura detecta variação fora do parâmetro durante uma entrega?' Silêncio. A empresa não tem um protocolo formal documentado. O motorista que estava no veículo na falha conta que ligou para o supervisor, mas não havia um procedimento claro do que fazer. Como você responde ao auditor?",
@@ -804,9 +705,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · O Custo da Certificação
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Custo da Certificação",
     description: "Para atender exigências da FarmaPlus e de outros clientes do setor, o consultor de qualidade recomenda buscar a certificação ISO 9001 adaptada para cadeia do frio. 'Com isso, vocês passam de fornecedor sob vigilância para fornecedor certificado — abre contratos com hospitais e laboratórios que só trabalham com certificados.' O custo: R$280k e 9 meses de processo. O CFO alerta: 'O caixa está apertado. Temos outras prioridades urgentes.' Como você decide?",
@@ -845,9 +744,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · A Decisão da FarmaPlus
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Decisão da FarmaPlus",
     description: "No 15º dia, a FarmaPlus se reúne com você para comunicar a decisão sobre o contrato. Eles viram as ações tomadas: atualização dos sensores em andamento, protocolo de temperatura criado e treinamento iniciado. Mas o diretor de supply chain diz: 'Avançamos positivamente. Para continuar com vocês, precisamos de um SLA de temperatura com garantia contratual e um dashboard de monitoramento que nossa equipe acessa em tempo real.' São exigências técnicas que você ainda não tem. Como você responde?",
@@ -886,9 +783,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · A ANVISA Bate à Porta
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A ANVISA Bate à Porta",
     description: "A FarmaPlus reportou o incidente à ANVISA como parte do protocolo de farmacovigilância. Um fiscal da ANVISA liga para agendar uma vistoria nos seus armazéns frigorificados em 5 dias. O consultor de qualidade é claro: 'Estamos 60% prontos para uma vistoria. Há registros de temperatura incompletos, um armazém com equipamento fora da especificação e a documentação de treinamento está desatualizada.' O que você prioriza?",
@@ -927,9 +822,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · O Armazém que Precisa Parar
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Armazém que Precisa Parar",
     description: "A vistoria da ANVISA identificou que o armazém de São Paulo está com 3 câmaras frias operando fora da faixa de temperatura especificada para medicamentos. O fiscal emite uma notificação: ou a empresa faz a adequação em 48 horas ou o armazém será interditado. As 3 câmaras representam 40% da capacidade do armazém SP — e há 12 clientes com entregas programadas nos próximos 3 dias. Como você age?",
@@ -968,9 +861,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · O Segurador Revisa a Apólice
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Segurador Revisa a Apólice",
     description: "A seguradora que cobre a carga perecível notifica que, após o incidente dos R$620 mil, vai revisar a apólice. As novas condições propostas: aumento de 65% no prêmio anual ou inclusão de franquia de R$300k por sinistro. O CFO alerta: 'Com o prêmio mais alto, a margem do segmento refrigerado cai para 4%. Com a franquia, o risco por sinistro fica muito alto para o nosso caixa atual.' Qual é a sua resposta à seguradora?",
@@ -1009,9 +900,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · O Técnico que Quer Sair
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Técnico que Quer Sair",
     description: "Rogério, o responsável de qualidade que identificou o problema dos sensores 4 meses antes e cujo alerta foi ignorado, pede demissão. Em conversa privada ele é direto: 'Fiz a coisa certa. O problema foi ignorado. Depois da crise, todo mundo olhou para mim como se eu fosse o culpado.' Ele tem 15 anos de experiência em cadeia do frio e conhece cada câmara, cada veículo, cada protocolo da empresa. Perdê-lo agora seria um golpe técnico e moral. Como você responde?",
@@ -1050,9 +939,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO / GATILHO · A Proposta de Parceria
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Proposta de Parceria",
     description: "Uma rede hospitalar de grande porte — com 8 hospitais em SP e MG — entra em contato. Eles querem terceirizar a logística de insumos cirúrgicos e medicamentos de alto custo. O contrato potencial: R$14M anuais, 3 anos, cláusula de SLA de 99,5% e exigência de certificação ISO e dashboard de monitoramento. 'Estamos avaliando três empresas. A decisão é em 45 dias.' É a maior oportunidade da história da empresa — e também o teste mais exigente. O que você responde?",
@@ -1091,9 +978,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · A Certificação ou os Sensores?
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Certificação ou os Sensores?",
     description: "Com o caixa sob pressão, você precisa escolher onde concentrar R$400k disponíveis nos próximos 90 dias. O consultor apresenta duas opções excludentes: (A) Completar a atualização de todos os 87 sensores de temperatura da frota — resolve 100% da conformidade técnica imediata; (B) Iniciar o processo de certificação ISO para cadeia do frio — abre o mercado hospitalar e farmacêutico premium mas leva 9 meses. Qual é a sua escolha?",
@@ -1131,9 +1016,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · O Modelo de Precificação
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Modelo de Precificação",
     description: "Com a operação se estabilizando, o diretor comercial apresenta um dilema: os contratos atuais foram negociados há 3 anos com margens de 12%. Com o aumento de custo de energia (22%), seguros (40%) e manutenção, a margem real caiu para 4,8%. 'Precisamos reajustar preços ou cortar custos. Mas reajuste pode perder clientes e corte de custos pode afetar qualidade.' O que você decide?",
@@ -1172,9 +1055,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · A Expansão para o Rio
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Expansão para o Rio",
     description: "Um cliente farmacêutico de médio porte quer expandir o contrato atual para incluir cobertura no Rio de Janeiro, mas você não tem armazém frigorificado no RJ. Três opções na mesa: (A) alugar um galpão e montar o armazém em 90 dias; (B) parceria com um operador local do RJ; (C) recusar e indicar o cliente para um parceiro referenciado no RJ. O contrato vale R$3,2M adicionais por ano. O que você decide?",
@@ -1212,9 +1093,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · O Contrato com o Hospital
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Contrato com o Hospital",
     description: "A rede hospitalar voltou. Depois de 90 dias, eles reavaliam a empresa e reconhecem a evolução. A proposta está na mesa: R$14M por 3 anos, mas agora com condições ajustadas — SLA de 99% (não mais 99,5%) e início em 120 dias. A empresa ainda não concluiu a certificação ISO, mas está com 70% do processo. O consultor de qualidade diz: 'Provavelmente chegamos na certificação em 60 a 75 dias.' O sócio-fundador quer a sua posição.",
@@ -1253,9 +1132,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO FINAL · O Posicionamento Estratégico
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Posicionamento Estratégico",
     description: "Com a FarmaPlus reconquistada, a certificação encaminhada e o contrato hospitalar em negociação, você precisa definir o posicionamento estratégico da empresa para os próximos 3 anos. O mercado de cadeia do frio está crescendo, mas também está se tornando mais regulado e competitivo. Onde a empresa vai competir e como?",
@@ -1291,18 +1168,10 @@ const LogisticaRounds = [
 
 ],
 
-/* ══════════════════════════════════════════════════════════════════
-   HISTÓRIA [2] · Fulfillment E-commerce — Capacidade no Limite
-   Contexto: 2 CDs em Campinas, 310 funcionários, R$45M faturamento,
-   marketplace de grande porte elevou o volume em 62%, CD operando
-   a 110% da capacidade, pedidos com problema saltaram de 1,2% para
-   4,7% (limite contratual: 2%), marketplace emitiu alerta formal.
-══════════════════════════════════════════════════════════════════ */
+
 [
 
-  /* ═══════════════════════════════════════════════════════
-     R1 · DIAGNÓSTICO · O Painel do Marketplace
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Painel do Marketplace",
     description: "Você acessa o painel de performance do marketplace pela primeira vez como gestor responsável. Os dados são brutais: 4,7% de pedidos com problema (acima do limite de 2%), tempo médio de despacho em 5,2 horas (vs. SLA de 4 horas), e um alerta vermelho piscando: 'Performance em avaliação — rescisão possível se índice não retornar a 2% em 21 dias.' O que você faz primeiro?",
@@ -1340,9 +1209,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R2 · DIAGNÓSTICO · O Layout que Não Escala
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Layout que Não Escala",
     description: "Um consultor de operações passa 2 dias observando o CD e apresenta o diagnóstico: o layout foi projetado para 12 mil pedidos/dia e está processando 19 mil. Os corredores de picking estão com congestionamento nas horas de pico, o endereçamento dos produtos não reflete o giro real (os mais vendidos ficam nos pontos mais distantes) e o processo de conferência cria um gargalo que atrasa o despacho em 40 minutos por lote. Qual é a sua prioridade de intervenção?",
@@ -1381,9 +1248,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R3 · DIAGNÓSTICO · O Time Exausto
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Time Exausto",
     description: "A supervisora do turno noturno pede uma reunião urgente. Ela apresenta dados que havia levantado por conta própria: 23% de absenteísmo nos últimos 15 dias (vs. média histórica de 8%), 3 acidentes de trabalho leves no mesmo período, e uma pesquisa informal com 40 operadores mostrando que 68% estão 'muito cansados' ou 'extremamente cansados'. 'As horas extras viraram a regra há 6 semanas. As pessoas estão no limite físico.' Como você responde?",
@@ -1422,9 +1287,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R4 · DIAGNÓSTICO · O WMS que Não Foi
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O WMS que Não Foi",
     description: "O coordenador de TI revela que um projeto de implementação de WMS (Warehouse Management System) foi iniciado 14 meses atrás, chegou a 65% de implementação e foi paralisado por restrição orçamentária. 'Se tivéssemos o WMS completo, teríamos reduzido o erro de separação em pelo menos 70%,' ele explica. 'O sistema atual não tem integração em tempo real com o painel do marketplace, o que significa que somos os últimos a saber quando um pedido está com problema.' Como você decide sobre o WMS?",
@@ -1463,9 +1326,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R5 · DIAGNÓSTICO · O Dia 21 do Prazo
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Dia 21 do Prazo",
     description: "No 21º dia, o painel do marketplace mostra: taxa de pedidos com problema em 2,8% — melhor do que os 4,7%, mas ainda acima do limite contratual de 2%. Você tem uma reunião em 2 horas com o gerente de contas do marketplace. O módulo de integração está ativo, o endereçamento foi reorganizado e os temporários foram contratados. A trajetória é positiva — mas você não cruzou a linha. O que você apresenta na reunião?",
@@ -1504,9 +1365,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R6 · PRESSÃO · O Segundo Marketplace Aparece
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Segundo Marketplace Aparece",
     description: "Enquanto você tenta estabilizar a operação para o primeiro marketplace, um segundo — menor mas em crescimento acelerado — propõe um contrato de R$6M anuais com início imediato. 'Estamos insatisfeitos com nosso operador atual e queremos fechar em 7 dias,' diz o diretor de operações deles. Seu time operacional é unânime: 'Não temos capacidade agora.' O diretor comercial é igualmente unânime: 'Não podemos perder essa janela.' Como você decide?",
@@ -1545,9 +1404,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R7 · PRESSÃO · O Sinistro no CD
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Sinistro no CD",
     description: "Uma empilhadeira colide com uma estante de armazenagem no CD principal. Resultado: 3 operadores com ferimentos leves, 400 SKUs danificados e o corredor B completamente bloqueado por 72 horas. O corredor B é responsável por 30% do volume de separação do CD. O marketplace tem 1.200 pedidos programados para despacho nas próximas 24 horas. Como você age?",
@@ -1586,9 +1443,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R8 · PRESSÃO · A Demissão do Gerente de CD
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Demissão do Gerente de CD",
     description: "O gerente do CD principal — 9 anos de casa, domina cada processo da operação — pede demissão. Motivo revelado na conversa de saída: 'Fui ignorado quando alertei que o CD não estava pronto para absorver o marketplace. Agora todo mundo me trata como culpado pelo problema que eu tentei evitar.' Ele tem 3 propostas de empresas concorrentes. Como você responde?",
@@ -1627,9 +1482,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R9 · PRESSÃO · O Pico do Black Friday
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Pico do Black Friday",
     description: "O marketplace confirma: o Black Friday vai triplicar o volume de pedidos por 5 dias — de 19 mil para 57 mil pedidos/dia. A operação atual consegue processar no máximo 22 mil com qualidade. A data é daqui a 45 dias. O marketplace é claro: 'Quem não tiver capacidade de pico vai perder os lojistas para quem tiver.' Você tem 45 dias e um CD que ainda não atingiu 2% de SLA consistente. Como você planeja?",
@@ -1668,9 +1521,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R10 · PRESSÃO / GATILHO · O Resultado do Black Friday
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Resultado do Black Friday",
     description: "O Black Friday passou. Os dados chegam: taxa de pedidos com problema em 1,7% — abaixo do limite de 2% pela primeira vez. O marketplace envia uma mensagem do diretor de operações: 'Vocês superaram as expectativas no pico. Queremos conversar sobre expansão do contrato e sobre incluir vocês como operador preferencial para um novo vertical que estamos lançando.' É o reconhecimento que a empresa precisava — e também um novo desafio estratégico. Como você responde?",
@@ -1709,9 +1560,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R11 · DECISÃO CRÍTICA · O Terceiro CD
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Terceiro CD",
     description: "Com o marketplace propondo expansão de 40% de volume e o segundo marketplace em ramp-up, a empresa definitivamente precisa de um terceiro CD. Três opções no radar: (A) Construir próprio em Jundiaí — R$3,2M, 10 meses, 100% controle; (B) Alugar galpão já configurado em Sorocaba — R$280k/ano + R$400k de adaptação, 3 meses; (C) Parceria com um operador de CD existente em São José dos Campos que tem capacidade ociosa.",
@@ -1749,9 +1598,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R12 · DECISÃO CRÍTICA · A Automação
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Automação",
     description: "O WMS completado gerou dados que revelam uma oportunidade: 35% do tempo dos operadores é gasto em movimentações que um sistema de esteiras e classificadoras automatizadas poderia eliminar. Uma empresa de automação logística propõe um projeto: R$2,1M de investimento, payback em 28 meses, capacidade do CD salta de 22 mil para 35 mil pedidos/dia. O CFO alerta: 'Temos capital para isso — ou para o terceiro CD, mas não para os dois.' O que você prioriza?",
@@ -1790,9 +1637,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R13 · DECISÃO CRÍTICA · O Modelo de Negócio
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "O Modelo de Negócio",
     description: "Com 2 marketplaces e capacidade em expansão, o conselheiro externo levanta uma questão estratégica: 'A empresa cobra por pedido processado. Mas o mercado está indo para contratos de capacidade dedicada com receita mensal fixa. O modelo atual tem variabilidade de receita que dificulta o planejamento. É hora de mudar o modelo de precificação?' O diretor financeiro concorda. O diretor comercial tem dúvidas. Qual é o seu posicionamento?",
@@ -1829,9 +1674,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R14 · DECISÃO CRÍTICA · A Oferta de Aquisição
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Oferta de Aquisição",
     description: "O maior grupo de fulfillment do Brasil apresenta uma proposta de aquisição: R$38M por 70% da empresa. O valuation implícito é 8x o EBITDA atual — considerado alto para o setor. A proposta inclui manutenção do time de gestão por 3 anos e acesso imediato à rede de 12 CDs em todo o Brasil. O sócio-fundador quer a sua opinião antes de decidir. O que você recomenda?",
@@ -1871,9 +1714,7 @@ const LogisticaRounds = [
     ]
   },
 
-  /* ═══════════════════════════════════════════════════════
-     R15 · DECISÃO FINAL · A Visão de Longo Prazo
-  ═══════════════════════════════════════════════════════ */
+  
   {
     title: "A Visão de Longo Prazo",
     description: "Com o primeiro marketplace estabilizado, o segundo em ramp-up e a expansão de capacidade encaminhada, você precisa definir onde a empresa quer estar em 3 anos. O setor de fulfillment está em transformação: automação, IA para previsão de demanda, expansão do social commerce e pressão por entregas cada vez mais rápidas. Qual é o posicionamento estratégico que você defende?",
@@ -1910,4 +1751,4 @@ const LogisticaRounds = [
 
 ]
 
-]; // fim LogisticaRounds
+]; 

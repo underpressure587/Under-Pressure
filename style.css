@@ -1,13 +1,10 @@
-/* ═══════════════════════════════════════════════════════
-   UNDER-PRESSURE · v5.2 — Design Escuro Elegante
-   Temas por setor via [data-sector] no #app
-═══════════════════════════════════════════════════════ */
+
 
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
 
-/* ── TOKENS BASE ────────────────────────────────────── */
+
 :root {
-  /* Fundo */
+  
   --bg:      #0D0F14;
   --bg1:     #13161D;
   --bg2:     #181C25;
@@ -16,12 +13,12 @@
   --surface: rgba(255,255,255,.04);
   --surface2:rgba(255,255,255,.07);
 
-  /* Bordas */
+  
   --line:    rgba(255,255,255,.06);
   --line2:   rgba(255,255,255,.10);
   --line3:   rgba(255,255,255,.18);
 
-  /* Tema padrão (dourado) */
+  
   --s-primary:   #D4A853;
   --s-secondary: #F0C878;
   --s-bg-accent: rgba(212,168,83,.10);
@@ -30,13 +27,13 @@
   --s-gradient:  linear-gradient(135deg,#D4A853,#F0C878);
   --s-text:      #D4A853;
 
-  /* Texto */
+  
   --t1:  #F0EDE8;
   --t2:  #9A97A0;
   --t3:  #52505A;
   --t4:  #3A3840;
 
-  /* Status */
+  
   --ok:    #2ECC71;
   --ok2:   #27AE60;
   --warn:  #F39C12;
@@ -46,23 +43,23 @@
   --pur:   #9B59B6;
   --pur2:  #8E44AD;
 
-  /* Tipografia */
+  
   --serif: 'Syne', system-ui, sans-serif;
   --sans:  'Inter', system-ui, sans-serif;
 
-  /* Espaços */
+  
   --sp1:4px; --sp2:16px; --sp3:24px; --sp4:32px;
 
-  /* Raios */
+  
   --r:8px; --r2:12px; --r3:18px; --rpill:999px;
 
-  /* Sombras */
+  
   --sh1: 0 2px 12px rgba(0,0,0,.4);
   --sh2: 0 4px 24px rgba(0,0,0,.5);
   --sh3: 0 8px 40px rgba(0,0,0,.6);
 }
 
-/* ── TEMAS POR SETOR ───────────────────────────────── */
+
 #app[data-sector="tecnologia"] {
   --s-primary:   #5B8DEF;
   --s-secondary: #7BA7FF;
@@ -119,10 +116,10 @@
   --bg3:  #281828;
 }
 
-/* ── TEMAS POR SETOR — overlays fora do #app ───────── */
-/* _abrirOverlay move o elemento pro document.body,     */
-/* então o seletor #app não cobre mais. Duplicamos as   */
-/* vars para .overlay[data-sector] aplicar o tema.      */
+
+
+
+
 .overlay[data-sector="tecnologia"] {
   --s-primary:   #5B8DEF;
   --s-secondary: #7BA7FF;
@@ -176,11 +173,10 @@
   --bg3:  #281828;
 }
 
-/* ── RESET ─────────────────────────────────────────── */
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-/* remove o "flash" cinza/azul padrão do Android/Chrome ao tocar em
-   qualquer elemento clicável (botões, divs com onclick, links etc.) */
+
 *{ -webkit-tap-highlight-color: transparent; }
 
 html,body{
@@ -188,10 +184,10 @@ html,body{
   overflow:hidden; -webkit-font-smoothing:antialiased;
   background:#07080f;
 }
-/* garante que position:fixed funcione em todos os WebViews */
+
 html { -webkit-overflow-scrolling: auto; }
 
-/* ── WALLPAPER ANIMADO ─────────────────────────────── */
+
 body::before{
   content:''; position:fixed; inset:0; z-index:0;
   background:
@@ -208,7 +204,7 @@ body::before{
   100% { filter: hue-rotate(-10deg) brightness(.95); }
 }
 
-/* Grade de pontos */
+
 body::after{
   content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
   background-image: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
@@ -217,7 +213,7 @@ body::after{
 }
 @keyframes gridFade{ 0%{opacity:.3} 100%{opacity:.7} }
 
-/* ── FIREBASE STATUS ───────────────────────────────── */
+
 .firebase-status {
   display: flex; align-items: center; gap: 5px;
   padding: 4px 10px; border-radius: var(--rpill);
@@ -250,14 +246,14 @@ body::after{
   50%      { opacity: 1;  transform: scale(1.1); }
 }
 
-/* ── APP ────────────────────────────────────────────── */
+
 #app{
   position:relative; z-index:1; width:100%; max-width:430px;
   height:100dvh; margin:0 auto; background:var(--bg);
   box-shadow:var(--sh3), 0 0 80px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.06);
   transition: background .5s ease;
 }
-/* Mobile: ocupa tela toda sem remover box-shadow no desktop */
+
 @media (max-width:430px){
   #app{
     max-width:100%;
@@ -265,23 +261,18 @@ body::after{
   }
 }
 
-/* Glow de setor no app */
+
 #app::before{
   content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
   background: radial-gradient(ellipse 60% 30% at 100% 0%, var(--s-glow) 0%, transparent 70%);
   transition: background .5s ease;
 }
 
-/* ── SCREENS ────────────────────────────────────────── */
+
 .screen{
   display:none; position:absolute; inset:0; flex-direction:column;
   overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
-  /* content-visibility:hidden força o navegador a descartar a camada de
-     composição/render desta tela enquanto inativa, evitando que conteúdo
-     "fantasma" de uma tela anterior (especialmente com animação contínua,
-     como o botão da home) vaze visualmente durante a transição para a
-     próxima tela. Sem isso, alguns navegadores Android mantêm a textura
-     da última pintura em cache na GPU por um frame extra. */
+  
   content-visibility: hidden;
 }
 .screen.active{ display:flex; z-index:10; content-visibility: visible; }
@@ -300,7 +291,7 @@ body::after{
   animation: screenBack .3s cubic-bezier(.22,.68,0,1.2) !important;
 }
 
-/* ── BOTÕES ─────────────────────────────────────────── */
+
 .btn{
   display:flex; align-items:center; justify-content:center; gap:8px;
   border:none; cursor:pointer; font-family:var(--sans); font-weight:600;
@@ -388,7 +379,7 @@ body::after{
 }
 .btn-back:active { transform: translateX(-1px) scale(.95); }
 
-/* ── INPUT ──────────────────────────────────────────── */
+
 .input-field{
   width:100%; background:var(--bg2); border:1px solid var(--line2);
   border-radius:var(--r2); padding:14px var(--sp2); font-size:.95rem;
@@ -397,16 +388,14 @@ body::after{
 .input-field:focus{ border-color:var(--s-primary); box-shadow:0 0 0 3px var(--s-bg-accent); }
 .input-field::placeholder{ color:var(--t3); }
 
-/* ════════════════════════════════════════════════════
-   LOGIN
-════════════════════════════════════════════════════ */
+
 #screen-login {
   justify-content: space-between;
   background: var(--bg);
   overflow: hidden;
 }
 
-/* Gradiente superior sutil no tema do setor */
+
 #screen-login::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
   background:
@@ -437,7 +426,7 @@ body::after{
   gap: 0;
 }
 
-/* Logo principal */
+
 .login-logo-img {
   width: 188px; height: 188px;
   object-fit: contain; margin-bottom: 20px;
@@ -448,7 +437,7 @@ body::after{
     drop-shadow(0 6px 20px rgba(0,0,0,.7));
   animation: logoFloat 6s ease-in-out infinite;
 }
-/* Logo legada SVG — mantida por compatibilidade */
+
 .login-logo {
   width: 76px; height: 92px; margin-bottom: var(--sp3);
   filter: drop-shadow(0 0 20px var(--s-glow)) drop-shadow(0 4px 14px rgba(0,0,0,.5));
@@ -500,7 +489,7 @@ body::after{
   display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;
 }
 
-/* Botão primário na login ganha glow extra */
+
 #screen-login .btn-primary {
   box-shadow: 0 4px 24px var(--s-glow), 0 2px 8px rgba(0,0,0,.4);
   letter-spacing: .08em;
@@ -511,9 +500,7 @@ body::after{
 }
 
 
-/* ════════════════════════════════════════════════════
-   AUTH — Login / Cadastro / Recuperar Senha
-════════════════════════════════════════════════════ */
+
 #screen-auth {
   background: var(--bg);
   justify-content: flex-start;
@@ -539,7 +526,7 @@ body::after{
   min-height: 100%; box-sizing: border-box;
 }
 
-/* Vitrine lateral — oculta no mobile, ativada só no layout desktop */
+
 .auth-showcase { display: none; }
 
 .auth-topbar {
@@ -553,7 +540,7 @@ body::after{
   letter-spacing: .2em; text-transform: uppercase; color: var(--t3);
 }
 
-/* Logo pequena centralizada */
+
 .auth-logo-row {
   display: flex; justify-content: center;
   margin-bottom: 20px;
@@ -569,7 +556,7 @@ body::after{
   animation: logoFloat 6s ease-in-out infinite;
 }
 
-/* Abas */
+
 .auth-tabs {
   display: flex; gap: 3px;
   background: var(--bg2); border: 1px solid var(--line);
@@ -589,7 +576,7 @@ body::after{
 }
 .auth-tab:hover:not(.active) { color: var(--t2); }
 
-/* Formulário */
+
 .auth-form {
   display: flex; flex-direction: column;
   gap: 18px; flex: 1;
@@ -634,7 +621,7 @@ body::after{
 }
 .auth-link:hover { opacity: 1; text-decoration: underline; }
 
-/* Erro / Sucesso */
+
 .auth-err {
   font-size: .78rem; color: var(--err);
   background: rgba(231,76,60,.07);
@@ -654,7 +641,7 @@ body::after{
 
 .auth-submit { margin-top: 4px; position: relative; }
 
-/* Spinner */
+
 .spinner-ring {
   display: inline-block;
   width: 14px; height: 14px;
@@ -671,7 +658,7 @@ body::after{
   animation: spinAuth .8s linear infinite;
 }
 
-/* Divisor */
+
 .auth-divider {
   display: flex; align-items: center; gap: 12px;
   color: var(--t3); font-size: .68rem;
@@ -683,7 +670,7 @@ body::after{
   background: linear-gradient(90deg, transparent, var(--line2), transparent);
 }
 
-/* Botão Google */
+
 .auth-google-btn {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   background: var(--bg2); border: 1px solid var(--line2);
@@ -697,7 +684,7 @@ body::after{
   box-shadow: 0 0 14px var(--s-glow);
 }
 
-/* Especificidade maior para sobrescrever .btn e .btn-ghost */
+
 .btn.btn-ghost.auth-guest-btn,
 .auth-guest-btn {
   width: 100% !important;
@@ -716,7 +703,7 @@ body::after{
   box-shadow: none !important; transform: none !important;
 }
 
-/* Recuperar senha */
+
 .auth-recover-head { text-align: center; margin-bottom: 8px; }
 .auth-recover-icon { font-size: 2.4rem; margin-bottom: 14px; display: block; }
 .auth-recover-title {
@@ -728,9 +715,7 @@ body::after{
 
 
 
-/* ════════════════════════════════════════════════════
-   HOME — tela principal
-════════════════════════════════════════════════════ */
+
 #screen-home {
   background: var(--bg);
   overflow: hidden;
@@ -740,7 +725,7 @@ body::after{
   height: 100%;
 }
 
-/* Gradiente atmosférico de fundo — respira com o setor */
+
 #screen-home::before {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background:
@@ -751,7 +736,7 @@ body::after{
   opacity: .9;
 }
 
-/* ── HEADER ───────────────────────────────────────── */
+
 .home-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px var(--sp2);
@@ -761,7 +746,7 @@ body::after{
   border-bottom: 1px solid var(--line);
   flex-shrink: 0; z-index: 2; position: relative;
 }
-/* Linha dourada fina abaixo do header */
+
 .home-header::after {
   content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent 0%, var(--s-bd-accent) 40%, var(--s-bd-accent) 60%, transparent 100%);
@@ -782,14 +767,14 @@ body::after{
   -webkit-touch-callout: none;
   user-select: none;
 }
-/* Img do avatar: sem menu de contexto ao segurar */
+
 .home-avatar img {
   width: 100%; height: 100%;
   object-fit: cover; border-radius: 50%;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-  pointer-events: none; /* impede right-click e long-press na imagem */
+  pointer-events: none; 
   draggable: false;
 }
 .home-id:hover .home-avatar {
@@ -809,7 +794,7 @@ body::after{
 
 .home-tools { display: flex; gap: 6px; align-items: center; }
 
-/* ── BADGE FIREBASE STATUS ────────────────────────── */
+
 .firebase-status {
   display: flex; align-items: center; gap: 5px;
   padding: 5px 10px; border-radius: var(--rpill);
@@ -849,7 +834,7 @@ body::after{
   50%      { opacity: 1;   transform: scale(1.15); }
 }
 
-/* ── BOTÕES GHOST (inbox, ?, config) ──────────────── */
+
 .btn-ghost {
   background: rgba(255,255,255,.04);
   border: 1px solid var(--line2); color: var(--t2);
@@ -863,7 +848,7 @@ body::after{
   box-shadow: 0 0 12px var(--s-glow);
 }
 
-/* ── BANNER SESSÃO ────────────────────────────────── */
+
 .session-banner {
   margin: 12px 16px 0; padding: 14px 16px;
   background: var(--bg2); border: 1px solid var(--s-bd-accent);
@@ -900,16 +885,16 @@ body::after{
 }
 .btn-discard:hover { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.5); }
 
-/* ── CENTRO — BOTÃO INICIAR ───────────────────────── */
+
 .home-center {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: var(--sp3); position: relative; z-index: 1;
   gap: 28px;
-  min-height: 0; /* permite flex shrink correto */
+  min-height: 0; 
 }
 
-/* Subtítulo acima do botão */
+
 .home-center::before {
   content: 'UNDER PRESSURE';
   display: block;
@@ -939,7 +924,7 @@ body::after{
   position: relative;
 }
 
-/* Anel exterior giratório lento */
+
 .home-start-btn::before {
   content: ''; position: absolute; inset: -6px; border-radius: 50%;
   border: 1.5px solid transparent;
@@ -950,7 +935,7 @@ body::after{
   animation: ringPulse 3.5s ease-in-out infinite;
 }
 
-/* Segundo anel interior mais sutil */
+
 .home-start-btn::after {
   content: ''; position: absolute; inset: 6px; border-radius: 50%;
   border: 1px solid var(--s-bd-accent);
@@ -994,7 +979,7 @@ body::after{
 }
 .home-start-btn:hover .home-start-label { color: var(--s-text); }
 
-/* ── TAB BAR ──────────────────────────────────────── */
+
 .home-tab-bar {
   display: flex; gap: 8px;
   padding: 10px var(--sp2) calc(10px + env(safe-area-inset-bottom, 0px));
@@ -1004,7 +989,7 @@ body::after{
   border-top: 1px solid var(--line);
   flex-shrink: 0; position: relative; z-index: 2;
 }
-/* Linha dourada acima da tab bar */
+
 .home-tab-bar::before {
   content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, var(--s-bd-accent), transparent);
@@ -1029,9 +1014,7 @@ body::after{
 }
 .home-tab-btn:active { transform: scale(.97); }
 
-/* ════════════════════════════════════════════════════
-   PÓDIO / HISTÓRICO
-════════════════════════════════════════════════════ */
+
 .podio-header {
   display: flex; align-items: center; gap: 12px; padding: 14px var(--sp2);
   border-bottom: 1px solid var(--line);
@@ -1045,7 +1028,7 @@ body::after{
   opacity: .5;
 }
 
-/* Header do perfil — fundo sólido com separador dourado */
+
 #screen-perfil .podio-header {
   background: var(--bg);
   backdrop-filter: none;
@@ -1089,16 +1072,14 @@ body::after{
   text-shadow: 0 0 16px var(--s-glow);
 }
 
-/* ════════════════════════════════════════════════════
-   PÓDIO — TOP 3
-════════════════════════════════════════════════════ */
+
 .podio-sync {
   text-align: center; font-size: .75rem; color: var(--t3);
   padding: 8px; animation: pulse 1.5s ease-in-out infinite;
 }
 @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
 
-/* ── PÓDIO ESCADA ───────────────────────────────── */
+
 .podio-top3 {
   display: flex;
   align-items: flex-end;
@@ -1108,7 +1089,7 @@ body::after{
   width: 100%;
 }
 
-/* Cada coluna = player card em cima + degrau embaixo */
+
 .podio-top3-card {
   flex: 1;
   display: flex;
@@ -1120,13 +1101,13 @@ body::after{
 }
 .podio-top3-card.hidden { display: none; }
 
-/* Player info (acima do degrau) */
+
 .podio-top3-player {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 0 4px;
 }
 
-/* Degrau — altura varia por posição */
+
 .podio-top3-step {
   width: 100%;
   display: flex; align-items: center; justify-content: center;
@@ -1150,7 +1131,7 @@ body::after{
   border: 1px solid rgba(192,120,64,.22); border-bottom: none;
 }
 
-/* Número da posição dentro do degrau */
+
 .podio-top3-pos {
   font-family: var(--serif); font-size: 1rem; font-weight: 800;
   letter-spacing: .04em;
@@ -1159,7 +1140,7 @@ body::after{
 .podio-top3-pos.silver { color: #8A9CB0; }
 .podio-top3-pos.bronze { color: #C07840; }
 
-/* Avatar */
+
 .podio-top3-avatar {
   width: 40px; height: 40px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -1213,7 +1194,7 @@ body::after{
   box-shadow: 0 0 20px var(--s-glow) !important;
 }
 
-/* Linha base que conecta os 3 degraus */
+
 .podio-base {
   height: 4px;
   background: linear-gradient(90deg, rgba(192,120,64,.3), rgba(212,168,83,.5), rgba(138,156,176,.3));
@@ -1231,9 +1212,7 @@ body::after{
   padding: 1px 6px; border-radius: var(--rpill); margin-left: 5px; vertical-align: middle;
 }
 
-/* ════════════════════════════════════════════════════
-   HISTÓRICO
-════════════════════════════════════════════════════ */
+
 .podio-top3-score-label {
   font-size: .58rem; font-weight: 700; letter-spacing: .1em;
   text-transform: uppercase; color: var(--t3); margin-top: -2px;
@@ -1308,18 +1287,14 @@ body::after{
 .hist-guest-desc { font-size: .8rem; color: var(--t2); line-height: 1.6; max-width: 260px; }
 .hist-guest-btn { margin-top: 4px; }
 
-/* ════════════════════════════════════════════════════
-   SETOR
-════════════════════════════════════════════════════ */
+
 #screen-sector{ background:var(--bg); }
-/* ════════════════════════════════════════════════════
-   SELEÇÃO DE SETOR
-════════════════════════════════════════════════════ */
+
 #screen-sector {
   background: var(--bg);
   overflow-y: auto;
 }
-/* Glow suave no topo que muda conforme o setor selecionado */
+
 #screen-sector::before {
   content: ''; position: fixed; top: 0; left: 0; right: 0; height: 240px;
   background: radial-gradient(ellipse 80% 100% at 50% -20%, var(--s-glow) 0%, transparent 70%);
@@ -1340,14 +1315,14 @@ body::after{
   padding: 0 0 var(--sp2);
 }
 
-/* Grid 2×2 */
+
 .sector-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   padding: 0 var(--sp2); flex-shrink: 0;
   position: relative; z-index: 1;
 }
 
-/* Card base */
+
 .sector-card {
   padding: 24px 14px 18px;
   border-radius: var(--r3);
@@ -1369,13 +1344,13 @@ body::after{
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Destaque interno no topo do card */
+
 .sector-card::before {
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(ellipse 90% 55% at 50% -10%, rgba(255,255,255,.06) 0%, transparent 65%);
   pointer-events: none;
 }
-/* Barra colorida no topo — aparece no selected */
+
 .sector-card::after {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2.5px;
   background: currentColor;
@@ -1385,7 +1360,7 @@ body::after{
 }
 .sector-card.selected::after { transform: scaleX(1); }
 
-/* Tecnologia — azul */
+
 .sector-card[data-sector="tecnologia"] {
   border-color: rgba(91,141,239,.22);
   color: #5B8DEF;
@@ -1403,7 +1378,7 @@ body::after{
   transform: translateY(-2px);
 }
 
-/* Indústria — laranja */
+
 .sector-card[data-sector="industria"] {
   border-color: rgba(232,113,26,.22);
   color: #E8711A;
@@ -1421,7 +1396,7 @@ body::after{
   transform: translateY(-2px);
 }
 
-/* Logística — verde */
+
 .sector-card[data-sector="logistica"] {
   border-color: rgba(31,184,133,.22);
   color: #1FB885;
@@ -1439,7 +1414,7 @@ body::after{
   transform: translateY(-2px);
 }
 
-/* Varejo — rosa */
+
 .sector-card[data-sector="varejo"] {
   border-color: rgba(232,70,122,.22);
   color: #E8467A;
@@ -1457,7 +1432,7 @@ body::after{
   transform: translateY(-2px);
 }
 
-/* Conteúdo do card */
+
 .sector-card-icon {
   font-size: 2rem;
   filter: drop-shadow(0 3px 8px rgba(0,0,0,.45));
@@ -1473,7 +1448,7 @@ body::after{
 }
 .sector-card.selected .sector-card-name { color: #fff; }
 
-/* Campo nome da empresa */
+
 .sector-field { padding: var(--sp2); flex-shrink: 0; position: relative; z-index: 1; }
 .company-name-row { display: flex; gap: 8px; align-items: stretch; }
 .company-name-row .input-field { flex: 1; }
@@ -1507,7 +1482,7 @@ body::after{
   box-shadow: 0 0 0 3px rgba(224,85,85,.2) !important;
 }
 
-/* CTA */
+
 .sector-cta {
   padding: 0 var(--sp2) calc(var(--sp3) + env(safe-area-inset-bottom, 0px));
   flex-shrink: 0; position: relative; z-index: 1;
@@ -1519,15 +1494,13 @@ body::after{
 }
 .btn-assumir-pronto { animation: mandatoPulse 1.8s ease-in-out infinite; }
 
-/* ════════════════════════════════════════════════════
-   INTRO DA HISTÓRIA
-════════════════════════════════════════════════════ */
+
 #screen-intro {
   background: var(--bg);
   overflow: hidden;
 }
 
-/* Header com glow do setor */
+
 .intro-header {
   padding: var(--sp3) var(--sp3) var(--sp3); flex-shrink: 0;
   background: linear-gradient(180deg, var(--s-bg-accent) 0%, transparent 100%);
@@ -1553,14 +1526,14 @@ body::after{
 }
 .intro-subtitulo { font-size: .85rem; color: var(--t2); line-height: 1.65; }
 
-/* Corpo scrollável */
+
 .intro-body {
   flex: 1; overflow-y: auto; padding: var(--sp3);
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin; scrollbar-color: var(--bg3) transparent;
 }
 
-/* Seções informativas — modo slide (uma por vez) */
+
 .intro-dots {
   display: flex; gap: 4px; margin-bottom: var(--sp3);
 }
@@ -1614,7 +1587,7 @@ body::after{
 }
 .intro-secao-voltar:hover { border-color: var(--line2); color: var(--t2); }
 
-/* Card de crise — destaque vermelho */
+
 .intro-crise {
   background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.22);
   border-radius: var(--r2); margin-bottom: 10px; overflow: hidden;
@@ -1633,7 +1606,7 @@ body::after{
 .intro-crise-titulo { font-weight: 700; font-size: .88rem; color: #F87171; }
 .intro-crise-texto  { padding: 12px var(--sp2); font-size: .84rem; color: #FCA5A5; line-height: 1.65; }
 
-/* Grid de indicadores iniciais */
+
 .intro-ind-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: var(--sp2);
 }
@@ -1647,7 +1620,7 @@ body::after{
 .intro-ind-item span:first-child { font-size: .78rem; color: var(--t2); }
 .intro-ind-item span:last-child  { font-size: .85rem; font-weight: 700; }
 
-/* CTA */
+
 .intro-cta {
   padding: var(--sp2) var(--sp3) calc(var(--sp3) + env(safe-area-inset-bottom, 0px));
   flex-shrink: 0; background: var(--bg);
@@ -1671,12 +1644,10 @@ body::after{
   opacity: .5;
 }
 
-/* ════════════════════════════════════════════════════
-   GAME — tela do jogo
-════════════════════════════════════════════════════ */
+
 #screen-game { overflow: hidden; }
 
-/* ── Topbar ── */
+
 .game-top {
   flex-shrink: 0;
   background: rgba(13,15,20,.95);
@@ -1708,7 +1679,7 @@ body::after{
   border: 1px solid var(--line2);
 }
 
-/* ── Barra de progresso ── */
+
 .game-prog-track {
   height: 3px; background: var(--bg3);
 }
@@ -1723,7 +1694,7 @@ body::after{
   50%     { box-shadow: 0 0 20px var(--s-glow), 0 0 6px var(--s-glow); }
 }
 
-/* ── Grid de indicadores ── */
+
 .game-ind-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1754,7 +1725,7 @@ body::after{
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Barra colorida lateral */
+
 .game-ind-row::before {
   content: '';
   position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
@@ -1790,7 +1761,7 @@ body::after{
   display: flex; align-items: center; justify-content: space-between;
 }
 
-/* ── Strip do gestor ── */
+
 .gestor-strip {
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 6px; padding: 0 var(--sp2) 10px;
@@ -1819,7 +1790,7 @@ body::after{
   font-family: var(--serif); line-height: 1;
 }
 
-/* ── Body e conteúdo ── */
+
 .game-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
 .game-content {
   flex: 1; overflow-y: auto;
@@ -1829,7 +1800,7 @@ body::after{
   scrollbar-color: var(--bg3) transparent;
 }
 
-/* ── Abas ── */
+
 .tab-pane {
   display: none; padding: var(--sp2) var(--sp2) calc(var(--sp2) + 20px);
   animation: screenIn .22s ease;
@@ -1846,7 +1817,7 @@ body::after{
   padding-bottom: env(safe-area-inset-bottom, 0px);
   position: relative; z-index: 2;
 }
-/* Linha dourada acima da tab bar */
+
 .game-tab-bar::before {
   content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, var(--s-bd-accent), transparent);
@@ -1871,7 +1842,7 @@ body::after{
 .tab-btn.active { color: var(--s-text); }
 .tab-btn.active::after { opacity: 1; transform: scaleX(1); }
 
-/* ── Tab Empresa (história da empresa) ── */
+
 .empresa-tab-body {
   display: flex;
   flex-direction: column;
@@ -1935,7 +1906,7 @@ body::after{
   font-size: .79rem; color: var(--t2); line-height: 1.7;
 }
 
-/* ── Tab História ── */
+
 .hist-badge {
   display: inline-block; font-size: .65rem; font-weight: 800; letter-spacing: .12em;
   text-transform: uppercase; color: var(--s-text); background: var(--s-bg-accent);
@@ -1982,7 +1953,7 @@ body::after{
   transform: translateX(4px);
 }
 
-/* ── Tab Desafios ── */
+
 .desafios-head{
   display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
 }
@@ -2050,7 +2021,7 @@ body::after{
 }
 .choice-card:active { transform: translateX(2px); transition-duration: .1s; }
 
-/* ── Tab Histórico ── */
+
 .historico-split{ display:flex; flex-direction:column; gap:var(--sp3); }
 .historico-col-title{
   font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
@@ -2075,10 +2046,8 @@ body::after{
 .rec-item-title{ font-size:.82rem; font-weight:600; color:var(--t1); margin-bottom:4px; }
 .rec-item-desc { font-size:.79rem; color:var(--t2); line-height:1.5; }
 
-/* ════════════════════════════════════════════════════
-   FEEDBACK
-════════════════════════════════════════════════════ */
-/* Barra de progresso da rodada no topo do feedback */
+
+
 .fb-round-bar {
   padding: 8px var(--sp2) 0;
   flex-shrink: 0;
@@ -2179,9 +2148,7 @@ body::after{
   flex-shrink:0; background:var(--bg); border-top:1px solid var(--line);
 }
 
-/* ════════════════════════════════════════════════════
-   RESULTADO
-════════════════════════════════════════════════════ */
+
 #screen-result{ background:var(--bg); }
 
 .result-header{
@@ -2229,14 +2196,14 @@ body::after{
   font-size:.87rem; color:var(--t2); line-height:1.72;
 }
 .result-ind-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-/* alias antigo — mantido por compatibilidade */
+
 .result-ind-item,
 .result-ind-card{
   background:var(--bg2); border:1px solid var(--line2);
   border-radius:var(--r2); padding:12px 10px;
   display:flex; flex-direction:column; gap:2px;
 }
-/* label do indicador — classes antigas e nova */
+
 .result-ind-name,
 .result-ind-label{
   font-size:.6rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
@@ -2274,7 +2241,7 @@ body::after{
   background:var(--bg); border-top:1px solid var(--line);
 }
 
-/* Status de salvamento na nuvem */
+
 #result-cloud-status{
   text-align:center; font-size:.78rem; font-weight:600;
   color:#fff; letter-spacing:.03em;
@@ -2316,16 +2283,16 @@ body::after{
 }
 @keyframes slideUp { from { transform: translateY(60px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 
-/* Handle removido — overlay com bordas arredondadas */
 
-/* sidebar-brand: oculto no mobile, visível só no desktop */
+
+
 .sidebar-brand { display: none; }
 
 .overlay-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px var(--sp3) 12px; border-bottom: 1px solid var(--line); flex-shrink: 0;
 }
-/* Linha dourada sutil no topo */
+
 .overlay-head::before {
   content: '';
   position: absolute; top: 0; left: 20%; right: 20%; height: 1px;
@@ -2356,9 +2323,7 @@ body::after{
 .settings-row:last-child { border-bottom: none; }
 .settings-row-label { font-size: .87rem; color: var(--t2); flex: 1; margin-right: 12px; }
 
-/* ════════════════════════════════════════════════════
-   TOAST
-════════════════════════════════════════════════════ */
+
 #toast{
   position:absolute; z-index:200; pointer-events:none;
   bottom:calc(72px + env(safe-area-inset-bottom,0px));
@@ -2376,7 +2341,7 @@ body::after{
 @keyframes toastIn { from{opacity:0;transform:translateY(20px) scale(.93)} to{opacity:1;transform:translateY(0) scale(1)} }
 @keyframes toastOut{ from{opacity:1;transform:translateY(0) scale(1)} to{opacity:0;transform:translateY(-10px) scale(.96)} }
 
-/* Botão tela cheia nas configurações */
+
 .btn-settings-fullscreen {
   background: var(--bg3);
   border: 1px solid var(--line2);
@@ -2392,33 +2357,26 @@ body::after{
 }
 .btn-settings-fullscreen:hover { background: var(--bg4); }
 
-/* ════════════════════════════════════════════════════
-   TELA DE CONFIGURAÇÕES — Premium Minimal
-════════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════════
-   CONFIGURAÇÕES — redesenho completo
-   Independente do .perfil-body — estrutura própria
-════════════════════════════════════════════════════ */
 
-/* Wrapper principal — independente do perfil */
-/* ════════════════════════════════════════════════════
-   CONFIGURAÇÕES — Command Panel (redesign completo)
-════════════════════════════════════════════════════ */
 
-/* ── Container principal ── */
+
+
+
+
+
 .config-body {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0; /* controlado por padding dos section-titles */
+  gap: 0; 
   padding: 8px 0 calc(48px + env(safe-area-inset-bottom, 0px));
   background: var(--bg);
   scrollbar-width: thin;
   scrollbar-color: var(--bg3) transparent;
 }
 
-/* ── Título de seção — label flutuante acima do card ── */
+
 .config-section-title {
   display: block;
   font-size: .58rem;
@@ -2432,14 +2390,14 @@ body::after{
   padding-top: 10px;
 }
 
-/* ── Card de grupo ── */
+
 .config-group {
   background: var(--bg2);
   border: 1px solid var(--line);
   border-radius: 20px;
   overflow: hidden;
   flex-shrink: 0;
-  /* Margem lateral para não colar nas bordas */
+  
   margin: 0 14px 4px;
   box-shadow:
     0 1px 0 rgba(255,255,255,.03) inset,
@@ -2450,7 +2408,7 @@ body::after{
   box-shadow: 0 2px 10px rgba(0,0,0,.25);
 }
 
-/* Accent no topo de cada grupo por posição */
+
 .config-body .config-group:nth-child(2) {
   border-top: 2px solid rgba(139,92,246,.45);
 }
@@ -2464,7 +2422,7 @@ body::after{
   border-top: 2px solid rgba(99,102,241,.45);
 }
 
-/* ── Item ── */
+
 .config-item {
   display: flex;
   align-items: center;
@@ -2484,7 +2442,7 @@ body::after{
   filter: grayscale(.5);
 }
 
-/* ── Ícone ── */
+
 .config-item-icon {
   width: 42px; height: 42px;
   border-radius: 13px;
@@ -2493,7 +2451,7 @@ body::after{
   box-shadow: 0 2px 8px rgba(0,0,0,.3);
 }
 
-/* ── Textos ── */
+
 .config-item-info {
   display: flex; flex-direction: column; gap: 3px;
   flex: 1; min-width: 0;
@@ -2507,7 +2465,7 @@ body::after{
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* ── Botão de ação ── */
+
 .config-item-btn {
   display: flex; align-items: center; gap: 5px;
   background: var(--bg3);
@@ -2529,7 +2487,7 @@ body::after{
 }
 .config-item-btn:active { transform: scale(.96); }
 
-/* ── Toggle switch (estilo iOS) ── */
+
 .toggle-btn {
   position: relative;
   width: 50px; height: 28px;
@@ -2560,7 +2518,7 @@ body::after{
   border: 1px solid var(--line2);
 }
 
-/* ── Badge Em breve ── */
+
 .config-soon-badge {
   flex-shrink: 0;
   background: rgba(255,255,255,.04);
@@ -2571,7 +2529,7 @@ body::after{
   padding: 5px 10px; border-radius: 20px;
 }
 
-/* ── Rodapé ── */
+
 .config-version {
   text-align: center;
   font-size: .64rem; color: var(--t4);
@@ -2595,9 +2553,7 @@ body::after{
   opacity: .4;
 }
 
-/* ════════════════════════════════════════════════════
-   RESPONSIVE
-════════════════════════════════════════════════════ */
+
 @media (max-width:380px){
   :root{ font-size:14px; }
   .login-heading{ font-size:2.8rem; }
@@ -2614,14 +2570,12 @@ body::after{
   }
 }
 
-/* Scrollbar */
+
 ::-webkit-scrollbar{ width:3px; height:3px; }
 ::-webkit-scrollbar-track{ background:transparent; }
 ::-webkit-scrollbar-thumb{ background:var(--line3); border-radius:4px; }
 
-/* ════════════════════════════════════════════════════
-   CORES JS (variáveis usadas no JS inline)
-════════════════════════════════════════════════════ */
+
 :root{
   --good:      #2ECC71;
   --danger:    #E74C3C;
@@ -2632,12 +2586,12 @@ body::after{
   --f-game:    'Inter', system-ui, sans-serif;
 }
 
-/* Elementos gerados pelo JS que precisam de cor de texto clara */
+
 .podio-player-meta{
   font-size:.72rem; color:var(--t3); margin-top:2px;
 }
 
-/* Classes do pódio e histórico geradas pelo JS */
+
 .podio-player{ flex:1; min-width:0; }
 .podio-player-name{
   font-size:.9rem; font-weight:700; color:var(--t1);
@@ -2669,7 +2623,7 @@ body::after{
   font-size:.75rem; font-weight:600; margin-top:3px;
 }
 
-/* Histórico de decisões no feedback */
+
 .historico-decisao{
   background:var(--bg2); border:1px solid var(--line);
   border-radius:var(--r); padding:10px 12px; margin-bottom:6px;
@@ -2681,9 +2635,7 @@ body::after{
 }
 
 
-/* ════════════════════════════════════════════════════
-   GLOSSÁRIO — classes geradas pelo JS
-════════════════════════════════════════════════════ */
+
 .glossary-term{
   padding:14px 0;
   border-bottom:1px solid var(--line);
@@ -2705,7 +2657,7 @@ body::after{
   line-height:1.7;
 }
 
-/* Barra de pesquisa, fixa entre o cabeçalho e a lista de termos */
+
 .glossary-search-wrap{
   position: relative;
   display: flex; align-items: center;
@@ -2733,10 +2685,8 @@ body::after{
   background: var(--bg3);
 }
 
-/* Seções do glossário */
-/* Abas de categoria — mesma linguagem visual das abas da tela de jogo
-   (sublinhado dourado/de-tema animado), rolável horizontalmente já que
-   há várias categorias e o card tem largura limitada. */
+
+
 .glossary-tabs{
   display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch;
   scrollbar-width: none; gap: 2px;
@@ -2783,9 +2733,7 @@ body::after{
   font-size: .85rem;
 }
 
-/* Termos técnicos detectados automaticamente nos textos de rodada e nas
-   opções de escolha — sublinhado pontilhado sutil, na cor do tema ativo,
-   sinalizando que é clicável sem competir visualmente com o texto normal. */
+
 .termo-glossario {
   text-decoration: underline;
   text-decoration-style: dotted;
@@ -2802,14 +2750,12 @@ body::after{
   color: var(--s-text);
 }
 
-/* Overlay body — garante texto claro */
+
 .overlay-body{
   color:var(--t1);
 }
 
-/* ════════════════════════════════════════════════════
-   PÓDIO / HISTÓRICO — fixes de legibilidade
-════════════════════════════════════════════════════ */
+
 .podio-item{
   background:var(--bg2);
   border:1px solid var(--line2);
@@ -2873,9 +2819,7 @@ body::after{
 }
 
 
-/* ══════════════════════════════════════════════════
-   TUTORIAL
-══════════════════════════════════════════════════ */
+
 #screen-tutorial {
   background: var(--bg); justify-content: stretch;
 }
@@ -2910,7 +2854,7 @@ body::after{
 }
 .tutorial-slide.active { display: flex; }
 
-/* Selo do ícone — moldura circular, ecoa o tratamento da logo no login */
+
 .tutorial-icon-enter {
   animation: tutFadeUp .5s cubic-bezier(.22,.68,0,1.2) both;
 }
@@ -2977,7 +2921,7 @@ body::after{
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Indicadores de exemplo */
+
 .tut-ind-row {
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 8px; font-size: .82rem; color: var(--t2);
@@ -3002,7 +2946,7 @@ body::after{
   to   { transform: scaleX(1); }
 }
 
-/* Pills */
+
 .tut-pill-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .tut-pill {
   display: inline-flex; align-items: center; gap: 6px;
@@ -3013,7 +2957,7 @@ body::after{
 .tut-pill.pur  { border-color: rgba(155,89,182,.3); background: rgba(155,89,182,.1); color: #B590D4; }
 .tut-pill.warn { border-color: rgba(243,156,18,.3); background: rgba(243,156,18,.1); color: var(--warn); }
 
-/* Tabs demo */
+
 .tut-tabs-demo { display: flex; gap: 6px; justify-content: center; }
 .tut-tab {
   display: inline-flex; align-items: center; gap: 5px;
@@ -3022,7 +2966,7 @@ body::after{
 }
 .tut-tab.active { background: var(--s-bg-accent); border-color: var(--s-bd-accent); color: var(--s-text); }
 
-/* Dots de navegação */
+
 .tutorial-dots { display: flex; gap: 8px; justify-content: center; padding: var(--sp2) 0; }
 .tut-dot {
   width: 7px; height: 7px; border-radius: 50%;
@@ -3036,7 +2980,7 @@ body::after{
   box-shadow: 0 0 8px var(--s-glow);
 }
 
-/* Footer */
+
 .tutorial-footer { display: flex; gap: 10px; flex-shrink: 0; }
 .tutorial-prev { flex: 0 0 auto; width: auto; padding: 16px 20px; }
 .tutorial-next { flex: 1; }
@@ -3048,9 +2992,7 @@ body::after{
   }
 }
 
-/* ══════════════════════════════════════════════════
-   SETOR — estrelas e tagline
-══════════════════════════════════════════════════ */
+
 .sector-card-tag{
   font-size:.7rem; color:var(--t3); text-align:center;
   line-height:1.3; padding:0 4px;
@@ -3066,7 +3008,7 @@ body::after{
 .sector-card.selected .sector-card-tag{ color:rgba(255,255,255,.7); }
 .sector-card.selected .sector-card-stars{ color:#fff; text-shadow:0 0 12px rgba(255,255,255,.4); }
 
-/* Toggles na seleção de setor (Timer + Modo Treino) */
+
 .sector-mode-row {
   display: flex; align-items: center; justify-content: space-between;
   margin: 0 var(--sp2) 8px; padding: 13px var(--sp2);
@@ -3082,8 +3024,7 @@ body::after{
   display: flex; align-items: center; gap: 6px;
 }
 
-/* Ícone "i" de informação — abre um tooltip explicativo. Área de toque
-   maior que o tamanho visual, para facilitar o toque no celular. */
+
 .info-icon-btn {
   width: 16px; height: 16px; min-width: 16px;
   border-radius: 50%;
@@ -3100,7 +3041,7 @@ body::after{
   transition: border-color .15s, color .15s;
 }
 .info-icon-btn::before {
-  /* Aumenta a área de toque sem aumentar o tamanho visual do ícone */
+  
   content: ''; position: absolute; inset: -10px;
 }
 .info-icon-btn:hover, .info-icon-btn:active {
@@ -3108,26 +3049,24 @@ body::after{
 }
 .sector-mode-desc  { font-size: .72rem; color: var(--t3); margin-top: 2px; }
 
-/* ══════════════════════════════════════════════════
-   PERFIL
-══════════════════════════════════════════════════ */
+
 .perfil-body {
   flex: 1; overflow-y: auto;
   padding: 0;
-  /* Fluxo normal em coluna — nada de position absolute ou overlap */
+  
   display: flex; flex-direction: column; gap: 0;
   background: linear-gradient(180deg, var(--s-glow) 0%, rgba(0,0,0,0) 300px);
 }
 
-/* ── Hero: avatar + nome + uid ─────────────────────── */
+
 .perfil-avatar-block {
-  /* Altura mínima fixa garante que os cards NUNCA sobem para cima */
+  
   min-height: 220px;
-  flex-shrink: 0; /* nunca comprime */
+  flex-shrink: 0; 
   display: flex; flex-direction: column; align-items: center; gap: 10px;
   padding: 28px var(--sp3) 24px;
   position: relative;
-  overflow: visible; /* sem clip que esconde conteúdo */
+  overflow: visible; 
 }
 .perfil-avatar-block::before {
   content: ''; position: absolute; inset: 0;
@@ -3165,7 +3104,7 @@ body::after{
   letter-spacing: .14em; text-transform: uppercase; font-weight: 700;
   position: relative; z-index: 1; flex-shrink: 0;
 }
-/* UID badge — sempre visível abaixo do nome */
+
 .perfil-meta-row {
   display: flex; flex-direction: column; align-items: center;
   gap: 5px; margin-top: 4px;
@@ -3183,7 +3122,7 @@ body::after{
 .perfil-id-badge:hover { box-shadow: 0 0 16px var(--s-glow); background: var(--bg4); }
 .perfil-email { font-size: .66rem; color: var(--t3); }
 
-/* Botão logout */
+
 .perfil-logout-btn {
   margin-left: auto; font-size: .7rem; font-weight: 700; color: var(--err);
   background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2);
@@ -3192,12 +3131,12 @@ body::after{
 }
 .perfil-logout-btn:hover { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.5); }
 
-/* ── Stats: sempre depois do hero no fluxo normal ───── */
+
 .perfil-stats {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
   padding: 8px var(--sp2) var(--sp2);
   flex-shrink: 0;
-  /* position: static implícito — nunca flutua sobre o hero */
+  
 }
 .perfil-stat {
   background: rgba(255,255,255,.04);
@@ -3205,7 +3144,7 @@ body::after{
   border-radius: var(--r2); padding: 14px 12px;
   display: flex; flex-direction: column; gap: 5px;
   transition: border-color .2s, background .2s;
-  position: static; /* explícito: nunca vira relative/absolute */
+  position: static; 
   overflow: hidden;
 }
 .perfil-stat::after {
@@ -3216,7 +3155,7 @@ body::after{
 .perfil-stat:hover { border-color: var(--s-bd-accent); background: var(--s-bg-accent); }
 .perfil-stat:hover::after { opacity: 1; }
 
-/* Valor dos cards */
+
 .perfil-stat-val {
   font-family: var(--serif); font-size: 1rem; font-weight: 800;
   line-height: 1;
@@ -3229,7 +3168,7 @@ body::after{
   text-transform: uppercase; color: var(--t3);
 }
 
-/* Setor favorito — sem background-clip para não cortar o texto */
+
 .perfil-stat.setor-card .perfil-stat-val {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   font-size: 1rem; font-weight: 800;
@@ -3240,7 +3179,7 @@ body::after{
   white-space: normal; overflow: visible;
 }
 
-/* Divisor entre stats e gráfico */
+
 .perfil-stats::before {
   content: ''; display: block;
   grid-column: 1 / -1; height: 1px;
@@ -3248,7 +3187,7 @@ body::after{
   margin-bottom: 8px;
 }
 
-/* ── Gráfico e conquistas ──────────────────────────── */
+
 .perfil-grafico-section {
   padding: 0 var(--sp2) 8px;
   flex-shrink: 0;
@@ -3265,7 +3204,7 @@ body::after{
   flex-shrink: 0;
 }
 
-/* Gráfico de evolução */
+
 .perfil-grafico-section{}
 .perfil-grafico{
   background:var(--bg2); border:1px solid var(--line2); border-radius:var(--r2);
@@ -3279,7 +3218,7 @@ body::after{
   font-family:var(--sans); align-self:flex-start;
 }
 
-/* Conquistas */
+
 .perfil-conquistas-title{ font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--t3); margin-bottom:0; }
 .perfil-conquistas{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .perfil-conquista{
@@ -3295,7 +3234,7 @@ body::after{
 }
 .perfil-conquista.unlocked .perfil-conquista-nome{ color:var(--s-text); }
 
-/* Conquistas bloqueadas para convidado */
+
 .conquistas-guest-lock{
   display:flex; flex-direction:column; align-items:center; gap:10px;
   padding:28px 20px; text-align:center;
@@ -3319,9 +3258,7 @@ body::after{
 .podio-filter:hover:not(.active){ border-color:var(--line3); color:var(--t1); }
 .podio-item.hidden{ display:none; }
 
-/* ══════════════════════════════════════════════════
-   OVERLAY PAUSA
-══════════════════════════════════════════════════ */
+
 .pause-card {
   width: 100%; align-items: center; text-align: center;
   padding: var(--sp4) var(--sp3);
@@ -3344,9 +3281,7 @@ body::after{
 .pause-info { font-size: .84rem; color: var(--t3); line-height: 1.65; margin-bottom: var(--sp3); }
 .pause-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 
-/* ══════════════════════════════════════════════════
-   OVERLAY TOOLTIP
-══════════════════════════════════════════════════ */
+
 .tooltip-card{ max-height:60vh; }
 .tooltip-body-text{ font-size:.88rem; color:var(--t2); line-height:1.75; }
 .tooltip-body-text strong{ color:var(--s-text); }
@@ -3362,9 +3297,7 @@ body::after{
 .tooltip-val-num{ font-family:var(--serif); font-size:1.8rem; font-weight:700; }
 .tooltip-val-label{ font-size:.72rem; color:var(--t3); }
 
-/* ══════════════════════════════════════════════════
-   RESULTADO — estados visuais e animação de score
-══════════════════════════════════════════════════ */
+
 #screen-result.state-excelente .result-header{ background:linear-gradient(180deg, rgba(46,204,113,.12) 0%, transparent 100%); }
 #screen-result.state-regular   .result-header{ background:linear-gradient(180deg, rgba(243,156,18,.10) 0%, transparent 100%); }
 #screen-result.state-dificil   .result-header{ background:linear-gradient(180deg, rgba(231,76,60,.12) 0%, transparent 100%); }
@@ -3377,9 +3310,7 @@ body::after{
   100%{ transform:scale(1); }
 }
 
-/* ══════════════════════════════════════════════════
-   TRANSIÇÃO ENTRE RODADAS
-══════════════════════════════════════════════════ */
+
 .tab-pane.slide-out{
   animation: slideOut .25s ease forwards;
 }
@@ -3395,9 +3326,7 @@ body::after{
   to  { opacity:1; transform:translateX(0); }
 }
 
-/* ══════════════════════════════════════════════════
-   CONFETTI (resultado excelente)
-══════════════════════════════════════════════════ */
+
 .confetti-piece{
   position:absolute; width:8px; height:8px; border-radius:2px;
   animation: confettiFall 2s ease-in forwards;
@@ -3409,11 +3338,9 @@ body::after{
 }
 
 
-/* ══════════════════════════════════════════════════
-   UI/UX MELHORIAS v2
-══════════════════════════════════════════════════ */
 
-/* ── SETA DE TENDÊNCIA nos indicadores ─────────── */
+
+
 .game-ind-trend {
   font-size: .72rem;
   font-weight: 700;
@@ -3425,7 +3352,7 @@ body::after{
 .game-ind-trend.down { color: var(--err); }
 .game-ind-trend.flat { color: var(--warn);   opacity: .6; }
 
-/* ── INDICADOR CRÍTICO — pulso vermelho ─────────── */
+
 @keyframes pulseCritical {
   0%   { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
   60%  { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
@@ -3435,17 +3362,17 @@ body::after{
   0%,100% { background: transparent; }
   50%     { background: rgba(239,68,68,.10); }
 }
-/* Borda pulsando com brilho — mais intenso que o anterior, cria urgência real */
+
 @keyframes pulseCriticalBorder {
   0%,100% { border-color: rgba(239,68,68,.4);  box-shadow: 0 0 0 0 rgba(239,68,68,0); }
   50%     { border-color: rgba(239,68,68,.95); box-shadow: 0 0 14px 1px rgba(239,68,68,.45); }
 }
-/* Valor numérico "respirando" — leve escala para chamar atenção sem ser irritante */
+
 @keyframes pulseCriticalVal {
   0%,100% { transform: scale(1);    text-shadow: 0 0 0 rgba(239,68,68,0); }
   50%     { transform: scale(1.12); text-shadow: 0 0 8px rgba(239,68,68,.6); }
 }
-/* Ícone de alerta tremendo sutilmente */
+
 @keyframes shakeCritical {
   0%, 100% { transform: translateX(0); }
   20%      { transform: translateX(-1px); }
@@ -3460,11 +3387,7 @@ body::after{
              pulseCriticalBorder 1.4s ease infinite,
              indFadeIn .3s ease both;
 }
-/* Pausa as animações infinitas dos indicadores enquanto um overlay está
-   aberto. Múltiplas animações infinite simultâneas promovem o elemento
-   para sua própria camada de composição em GPU, o que pode fazer esse
-   conteúdo "vencer" a ordem de pintura do overlay (ainda em transição de
-   opacidade) por alguns frames — o flash relatado ao abrir overlays. */
+
 body.overlay-active .game-ind-row.critical,
 body.overlay-active .game-ind-row.critical::before,
 body.overlay-active .game-ind-row.critical .game-ind-val,
@@ -3490,7 +3413,7 @@ body.overlay-active .game-ind-name.critical-label {
   animation: shakeCritical 2.5s ease-in-out infinite;
 }
 
-/* ── TOAST DE INDICADOR CRÍTICO ─────────────────── */
+
 #critical-toast-container {
   position: fixed;
   top: 80px;
@@ -3526,7 +3449,7 @@ body.overlay-active .game-ind-name.critical-label {
   animation: toastOut .2s ease forwards;
 }
 
-/* ── ANIMAÇÃO DAS BARRAS AO DECIDIR ─────────────── */
+
 @keyframes barDecide {
   0%   { opacity: 1; }
   30%  { opacity: .4; transform: scaleX(.95); }
@@ -3537,7 +3460,7 @@ body.overlay-active .game-ind-name.critical-label {
   transform-origin: left center;
 }
 
-/* ── CHOICE CARD — selecionado ──────────────────── */
+
 @keyframes choiceSelect {
   0%   { transform: scale(1); }
   40%  { transform: scale(.97); }
@@ -3549,7 +3472,7 @@ body.overlay-active .game-ind-name.critical-label {
   animation: choiceSelect .35s ease;
 }
 
-/* ── CONQUISTAS — flash ao desbloquear ──────────── */
+
 @keyframes unlockFlash {
   0%   { box-shadow: 0 0 0 0 rgba(212,168,83,.7); transform: scale(1); }
   40%  { box-shadow: 0 0 12px 6px rgba(212,168,83,.4); transform: scale(1.04); }
@@ -3559,7 +3482,7 @@ body.overlay-active .game-ind-name.critical-label {
   animation: unlockFlash .8s ease;
 }
 
-/* ── TUTORIAL DOTS — hover interativo ───────────── */
+
 .tut-dot {
   cursor: pointer !important;
   transition: all .2s, transform .15s !important;
@@ -3570,27 +3493,18 @@ body.overlay-active .game-ind-name.critical-label {
   opacity: .7;
 }
 
-/* ── BARRA DE PROGRESSO — transição suave ─────── */
+
 #game-progress-bar {
   transition: width .6s cubic-bezier(.4,0,.2,1) !important;
 }
 
-/* ═══════════════════════════════════════════════════════
-   DESKTOP — layout adaptado para telas ≥ 800px
-═══════════════════════════════════════════════════════ */
+
 @media (min-width: 800px) {
 
-  /* ══════════════════════════════════════════
-     BASE
-  ══════════════════════════════════════════ */
+  
   html, body { overflow: hidden; background: #07080f; }
 
-  /* Transição entre telas no desktop — redefine os mesmos keyframes usados
-     no mobile (screenIn/screenBack) com deslocamento horizontal mais amplo
-     e perceptível em telas largas (o translateY sutil do mobile passa
-     despercebido em viewports grandes). Como o nome do keyframe é o mesmo
-     usado no JS (mostrarTela), isso é aplicado automaticamente sem precisar
-     tocar no JS — a última definição de @keyframes com o mesmo nome vence. */
+  
   @keyframes screenIn {
     from { opacity: 0; transform: translateX(36px) scale(.985); }
     to   { opacity: 1; transform: translateX(0) scale(1); }
@@ -3611,9 +3525,7 @@ body.overlay-active .game-ind-name.critical-label {
     box-shadow: none;
   }
 
-  /* ══════════════════════════════════════════
-     TELA DE LOGIN — duas colunas
-  ══════════════════════════════════════════ */
+  
   #screen-login {
     flex-direction: row;
     overflow: hidden;
@@ -3635,7 +3547,7 @@ body.overlay-active .game-ind-name.critical-label {
     filter: drop-shadow(0 0 8px rgba(212,168,83,.4));
   }
 
-  /* Coluna esquerda */
+  
   .login-main {
     flex: 1;
     display: flex;
@@ -3711,7 +3623,7 @@ body.overlay-active .game-ind-name.critical-label {
     max-width: 320px; position: relative; z-index: 1;
   }
 
-  /* Coluna direita */
+  
   .login-footer {
     width: 400px; flex-shrink: 0;
     display: flex; flex-direction: column;
@@ -3756,9 +3668,7 @@ body.overlay-active .game-ind-name.critical-label {
     box-shadow: 0 0 44px rgba(212,168,83,.28), 0 8px 24px rgba(0,0,0,.4);
   }
 
-  /* ══════════════════════════════════════════
-     AUTH — duas colunas (vitrine + formulário)
-  ══════════════════════════════════════════ */
+  
   #screen-auth {
     flex-direction: row;
     overflow: hidden;
@@ -3766,7 +3676,7 @@ body.overlay-active .game-ind-name.critical-label {
   }
   #screen-auth::before { display: none; }
 
-  /* Coluna esquerda — vitrine, mesma linguagem visual da tela de login */
+  
   .auth-showcase {
     display: flex; flex-direction: column;
     justify-content: center; align-items: flex-start;
@@ -3854,7 +3764,7 @@ body.overlay-active .game-ind-name.critical-label {
     to   { width: 74%; }
   }
 
-  /* Coluna direita — formulário */
+  
   #screen-auth .auth-wrap {
     width: 480px; flex-shrink: 0;
     justify-content: center;
@@ -3865,16 +3775,13 @@ body.overlay-active .game-ind-name.critical-label {
   }
 
   .auth-topbar { margin-bottom: 8px; border-bottom: none; padding: 0; }
-  .auth-brand { display: none; } /* marca já aparece na vitrine */
-  .auth-logo-row { display: none; } /* logo já aparece na vitrine */
+  .auth-brand { display: none; } 
+  .auth-logo-row { display: none; } 
 
   .auth-tabs { margin-top: 8px; }
 
 
-  /* ══════════════════════════════════════════
-     HOME — grid com sidebar e área central
-     (HTML original mantido, só CSS reorganiza)
-  ══════════════════════════════════════════ */
+  
   #screen-home {
     display: grid !important;
     grid-template-columns: 220px 1fr;
@@ -3888,7 +3795,7 @@ body.overlay-active .game-ind-name.critical-label {
     background: var(--bg);
   }
 
-  /* Header do jogador — área superior direita */
+  
   .home-header {
     grid-area: header;
     display: flex !important;
@@ -3901,7 +3808,7 @@ body.overlay-active .game-ind-name.critical-label {
 
   #session-restore-banner { grid-area: banner; }
 
-  /* Área central */
+  
   .home-center {
     grid-area: center;
     display: flex !important;
@@ -3913,7 +3820,7 @@ body.overlay-active .game-ind-name.critical-label {
     min-height: 0; height: 100%;
   }
 
-  /* Círculos decorativos concêntricos no centro */
+  
   .home-center::before {
     content: ''; position: absolute;
     width: 420px; height: 420px; border-radius: 50%;
@@ -3923,15 +3830,15 @@ body.overlay-active .game-ind-name.critical-label {
   }
 
   .home-center::after {
-    content: ''; /* "UNDER PRESSURE" removido do desktop */
+    content: ''; 
     display: none;
   }
 
-  /* ══ SIDEBAR DESKTOP ══════════════════════════════ */
+  
 
   .home-tab-bar {
     grid-area: sidebar;
-    /* Flex column: sidebar-brand fixo no topo, 3 botões dividem o resto */
+    
     display: flex !important;
     flex-direction: column;
     width: 220px;
@@ -3941,19 +3848,19 @@ body.overlay-active .game-ind-name.critical-label {
     overflow: hidden;
   }
 
-  /* Pseudo-elemento desativado — usamos elemento HTML dedicado */
+  
   .home-tab-bar::before { display: none !important; content: none !important; }
 
-  /* ── "Under Pressure": elemento HTML estático, ZERO relação com botões ── */
+  
   .sidebar-brand {
-    /* Altura fixa alinhada com o header à direita */
+    
     height: 70px;
     flex-shrink: 0;
-    /* Layout interno */
+    
     display: flex;
     align-items: center;
     padding: 0 22px;
-    /* Gradiente dourado */
+    
     font-family: var(--serif);
     font-size: .88rem; font-weight: 800;
     letter-spacing: .04em;
@@ -3961,17 +3868,17 @@ body.overlay-active .game-ind-name.critical-label {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    /* Linha separadora dos botões */
+    
     border-bottom: 1px solid var(--line);
-    /* Completamente não-interativo */
+    
     pointer-events: none;
     user-select: none;
     cursor: default;
   }
 
-  /* ── 3 botões: dividem igualmente o espaço restante ── */
+  
   .home-tab-btn {
-    flex: 1; /* cada um recebe 1/3 do espaço após o título */
+    flex: 1; 
     width: 100%;
     border-radius: 0;
     text-align: left;
@@ -3992,14 +3899,14 @@ body.overlay-active .game-ind-name.critical-label {
     box-shadow: none;
   }
 
-  /* Hover só afeta o botão — sidebar-brand é outro elemento, imune */
+  
   .home-tab-btn:hover {
     background: var(--s-bg-accent);
     border-left-color: var(--s-primary);
     color: var(--s-text);
   }
 
-  /* Botão iniciar mandato */
+  
   .home-start-btn {
     width: 190px; height: 190px; border-radius: 50%;
     position: relative; z-index: 1;
@@ -4019,9 +3926,7 @@ body.overlay-active .game-ind-name.critical-label {
 
   .home-start-label { font-size: .88rem; letter-spacing: .1em; }
 
-  /* ══════════════════════════════════════════
-     PERFIL / PÓDIO / HISTÓRICO
-  ══════════════════════════════════════════ */
+  
   #screen-perfil,
   #screen-config,
   #screen-podio,
@@ -4031,7 +3936,7 @@ body.overlay-active .game-ind-name.critical-label {
     background: var(--bg);
   }
 
-  /* ── Config desktop — Command Panel ── */
+  
   #screen-config {
     align-items: center;
     overflow-y: auto;
@@ -4047,7 +3952,7 @@ body.overlay-active .game-ind-name.critical-label {
   }
 
   #screen-config .config-body {
-    /* Duas colunas de cards, espaçadas generosamente */
+    
     display: grid !important;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: min-content;
@@ -4059,36 +3964,36 @@ body.overlay-active .game-ind-name.critical-label {
     background: var(--bg) !important;
   }
 
-  /* Títulos de seção: ocultos no desktop também */
+  
   #screen-config .config-section-title {
     display: none;
   }
 
-  /* Cards no desktop: sem margem lateral (o grid já controla) */
+  
   #screen-config .config-group {
     border-radius: 22px;
     grid-column: auto;
-    margin: 0; /* cancela margem do mobile */
+    margin: 0; 
   }
 
-  /* Títulos de seção ocultos no desktop */
+  
   #screen-config .config-section-title {
     display: none;
   }
 
-  /* Items mais espaçosos no desktop */
+  
   #screen-config .config-item {
     padding: 18px 20px;
     min-height: 68px;
   }
 
-  /* Versão rodapé span completo */
+  
   #screen-config .config-version {
     grid-column: 1 / -1;
     padding: 16px 0 8px;
   }
 
-  /* Hover dourado no desktop */
+  
   #screen-config .config-item:hover {
     background: var(--s-bg-accent);
   }
@@ -4114,7 +4019,7 @@ body.overlay-active .game-ind-name.critical-label {
 
   .perfil-avatar-block {
     grid-column: 1; grid-row: 1 / 3;
-    /* No desktop: card lateral com gradiente do setor */
+    
     background: linear-gradient(180deg, var(--s-glow) 0%, var(--bg2) 60%);
     border: 1px solid var(--s-bd-accent);
     border-radius: var(--r3); padding: var(--sp3);
@@ -4156,15 +4061,13 @@ body.overlay-active .game-ind-name.critical-label {
     width: 100%; max-width: 820px; align-self: center; padding: 0 32px;
   }
 
-  /* ══════════════════════════════════════════
-     SELEÇÃO DE SETOR
-  ══════════════════════════════════════════ */
+  
   #screen-sector {
     align-items: center; overflow-y: auto;
     background: var(--bg);
   }
 
-  /* ── Seleção de setor desktop ── */
+  
   #screen-sector {
     align-items: center;
     overflow-y: auto;
@@ -4203,9 +4106,7 @@ body.overlay-active .game-ind-name.critical-label {
     padding: var(--sp2) 32px var(--sp3);
   }
 
-  /* ══════════════════════════════════════════
-     INTRO — layout de PC, reconstruído
-  ══════════════════════════════════════════ */
+  
   #screen-intro { display: grid; grid-template-rows: auto 1fr auto; }
 
   .intro-header {
@@ -4222,7 +4123,7 @@ body.overlay-active .game-ind-name.critical-label {
       "slide side"
       "crise side";
     column-gap: var(--sp3); row-gap: 14px;
-    align-content: start;      /* impede as linhas de esticarem e criarem vãos enormes */
+    align-content: start;      
     overflow-y: auto;
   }
 
@@ -4251,9 +4152,7 @@ body.overlay-active .game-ind-name.critical-label {
     border-top: 1px solid var(--line); background: var(--bg1);
   }
 
-  /* ══════════════════════════════════════════
-     GAME — sidebar + conteúdo
-  ══════════════════════════════════════════ */
+  
   #screen-game { flex-direction: row; }
 
   .game-top {
@@ -4316,16 +4215,12 @@ body.overlay-active .game-ind-name.critical-label {
   .choice-letter { width: 46px; font-size: 1rem; }
   .choice-text { font-size: .88rem; }
 
-  /* ══════════════════════════════════════════
-     FEEDBACK
-  ══════════════════════════════════════════ */
+  
   .feedback-top { padding: var(--sp3) 32px var(--sp2); }
   .fb-body { padding: var(--sp2) 32px; }
   .fb-foot { padding: var(--sp2) 32px var(--sp3); }
 
-  /* ══════════════════════════════════════════
-     RESULTADO
-  ══════════════════════════════════════════ */
+  
   #screen-result { flex-direction: row; flex-wrap: wrap; }
 
   .result-header {
@@ -4363,12 +4258,10 @@ body.overlay-active .game-ind-name.critical-label {
 
   .result-actions .btn { min-width: 150px; }
 
-  /* ══════════════════════════════════════════
-     OVERLAYS
-  ══════════════════════════════════════════ */
+  
   .overlay { align-items: center; }
 
-  /* Desktop: overlay centralizado com cantos arredondados */
+  
   .overlay-card {
     max-width: 500px; width: 90%;
     border-radius: var(--r3) !important; border: 1px solid var(--line2);
@@ -4376,7 +4269,7 @@ body.overlay-active .game-ind-name.critical-label {
     box-shadow: 0 24px 64px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
     animation: popIn .25s cubic-bezier(.22,.68,0,1.2) !important;
   }
-  .overlay-card::before { display: none; } /* sem handle no desktop */
+  .overlay-card::before { display: none; } 
 
   .glossary-card, .settings-card {
     max-width: 540px; border-radius: var(--r3);
@@ -4385,14 +4278,12 @@ body.overlay-active .game-ind-name.critical-label {
 }
 
 
-/* ══════════════════════════════════════════════════
-   TELA DE CARREGAMENTO
-══════════════════════════════════════════════════ */
+
 #screen-loading {
   align-items: center; justify-content: center;
   background: var(--bg);
 }
-/* Gradiente de fundo suave */
+
 #screen-loading::before {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(ellipse 60% 50% at 50% 40%, var(--s-glow) 0%, transparent 70%);
@@ -4400,7 +4291,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 #screen-loading:not(.active) { display: none !important; }
 
-/* Screens sem background — evita loading vazar */
+
 #screen-perfil,
 #screen-config,
 #screen-podio,
@@ -4426,7 +4317,7 @@ body.overlay-active .game-ind-name.critical-label {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Logo real da marca, com glow pulsante — consistente com login/auth */
+
 .loading-logo-img {
   width: 64px; height: 64px;
   border-radius: 50%;
@@ -4438,7 +4329,7 @@ body.overlay-active .game-ind-name.critical-label {
   50%      { transform: scale(1.06); filter: drop-shadow(0 0 30px rgba(212,168,83,.6)); }
 }
 
-/* Título */
+
 .loading-title {
   font-family: var(--serif); font-size: 1.4rem; font-weight: 800;
   color: var(--t1); letter-spacing: .08em;
@@ -4446,10 +4337,7 @@ body.overlay-active .game-ind-name.critical-label {
   margin-top: -6px;
 }
 
-/* Mini-barras de indicador "calculando" — referência direta à mecânica
-   central do jogo (indicadores de negócio), em vez de um spinner genérico.
-   Cada barra sobe e desce em looping com atraso escalonado, como um
-   painel de KPIs sendo computado antes de exibir o mandato. */
+
 .loading-bars {
   display: flex; align-items: flex-end; justify-content: center;
   gap: 5px; height: 28px;
@@ -4470,7 +4358,7 @@ body.overlay-active .game-ind-name.critical-label {
   50%      { height: 28px; opacity: 1; }
 }
 
-/* Barra de progresso real */
+
 .loading-bar-wrap { width: 200px; }
 .loading-bar-track {
   width: 100%; height: 3px;
@@ -4485,7 +4373,7 @@ body.overlay-active .game-ind-name.critical-label {
   box-shadow: 0 0 8px var(--s-glow);
 }
 
-/* Mensagens */
+
 .loading-submsg {
   font-size: .72rem; color: var(--t3); opacity: .65;
   min-height: 1em; text-align: center; max-width: 220px;
@@ -4499,9 +4387,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 
 
-/* ════════════════════════════════════════════════════
-   PAINEL ADMIN
-════════════════════════════════════════════════════ */
+
 .admin-nav{
   display:flex; overflow-x:auto; gap:6px; padding:10px var(--sp2);
   border-bottom:1px solid var(--line); background:var(--bg1); flex-shrink:0;
@@ -4523,7 +4409,7 @@ body.overlay-active .game-ind-name.critical-label {
 
 .admin-section{ animation:fadeIn .2s ease; }
 
-/* Cards visão geral */
+
 .admin-cards{
   display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:10px; margin-bottom:var(--sp2);
 }
@@ -4534,7 +4420,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-card-val{ font-size:1.6rem; font-weight:800; color:var(--s-text); font-family:var(--serif); }
 .admin-card-label{ font-size:.7rem; color:var(--t3); margin-top:4px; text-transform:uppercase; letter-spacing:.06em; }
 
-/* Jogadores */
+
 .admin-busca-row{ margin-bottom:12px; }
 .admin-jogador-row{
   background:var(--bg2); border:1px solid var(--line2); border-radius:var(--r2);
@@ -4551,7 +4437,7 @@ body.overlay-active .game-ind-name.critical-label {
   border-radius:4px; margin-left:6px; font-weight:700;
 }
 
-/* Pódio admin */
+
 .admin-reset-row{ display:flex; gap:8px; margin-bottom:12px; align-items:center; }
 .admin-podio-row{
   background:var(--bg2); border:1px solid var(--line2); border-radius:var(--r2);
@@ -4563,7 +4449,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-podio-detalhe{ font-size:.7rem; color:var(--t3); margin-top:2px; }
 .admin-podio-score{ font-size:.95rem; font-weight:800; color:var(--s-text); flex-shrink:0; }
 
-/* Conteúdo */
+
 .admin-conteudo-row{
   background:var(--bg2); border:1px solid var(--line2); border-radius:var(--r2);
   padding:12px; margin-bottom:8px; display:flex; gap:12px; align-items:center;
@@ -4571,15 +4457,15 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-conteudo-setor{ flex:1; font-size:.85rem; font-weight:700; color:var(--t1); }
 .admin-conteudo-stat{ font-size:.75rem; color:var(--t2); flex-shrink:0; }
 
-/* Config */
+
 .admin-config-form{ display:flex; flex-direction:column; gap:14px; }
 .admin-label{ font-size:.78rem; font-weight:600; color:var(--t2); margin-bottom:4px; display:block; }
 .admin-textarea{ min-height:80px; resize:vertical; }
 .admin-toggle-row{ display:flex; justify-content:space-between; align-items:center; }
-/* Toggle switch — substitui checkbox nativo */
-.admin-checkbox { display: none; } /* oculta o nativo caso ainda exista */
 
-/* Checkbox nativo do admin — fundo escuro */
+.admin-checkbox { display: none; } 
+
+
 #versao-critica-check {
   appearance: none;
   -webkit-appearance: none;
@@ -4631,7 +4517,7 @@ body.overlay-active .game-ind-name.critical-label {
   transform: translateX(20px); background: #fff;
 }
 
-/* Banner de alerta de manutenção ativa */
+
 .admin-manutencao-banner {
   display: flex; align-items: center; gap: 8px;
   background: rgba(231,76,60,.15); border: 1px solid rgba(231,76,60,.4);
@@ -4644,7 +4530,7 @@ body.overlay-active .game-ind-name.critical-label {
   50%       { border-color: rgba(231,76,60,.8); }
 }
 
-/* Lista de UIDs admin */
+
 .admin-uid-row {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 0; border-bottom: 1px solid var(--line);
@@ -4657,7 +4543,7 @@ body.overlay-active .game-ind-name.critical-label {
   display: flex; gap: 8px; margin-top: 8px; align-items: center;
 }
 
-/* Histórico modal */
+
 .admin-hist-row{
   display:flex; gap:10px; align-items:center; padding:10px 0;
   border-bottom:1px solid var(--line);
@@ -4667,7 +4553,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-hist-score{ font-size:.85rem; font-weight:700; color:var(--s-text); }
 .admin-hist-data{ font-size:.72rem; color:var(--t3); }
 
-/* Botões admin */
+
 .admin-btn{
   padding:10px 16px; border-radius:var(--r); border:none; cursor:pointer;
   font-size:.8rem; font-weight:700; font-family:var(--sans);
@@ -4682,7 +4568,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-btn-danger, .admin-btn-sm.admin-btn-danger{ background:rgba(231,76,60,.15); color:var(--err); border:1px solid rgba(231,76,60,.3); }
 .admin-btn-danger:hover{ background:rgba(231,76,60,.3); }
 
-/* Inputs */
+
 .admin-input{
   width:100%; padding:10px 14px; background:var(--bg3);
   border:1px solid var(--line2); border-radius:var(--r);
@@ -4691,11 +4577,11 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .admin-input:focus{ outline:none; border-color:var(--s-primary); }
 
-/* Estados */
+
 .admin-loading{ text-align:center; color:var(--t3); padding:24px; font-size:.85rem; letter-spacing:.03em; }
 .admin-empty{ text-align:center; color:var(--t3); padding:24px; font-size:.85rem; }
 
-/* Toast */
+
 .admin-toast{
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
   padding:10px 20px; border-radius:var(--rpill); font-size:.82rem; font-weight:600;
@@ -4705,9 +4591,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-toast-ok{ background:var(--s-gradient); color:#fff; }
 .admin-toast-err{ background:var(--err); color:#fff; }
 
-/* ════════════════════════════════════════════════════
-   ADMIN — LAYOUT DESKTOP (min-width: 800px)
-════════════════════════════════════════════════════ */
+
 @media (min-width: 800px) {
   #screen-admin {
     display: grid !important;
@@ -4720,13 +4604,13 @@ body.overlay-active .game-ind-name.critical-label {
     background: var(--bg);
   }
 
-  /* Topbar ocupa a linha inteira */
+  
   #screen-admin .podio-header {
     grid-area: header;
     border-bottom: 1px solid var(--line);
   }
 
-  /* Nav lateral fixa */
+  
   #screen-admin .admin-nav {
     grid-area: nav;
     flex-direction: column;
@@ -4746,33 +4630,31 @@ body.overlay-active .game-ind-name.critical-label {
     font-size: .8rem;
   }
 
-  /* Body ocupa o restante */
+  
   #screen-admin .admin-body {
     grid-area: body;
     overflow-y: auto;
     padding: var(--sp3);
   }
 
-  /* Config — two columns: mensagem à esquerda, toggle + admins à direita */
+  
   #admin-sec-config .admin-config-form {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
     align-items: start;
   }
-  /* Labels do config como separadores de coluna */
+  
   #admin-sec-config .admin-config-form > label:first-child { grid-column: 1; }
   #admin-sec-config .admin-config-form > .admin-textarea   { grid-column: 1; }
 
-  /* Cards da visão geral em 5 colunas no desktop */
+  
   .admin-cards {
     grid-template-columns: repeat(5, 1fr);
   }
 }
 
-/* ════════════════════════════════════════════════════
-   ADMIN — DROPDOWN CUSTOMIZADO
-════════════════════════════════════════════════════ */
+
 .admin-dropdown {
   position: relative;
   flex: 1;
@@ -4854,9 +4736,7 @@ body.overlay-active .game-ind-name.critical-label {
   font-weight: 600;
 }
 
-/* ════════════════════════════════════════════════════
-   ADMIN — MODAIS CUSTOMIZADOS (Mensagem Global + Ban)
-════════════════════════════════════════════════════ */
+
 .admin-modal-overlay {
   position: fixed;
   inset: 0;
@@ -4935,7 +4815,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .admin-modal-foot .admin-btn { flex: 1; text-align: center; }
 
-/* Preview da mensagem global */
+
 .admin-modal-preview {
   background: var(--bg3);
   border: 1px solid var(--s-bd-accent);
@@ -4956,7 +4836,7 @@ body.overlay-active .game-ind-name.critical-label {
   line-height: 1.5;
 }
 
-/* ── MODAL BAN ─────────── */
+
 .admin-ban-player-card {
   display: flex;
   align-items: center;
@@ -5009,9 +4889,7 @@ body.overlay-active .game-ind-name.critical-label {
   padding-top: 12px;
 }
 
-/* ════════════════════════════════════════════════════
-   OVERLAY DE MANUTENÇÃO (não expulsa — bloqueia jogo)
-════════════════════════════════════════════════════ */
+
 #overlay-manutencao {
   position: fixed;
   inset: 0;
@@ -5081,11 +4959,11 @@ body.overlay-active .game-ind-name.critical-label {
   cursor: pointer;
   font-family: var(--sans);
   transition: background .18s;
-  display: none; /* só visível no meio de uma partida */
+  display: none; 
 }
 .manut-btn-salvar:hover { background: var(--bg4); }
 
-/* ── Botão Iniciar Mandato bloqueado durante manutenção ── */
+
 .home-start-btn.manutencao-ativa {
   opacity: .35;
   cursor: not-allowed;
@@ -5101,9 +4979,7 @@ body.overlay-active .game-ind-name.critical-label {
   margin-top: 4px;
 }
 
-/* ════════════════════════════════════════════════════
-   OVERLAY DE MENSAGEM GLOBAL
-════════════════════════════════════════════════════ */
+
 #overlay-msg-global {
   position: fixed;
   inset: 0;
@@ -5169,9 +5045,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .msg-global-btn:hover { opacity: .85; }
 
-/* ════════════════════════════════════════════════════
-   OVERLAY DE BANIMENTO
-════════════════════════════════════════════════════ */
+
 .ban-card {
   background: var(--bg1);
   border: 1px solid rgba(231,76,60,.3);
@@ -5211,7 +5085,7 @@ body.overlay-active .game-ind-name.critical-label {
   letter-spacing: .04em;
 }
 
-/* ── Botão sair do modo convidado ── */
+
 .perfil-guest-sair {
   background: transparent;
   border-color: var(--line2);
@@ -5224,15 +5098,13 @@ body.overlay-active .game-ind-name.critical-label {
   border-color: var(--line3);
 }
 
-/* ════════════════════════════════════════════════════
-   SVG ICON HELPERS
-════════════════════════════════════════════════════ */
 
-/* Generic icon button — removes extra space from SVG inside btn */
+
+
 .btn-icon { display: inline-flex; align-items: center; justify-content: center; }
 .btn-icon svg { display: block; }
 
-/* Status dots — replace emoji 🟢 🟡 🔴 */
+
 .status-dot {
   display: inline-block;
   width: 9px; height: 9px;
@@ -5244,22 +5116,20 @@ body.overlay-active .game-ind-name.critical-label {
 .dot-warn { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
 .dot-err  { background: var(--err); box-shadow: 0 0 6px var(--err); }
 
-/* Cloud status with data-state icon prefix via CSS */
+
 #result-cloud-status[data-state="saving"]::before { content: ''; display: inline-block; width: 8px; height: 8px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
 #result-cloud-status[data-state="ok"]::before    { content: '✓'; margin-right: 5px; color: var(--ok); font-weight: 700; }
 #result-cloud-status[data-state="err"]::before   { content: '✕'; margin-right: 5px; color: var(--err); font-weight: 700; }
 
-/* Lock icon for locked achievements */
+
 .conquista-lock { display: flex; align-items: center; justify-content: center; opacity: .4; }
 
-/* Auth recover icon — key SVG */
+
 .auth-recover-icon { display: flex; align-items: center; justify-content: center; margin-bottom: 4px; opacity: .7; }
 
-/* ════════════════════════════════════════════════════
-   OVERLAY DE BANIMENTO — COMPLETO
-════════════════════════════════════════════════════ */
 
-/* Override the old .ban-card to match the new structure */
+
+
 .ban-card {
   background: var(--bg1);
   border: 1px solid rgba(231,76,60,.25);
@@ -5284,7 +5154,7 @@ body.overlay-active .game-ind-name.critical-label {
   letter-spacing: .02em;
 }
 
-/* Motivo box */
+
 .ban-motivo-box {
   background: rgba(231,76,60,.08);
   border: 1px solid rgba(231,76,60,.2);
@@ -5322,7 +5192,7 @@ body.overlay-active .game-ind-name.critical-label {
   letter-spacing: .06em;
 }
 
-/* Barra de progresso do countdown */
+
 .ban-progress-wrap {
   width: 100%;
   height: 3px;
@@ -5365,9 +5235,7 @@ body.overlay-active .game-ind-name.critical-label {
   gap: 6px;
 }
 
-/* ════════════════════════════════════════════════════
-   ADMIN — MOTIVOS DE BANIMENTO
-════════════════════════════════════════════════════ */
+
 .admin-motivo-grid {
   display: flex;
   flex-wrap: wrap;
@@ -5394,7 +5262,7 @@ body.overlay-active .game-ind-name.critical-label {
   font-weight: 600;
 }
 
-/* Histórico de banimentos no modal */
+
 .admin-ban-hist-entry {
   display: flex;
   align-items: center;
@@ -5415,11 +5283,9 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-ban-hist-motivo { flex: 1; color: var(--t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-ban-hist-data   { color: var(--t3); flex-shrink: 0; }
 
-/* ════════════════════════════════════════════════════
-   TAB BAR — HOME E JOGO
-════════════════════════════════════════════════════ */
 
-/* Home tab bar: ícones e texto com cor do tema */
+
+
 .home-tab-btn {
   color: var(--t3);
   transition: color .18s;
@@ -5433,7 +5299,7 @@ body.overlay-active .game-ind-name.critical-label {
   flex-shrink: 0;
 }
 
-/* Game tab bar: ícones SVG herdam a cor do btn */
+
 .tab-btn svg {
   stroke: currentColor;
   flex-shrink: 0;
@@ -5445,11 +5311,9 @@ body.overlay-active .game-ind-name.critical-label {
   gap: 5px;
 }
 
-/* ════════════════════════════════════════════════════
-   PERFIL — AJUSTES VISUAIS
-════════════════════════════════════════════════════ */
 
-/* Botão logout neutro — sem vermelho */
+
+
 .perfil-logout-neutro {
   background: transparent;
   border: 1px solid var(--line2);
@@ -5466,11 +5330,9 @@ body.overlay-active .game-ind-name.critical-label {
   border-color: var(--line3);
 }
 
-/* Card setor favorito — override consolidado no bloco principal do perfil */
 
-/* ════════════════════════════════════════════════════
-   PÓDIO — ESTADO ESPARSO
-════════════════════════════════════════════════════ */
+
+
 .podio-empty-login {
   padding: 40px 24px;
   display: flex;
@@ -5482,9 +5344,7 @@ body.overlay-active .game-ind-name.critical-label {
   text-align: center;
 }
 
-/* ════════════════════════════════════════════════════
-   RECOMENDAÇÕES — WARNING DOT
-════════════════════════════════════════════════════ */
+
 .rec-warn-dot {
   display: inline-block;
   width: 7px; height: 7px;
@@ -5496,9 +5356,7 @@ body.overlay-active .game-ind-name.critical-label {
   box-shadow: 0 0 5px var(--warn);
 }
 
-/* ════════════════════════════════════════════════════
-   OVERLAY CONFIRMAÇÃO DE SAÍDA
-════════════════════════════════════════════════════ */
+
 .confirmar-saida-card {
   background: var(--bg1);
   border: 1px solid var(--line2);
@@ -5547,7 +5405,7 @@ body.overlay-active .game-ind-name.critical-label {
   border-color: var(--line2);
   color: var(--t2);
 }
-/* Variantes do botão de confirmar */
+
 .confirmar-saida-confirmar--neutro {
   background: var(--bg3);
   border: 1px solid var(--line3);
@@ -5564,9 +5422,7 @@ body.overlay-active .game-ind-name.critical-label {
   color: var(--err);
 }
 
-/* ════════════════════════════════════════════════════
-   ADMIN · VERSÃO
-════════════════════════════════════════════════════ */
+
 .admin-versao-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
 .admin-versao-card {
@@ -5636,7 +5492,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-versao-hist-log { font-size: .8rem; color: var(--t2); line-height: 1.5; }
 .admin-versao-hist-hash { font-size: .68rem; color: var(--t4); font-family: monospace; margin-top: 4px; }
 
-/* Toast de atualização disponível */
+
 .update-toast {
   position: fixed; bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   left: 50%; transform: translateX(-50%);
@@ -5657,11 +5513,9 @@ body.overlay-active .game-ind-name.critical-label {
   padding: 4px 12px; cursor: pointer;
 }
 
-/* ════════════════════════════════════════════════════
-   ADMIN v7 — Novos componentes
-════════════════════════════════════════════════════ */
 
-/* Título de seção interno */
+
+
 .admin-sec-title {
   font-size: .68rem; font-weight: 700; letter-spacing: .1em;
   text-transform: uppercase; color: var(--t3);
@@ -5669,7 +5523,7 @@ body.overlay-active .game-ind-name.critical-label {
   margin-top: 8px;
 }
 
-/* CSV button */
+
 .admin-btn-csv {
   background: var(--bg3); border: 1px solid var(--line2);
   color: var(--t2); font-size: .75rem; font-weight: 600;
@@ -5679,7 +5533,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .admin-btn-csv:active { opacity: .7; }
 
-/* Filtros de aba (Todos/Ativos/Banidos) */
+
 .admin-filtros-row {
   display: flex; gap: 6px; padding: 0 16px 10px;
 }
@@ -5693,7 +5547,7 @@ body.overlay-active .game-ind-name.critical-label {
   background: var(--s-gradient); color: #fff; border-color: transparent;
 }
 
-/* Dashboard */
+
 .admin-dash-periodo {
   display: flex; gap: 6px; padding: 12px 16px 8px;
 }
@@ -5738,7 +5592,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-dash-rod { font-size: .78rem; color: var(--t3); min-width: 36px; }
 .admin-dash-abandono-pct { font-size: .82rem; font-weight: 700; color: var(--t1); min-width: 36px; }
 
-/* Histórias */
+
 .admin-historias-info {
   font-size: .78rem; color: var(--t3); padding: 12px 16px 8px; line-height: 1.5;
 }
@@ -5756,7 +5610,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-historia-badge.ativa    { background: rgba(34,197,94,.15); color: #22c55e; }
 .admin-historia-badge.inativa  { background: var(--bg4); color: var(--t3); }
 
-/* Feedback */
+
 .admin-feedback-media {
   display: flex; flex-direction: column; align-items: center;
   gap: 4px; padding: 20px 16px 12px;
@@ -5783,7 +5637,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-feedback-recente-estrelas { font-size: .85rem; color: #f59e0b; }
 .admin-feedback-recente-texto { font-size: .78rem; color: var(--t2); line-height: 1.4; }
 
-/* Sessões */
+
 .admin-sessoes-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 16px 8px;
@@ -5807,7 +5661,7 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-sessao-detalhe { font-size: .72rem; color: var(--t3); margin-top: 2px; }
 .admin-sessao-tempo { font-size: .72rem; color: var(--t4); font-family: monospace; }
 
-/* Logs */
+
 .admin-logs-filtros {
   display: flex; gap: 6px; padding: 12px 16px 8px;
 }
@@ -5829,14 +5683,14 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-log-msg   { font-size: .8rem; color: var(--t1); margin-bottom: 2px; }
 .admin-log-meta  { font-size: .7rem; color: var(--t3); }
 
-/* Config — Agendamento */
+
 .admin-agendamento-row {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   padding: 8px 0;
 }
 .admin-agendamento-field { display: flex; flex-direction: column; gap: 4px; }
 
-/* Log de auditoria */
+
 .admin-audit-row {
   padding: 8px 0; border-bottom: 1px solid var(--line2);
   font-size: .78rem; color: var(--t2); line-height: 1.4;
@@ -5845,23 +5699,21 @@ body.overlay-active .game-ind-name.critical-label {
 .admin-audit-quem { font-weight: 600; color: var(--t1); }
 .admin-audit-quando { color: var(--t4); font-size: .7rem; }
 
-/* Ao vivo (aba Geral) */
+
 .admin-aovivo-row {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 16px; border-bottom: 1px solid var(--line2);
 }
 
-/* Busca row com CSV */
+
 .admin-busca-row {
   display: flex; gap: 8px; padding: 12px 16px 6px; align-items: center;
 }
 .admin-busca-row .admin-input { flex: 1; }
 
-/* ════════════════════════════════════════════════════
-   SALA — Sprint 1
-════════════════════════════════════════════════════ */
 
-/* Badge sala ativa (acima da tab bar) */
+
+
 .home-sala-badge {
   display: none;
   margin: 0 16px 8px;
@@ -5880,7 +5732,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .home-sala-badge:active { opacity: .7; }
 
-/* Modal sala */
+
 .modal-overlay {
   position: fixed; inset: 0; z-index: 99999;
   background: rgba(0,0,0,.6);
@@ -5913,7 +5765,7 @@ body.overlay-active .game-ind-name.critical-label {
   display: flex; justify-content: flex-end; gap: 10px;
 }
 
-/* Input de código */
+
 .sala-input-group { display: flex; flex-direction: column; gap: 6px; }
 .sala-label { font-size: .75rem; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; }
 .sala-input {
@@ -5930,7 +5782,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .sala-input:focus { outline: none; border-color: var(--purple); }
 
-/* Status do modal */
+
 .sala-status {
   font-size: .82rem; padding: 8px 12px;
   border-radius: 8px; text-align: center;
@@ -5939,7 +5791,7 @@ body.overlay-active .game-ind-name.critical-label {
 .sala-status--ok   { background: rgba(46,204,113,.12); color: var(--ok); }
 .sala-status--info { background: var(--bg); color: var(--t2); }
 
-/* Sala atual info */
+
 .sala-atual-info {
   display: flex; align-items: center; justify-content: space-between;
   background: var(--bg); border-radius: 10px; padding: 10px 14px;
@@ -5952,7 +5804,7 @@ body.overlay-active .game-ind-name.critical-label {
   white-space: nowrap;
 }
 
-/* Screen pódio da sala */
+
 .podio-sala-card {
   display: flex; align-items: center; gap: 12px;
   padding: 14px 16px;
@@ -5966,7 +5818,7 @@ body.overlay-active .game-ind-name.critical-label {
 .podio-sala-sub  { font-size: .75rem; color: var(--t3); margin-top: 2px; }
 .podio-sala-score { font-size: 1.4rem; font-weight: 800; }
 
-/* Tela de espera */
+
 .podio-sala-espera {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
@@ -5976,15 +5828,13 @@ body.overlay-active .game-ind-name.critical-label {
 .podio-espera-msg  { font-weight: 700; font-size: 1rem; color: var(--t1); }
 .podio-espera-sub  { font-size: .82rem; color: var(--t3); line-height: 1.5; }
 
-/* Loading state */
+
 .podio-loading {
   text-align: center; color: var(--t3);
   font-size: .85rem; padding: 40px 0;
 }
 
-/* ════════════════════════════════════════════════════
-   GRUPOS — Sprint 2
-════════════════════════════════════════════════════ */
+
 
 .grupos-min-aviso {
   font-size: .75rem; color: var(--t3);
@@ -5995,7 +5845,7 @@ body.overlay-active .game-ind-name.critical-label {
   text-align: center; padding: 10px 0;
 }
 
-/* Botão criar grupo */
+
 .btn-criar-grupo {
   width: 100%; padding: 13px;
   background: none;
@@ -6008,7 +5858,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .btn-criar-grupo:active { background: rgba(155,89,182,.1); }
 
-/* Card de grupo */
+
 .grupo-card {
   display: flex; align-items: center; gap: 12px;
   padding: 14px 16px;
@@ -6027,7 +5877,7 @@ body.overlay-active .game-ind-name.critical-label {
   align-items: flex-end; gap: 6px;
 }
 
-/* Badges */
+
 .grupo-badge {
   font-size: .65rem; font-weight: 700; padding: 2px 7px;
   border-radius: 20px; letter-spacing: .3px;
@@ -6035,14 +5885,14 @@ body.overlay-active .game-ind-name.critical-label {
 .grupo-badge--eu    { background: rgba(52,152,219,.15); color: #3498db; }
 .grupo-badge--lider { background: none; }
 
-/* Status do grupo */
+
 .grupo-status {
   font-size: .75rem; color: var(--t3); font-weight: 600;
 }
 .grupo-status--cheio { color: var(--err); }
 .grupo-status--jogo  { color: var(--warn); }
 
-/* Botão entrar no grupo */
+
 .btn-entrar-grupo {
   background: var(--purple); color: #fff;
   border: none; border-radius: 8px;
@@ -6052,7 +5902,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .btn-entrar-grupo:active { opacity: .75; }
 
-/* Seletor de cor */
+
 .grupo-cor-options {
   display: flex; flex-wrap: wrap; gap: 10px; padding: 4px 0;
 }
@@ -6066,9 +5916,7 @@ body.overlay-active .game-ind-name.critical-label {
   transform: scale(1.2);
 }
 
-/* ════════════════════════════════════════════════════
-   LOBBY — Sprint 3
-════════════════════════════════════════════════════ */
+
 .lobby-body { padding: 0 0 24px; }
 .lobby-sala-info { text-align:center; color:var(--t3); font-size:.82rem; padding:10px 16px 0; }
 .lobby-section-label { font-size:.72rem; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; padding:16px 16px 6px; }
@@ -6077,9 +5925,7 @@ body.overlay-active .game-ind-name.critical-label {
 .lobby-btn-iniciar { display:block; margin:20px 16px 0; width:calc(100% - 32px); }
 .lobby-aguardo-msg { text-align:center; color:var(--t3); font-size:.8rem; padding:12px 0 0; }
 
-/* ════════════════════════════════════════════════════
-   VOTAÇÃO — Sprint 4
-════════════════════════════════════════════════════ */
+
 .votacao-header {
   display:flex; align-items:center; justify-content:space-between;
   padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line2);
@@ -6114,7 +5960,7 @@ body.overlay-active .game-ind-name.critical-label {
 .votacao-avatar-nome { font-size:.65rem; color:var(--t3); }
 .votacao-avatar-check { position:absolute; top:-4px; right:-4px; background:var(--purple); color:#fff; border-radius:50%; width:16px; height:16px; font-size:.6rem; display:flex; align-items:center; justify-content:center; }
 
-/* Barra de revelação */
+
 .votacao-barra { display:flex; flex-direction:column; gap:8px; }
 .barra-opcao { display:flex; align-items:center; gap:10px; }
 .barra-letra { font-weight:800; min-width:20px; color:var(--t2); }
@@ -6124,18 +5970,14 @@ body.overlay-active .game-ind-name.critical-label {
 .barra-pct { font-size:.75rem; color:var(--t3); min-width:50px; }
 .barra-win-badge { font-size:.7rem; background:rgba(46,204,113,.15); color:var(--ok); padding:2px 7px; border-radius:20px; font-weight:700; }
 
-/* ════════════════════════════════════════════════════
-   RESULTADO GRUPO — Sprint 5
-════════════════════════════════════════════════════ */
+
 .resultado-grupo-body { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; gap:12px; text-align:center; min-height:60vh; }
 .resultado-grupo-nome { font-size:1.1rem; font-weight:700; color:var(--t1); }
 .resultado-grupo-score-label { font-size:.78rem; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; }
 .resultado-grupo-score { font-size:4rem; font-weight:900; line-height:1; }
 .resultado-grupo-aviso { font-size:.82rem; color:var(--t3); margin-top:8px; }
 
-/* ════════════════════════════════════════════════════
-   PAINEL ANFITRIÃO — Sprint 6
-════════════════════════════════════════════════════ */
+
 .painel-anf-body { padding:16px; display:flex; flex-direction:column; gap:16px; }
 .painel-anf-section { background:var(--card); border-radius:12px; padding:16px; }
 .painel-anf-label { font-size:.78rem; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
@@ -6143,9 +5985,7 @@ body.overlay-active .game-ind-name.critical-label {
 .espera-grupo-row { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--card); border-radius:10px; margin-bottom:8px; font-size:.88rem; }
 .btn-danger { background:rgba(231,76,60,.12); color:var(--err); border:1px solid var(--err); border-radius:10px; padding:10px 16px; font-size:.88rem; font-weight:700; cursor:pointer; }
 
-/* ════════════════════════════════════════════════════
-   MODAL MODO DE JOGO
-════════════════════════════════════════════════════ */
+
 .modo-card {
   width: 100%;
   display: flex; align-items: center; gap: 14px;
@@ -6164,9 +6004,7 @@ body.overlay-active .game-ind-name.critical-label {
 .modo-card-desc { font-size: .78rem; color: var(--t3); margin-top: 3px; line-height: 1.4; }
 .modo-card-arrow { font-size: 1.4rem; color: var(--t3); }
 
-/* ════════════════════════════════════════════════════
-   CRIAR SALA — admin
-════════════════════════════════════════════════════ */
+
 .modo-divisor {
   text-align: center; color: var(--t3);
   font-size: .75rem; margin: 4px 0;
@@ -6183,7 +6021,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .modo-card--criar:active { background: rgba(155,89,182,.08); }
 
-/* Radio group setor */
+
 .criar-sala-radio-group { display: flex; flex-direction: column; gap: 8px; }
 .criar-sala-radio {
   display: flex; align-items: center; gap: 10px;
@@ -6194,7 +6032,7 @@ body.overlay-active .game-ind-name.critical-label {
 .criar-sala-radio:has(input:checked) { border-color: var(--purple); }
 .criar-sala-radio input { accent-color: var(--purple); width: 16px; height: 16px; }
 
-/* Modal código gerado */
+
 .codigo-gerado-label { font-size: .75rem; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; }
 .codigo-gerado-valor {
   font-size: 2.5rem; font-weight: 900; letter-spacing: 8px;
@@ -6203,9 +6041,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .codigo-gerado-desc { font-size: .82rem; color: var(--t3); line-height: 1.5; }
 
-/* ════════════════════════════════════════════════════
-   PAINEL ANFITRIÃO INLINE — tela de grupos
-════════════════════════════════════════════════════ */
+
 .anf-painel {
   margin: 12px 16px;
   background: var(--card);
@@ -6232,7 +6068,7 @@ body.overlay-active .game-ind-name.critical-label {
 .anf-status-label { font-size: .62rem; color: var(--t3); text-transform: uppercase; letter-spacing: .3px; }
 .anf-status-val   { font-size: .95rem; font-weight: 800; color: var(--t1); }
 
-/* Grid de ações */
+
 .anf-acoes {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 8px; padding: 12px;
@@ -6254,14 +6090,14 @@ body.overlay-active .game-ind-name.critical-label {
 .anf-btn--encerrar { background: rgba(231,76,60,.12);   color: var(--err); border: 1px solid rgba(231,76,60,.3); }
 .anf-btn--disabled { opacity: .4; cursor: not-allowed; }
 
-/* Status pódio */
+
 .anf-podio-status {
   font-size: .75rem; color: var(--t3);
   padding: 0 12px 12px; text-align: center;
 }
 .anf-podio-status--pronto { color: var(--ok); font-weight: 700; }
 
-/* Modal gerenciar grupos */
+
 .gerenciar-grupo-bloco {
   background: var(--bg); border-radius: 10px;
   padding: 12px; margin-bottom: 10px;
@@ -6291,12 +6127,9 @@ body.overlay-active .game-ind-name.critical-label {
   background: rgba(52,152,219,.12); color: #3498db;
 }
 .anf-btn-sm--danger { background: rgba(231,76,60,.12); color: var(--err); }
-/* ═══════════════════════════════════════════════════════════════
-   UNDER PRESSURE — MODO SALA v2.0 — ESTILOS
-   Adicione ao final de style.css
-═══════════════════════════════════════════════════════════════ */
 
-/* ─── VARIÁVEIS EXTRAS ─── */
+
+
 :root {
   --ns-alerta:      #e74c3c;
   --ns-deliberacao: #f39c12;
@@ -6307,9 +6140,7 @@ body.overlay-active .game-ind-name.critical-label {
   --ns-fase-glow: 0 0 20px rgba(52,152,219,.35);
 }
 
-/* ══════════════════════════════════════════════
-   MODAL DE ENTRADA NA SALA
-══════════════════════════════════════════════ */
+
 .ns-modal-card { max-width: 360px; }
 .ns-modal-body { padding: 20px 20px 8px; }
 
@@ -6374,9 +6205,7 @@ body.overlay-active .game-ind-name.critical-label {
 .ns-status--info   { background: var(--bg3); color: var(--t2); }
 
 
-/* ══════════════════════════════════════════════
-   WAR ROOM — SCREEN GRUPOS
-══════════════════════════════════════════════ */
+
 .ns-players-bar {
   background: var(--bg2);
   border-bottom: 1px solid var(--line);
@@ -6400,7 +6229,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .ns-player-chip .ns-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
 
-/* Painel Anfitrião inline */
+
 .ns-anf-painel {
   background: var(--bg2);
   border-bottom: 2px solid var(--line);
@@ -6433,7 +6262,7 @@ body.overlay-active .game-ind-name.critical-label {
 .ns-anf-podio-status { font-size: .75rem; color: var(--t3); text-align: center; padding: 4px 0; }
 .ns-anf-podio-status--pronto { color: var(--ok); font-weight: 600; }
 
-/* Lista de grupos */
+
 .ns-grupos-lista { padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
 .ns-btn-criar {
   display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -6505,9 +6334,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 
 
-/* ══════════════════════════════════════════════
-   LOBBY DO GRUPO — NOVO
-══════════════════════════════════════════════ */
+
 .ns-lobby-header {
   display: flex;
   align-items: center;
@@ -6553,7 +6380,7 @@ body.overlay-active .game-ind-name.critical-label {
 .ns-btn-iniciar { width: 100%; font-size: 1rem; padding: 14px; }
 .ns-lobby-aguardo { text-align: center; font-size: .82rem; color: var(--t3); padding: 8px 0; }
 
-/* Papel card */
+
 .ns-papel-card {
   margin: 14px 16px 8px;
   background: var(--bg2);
@@ -6592,7 +6419,7 @@ body.overlay-active .game-ind-name.critical-label {
   color: var(--acc);
 }
 
-/* Lobby jogadores */
+
 .ns-lobby-section { font-size: .7rem; font-weight: 700; color: var(--t3); letter-spacing: .08em; text-transform: uppercase; padding: 12px 16px 6px; }
 .ns-lobby-jogadores { padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
 .ns-lobby-player {
@@ -6614,7 +6441,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .ns-lobby-player-papel--lider { background: rgba(241,196,15,.15); color: #f1c40f; }
 
-/* Info de papéis */
+
 .ns-papeis-info {
   margin: 14px 16px 0;
   background: var(--bg2);
@@ -6634,9 +6461,7 @@ body.overlay-active .game-ind-name.critical-label {
 .ns-papel-mini-desc { font-size: .68rem; color: var(--t3); margin-top: 1px; }
 
 
-/* ══════════════════════════════════════════════
-   SCREEN JOGO GRUPO — WAR ROOM
-══════════════════════════════════════════════ */
+
 #screen-jogo-grupo {
   display: flex;
   flex-direction: column;
@@ -6645,7 +6470,7 @@ body.overlay-active .game-ind-name.critical-label {
   max-height: 100vh;
 }
 
-/* HEADER */
+
 .jg-header {
   display: flex;
   align-items: center;
@@ -6668,7 +6493,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .jg-grupo-cor-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--acc); flex-shrink: 0; }
 
-/* Timer Circular */
+
 .jg-timer-wrap { position: relative; width: 44px; height: 44px; flex-shrink: 0; cursor: default; }
 .jg-timer-svg  { width: 44px; height: 44px; transform: rotate(-90deg); }
 .jg-timer-bg   { fill: none; stroke: var(--line2); stroke-width: 3; }
@@ -6685,7 +6510,7 @@ body.overlay-active .game-ind-name.critical-label {
 .jg-timer-urgent .jg-timer-ring { stroke: var(--err); }
 .jg-timer-urgent .jg-timer-num  { color: var(--err); }
 
-/* INDICADORES */
+
 .jg-inds {
   display: flex;
   gap: 6px;
@@ -6717,7 +6542,7 @@ body.overlay-active .game-ind-name.critical-label {
 .jg-ind-delta--pos { color: var(--ok); display: block; }
 .jg-ind-delta--neg { color: var(--err); display: block; }
 
-/* FASE BADGE */
+
 .jg-fase-badge {
   text-align: center;
   font-size: .68rem; font-weight: 700;
@@ -6733,12 +6558,12 @@ body.overlay-active .game-ind-name.critical-label {
 .jg-fase--impacto     .jg-fase-badge { background: rgba(39,174,96,.12);  color: var(--ns-impacto); }
 .jg-fase--placar      .jg-fase-badge { background: rgba(26,188,156,.12); color: var(--ns-placar); }
 
-/* CORPO */
+
 .jg-corpo { flex: 1; overflow-y: auto; padding: 12px; scrollbar-width: none; }
 .jg-corpo::-webkit-scrollbar { display: none; }
 .jg-loading { text-align: center; color: var(--t3); padding: 40px; font-size: .88rem; }
 
-/* ── FASE ALERTA ── */
+
 .jg-alerta-wrap {
   display: flex; flex-direction: column; align-items: center;
   padding: 8px 0 12px;
@@ -6773,7 +6598,7 @@ body.overlay-active .game-ind-name.critical-label {
   padding: 10px 12px 0; line-height: 1.5;
 }
 
-/* ── FASE DELIBERAÇÃO ── */
+
 .jg-delib-wrap { animation: jg-fade-in .35s ease; }
 .jg-crisis-box {
   background: var(--bg2);
@@ -6799,7 +6624,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 .jg-opcao-texto { flex: 1; line-height: 1.4; }
 
-/* Insight do papel */
+
 .jg-insight-box {
   background: rgba(99,102,241,.07);
   border: 1px solid rgba(99,102,241,.2);
@@ -6831,7 +6656,7 @@ body.overlay-active .game-ind-name.critical-label {
 .jg-sinal-btn--ativo { background: rgba(99,102,241,.1); border-color: var(--acc); color: var(--acc); }
 .jg-sinal-emoji { font-size: 1.3rem; }
 
-/* Sinais dos outros no display */
+
 .jg-sinais-outros { display: flex; flex-wrap: wrap; gap: 6px; }
 .jg-sinal-outro {
   display: flex; align-items: center; gap: 5px;
@@ -6840,7 +6665,7 @@ body.overlay-active .game-ind-name.critical-label {
   font-size: .74rem; color: var(--t2);
 }
 
-/* ── FASE VOTAÇÃO ── */
+
 .jg-votacao-wrap { animation: jg-fade-in .35s ease; }
 .jg-crise-mini {
   background: var(--bg2); border: 1px solid var(--line);
@@ -6887,7 +6712,7 @@ body.overlay-active .game-ind-name.critical-label {
 .jg-conf-btn--ativo { border-color: var(--acc); background: rgba(99,102,241,.1); color: var(--acc); }
 .jg-conf-emoji { font-size: 1.2rem; }
 
-/* ── FASE REVELAÇÃO ── */
+
 .jg-revelacao-wrap { animation: jg-fade-in .35s ease; }
 .jg-rev-titulo { font-size: .8rem; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
 .jg-rev-barras { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
@@ -6923,7 +6748,7 @@ body.overlay-active .game-ind-name.critical-label {
 .jg-decisao-label { font-size: .68rem; font-weight: 700; color: var(--ok); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
 .jg-decisao-txt { font-size: .88rem; color: var(--t1); font-weight: 600; }
 
-/* ── FASE IMPACTO ── */
+
 .jg-impacto-wrap { animation: jg-fade-in .35s ease; }
 .jg-impacto-titulo { font-size: .8rem; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
 .jg-impacto-grid { display: flex; flex-direction: column; gap: 6px; }
@@ -6945,7 +6770,7 @@ body.overlay-active .game-ind-name.critical-label {
 .jg-delta-neg { background: rgba(231,76,60,.12);  color: var(--err); }
 .jg-delta-neu { background: var(--bg3); color: var(--t3); }
 
-/* ── FASE PLACAR ── */
+
 .jg-placar-wrap { animation: jg-fade-in .35s ease; }
 .jg-placar-titulo { font-size: .8rem; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
 .jg-placar-lista { display: flex; flex-direction: column; gap: 7px; }
@@ -6970,7 +6795,7 @@ body.overlay-active .game-ind-name.critical-label {
 .jg-trend-down { background: rgba(231,76,60,.12); color: var(--err); }
 .jg-trend-neu  { background: var(--bg3); color: var(--t3); }
 
-/* AVATARES */
+
 .jg-avatares-barra {
   padding: 8px 12px;
   border-top: 1px solid var(--line);
@@ -7013,9 +6838,7 @@ body.overlay-active .game-ind-name.critical-label {
   font-size: .55rem; color: var(--t3); font-weight: 700;
 }
 
-/* ══════════════════════════════════════════════
-   RESULTADO DO GRUPO — NOVO
-══════════════════════════════════════════════ */
+
 .ns-resultado-body { overflow-y: auto; padding: 0 0 20px; }
 .ns-resultado-card {
   text-align: center; padding: 24px 16px 20px;
@@ -7052,9 +6875,7 @@ body.overlay-active .game-ind-name.critical-label {
 .ns-resultado-aviso { text-align: center; font-size: .82rem; color: var(--t3); padding: 12px 16px 0; }
 
 
-/* ══════════════════════════════════════════════
-   PÓDIO DA SALA — NOVO
-══════════════════════════════════════════════ */
+
 .ns-podio-espera {
   display: flex; flex-direction: column; align-items: center;
   padding: 48px 24px;
@@ -7088,9 +6909,7 @@ body.overlay-active .game-ind-name.critical-label {
 }
 
 
-/* ══════════════════════════════════════════════
-   ANIMAÇÕES
-══════════════════════════════════════════════ */
+
 @keyframes jg-fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -7109,9 +6928,7 @@ body.overlay-active .game-ind-name.critical-label {
 .jg-anim-shake { animation: jg-shake .4s ease; }
 
 
-/* ══════════════════════════════════════════════
-   UTILS
-══════════════════════════════════════════════ */
+
 .ns-lobby-msgs {
   padding: 10px 16px 0;
   display: flex; flex-direction: column; gap: 6px;
@@ -7123,7 +6940,7 @@ body.overlay-active .game-ind-name.critical-label {
   animation: jg-fade-in .3s ease;
 }
 
-/* Bloquear menu de contexto e arrastar nas imagens do logo */
+
 .login-logo-img,
 .auth-logo-img,
 .loading-logo-img,
@@ -7135,44 +6952,42 @@ body.overlay-active .game-ind-name.critical-label {
   pointer-events: none;
 }
 
-/* ════════════════════════════════════════════════════
-   ANIMAÇÕES DE INDICADORES
-════════════════════════════════════════════════════ */
 
-/* Flash quando indicador sobe */
+
+
 @keyframes indFlashUp {
   0%   { background: rgba(34,197,94,.0);  box-shadow: none; }
   30%  { background: rgba(34,197,94,.18); box-shadow: 0 0 12px rgba(34,197,94,.25); border-color: rgba(34,197,94,.5); }
   100% { background: var(--bg2);          box-shadow: none; }
 }
 
-/* Flash quando indicador desce */
+
 @keyframes indFlashDown {
   0%   { background: rgba(239,68,68,.0);  box-shadow: none; }
   30%  { background: rgba(239,68,68,.18); box-shadow: 0 0 12px rgba(239,68,68,.25); border-color: rgba(239,68,68,.5); }
   100% { background: var(--bg2);          box-shadow: none; }
 }
 
-/* Contador animando (número subindo/descendo) */
+
 @keyframes valPop {
   0%   { transform: scale(1); }
   40%  { transform: scale(1.35); }
   100% { transform: scale(1); }
 }
 
-/* Barra crescendo/encolhendo */
+
 @keyframes barGrow {
   from { width: var(--bar-from); }
   to   { width: var(--bar-to); }
 }
 
-/* Chips do feedback — entrada sequencial */
+
 @keyframes chipSlideIn {
   from { opacity: 0; transform: translateY(8px) scale(.92); }
   to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
-/* Pulso de cor nos chips */
+
 @keyframes chipPulseGood {
   0%,100% { box-shadow: none; }
   50%     { box-shadow: 0 0 10px rgba(34,197,94,.4); }
@@ -7182,19 +6997,15 @@ body.overlay-active .game-ind-name.critical-label {
   50%     { box-shadow: 0 0 10px rgba(239,68,68,.4); }
 }
 
-/* Classes aplicadas por JS */
+
 .ind-flash-up   { animation: indFlashUp   .7s ease forwards; }
 .ind-flash-down { animation: indFlashDown .7s ease forwards; }
 
 .ind-val-pop { animation: valPop .35s cubic-bezier(.22,.68,0,1.4) forwards; }
 
-/* Removido: animação dos chips agora é 100% via JS (_animarChips / _dispararAnimacaoChips
-   em mainBeta.js). Uma regra CSS .fb-chip { animation: ... } aqui disparava a entrada
-   imediatamente ao inserir no DOM, brigando com e sobrescrevendo o controle via JS. */
 
-/* ════════════════════════════════════════════════════
-   SCREEN: INBOX — header, abas, lista de mensagens e changelog
-════════════════════════════════════════════════════ */
+
+
 .inbox-header {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; padding: 16px var(--sp2);
@@ -7206,7 +7017,7 @@ body.overlay-active .game-ind-name.critical-label {
   font-family: var(--serif); font-weight: 800; font-size: .95rem; color: var(--t1);
 }
 
-/* Sidebar de abas, fixa na parte inferior da tela */
+
 .inbox-tabs {
   display: flex; flex-shrink: 0;
   border-bottom: 1px solid var(--line);
@@ -7264,7 +7075,7 @@ body.overlay-active .game-ind-name.critical-label {
   color: var(--t3); font-size: .85rem; text-align: center; padding: 40px 20px;
 }
 
-/* Item de mensagem individual */
+
 .inbox-msg-item {
   border-radius: var(--r2); padding: 14px;
   transition: border-color .2s, background .2s;
@@ -7288,10 +7099,7 @@ body.overlay-active .game-ind-name.critical-label {
   font-size: .8rem; padding: 2px 4px;
 }
 
-/* Corpo do texto da mensagem — respeita quebras de linha e parágrafos
-   digitados pelo admin, em vez de exibir tudo como texto corrido numa
-   única linha. white-space:pre-line preserva \n sem precisar de <br>
-   manual, mantendo o texto seguro contra HTML injection. */
+
 .inbox-msg-corpo {
   font-size: .85rem; line-height: 1.6;
   white-space: pre-line; word-wrap: break-word;
@@ -7308,7 +7116,7 @@ body.overlay-active .game-ind-name.critical-label {
   border: none; color: #0A0800; font-weight: 700; font-size: .82rem; cursor: pointer;
 }
 
-/* Changelog */
+
 .inbox-changelog-wrap {
   overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1;
   padding: var(--sp2);

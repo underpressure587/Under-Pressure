@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════
-   BETA · EMPRESA · Indústria
-═══════════════════════════════════════════════════════ */
+
 
 const EmpresaIndustria = {
     id:   "industria",
@@ -40,7 +38,7 @@ const EmpresaIndustria = {
             rodape: "Você tem {totalRounds} rodadas para transformar a fábrica antes que os problemas acumulados se tornem irreversíveis."
         },
 
-        /* ── 2 ─────────────────────────────────────── */
+        
         {
             badge:     "Indústria de Embalagens · Bens de Consumo",
             subtitulo: "Seus maiores clientes querem embalagens sustentáveis. Sua linha de produção não está pronta.",
@@ -70,7 +68,7 @@ const EmpresaIndustria = {
             rodape: "Você tem {totalRounds} rodadas para modernizar a operação sem perder os contratos que sustentam a empresa."
         },
 
-        /* ── 3 ─────────────────────────────────────── */
+        
         {
             badge:     "Indústria Química · Especialidades",
             subtitulo: "Uma autuação ambiental parou a planta. A retomada depende de você.",

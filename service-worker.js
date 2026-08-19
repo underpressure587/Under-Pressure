@@ -1,11 +1,11 @@
 const CACHE_NAME = 'up-admin-v2';
 
-// Instalação mínima — sem cache obrigatório que pode falhar
+
 self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Ativação — remove caches antigos
+
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -17,7 +17,7 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch — tenta rede primeiro, cai no cache se offline
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   event.respondWith(

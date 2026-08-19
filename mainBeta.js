@@ -1,21 +1,6 @@
-/* ═══════════════════════════════════════════════════════
-   UNDER-PRESSURE · MAIN v5.1
-   ─────────────────────────────────────────────────────
-   · Sistema de jogador com persistência (localStorage)
-   · Pódio global e histórico de jogos
-   · Restauração de sessão interrompida
-   · Timer opcional por rodada (90s)
-   · Glossário com 20 termos de gestão
-   · Benchmarks de mercado nos indicadores
-   · Memória narrativa (referências a decisões passadas)
-   · Painel de recomendações dinâmicas
-   · Modo revisão pós-jogo com decisões cruciais
-   · Tela de jogo em 3 abas: HISTÓRIA · DESAFIOS · HISTÓRICO
-═══════════════════════════════════════════════════════ */
 
-/* ════════════════════════════════════════════════════
-   PERSISTÊNCIA
-════════════════════════════════════════════════════ */
+
+
 const LS = {
   get:    k      => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
   set:    (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
@@ -25,13 +10,11 @@ const SK = {
   PLAYER:"gsp_player", PODIO:"gsp_podio",
   HISTORICO:"gsp_historico", HIST_GUEST:"gsp_historico_guest",
   SESSION:"gsp_session", SETTINGS:"gsp_settings",
-  SALA:"gsp_sala",        // { codigo, nome, modoSetor, setorFixo, ... }
-  INTROS_USADAS:"gsp_intros_usadas", // { sector: [indices ja jogados], situacoes: [indices usados] }
+  SALA:"gsp_sala",        
+  INTROS_USADAS:"gsp_intros_usadas", 
 };
 
-/* ════════════════════════════════════════════════════
-   ESTADO LOCAL
-════════════════════════════════════════════════════ */
+
 let _player   = null;
 let _isAdmin  = false;
 let _settings = { timer: false, cloudStatus: false, mostrarStatus: false };
@@ -39,36 +22,34 @@ let _setorSelecionado = null;
 let _escolhaFeita     = false;
 let _feedbackCallback = null;
 let _timerInterval    = null;
-// _manutencaoInterval → maintenance.js
-// _globalPollInterval → maintenance.js
-// _guestPollInterval → maintenance.js
+
+
+
 let _ultimaMensagemGlobal = '';
 let _timerSegs        = 0;
-let _bloqueioAte      = 0; // timestamp — bloqueia escolher() durante transições
-let _prevIndicators   = {}; // track trends
-// BUG #1 FIX: hook called by engine.iniciar() to seed prev state before first render
-window._initPrevIndicators = (indicators) => { _prevIndicators = { ...indicators }; };
-let _sala             = null; // sala ativa: { codigo, nome, ... } | null
+let _bloqueioAte      = 0; 
+let _prevIndicators   = {}; 
 
-/* ════════════════════════════════════════════════════
-   BOOT
-════════════════════════════════════════════════════ */
+window._initPrevIndicators = (indicators) => { _prevIndicators = { ...indicators }; };
+let _sala             = null; 
+
+
 function _setFirebaseStatus(estado, pingMs) {
-  // estados: 'connecting' | 'online' | 'offline'
+  
   const statusEl = document.getElementById('firebase-status');
   const dot      = document.getElementById('firebase-status-dot');
   const label    = document.getElementById('firebase-status-label');
   const ping     = document.getElementById('firebase-ping');
   if (!dot || !label) return;
 
-  // SEMPRE atualiza a classe do dot — é a fonte de verdade do estado atual.
-  // Sem isso, quando o toggle ativa depois, lê 'connecting' (valor inicial do HTML)
-  // em vez do estado real.
+  
+  
+  
   dot.className = 'firebase-dot firebase-dot--' + estado;
 
   const mostrar = _settings.mostrarStatus === true;
 
-  // OFFLINE: sempre mostra, ignora configuração
+  
   if (estado === 'offline') {
     if (statusEl) statusEl.style.display = '';
     label.textContent = 'Offline';
@@ -77,13 +58,13 @@ function _setFirebaseStatus(estado, pingMs) {
     return;
   }
 
-  // ONLINE/CONNECTING: esconde se configuração estiver desativada
+  
   if (!mostrar) {
     if (statusEl) statusEl.style.display = 'none';
     return;
   }
 
-  // Configuração ativa — exibe normalmente
+  
   if (statusEl) statusEl.style.display = '';
 
   if (estado === 'online') {
@@ -98,14 +79,14 @@ function _setFirebaseStatus(estado, pingMs) {
         pingMs < 350   ? '#f59e0b'   : '#ef4444';
     }
   } else {
-    // connecting
+    
     label.textContent = 'Conectando';
     label.style.color = 'var(--t3)';
     if (ping) { ping.style.display = 'none'; ping.textContent = ''; }
   }
 }
 
-// Mede ping via fetch do próprio domínio
+
 async function _medirPing() {
   try {
     const t0 = performance.now();
@@ -114,7 +95,7 @@ async function _medirPing() {
   } catch { return null; }
 }
 
-// Inicia polling do Firebase só após DOM pronto
+
 window.addEventListener('DOMContentLoaded', function _pollFirebase() {
   let tentativas = 0;
   const intervalo = setInterval(async () => {
@@ -123,7 +104,7 @@ window.addEventListener('DOMContentLoaded', function _pollFirebase() {
       clearInterval(intervalo);
       const ms = await _medirPing();
       _setFirebaseStatus('online', ms);
-      // Atualiza ping a cada 30s enquanto online
+      
       setInterval(async () => {
         const dot = document.getElementById('firebase-status-dot');
         if (dot?.classList.contains('firebase-dot--online')) {
@@ -138,7 +119,7 @@ window.addEventListener('DOMContentLoaded', function _pollFirebase() {
   }, 100);
 });
 
-// Listener global — captura login do Google mesmo após redirect
+
 function _iniciarListenerAuth() {
   if (!window.GSPAuth?.isReady()) return;
   window.GSPAuth.onAuthChange((user) => {
@@ -148,11 +129,11 @@ function _iniciarListenerAuth() {
         mostrarTela('screen-loading');
         _setLoadingMsg('Entrando no painel...', 'Bem-vindo de volta!', 90);
       }
-      // IIFE async: onAuthChange nao suporta callback async,
-      // mas _loginOk precisa de await para verificar admin antes de checar manutencao
+      
+      
       (async () => { await _loginOk(user); })();
     } else if (user && _player) {
-      // Firebase confirmou user — atualiza avatar que pode ter ficado sem foto no boot
+      
       _atualizarHome();
     }
   });
@@ -164,7 +145,7 @@ function _fecharOverlay(id) {
   el.classList.remove('active');
   el.style.display = 'none';
   el.removeAttribute('data-sector');
-  // Só remove overlay-active se nenhum outro overlay continuar aberto
+  
   const algumAberto = Array.from(document.querySelectorAll('.overlay'))
     .some(o => o !== el && o.style.display === 'flex');
   if (!algumAberto) document.body.classList.remove('overlay-active');
@@ -175,7 +156,7 @@ function _abrirOverlay(id) {
   if (!el) return;
   if (el.parentElement !== document.body) document.body.appendChild(el);
   document.body.classList.add('overlay-active');
-  // Força estilos inline sempre (garante centralização independente do contexto)
+  
   el.style.position = 'fixed';
   el.style.top = '0';
   el.style.left = '0';
@@ -187,32 +168,32 @@ function _abrirOverlay(id) {
   el.style.justifyContent = 'center';
   el.style.padding = '20px';
   el.style.boxSizing = 'border-box';
-  // NÃO definir background aqui — isso sobrescreveria via inline qualquer
-  // ajuste feito no CSS (.overlay já define um background quase-opaco).
-  // Essa sobrescrita inline (antes fixa em 0.75 de opacidade) era a causa
-  // raiz real do conteúdo de baixo (ex: indicadores críticos com glow)
-  // continuar visível através do overlay, independente de qualquer
-  // mudança no style.css.
-  // Força reflow síncrono antes de adicionar a classe .active (usada para
-  // a animação do card interno). Mantém consistência com mostrarTela().
+  
+  
+  
+  
+  
+  
+  
+  
   void el.offsetHeight;
   el.classList.add('active');
-  // Aplica a cor do tema atual (sempre que #app tiver um setor definido,
-  // não só durante o jogo — ex: telas de criação de empresa também
-  // já aplicam o tema em #app antes do jogo começar)
+  
+  
+  
   const sector = document.getElementById('app')?.getAttribute('data-sector') || null;
   if (sector) el.setAttribute('data-sector', sector);
   else el.removeAttribute('data-sector');
 }
 
-/* _verificarManutencaoInicial → maintenance.js */
+
 
 async function _boot() {
   _settings = LS.get(SK.SETTINGS) || { timer: false, cloudStatus: false, mostrarStatus: false };
-  // Garante campo legado
+  
   if (_settings.mostrarStatus === undefined) _settings.mostrarStatus = false;
-  // Move todos os .overlay para o body para evitar stacking context do #app
-  // O overlay-confirmar-saida (z-index:100001) deve vir por último para ficar na frente
+  
+  
   const confirmar = document.getElementById('overlay-confirmar-saida');
   document.querySelectorAll('.overlay').forEach(o => {
     if (o.parentElement !== document.body) {
@@ -231,14 +212,14 @@ async function _boot() {
     }
     _fecharOverlay(o.id);
   });
-  // Garante que confirmar-saida é o último no body (maior prioridade visual)
+  
   if (confirmar && confirmar.parentElement === document.body) {
     document.body.appendChild(confirmar);
   }
-  _carregarVersaoAtual(); // carrega versão atual em background
-  _sincronizarGlossarioCloud(); // atualiza o glossário com a versão mais recente da nuvem, em background
+  _carregarVersaoAtual(); 
+  _sincronizarGlossarioCloud(); 
 
-  // Sempre sai da screen-loading imediatamente
+  
   const saved = LS.get(SK.PLAYER);
   if (saved) {
     _player = saved;
@@ -246,13 +227,13 @@ async function _boot() {
     _verificarSessaoSalva();
     _atualizarHome();
 
-    // Mostra a tela de loading com progresso real durante a restauração
-    // da sessão, em vez de deixar a tela anterior parada enquanto o boot
-    // processa auth/polling/admin silenciosamente por baixo.
+    
+    
+    
     mostrarTela('screen-loading');
     _setLoadingMsg('Restaurando sessão...', `Olá, ${(saved.nome || 'jogador')}!`, 15);
 
-    // Espera o Firebase resolver o auth antes de qualquer chamada ao Firestore
+    
     if (window.GSPAuth) {
       _setLoadingMsg('Verificando login...', 'Conectando com o Firebase', 35);
       let t = 0;
@@ -261,14 +242,14 @@ async function _boot() {
         t++;
       }
       await window.GSPAuth.waitForAuthReady().catch(() => null);
-      // Auth resolvida — re-renderiza avatar agora que currentUser está disponível
+      
       _atualizarHome();
     }
 
     _setLoadingMsg('Carregando seu painel...', 'Verificando permissões', 60);
-    await _atualizarBotaoAdmin(saved.uid); // aguarda verificar admin ANTES do polling
+    await _atualizarBotaoAdmin(saved.uid); 
     if (window.ADMIN) {
-      // Espera GSPAuth ficar pronto (módulo ES6 carrega depois dos scripts normais)
+      
       let t = 0;
       while (!window.GSPAuth?.isReady() && t < 30) {
         await new Promise(r => setTimeout(r, 100));
@@ -278,21 +259,21 @@ async function _boot() {
       if (cfg) _atualizarModoSala(cfg);
     }
     _setLoadingMsg('Quase lá...', 'Sincronizando dados', 85);
-    _iniciarPollingGlobal(saved.uid); // inicia polling mesmo em sessão restaurada
-    _iniciarInbox(saved.uid); // inicia polling do inbox
+    _iniciarPollingGlobal(saved.uid); 
+    _iniciarInbox(saved.uid); 
     _setLoadingMsg('Pronto!', '', 100);
     const tutorialJaVisto = await _checarTutorialVisto(saved.uid);
     if (!tutorialJaVisto) {
       mostrarTela('screen-tutorial');
     } else {
       mostrarTela('screen-home');
-      _verificarSessaoSalva(); // re-verificar após tela estar visível
+      _verificarSessaoSalva(); 
     }
     _sincronizarFirebaseBackground(saved);
     return;
   }
 
-  // Sem sessão salva — mostra loading enquanto verifica redirect do Google
+  
   const _googlePending = localStorage.getItem('gsp_google_pending') === '1';
   localStorage.removeItem('gsp_google_pending');
 
@@ -303,7 +284,7 @@ async function _boot() {
     _setLoadingMsg('Iniciando...', 'Preparando o jogo', 10);
   }
 
-  // Escuta o evento de redirect do Google (disparado pelo firebase-config quando getRedirectResult resolve)
+  
   let _redirectPlayer = null;
   const _redirectHandler = (e) => { _redirectPlayer = e.detail; };
   window.addEventListener('gsp-redirect-login', _redirectHandler, { once: true });
@@ -322,12 +303,12 @@ async function _boot() {
         _setLoadingMsg('Verificando sua sessão...', 'Checando login do Google', 60);
       }
       try {
-        // Aguarda até 15s pelo resultado (waitForAuthReady OU evento de redirect)
+        
         let fbUser = null;
         const maxTentativas = _googlePending ? 150 : 80;
         for (let i = 0; i < maxTentativas; i++) {
           if (_redirectPlayer) {
-            // Evento de redirect chegou — entra direto
+            
             window.removeEventListener('gsp-redirect-login', _redirectHandler);
             _setLoadingMsg('Entrando no painel...', 'Bem-vindo de volta!', 90);
             await _loginOk(_redirectPlayer);
@@ -366,11 +347,11 @@ async function _boot() {
   }
   _iniciarListenerAuth();
 
-  // Manutenção só é verificada APÓS login — não bloqueia a tela inicial
+  
   mostrarTela('screen-login');
 }
 
-// Sincroniza sessão Firebase em background sem bloquear a UI
+
 function _sincronizarFirebaseBackground(player) {
   if (!player?.uid || !window.GSPAuth?.isReady() || !window.GSPSync) return;
   Promise.all([
@@ -379,7 +360,7 @@ function _sincronizarFirebaseBackground(player) {
     window.GSPSync.carregarSessao(player.uid)
   ]).then(([histFS, podioFS, sessFS]) => {
     if (histFS?.length > 0) LS.set(SK.HISTORICO, histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) })));
-    // Sempre sincroniza o localStorage com o Firestore — mesmo se vier vazio
+    
     LS.set(SK.PODIO, (podioFS || []).map(p => ({ ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now()) })));
     if (sessFS) LS.set(SK.SESSION, { ...sessFS, ts: sessFS.ts?.toMillis ? sessFS.ts.toMillis() : Date.now() });
   }).catch(() => {});
@@ -394,20 +375,18 @@ function _setLoadingMsg(msg, sub, progress) {
   if (bar && progress !== undefined) bar.style.width = progress + '%';
 }
 
-/* ════════════════════════════════════════════════════
-   NAVEGAÇÃO
-════════════════════════════════════════════════════ */
+
 function mostrarTela(id, goBack) {
   document.querySelectorAll(".screen").forEach(s => {
     s.classList.remove("active", "go-back");
-    // Não resetar display aqui: o CSS já define display:none para .screen sem .active.
-    // Resetar display causava um frame onde todos os screens ficavam visíveis
-    // simultaneamente (flash do sala-mode no fundo ao voltar para home).
+    
+    
+    
     s.style.opacity = '';
     s.style.transition = '';
     s.style.animation = '';
   });
-  // Fecha todos os overlays ao navegar
+  
   document.querySelectorAll(".overlay").forEach(o => { _fecharOverlay(o.id); });
   const el = document.getElementById(id);
   if (el) {
@@ -417,16 +396,16 @@ function mostrarTela(id, goBack) {
       : 'screenIn .3s cubic-bezier(.22,.68,0,1.2)';
     setTimeout(() => { el.style.animation = ''; }, 350);
   }
-  // Remove tema de setor em todas as telas fora do jogo
+  
   const TELAS_JOGO = ["screen-intro","screen-game","screen-feedback","screen-result","screen-tutorial"];
   if (!TELAS_JOGO.includes(id)) _aplicarTemaSetor(null);
   window.scrollTo(0, 0);
-  // Atualiza botão admin ao entrar na home
+  
   if (id === 'screen-home') {
 
-    // Registra presença no RTDB se jogador autenticado
+    
     if (_player?.uid) _registrarPresencaHome();
-    // Exibe mensagem global se houver
+    
     if (window._mensagemGlobal) {
       setTimeout(() => mostrarSucesso(window._mensagemGlobal), 800);
       window._mensagemGlobal = null;
@@ -443,18 +422,16 @@ function voltar(tela) {
   mostrarTela(tela, true);
 }
 
-/* ════════════════════════════════════════════════════
-   LOGIN / IDENTIDADE
-════════════════════════════════════════════════════ */
+
 
 function irComoConvidado() {
   _player = { nome: "Convidado", tipo: "guest" };
   window._player = _player;
-  LS.set(SK.PLAYER, _player); // persiste para não perder _player ao recarregar
+  LS.set(SK.PLAYER, _player); 
   _atualizarHome();
   mostrarTela("screen-home");
 
-  // Convidado não tem uid → polling leve só de manutenção
+  
   window.Maintenance.iniciarPollingConvidado();
 }
 
@@ -508,14 +485,12 @@ function _atualizarHome() {
       av.textContent = _player.nome.charAt(0).toUpperCase();
     }
   }
-  // Botão inbox sempre visível para usuários logados
+  
   const btnInbox = document.getElementById('btn-inbox');
   if (btnInbox) btnInbox.style.display = _player?.uid ? '' : 'none';
 }
 
-/* ════════════════════════════════════════════════════
-   SESSÃO PERSISTENTE
-════════════════════════════════════════════════════ */
+
 function _salvarSessao() {
   const state = BetaState.get();
   if (!state || state.phase === "result") { LS.remove(SK.SESSION); LS.remove('gsp_session_state'); return; }
@@ -524,7 +499,7 @@ function _salvarSessao() {
     currentRound: state.currentRound, totalRounds: state.totalRounds,
     ts: Date.now(),
   });
-  // BUG #3 FIX: salvar estado completo para restaurarSessao não recomeçar do zero
+  
   try {
     LS.set('gsp_session_state', {
       sector:          state.sector,
@@ -538,11 +513,11 @@ function _salvarSessao() {
       history:         [...(state.history || [])],
       storyState:      JSON.parse(JSON.stringify(state.storyState || {})),
       activeEvents:    JSON.parse(JSON.stringify(state.activeEvents || [])),
-      // FIX: campos que estavam faltando e tornavam o restore incompleto
+      
       situacaoAtual:   state.situacaoAtual  ? JSON.parse(JSON.stringify(state.situacaoAtual))  : null,
       situacaoStatus:  state.situacaoStatus || null,
       stakeholderLog:  JSON.parse(JSON.stringify(state.stakeholderLog || [])),
-      // FIX: salvar títulos dos 10 rounds sorteados para restore determinístico
+      
       gameRoundTitles: (state.gameRounds || []).map(r => r.title).filter(Boolean),
       ts: Date.now(),
     });
@@ -574,20 +549,20 @@ function restaurarSessao() {
       const introIdx = state.introIndex || 0;
       const todasRounds = empresa?.rounds?.[introIdx] || [];
 
-      // FIX: restaurar os rounds EXATOS usando títulos salvos (determinístico)
+      
       const titulos = estadoCompleto.gameRoundTitles;
       if (titulos && titulos.length > 0) {
-        // Reconstrói a lista de rounds na ordem original usando os títulos salvos
+        
         const mapaRounds = {};
         todasRounds.forEach(r => { if (r.title) mapaRounds[r.title] = r; });
         const roundsRestaurados = titulos.map(t => mapaRounds[t]).filter(Boolean);
         state.gameRounds  = roundsRestaurados.length > 0 ? roundsRestaurados : todasRounds;
         state.totalRounds = state.gameRounds.length;
       } else if (todasRounds.length > 0) {
-        // Fallback para sessões antigas sem gameRoundTitles: re-sorteia por fase
+        
         const temFase = todasRounds.some(r => r.fase);
         if (temFase) {
-          /* BUG E FIX: Fisher-Yates no fallback do restaurarSessao */
+          
           const _fisherYates = (arr) => {
             const a = arr.slice();
             for (let i = a.length - 1; i > 0; i--) {
@@ -622,7 +597,7 @@ function restaurarSessao() {
       console.warn("restaurarSessao: falha ao restaurar estado completo, reiniciando", e);
     }
   }
-  // Fallback: iniciar do começo
+  
   iniciar(sess.sector, _player?.nome || "Jogador", sess.companyName);
   setTimeout(() => mostrarAviso('Sessão reiniciada do início. Progresso anterior não recuperável.'), 500);
 }
@@ -633,9 +608,7 @@ function descartarSessao() {
   if (banner) banner.style.display = "none";
 }
 
-/* ════════════════════════════════════════════════════
-   PÓDIO / HISTÓRICO DE JOGOS
-════════════════════════════════════════════════════ */
+
 function _registrarResultado(score, scoreGestor, sector, companyName) {
   const isGuest  = _player?.tipo === 'guest' || !_player?.uid;
   const histKey  = isGuest ? SK.HIST_GUEST : SK.HISTORICO;
@@ -644,18 +617,18 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
     player: _player?.nome || 'Convidado',
     score, scoreGestor, sector, companyName, ts: Date.now(),
     uid: _player?.uid || null,
-    introIndex: state?.introIndex ?? null,  // registra qual história foi jogada
+    introIndex: state?.introIndex ?? null,  
   };
 
-  // Marca intro e situação como usadas para evitar repetição imediata
+  
   _registrarIntroUsada(sector, state?.introIndex ?? null, state?.situacaoAtual ?? null);
 
-  // Salva no histórico local
+  
   const hist = LS.get(histKey) || [];
   hist.unshift(entrada);
   LS.set(histKey, hist.slice(0, 30));
 
-  // Atualiza pódio local — usuários logados deduplicam por uid, convidados sempre adicionam nova entrada
+  
   const podio = LS.get(SK.PODIO) || [];
   if (entrada.uid) {
     const existIdx = podio.findIndex(p => p.uid && p.uid === entrada.uid);
@@ -672,7 +645,7 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
 
   LS.remove(SK.SESSION);
 
-  // Salva no Firestore com feedback visível
+  
   if (!isGuest && _player?.uid) {
     const _salvarNoFirestore = () => {
       if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
@@ -705,30 +678,24 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
   }
 }
 
-/* irParaPodio: definição única e correta abaixo (com data-sector) */
 
-/* ════════════════════════════════════════════════════
-   ROTAÇÃO DE HISTÓRIAS — evita repetir intro/situação
-════════════════════════════════════════════════════ */
 
-/**
- * Registra qual introIndex e situação foram usados nesta partida.
- * Mantém uma fila circular por setor: quando todos os índices já foram usados,
- * reseta a fila (rotação completa antes de repetir).
- */
+
+
+
 function _registrarIntroUsada(sector, introIndex, situacao) {
   if (!sector) return;
   const dados = LS.get(SK.INTROS_USADAS) || {};
   if (!dados[sector]) dados[sector] = [];
 
-  // Adiciona o introIndex à fila do setor (se for válido)
+  
   if (introIndex !== null && introIndex !== undefined) {
     if (!dados[sector].includes(introIndex)) {
       dados[sector].push(introIndex);
     }
   }
 
-  // Registra situação usada (por título, independente de setor)
+  
   if (situacao?.titulo) {
     if (!dados._situacoes) dados._situacoes = [];
     if (!dados._situacoes.includes(situacao.titulo)) {
@@ -739,18 +706,12 @@ function _registrarIntroUsada(sector, introIndex, situacao) {
   LS.set(SK.INTROS_USADAS, dados);
 }
 
-/**
- * Retorna os introIndexes já usados para um setor.
- * Se todos foram usados, reseta a fila (rotação completa).
- * @param {string} sector
- * @param {number} totalIntros — total de intros disponíveis no setor
- * @returns {number[]} — lista de índices já usados (a excluir do sorteio)
- */
+
 function _getIntrosUsadas(sector, totalIntros) {
   const dados  = LS.get(SK.INTROS_USADAS) || {};
   const usados = dados[sector] || [];
 
-  // Se já jogou todas as histórias do setor, reseta a fila
+  
   if (usados.length >= totalIntros) {
     const novoDados = { ...dados, [sector]: [] };
     LS.set(SK.INTROS_USADAS, novoDados);
@@ -759,12 +720,7 @@ function _getIntrosUsadas(sector, totalIntros) {
   return usados;
 }
 
-/**
- * Retorna as situações iniciais já usadas (por título).
- * Reseta quando todas foram usadas.
- * @param {number} totalSituacoes
- * @returns {string[]} — títulos das situações já usadas
- */
+
 function _getSituacoesUsadas(totalSituacoes) {
   const dados  = LS.get(SK.INTROS_USADAS) || {};
   const usadas = dados._situacoes || [];
@@ -784,10 +740,10 @@ function irParaHistoricoJogos() {
   const lista   = document.getElementById("historico-jogos-lista");
   if (!lista) return;
 
-  // Renderiza imediatamente com dados locais
+  
   _renderHistorico(lista, LS.get(histKey) || [], isGuest);
 
-  // Se logado, sincroniza Firestore em background e re-renderiza se tiver novo
+  
   if (!isGuest && _player?.uid && window.GSPSync) {
     window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
       if (!histFS?.length) return;
@@ -819,7 +775,7 @@ function _renderHistorico(lista, hist, isGuest) {
     return;
   }
 
-  // Agrupa por setor para estatísticas rápidas
+  
   const totalJogos = hist.length;
   const melhor     = Math.max(...hist.map(h => h.score));
   const media      = Math.round(hist.reduce((a, h) => a + h.score, 0) / totalJogos);
@@ -856,11 +812,9 @@ function _histCard(p, icones, labels) {
   </div>`;
 }
 
-/* ════════════════════════════════════════════════════
-   SETOR / INÍCIO
-════════════════════════════════════════════════════ */
+
 function irParaSetores() {
-  // Sincroniza estado do timer ao abrir seleção de setor
+  
   setTimeout(() => {
     const sBtn = document.getElementById('sector-toggle-timer-btn');
     if (sBtn) {
@@ -868,15 +822,15 @@ function irParaSetores() {
       sBtn.className = `toggle-btn ${_settings.timer ? 'on' : 'off'}`;
     }
   }, 50);
-  // Limpar estado anterior de seleção
+  
   document.querySelectorAll(".sector-card").forEach(b => b.classList.remove("selected"));
   const sh = document.getElementById("sector-hidden");
   const cn = document.getElementById("companyName");
   if (sh) sh.value = "";
   if (cn) cn.value = "";
-  _aplicarTemaSetor(null); // reseta tema ao entrar na tela sem setor selecionado
+  _aplicarTemaSetor(null); 
   mostrarTela("screen-sector");
-  // Listener para efeito pulsante no botão ao digitar o nome
+  
   const btn = document.getElementById("btn-assumir-mandato");
   if (cn && btn) {
     cn.oninput = () => {
@@ -899,7 +853,7 @@ function selecionarSetor(sector) {
   document.querySelectorAll(".sector-card").forEach(b => b.classList.remove("selected"));
   document.querySelector(`[data-sector="${sector}"]`)?.classList.add("selected");
   document.getElementById("sector-hidden").value = sector;
-  // Aplica tema do setor no botão e na tela de seleção imediatamente
+  
   const app = document.getElementById('app');
   if (app) app.setAttribute('data-sector', sector);
 }
@@ -916,14 +870,14 @@ const _NOMES_ALEATORIOS = [
 function gerarNomeAleatorio() {
   const el = document.getElementById("companyName");
   if (!el) return;
-  // Embaralha e pega um nome diferente do atual
+  
   let nome;
   do {
     nome = _NOMES_ALEATORIOS[Math.floor(Math.random() * _NOMES_ALEATORIOS.length)];
   } while (nome === el.value && _NOMES_ALEATORIOS.length > 1);
   el.value = nome;
   el.classList.remove("input-error-shake");
-  // Animação rápida de feedback
+  
   el.style.transition = "border-color .15s";
   el.style.borderColor = "var(--s-primary)";
   setTimeout(() => { el.style.borderColor = ""; }, 400);
@@ -944,9 +898,7 @@ function lancarJogo() {
   iniciar(sector, _player?.nome || "Jogador", companyName);
 }
 
-/* ════════════════════════════════════════════════════
-   INTRO
-════════════════════════════════════════════════════ */
+
 let _introCache = null;
 let _introSlideAtual = 0;
 
@@ -985,7 +937,7 @@ function mostrarIntro(state, empresa) {
 
   _renderIntroDots(secoes.length);
 
-  // Crise/indicadores/CTA só aparecem depois da última seção (igual ao app)
+  
   const criseEl = document.getElementById("intro-crise");
   if (criseEl) criseEl.style.display = "none";
   const previewEl = document.getElementById("intro-indicators-preview");
@@ -993,7 +945,7 @@ function mostrarIntro(state, empresa) {
   const ctaEl = document.getElementById("intro-cta");
   if (ctaEl) ctaEl.style.display = "none";
 
-  // Sem seções: pula direto para a situação/CTA
+  
   if (secoes.length === 0) _introMostrarFinal();
 }
 
@@ -1057,7 +1009,7 @@ function introVoltar() {
   const secoes = _introCache?.intro?.secoes || [];
   if (_introSlideAtual <= 0) return;
 
-  // Se estava na tela final (situação/indicadores/CTA), volta pro último slide
+  
   if (_introSlideAtual >= secoes.length) {
     const criseEl = document.getElementById("intro-crise");
     if (criseEl) criseEl.style.display = "none";
@@ -1091,18 +1043,18 @@ function comecaJogo() {
   iniciarRodadas();
   _renderEmpresaTab();
   _iniciarVerificacaoManutencao();
-  _atualizarSessaoAtiva(); // registra presença imediatamente ao iniciar o jogo
-  _gravarStatsDiario('inicio'); // contabiliza partida iniciada para dashboard
+  _atualizarSessaoAtiva(); 
+  _gravarStatsDiario('inicio'); 
 }
 
-// ─── POLLING UNIVERSAL ─────────────────────────────────────────
-// Roda sempre que o usuário está logado (home, jogo, perfil, etc.)
-// Verifica: ban + manutenção + mensagem global — a cada 20 segundos
+
+
+
 
 let _versaoAtual = null;
 let _updateToastVisible = false;
 
-// Carrega a versão atual do bundle ao iniciar
+
 async function _carregarVersaoAtual() {
   try {
     const r = await fetch('/version.json?t=' + Date.now());
@@ -1116,7 +1068,7 @@ async function _carregarVersaoAtual() {
 function _mostrarToastAtualizacao(forcado) {
   if (_updateToastVisible && !forcado) return;
   _updateToastVisible = true;
-  // Remove toast anterior se existir
+  
   document.getElementById('update-toast')?.remove();
   const toast = document.createElement('div');
   toast.id = 'update-toast';
@@ -1127,7 +1079,7 @@ function _mostrarToastAtualizacao(forcado) {
     <button class="update-toast-btn" onclick="location.reload()">Atualizar</button>
   `;
   if (!forcado) {
-    // Toast discreto — fecha ao clicar fora
+    
     toast.addEventListener('click', (e) => {
       if (!e.target.classList.contains('update-toast-btn')) {
         toast.remove();
@@ -1138,19 +1090,19 @@ function _mostrarToastAtualizacao(forcado) {
   document.body.appendChild(toast);
 }
 
-// ─── STATS DIÁRIO (dashboard admin) ────────────────────────────────────────
-// Grava em stats/diario: totalIniciadas e abandonos por rodada
-// tipo: 'inicio' | 'abandono'  rodada: índice 0-based (só usado em 'abandono')
+
+
+
 async function _gravarStatsDiario(tipo, rodada) {
   if (!_player?.uid || _player?.tipo === 'guest') return;
   try {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return;
     const hoje = new Date().toISOString().slice(0, 10);
-    const mesAtual = hoje.slice(0, 7); // ex: "2025-01"
+    const mesAtual = hoje.slice(0, 7); 
     const FS = 'https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents';
 
-    // Lê estado atual — guarda o doc para reusar na limpeza de meses
+    
     const getRes = await fetch(`${FS}/stats/diario`, { headers: { Authorization: `Bearer ${tok}` } });
     let doc = {};
     let campos = {};
@@ -1160,7 +1112,7 @@ async function _gravarStatsDiario(tipo, rodada) {
       if (raw) try { campos = JSON.parse(raw); } catch(e) {}
     }
 
-    // Atualiza contadores do dia
+    
     if (tipo === 'inicio') {
       campos.totalIniciadas = (campos.totalIniciadas || 0) + 1;
     } else if (tipo === 'abandono' && rodada !== undefined) {
@@ -1168,7 +1120,7 @@ async function _gravarStatsDiario(tipo, rodada) {
       const contadores = campos.contadoresPorRodada || {};
       contadores[rodada] = (contadores[rodada] || 0) + 1;
       campos.contadoresPorRodada = contadores;
-      // Recalcula percentuais em relação ao total de partidas iniciadas hoje
+      
       const total = campos.totalIniciadas || 1;
       const abandonoPorRodada = {};
       for (const [r, c] of Object.entries(contadores)) {
@@ -1177,11 +1129,11 @@ async function _gravarStatsDiario(tipo, rodada) {
       campos.abandonoPorRodada = abandonoPorRodada;
     }
 
-    // Monta patch: grava dia atual + apaga dias de meses anteriores
+    
     const fieldsParaGravar = { [hoje]: { stringValue: JSON.stringify(campos) } };
     for (const campo of Object.keys(doc.fields || {})) {
       if (/^\d{4}-\d{2}-\d{2}$/.test(campo) && campo.slice(0, 7) !== mesAtual) {
-        fieldsParaGravar[campo] = { nullValue: null }; // remove campo do Firestore
+        fieldsParaGravar[campo] = { nullValue: null }; 
       }
     }
     const updateMask = Object.keys(fieldsParaGravar)
@@ -1192,13 +1144,13 @@ async function _gravarStatsDiario(tipo, rodada) {
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields: fieldsParaGravar })
     });
-  } catch(e) { /* silencioso — não interrompe o fluxo */ }
+  } catch(e) {  }
 }
 
-// _iniciarPollingGlobal → window.Maintenance.iniciarPolling(uid)
+
 function _iniciarPollingGlobal(uid) { window.Maintenance.iniciarPolling(uid); }
 
-// _pararPollingGlobal → window.Maintenance.pararPolling()
+
 function _pararPollingGlobal() { window.Maintenance.pararPolling(); }
 
 function _forcarSaida(msg) {
@@ -1216,17 +1168,17 @@ function _forcarSaida(msg) {
   setTimeout(() => mostrarAviso(msg), 600);
 }
 
-// Ativa o overlay-ban completo (ícone, motivo, UID para suporte, contador
-// regressivo e botão de ação) em vez do toast genérico de _forcarSaida.
-// O card e o CSS já existiam prontos no projeto, mas nunca eram ativados
-// de fato — o jogador banido só via um toast de 3s que sumia rápido.
+
+
+
+
 async function _mostrarOverlayBan(uid) {
-  // Busca o motivo antes de limpar a sessão, enquanto ainda temos o uid
+  
   let motivo = '';
   try {
     const info = await window.ADMIN?._getBanInfo(uid).catch(() => null);
     motivo = info?.motivoBan || '';
-  } catch(e) { /* segue sem motivo */ }
+  } catch(e) {  }
 
   _pararPollingGlobal();
   _pararTimer();
@@ -1258,8 +1210,8 @@ async function _mostrarOverlayBan(uid) {
 
   overlay.style.display = 'flex';
 
-  // Contador regressivo de 10s até fechar sozinho (o botão "Ir para o
-  // login" já permite fechar antes, via banIrParaLogin()).
+  
+  
   let segundos = 10;
   if (countdownEl) countdownEl.textContent = `Redirecionando em ${segundos}s...`;
   if (progressBar) progressBar.style.width = '100%';
@@ -1285,9 +1237,9 @@ function banIrParaLogin() {
   mostrarTela('screen-login');
 }
 
-// Mantido para não quebrar chamadas de comecaJogo/abandonarJogo
-function _iniciarVerificacaoManutencao() { /* substituído pelo polling global */ }
-function _pararVerificacaoManutencao()  { /* substituído pelo polling global */ }
+
+function _iniciarVerificacaoManutencao() {  }
+function _pararVerificacaoManutencao()  {  }
 
 function _renderEmpresaTab() {
   const el = document.getElementById("empresa-tab-content");
@@ -1323,9 +1275,7 @@ function _renderEmpresaTab() {
   el.innerHTML = html;
 }
 
-/* ════════════════════════════════════════════════════
-   BENCHMARKS DE MERCADO
-════════════════════════════════════════════════════ */
+
 const BENCHMARKS = {
   varejo:    { financeiro:11,rh:10,clientes:12,processos:10,margem:9,estoque:11,marca:10,digital:9 },
   logistica: { financeiro:11,rh:10,clientes:12,processos:11,sla:12,frota:10,seguranca:11,tecnologia:9 },
@@ -1335,21 +1285,10 @@ const BENCHMARKS = {
 
 function _bench(sector, key) { return BENCHMARKS[sector]?.[key] ?? null; }
 
-/* ════════════════════════════════════════════════════
-   SIDEBAR — INDICADORES + GESTOR
-════════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════════
-   ANIMAÇÕES DE INDICADORES
-════════════════════════════════════════════════════ */
 
-/**
- * Anima o valor numérico de um indicador de `de` para `ate`,
- * passo a passo, atualizando o elemento DOM no caminho.
- * @param {HTMLElement} el   — elemento com o número
- * @param {number}      de   — valor inicial
- * @param {number}      ate  — valor final
- * @param {number}      dur  — duração total em ms
- */
+
+
+
 function _animarContador(el, de, ate, dur = 500) {
   if (!el || de === ate) return;
   const passos   = Math.abs(ate - de);
@@ -1363,12 +1302,7 @@ function _animarContador(el, de, ate, dur = 500) {
   }, intervMs);
 }
 
-/**
- * Aplica flash de cor + contador animado + barra animada em um card de indicador.
- * @param {string} key   — chave do indicador (ex: 'financeiro')
- * @param {number} prev  — valor anterior
- * @param {number} next  — valor novo
- */
+
 function _animarIndicador(key, prev, next) {
   if (prev === next || prev === undefined) return;
   const row     = document.querySelector(`.game-ind-row[data-ind="${key}"]`);
@@ -1382,19 +1316,19 @@ function _animarIndicador(key, prev, next) {
   const subiu = next > prev;
   const diff  = Math.abs(next - prev);
 
-  // Cor final calculada a partir do VALOR NOVO (next) — corrige o bug de cor
-  // presa no valor antigo (ex: 3/20 deveria ser vermelho crítico, não amarelo)
+  
+  
   const corFinal = BetaIndicadores.corNivel(next);
   const isCriticalNovo = next <= 3;
   const eraCritico      = prev <= 3;
 
-  // Remove classes anteriores para reiniciar animação
+  
   row.classList.remove('ind-flash-up', 'ind-flash-down');
-  // Força reflow para reiniciar a animação CSS
+  
   void row.offsetWidth;
   row.classList.add(subiu ? 'ind-flash-up' : 'ind-flash-down');
 
-  // Contador animado no número
+  
   if (valEl) {
     valEl.classList.remove('ind-val-pop');
     void valEl.offsetWidth;
@@ -1402,29 +1336,29 @@ function _animarIndicador(key, prev, next) {
     _animarContador(valEl, prev, next, 400);
   }
 
-  // Barra: aplica transition e muda o width — o navegador anima a diferença
+  
   if (barEl) {
     const pctTo = `${(next / 20) * 100}%`;
     barEl.style.transition = 'width .5s cubic-bezier(.4,0,.2,1)';
-    // Força reflow antes de mudar o width para garantir que a transition pega o estado anterior
+    
     void barEl.offsetWidth;
     barEl.style.width = pctTo;
   }
 
-  // Cor: sincronizada com o fim da animação do número/barra — sem isso,
-  // o elemento fica com a cor do NÍVEL ANTIGO até o próximo render completo.
+  
+  
   setTimeout(() => {
     if (valEl) valEl.style.color = corFinal;
     if (barEl) barEl.style.background = corFinal;
     row.style.setProperty('--ind-cor', corFinal);
 
-    // Atualiza/benchVal (cor do número 'x/20' junto ao texto de média)
+    
     if (benchEl) {
       const valSpan = benchEl.querySelector('span[style*="font-weight"]') || benchEl.lastElementChild;
       if (valSpan) valSpan.style.color = corFinal;
     }
 
-    // Aplica/remove estado crítico (borda pulsante, etc.) se o nível mudou
+    
     if (isCriticalNovo && !eraCritico) {
       row.classList.add('critical');
       nameEl?.classList.add('critical-label');
@@ -1432,11 +1366,11 @@ function _animarIndicador(key, prev, next) {
       row.classList.remove('critical');
       nameEl?.classList.remove('critical-label');
     }
-  }, 400); // mesma duração de _animarContador, mesmo timing da seta
+  }, 400); 
 
-  // Seta de tendência: só aparece QUANDO a animação do número termina,
-  // garantindo que ela nunca fica dessincronizada do valor exibido.
-  // Depois de 2s visível, desaparece com fade suave.
+  
+  
+  
   if (trendEl) {
     trendEl.textContent = '';
     trendEl.className   = 'game-ind-trend';
@@ -1446,24 +1380,24 @@ function _animarIndicador(key, prev, next) {
       trendEl.className    = `game-ind-trend ${subiu ? 'up' : 'down'}`;
       trendEl.style.opacity = '1';
 
-      // Some após 2s, com fade de .3s (definido no CSS .game-ind-trend)
+      
       setTimeout(() => {
         trendEl.style.opacity = '0';
       }, 2000);
-    }, 400); // mesma duração de _animarContador
+    }, 400); 
   }
 }
 
 function renderSidebar(state, empresa) {
   try {
-  // BUG #1 FIX: snapshot _prevIndicators at the START of render so trend arrows
-  // reflect the *previous* render's values, not the current one being drawn.
+  
+  
   const snapPrev = { ..._prevIndicators };
 
   const nameEl = document.getElementById("game-company-name");
   if (nameEl) nameEl.textContent = `${state.companyName} · ${empresa?.nome||""}`;
 
-  // Barra de progresso das rodadas
+  
   const progBar = document.getElementById("game-progress-bar");
   if (progBar) {
     const pct = Math.round(((state.currentRound + 1) / state.totalRounds) * 100);
@@ -1481,12 +1415,12 @@ function renderSidebar(state, empresa) {
   }
   const grid = document.getElementById("game-indicators-grid");
   if (grid) {
-    // Detectar indicadores críticos para toast
+    
     const newlyCritical = [];
 
-    // Se há valores anteriores (não é a primeira renderização), o HTML nasce
-    // com os valores ANTIGOS — para a transição ser visível — e a animação
-    // via _animarIndicador() corrige para os valores novos depois.
+    
+    
+    
     const temAnterior = Object.keys(snapPrev).length > 0;
 
     grid.innerHTML = Object.entries(state.indicators).map(([k, v]) => {
@@ -1497,18 +1431,18 @@ function renderSidebar(state, empresa) {
       const b         = _bench(state.sector, k);
       const prev      = snapPrev[k];
 
-      // IMPORTANTE: a seta de tendência NÃO é inserida aqui no HTML inicial.
-      // Ela é injetada via JS em _animarIndicador() (ou imediatamente abaixo,
-      // se não há mudança a animar) — assim a seta sempre aparece SINCRONIZADA
-      // com o número e a barra já no valor final, nunca antes.
+      
+      
+      
+      
 
-      // Classe crítico se valor final <= 3
+      
       const isCritical = v <= 3;
       if (isCritical && (prev === undefined || prev > 3)) newlyCritical.push(label);
       const rowClass = isCritical ? ' critical' : '';
       const nameClass = isCritical ? ' critical-label' : '';
 
-      // Label already contains emoji prefix (e.g. "💰 Financeiro")
+      
       const labelParts = label.split(" ");
       const indIcon = labelParts[0];
       const indName = labelParts.slice(1).join(" ");
@@ -1523,23 +1457,23 @@ function renderSidebar(state, empresa) {
       </div>`;
     }).join("");
 
-    // Para indicadores SEM mudança (prev === v), insere a seta vazia imediatamente
-    // (não há nada a animar, então não precisa esperar)
+    
+    
     if (!temAnterior) {
-      // Primeira renderização — nenhuma seta, nenhuma comparação possível
+      
     } else {
       Object.entries(state.indicators).forEach(([k, v]) => {
         const prev = snapPrev[k];
         if (prev === undefined || prev === v) {
-          // Sem mudança real — não precisa de seta, e o número já está correto
+          
           const trendEl = grid.querySelector(`[data-trend-for="${k}"]`);
           if (trendEl) trendEl.textContent = '';
         }
       });
     }
 
-    // BUG #1 FIX: update _prevIndicators AFTER rendering
-    // Anima dos valores antigos (já no DOM) para os valores reais do state.
+    
+    
     const _snapParaAnim = { ...snapPrev };
     if (temAnterior) {
       requestAnimationFrame(() => {
@@ -1556,7 +1490,7 @@ function renderSidebar(state, empresa) {
 
     _prevIndicators = { ...state.indicators };
 
-    // Toast para indicadores recém-críticos
+    
     if (newlyCritical.length && state.currentRound > 0) {
       newlyCritical.forEach(label => _mostrarCriticalToast(`⚠ ${label} em nível crítico! Ação urgente necessária.`));
     }
@@ -1589,54 +1523,34 @@ function renderSidebar(state, empresa) {
   }
 }
 
-/* ════════════════════════════════════════════════════
-   RODADA
-════════════════════════════════════════════════════ */
-/**
- * Animação de abertura: mostra todos os indicadores em 20
- * e conta sequencialmente até os valores reais, revelando o estado inicial da empresa.
- * @param {object} indicators — valores reais dos indicadores
- * @param {number} delayBase  — delay inicial em ms
- */
-/**
- * Anima chips de um grid sequencialmente via JS (evita problema de innerHTML + CSS animation).
- * Insere os chips sem classe de animação, depois aplica uma por uma com delay.
- * @param {string}   gridId  — id do elemento container
- * @param {Array}    itens   — [{ html: string, positivo: boolean }]
- */
-// Fila de chips pendentes para animar quando o jogador apertar "Próxima Rodada"
+
+
+
+
 let _chipsFila = [];
 
-/**
- * Insere chips no grid de forma estática (visíveis, sem animação).
- * A animação só acontece quando _dispararAnimacaoChips() for chamada
- * (ao apertar o botão Próxima Rodada).
- */
+
 function _animarChips(gridId, itens) {
   const grid = document.getElementById(gridId);
   if (!grid) return;
 
-  // Insere chips estáticos e visíveis — jogador lê normalmente
+  
   grid.innerHTML = itens.map(it => it.html).join('');
 
-  // Registra na fila para animar ao apertar Próxima Rodada
+  
   const chips = Array.from(grid.querySelectorAll('.fb-chip'));
   chips.forEach((chip, i) => {
     _chipsFila.push({ chip, index: i, positivo: chip.dataset.positivo === 'true' });
   });
 }
 
-/**
- * Chamada ao apertar "Próxima Rodada".
- * Anima todos os chips da fila sequencialmente antes de avançar.
- * Retorna uma Promise que resolve quando todas as animações terminarem.
- */
+
 function _dispararAnimacaoChips() {
   const fila = [..._chipsFila];
   _chipsFila = [];
   if (!fila.length) return Promise.resolve();
 
-  // Esconde todos antes de animar
+  
   fila.forEach(({ chip }) => {
     chip.style.transition = 'none';
     chip.style.opacity    = '0';
@@ -1644,7 +1558,7 @@ function _dispararAnimacaoChips() {
   });
 
   return new Promise(resolve => {
-    // rAF duplo: garante que o estado opacity:0 foi pintado
+    
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const duracaoUltimo = (fila.length - 1) * 90 + 220 + 400 + 50;
@@ -1655,7 +1569,7 @@ function _dispararAnimacaoChips() {
             chip.style.opacity    = '1';
             chip.style.transform  = 'translateY(0) scale(1)';
 
-            // Pulso de cor após entrar
+            
             setTimeout(() => {
               chip.style.transition += ', box-shadow .3s ease';
               chip.style.boxShadow  = positivo
@@ -1668,7 +1582,7 @@ function _dispararAnimacaoChips() {
           }, index * 90);
         });
 
-        // Resolve após o último chip terminar de pulsar
+        
         setTimeout(resolve, duracaoUltimo);
       });
     });
@@ -1678,8 +1592,8 @@ function _dispararAnimacaoChips() {
 function _animarInicioPartida(indicators, delayBase = 600) {
   const entradas = Object.entries(indicators);
 
-  // Passo 1: força barra em 0% e número em 20 para todos,
-  // sem transition para ser instantâneo
+  
+  
   entradas.forEach(([k]) => {
     const row   = document.querySelector(`.game-ind-row[data-ind="${k}"]`);
     const valEl = row?.querySelector('.game-ind-val');
@@ -1687,11 +1601,11 @@ function _animarInicioPartida(indicators, delayBase = 600) {
     if (valEl) valEl.textContent = '20';
     if (barEl) {
       barEl.style.transition = 'none';
-      barEl.style.width = '100%'; // parte cheio (20/20)
+      barEl.style.width = '100%'; 
     }
   });
 
-  // Passo 2: para cada indicador, anima sequencialmente do valor 20 ao real
+  
   entradas.forEach(([k, v], i) => {
     setTimeout(() => {
       const row    = document.querySelector(`.game-ind-row[data-ind="${k}"]`);
@@ -1699,23 +1613,23 @@ function _animarInicioPartida(indicators, delayBase = 600) {
       const barEl  = row?.querySelector('.game-ind-bar');
       const nameEl = row?.querySelector('.game-ind-name');
 
-      // Restaura transition antes de animar
+      
       if (barEl) barEl.style.transition = 'width .5s cubic-bezier(.4,0,.2,1)';
 
-      const corFinal = BetaIndicadores.corNivel(v); // cor 20 = excelente, sempre OK no início
+      const corFinal = BetaIndicadores.corNivel(v); 
 
       if (v === 20) {
-        // Sem mudança — só garante número e cor corretos
+        
         if (valEl) { valEl.textContent = '20'; valEl.style.color = corFinal; }
         if (row)   row.style.setProperty('--ind-cor', corFinal);
         return;
       }
 
-      // Flash e contador
+      
       if (row) {
         row.classList.remove('ind-flash-up', 'ind-flash-down');
         void row.offsetWidth;
-        row.classList.add('ind-flash-down'); // começa cheio e cai
+        row.classList.add('ind-flash-down'); 
       }
       if (valEl) {
         valEl.classList.remove('ind-val-pop');
@@ -1724,11 +1638,11 @@ function _animarInicioPartida(indicators, delayBase = 600) {
         _animarContador(valEl, 20, v, 450);
       }
       if (barEl) {
-        // Anima barra do valor máximo (100%) para o valor real
+        
         barEl.style.width = `${(v / 20) * 100}%`;
       }
 
-      // Cor e estado crítico — sincronizados com o fim da animação (450ms)
+      
       setTimeout(() => {
         if (valEl) valEl.style.color = corFinal;
         if (barEl) barEl.style.background = corFinal;
@@ -1751,7 +1665,7 @@ function _animarInicioPartida(indicators, delayBase = 600) {
 
 function renderRodada(state, aposTrocaTela) {
   _escolhaFeita = false;
-  _bloqueioAte  = Date.now() + 350; // bloqueia toques fantasma pós-transição
+  _bloqueioAte  = Date.now() + 350; 
   const round = state.gameRounds[state.currentRound];
   if (!round) return;
 
@@ -1764,13 +1678,13 @@ function renderRodada(state, aposTrocaTela) {
   document.getElementById("hist-round-title").textContent = round.title || "";
   document.getElementById("hist-round-desc").innerHTML = _destacarTermosGlossario(_enriquecerDescricao(round.description||"", state));
 
-  // Evento ativo
+  
   const ev     = state.activeEvents?.find(e => e.expiresAt >= state.currentRound);
   const banner = document.getElementById("hist-event-banner");
   const evTxt  = document.getElementById("hist-event-text");
   if (ev && banner && evTxt) {
     banner.classList.add("visible");
-    // Mostra quais indicadores do setor atual são amplificados e efeitos no gestor
+    
     const indAfetados = BetaImprevisto.descricaoIndicadores(ev, state.sector);
     const gestorAf    = BetaImprevisto.descricaoGestor(ev);
     let detalhes = ev.descricao;
@@ -1779,7 +1693,7 @@ function renderRodada(state, aposTrocaTela) {
     evTxt.innerHTML = `<strong>${ev.titulo}</strong> — ${detalhes}`;
   } else if (banner) banner.classList.remove("visible");
 
-  // Choices
+  
   const choices = state.choicesAtivas || round.choices;
   const lista   = document.getElementById("choices-list");
   lista.innerHTML = choices.map((c, i) => {
@@ -1792,30 +1706,30 @@ function renderRodada(state, aposTrocaTela) {
     </button>`;
   }).join("");
 
-  // Histórico + recomendações
+  
   _renderHistoricoTab(state);
 
-  // Timer
+  
   _iniciarTimer();
 
-  // Animação de início: na primeira rodada os indicadores "caem" de 20 até o valor real
+  
   if (state.currentRound === 0) {
     requestAnimationFrame(() => _animarInicioPartida(state.indicators));
   }
 
-  // Sempre começa na aba HISTÓRIA
+  
   mudarTab("historia");
   mostrarTela("screen-game");
 
-  // Se houver callback (chamado por _avancarRodada para renderizar a sidebar
-  // SÓ DEPOIS que a tela já estiver visível), executa após o screenIn (~300ms)
-  // para o jogador perceber a transição dos indicadores na tela certa.
+  
+  
+  
   if (typeof aposTrocaTela === 'function') {
     setTimeout(aposTrocaTela, 60);
   }
 }
 
-/* ── Abas ──────────────────────────────────────────── */
+
 function mudarTab(aba) {
   ["historia","desafios","historico","empresa"].forEach(t => {
     document.getElementById(`tab-${t}`)?.classList.remove("active");
@@ -1825,7 +1739,7 @@ function mudarTab(aba) {
   document.getElementById(`gtab-${aba}`)?.classList.add("active");
 }
 
-/* ── Histórico + Recomendações ─────────────────────── */
+
 function _renderHistoricoTab(state) {
   const histEl = document.getElementById("historico-indicadores");
   const recEl  = document.getElementById("recomendacoes-panel");
@@ -1854,12 +1768,10 @@ function _renderHistoricoTab(state) {
   }
 }
 
-/* ════════════════════════════════════════════════════
-   MEMÓRIA NARRATIVA
-════════════════════════════════════════════════════ */
-// Cache dos termos do glossário ordenados do mais longo para o mais curto
-// (evita que um termo curto, ex: "SLA", "roube" a marcação de um termo
-// mais longo que o contém, ex: nenhum caso aqui, mas é uma proteção geral).
+
+
+
+
 let _glossarioTermosOrdenados = null;
 function _getGlossarioTermosOrdenados() {
   if (!_glossarioTermosOrdenados) {
@@ -1874,21 +1786,21 @@ function _escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Detecta termos do Glossário dentro de um texto puro (sem HTML) e os
-// envolve em um <span> sublinhado e clicável, que abre a explicação do
-// Glossário ao ser tocado. Cada termo só é destacado na primeira
-// ocorrência dentro do texto, para não poluir visualmente o conteúdo.
+
+
+
+
 function _destacarTermosGlossario(texto) {
   if (!texto) return texto;
   const termos = _getGlossarioTermosOrdenados();
-  // Mapa de posições já ocupadas, para não destacar termos que se sobrepõem
-  // (ex: "Capital Político" já marcado não deveria ter "Capital" marcado de novo).
+  
+  
   const ocupado = new Array(texto.length).fill(false);
-  const marcacoes = []; // {start, end, termo, def}
+  const marcacoes = []; 
 
   for (const g of termos) {
-    // Aceita o termo com variações simples de plural (s no final) e ignora
-    // parênteses internos do próprio nome do termo (ex: "Angel (Investidor-Anjo)").
+    
+    
     const nomesBusca = g.termo.split('/').map(s => s.trim().replace(/\s*\(.*?\)\s*/g, ''));
     for (const nome of nomesBusca) {
       if (!nome) continue;
@@ -1901,7 +1813,7 @@ function _destacarTermosGlossario(texto) {
       if (!livre) continue;
       for (let i = start; i < end; i++) ocupado[i] = true;
       marcacoes.push({ start, end, termo: g.termo, def: g.def });
-      break; // já achou esse termo do glossário, não tenta os outros nomesBusca
+      break; 
     }
   }
 
@@ -1948,9 +1860,7 @@ function _enriquecerDescricao(desc, state) {
   return `[${refs[0]}]\n\n${desc}`;
 }
 
-/* ════════════════════════════════════════════════════
-   RECOMENDAÇÕES
-════════════════════════════════════════════════════ */
+
 function _gerarRecomendacoes(state) {
   const ind  = state.indicators;
   const bench= BENCHMARKS[state.sector] || {};
@@ -1967,42 +1877,38 @@ function _gerarRecomendacoes(state) {
   return recs.slice(0, 4);
 }
 
-/* ════════════════════════════════════════════════════
-   ESCOLHA / TIMER
-════════════════════════════════════════════════════ */
+
 function escolher(idx) {
   if (_escolhaFeita) return;
-  if (Date.now() < _bloqueioAte) return; // bloqueia toque fantasma pós-transição
+  if (Date.now() < _bloqueioAte) return; 
   _escolhaFeita = true;
   _pararTimer();
 
-  // Animação: destaca escolha, desabilita opções
+  
   document.querySelectorAll(".choice-card").forEach((b, i) => {
     b.disabled = true;
     if (i === idx) b.classList.add("chosen");
   });
 
-  // Animar barras dos indicadores (feedback visual imediato)
+  
   document.querySelectorAll(".game-ind-bar").forEach(bar => {
     bar.classList.add("deciding");
     setTimeout(() => bar.classList.remove("deciding"), 600);
   });
 
-  // Atualiza sessão ativa no Firestore (Option B — por evento, não heartbeat)
+  
   _atualizarSessaoAtiva();
 
-  // Pequena pausa para a animação ser vista antes de processar
+  
   setTimeout(() => processarEscolha(idx), 180);
 }
 
-/* ════════════════════════════════════════════════════
-   FEEDBACK DE OMISSÃO — tela diferenciada quando o tempo esgota
-════════════════════════════════════════════════════ */
+
 function mostrarFeedbackOmissao({ faseLabel, rodadaTitulo, efeitos, efeitosGestor }, callback) {
   _feedbackCallback = callback;
   mostrarTela('screen-feedback');
 
-  // Badge: vermelho com ícone de relógio
+  
   const badge = document.getElementById('fb-veredito-badge');
   if (badge) { badge.className = 'verdict-badge verdict-ruim'; badge.textContent = '⏰'; }
 
@@ -2012,16 +1918,16 @@ function mostrarFeedbackOmissao({ faseLabel, rodadaTitulo, efeitos, efeitosGesto
   const sub = document.getElementById('fb-veredito-sub');
   if (sub) sub.textContent = 'Você não respondeu a tempo';
 
-  // Contexto da rodada
+  
   const escolhaEl = document.getElementById('fb-escolha-texto');
   if (escolhaEl) escolhaEl.textContent = `"${rodadaTitulo}" — ${faseLabel}`;
 
-  // Explicação
+  
   const expEl = document.getElementById('fb-explicacao-texto');
   if (expEl) expEl.textContent =
     'A omissão tem custo. Em gestão, a indecisão raramente é neutra — ela cria vácuos que o mercado, a equipe e os stakeholders preenchem do jeito deles. As consequências abaixo refletem o impacto de não agir a tempo.';
 
-  // Impactos negativos
+  
   const grid = document.getElementById('fb-impactos-grid');
   if (grid) {
     const chips = Object.entries(efeitos)
@@ -2032,13 +1938,13 @@ function mostrarFeedbackOmissao({ faseLabel, rodadaTitulo, efeitos, efeitosGesto
         return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v > 0 ? '+' : ''}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;
       }).join('');
 
-    // Efeito no gestor
+    
     const gestorChips = Object.entries(efeitosGestor || {})
       .filter(([, v]) => v !== 0)
       .map(([k, v]) => {
         const labels = { capitalPolitico: '👔 Capital Político', esgotamento: '😓 Esgotamento' };
         const nome = labels[k] || k;
-        const cor  = v > 0 ? 'var(--danger)' : 'var(--good)'; // esgotamento+ é ruim
+        const cor  = v > 0 ? 'var(--danger)' : 'var(--good)'; 
         return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v > 0 ? '+' : ''}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;
       }).join('');
 
@@ -2046,11 +1952,11 @@ function mostrarFeedbackOmissao({ faseLabel, rodadaTitulo, efeitos, efeitosGesto
       '<span style="font-size:.8rem;color:var(--text-muted)">Nenhum impacto mensurável desta vez.</span>';
   }
 
-  // Esconde "melhor alternativa" (não faz sentido em omissão)
+  
   const altEl = document.getElementById('fb-melhor-alt');
   if (altEl) altEl.style.display = 'none';
 
-  // Limpa seções que podem ter conteúdo de partidas/rodadas anteriores
+  
   const histEl  = document.getElementById('fb-historico');
   const histLst = document.getElementById('fb-historico-lista');
   if (histEl)  histEl.style.display  = 'none';
@@ -2064,14 +1970,14 @@ function mostrarFeedbackOmissao({ faseLabel, rodadaTitulo, efeitos, efeitosGesto
   const stakeholderEl = document.getElementById('fb-stakeholder');
   if (stakeholderEl) stakeholderEl.style.display = 'none';
 
-  // Mostra banner de omissão
+  
   const omissaoBanner = document.getElementById('fb-omissao-banner');
   if (omissaoBanner) omissaoBanner.style.display = '';
 }
 
 let _presencaInicializada = false;
 
-// Registra presença no RTDB quando o jogador está na tela inicial (sem partida ativa)
+
 async function _registrarPresencaHome() {
   try {
     if (!_player?.uid || !window.GSPRtdb) return;
@@ -2085,7 +1991,7 @@ async function _registrarPresencaHome() {
       companyName: '',
       versao:      _versaoAtual || '',
       ts:          Date.now(),
-      status:      'home', // diferencia de quem está em partida
+      status:      'home', 
       online:      true,
     });
 
@@ -2093,18 +1999,18 @@ async function _registrarPresencaHome() {
       onDisconnect(presRef).remove();
       _presencaInicializada = true;
     }
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
-// Atualiza presença no Firebase Realtime Database
-// Chamada a cada escolha do jogador; onDisconnect garante limpeza automática
+
+
 async function _atualizarSessaoAtiva() {
   try {
     if (!_player?.uid) return;
     const state = BetaState.get();
     if (!state) return;
 
-    // — RTDB (preferido, tempo real) —
+    
     if (window.GSPRtdb) {
       const { db, ref, set, onDisconnect } = window.GSPRtdb;
       const presRef = ref(db, `presence/${_player.uid}`);
@@ -2119,7 +2025,7 @@ async function _atualizarSessaoAtiva() {
         online:      true,
       });
 
-      // Configura remoção automática ao desconectar (só precisa fazer 1x)
+      
       if (!_presencaInicializada) {
         onDisconnect(presRef).remove();
         _presencaInicializada = true;
@@ -2127,7 +2033,7 @@ async function _atualizarSessaoAtiva() {
       return;
     }
 
-    // — Fallback: Firestore REST (caso RTDB não esteja configurado) —
+    
     if (!window.GSPAuth) return;
     const tok = await window.GSPAuth.getToken();
     if (!tok) return;
@@ -2146,15 +2052,15 @@ async function _atualizarSessaoAtiva() {
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields }),
     }).catch(() => {});
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
-// Remove presença do RTDB ao sair/fechar a aba
+
 function _removerPresenca() {
   try {
     if (!_player?.uid || !window.GSPRtdb) return;
     const { db, ref, set } = window.GSPRtdb;
-    // Usa sendBeacon para garantir execução no unload
+    
     const presRef = ref(db, `presence/${_player.uid}`);
     set(presRef, null).catch(() => {});
   } catch(e) {}
@@ -2183,32 +2089,23 @@ function _pararTimer() {
   if (el) { el.classList.remove("active","danger"); el.textContent = ""; }
 }
 
-/* ════════════════════════════════════════════════════
-   OMISSÃO — penalidade quando o tempo esgota
-════════════════════════════════════════════════════ */
 
-// Tabela de penalidade base por fase (% de queda nos indicadores relevantes)
+
+
 const _OMISSAO_PENALIDADE = {
-  diagnostico: { base: 6,  max: 10 }, // fase inicial — penalidade leve
-  pressao:     { base: 10, max: 16 }, // fase do meio — penalidade moderada
-  decisao:     { base: 15, max: 22 }, // fase crítica — penalidade severa
+  diagnostico: { base: 6,  max: 10 }, 
+  pressao:     { base: 10, max: 16 }, 
+  decisao:     { base: 15, max: 22 }, 
 };
 
-/**
- * Calcula os efeitos de omissão baseados nos indicadores que o round afeta.
- * Lê os effects de todas as choices e extrai os indicadores negativamente relevantes,
- * aplicando penalidade proporcional à fase da rodada.
- * @param {object} round   — round atual (com .fase e .choices)
- * @param {object} state   — estado do jogo (com .indicators e .currentRound)
- * @returns {{ efeitos: object, indicadoresAfetados: string[], faseLabel: string }}
- */
+
 function _calcularPenalidadeOmissao(round, state) {
   const fase  = round.fase || 'pressao';
   const cfg   = _OMISSAO_PENALIDADE[fase] || _OMISSAO_PENALIDADE.pressao;
 
-  // Coleta todos os indicadores mencionados pelas choices do round
-  const frequencia = {}; // indicador → quantas choices o mencionam
-  const somaNeg    = {}; // indicador → soma dos valores negativos (para priorizar os mais impactantes)
+  
+  const frequencia = {}; 
+  const somaNeg    = {}; 
 
   (round.choices || []).forEach(c => {
     Object.entries(c.effects || {}).forEach(([k, v]) => {
@@ -2218,33 +2115,33 @@ function _calcularPenalidadeOmissao(round, state) {
     });
   });
 
-  // Filtra apenas indicadores que existem no estado atual do jogador
+  
   const candidatos = Object.keys(frequencia).filter(k =>
     state.indicators[k] !== undefined && state.indicators[k] > 0
   );
 
-  // Ordena por relevância: indicadores mais mencionados e com maior impacto negativo
+  
   candidatos.sort((a, b) =>
     (frequencia[b] + somaNeg[b] * 0.5) - (frequencia[a] + somaNeg[a] * 0.5)
   );
 
-  // Seleciona os 2-3 mais relevantes para penalizar
+  
   const qtd      = candidatos.length >= 3 ? 3 : candidatos.length >= 2 ? 2 : 1;
   const alvos    = candidatos.slice(0, qtd);
 
-  // Fallback: se não houver candidatos claros, penaliza financeiro + outro do setor
+  
   if (alvos.length === 0) {
     const fallbacks = Object.keys(state.indicators).filter(k => state.indicators[k] > 0);
     alvos.push(...fallbacks.slice(0, 2));
   }
 
-  // Distribui a penalidade: primeiro alvo leva mais, demais dividem o restante
+  
   const efeitos = {};
   alvos.forEach((k, i) => {
     const fator = i === 0 ? 1.0 : i === 1 ? 0.6 : 0.4;
-    // Penalidade é proporcional ao valor atual do indicador (não mata instantaneamente)
+    
     const penalidade = Math.round(cfg.base * fator);
-    efeitos[k] = -Math.min(penalidade, cfg.max, state.indicators[k]); // nunca vai abaixo de 0
+    efeitos[k] = -Math.min(penalidade, cfg.max, state.indicators[k]); 
   });
 
   const faseLabels = {
@@ -2256,10 +2153,7 @@ function _calcularPenalidadeOmissao(round, state) {
   return { efeitos, indicadoresAfetados: alvos, faseLabel: faseLabels[fase] || fase };
 }
 
-/**
- * Chamada quando o timer chega a zero e o jogador não escolheu.
- * Em vez de sortear uma alternativa, aplica consequências de omissão diretamente.
- */
+
 function _escolherPorOmissao() {
   if (_escolhaFeita) return;
   _escolhaFeita = true;
@@ -2270,7 +2164,7 @@ function _escolherPorOmissao() {
   const round = state.gameRounds?.[state.currentRound];
   if (!round) return;
 
-  // Pisca o timer no vermelho antes de sumir
+  
   const timerEl = document.getElementById('timer-display');
   if (timerEl) {
     timerEl.textContent = '⏱ 0s';
@@ -2278,27 +2172,25 @@ function _escolherPorOmissao() {
     setTimeout(() => timerEl.classList.remove('active', 'danger'), 800);
   }
 
-  // Desabilita todas as choices (sem highlight — nenhuma foi escolhida)
+  
   document.querySelectorAll('.choice-card').forEach(b => {
     b.disabled = true;
     b.style.opacity = '0.35';
   });
 
-  // Calcula penalidade
+  
   const { efeitos, indicadoresAfetados, faseLabel } = _calcularPenalidadeOmissao(round, state);
 
-  // Aplica via engine com flag de omissão
+  
   setTimeout(() => processarOmissao(efeitos, round, faseLabel), 350);
 }
 
-/* ════════════════════════════════════════════════════
-   FEEDBACK
-════════════════════════════════════════════════════ */
+
 function mostrarFeedback(data, callback) {
   _feedbackCallback = callback;
   mostrarTela("screen-feedback");
 
-  // Garante que o banner de omissão não vaze entre rodadas
+  
   const _omBanner = document.getElementById('fb-omissao-banner');
   if (_omBanner) _omBanner.style.display = 'none';
 
@@ -2313,7 +2205,7 @@ function mostrarFeedback(data, callback) {
   document.getElementById("fb-veredito-sub").textContent   = data.avaliacao==="boa"?"Decisão acertada":data.avaliacao==="ruim"?"Decisão equivocada":"Decisão com trade-offs";
   document.getElementById("fb-escolha-texto").textContent  = data.escolhaTexto||"";
   document.getElementById("fb-explicacao-texto").textContent = data.ensinamento||"";
-  // Impactos
+  
   const grid = document.getElementById("fb-impactos-grid");
   if (grid) {
     const chipEfeitos = Object.entries(data.efeitos||{}).filter(([,v])=>v!==0);
@@ -2326,7 +2218,7 @@ function mostrarFeedback(data, callback) {
       grid.innerHTML = `<span style="font-size:.8rem;color:var(--text-muted)">Sem impacto direto.</span>`;
     }
   }
-  // Melhor alternativa
+  
   const altEl = document.getElementById("fb-melhor-alt");
   if (altEl) {
     const melhor = data.melhorAlternativa;
@@ -2349,7 +2241,7 @@ function mostrarFeedback(data, callback) {
       }
     } else { altEl.style.display="none"; }
   }
-  // Gestor
+  
   const gestorEl=document.getElementById("fb-gestor"), gestorGrid=document.getElementById("fb-gestor-grid");
   if (gestorEl && gestorGrid) {
     const eg=data.efeitosGestor||{}, temEfeito=Object.values(eg).some(v=>v!==0);
@@ -2369,7 +2261,7 @@ function mostrarFeedback(data, callback) {
       }
     } else { gestorEl.style.display="none"; }
   }
-  // Stakeholder
+  
   const stEl=document.getElementById("fb-stakeholder");
   if (data.stakeholderReacao && stEl) {
     stEl.style.display="";
@@ -2377,18 +2269,18 @@ function mostrarFeedback(data, callback) {
     document.getElementById("fb-st-nome").textContent=data.stakeholderReacao.nome||"";
     document.getElementById("fb-st-txt").textContent=data.stakeholderReacao.texto||"";
   } else if (stEl) { stEl.style.display="none"; }
-  // Evento
+  
   const evEl=document.getElementById("fb-evento"), evTxt=document.getElementById("fb-evento-texto");
   if (data.eventoAtivo && evEl) { evEl.style.display=""; evTxt.textContent=`${data.eventoAtivo.titulo} amplificou os efeitos desta rodada.`; }
   else if (evEl) { evEl.style.display="none"; }
-  // Notificações
+  
   const notifEl=document.getElementById("fb-notif"), notifLst=document.getElementById("fb-notif-lista");
   if (notifEl && notifLst) {
     const notifs=[...(data.novasFlags||[]).map(f=>_textoFlag(f)),...(data.novasConquistas||[]).map(c=>`🏆 ${c}`)];
     if (notifs.length) { notifEl.style.display=""; notifLst.innerHTML=notifs.map(n=>`<div class="fb-notif-row">${n}</div>`).join(""); }
     else { notifEl.style.display="none"; }
   }
-  // Histórico rápido
+  
   const histEl=document.getElementById("fb-historico"), histLst=document.getElementById("fb-historico-lista");
   if (histEl && histLst && data.historico?.length) {
     histEl.style.display="";
@@ -2403,15 +2295,13 @@ function avancar() {
   if (!_feedbackCallback) return;
   const cb = _feedbackCallback;
   _feedbackCallback = null;
-  _bloqueioAte = Date.now() + 400; // bloqueia escolher() durante transição
+  _bloqueioAte = Date.now() + 400; 
 
-  // Dispara animação dos chips e avança ao terminar
+  
   _dispararAnimacaoChips().then(() => cb());
 }
 
-/* ════════════════════════════════════════════════════
-   RESULTADO FINAL
-════════════════════════════════════════════════════ */
+
 function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
                            history, companyName, empresa, sector, epilogo, decisoesCruciais }) {
   mostrarTela("screen-result");
@@ -2441,7 +2331,7 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
   document.getElementById("result-title").textContent    = titulos[motivo]||"Mandato Encerrado";
   document.getElementById("result-subtitle").textContent = subs[motivo]||"";
 
-  // Identidade visual por motivo
+  
   document.getElementById("screen-result")?.setAttribute("data-motivo", motivo);
   const motivoEl = document.getElementById("result-motivo-label");
   if (motivoEl) motivoEl.style.color = motivo==="omissao_gameover"?"var(--warn)":motivo==="gameover"?"var(--danger)":motivo==="fim"?"var(--good)":"var(--text-muted)";
@@ -2453,13 +2343,13 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
   const numEl=document.getElementById("result-score-num"), mgEl=document.getElementById("result-manager-num");
   if (numEl){numEl.textContent=score; numEl.style.color=corEmp;}
   if (mgEl) {mgEl.textContent=scoreGestor; mgEl.style.color=corGes;}
-  // Epílogo
+  
   const epilogoSec=document.getElementById("result-epilogo-section"), epilogoEl=document.getElementById("result-epilogo");
   if (epilogo && epilogoEl && epilogoSec) {
     epilogoSec.style.display="";
     epilogoEl.innerHTML=`<div class="result-epilogo-titulo">${epilogo.titulo}</div><div class="result-epilogo-desc">${epilogo.descricao}</div>`;
   } else if (epilogoSec) { epilogoSec.style.display="none"; }
-  // Indicadores com benchmark
+  
   const indEl=document.getElementById("result-indicators");
   if (indEl) {
     const bench=BENCHMARKS[sector]||{};
@@ -2473,7 +2363,7 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
       </div>`;
     }).join("");
   }
-  // Gestor final
+  
   const gestorGrid=document.getElementById("result-gestor-grid");
   if (gestorGrid) {
     const g=gestor, esgCor=g.esgotamento>=7?"var(--danger)":g.esgotamento>=5?"var(--warn)":"var(--good)";
@@ -2482,7 +2372,7 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
       <div class="gestor-item"><div class="gestor-item-val" style="color:var(--purple)">${g.capitalPolitico}</div><div class="gestor-item-label">Capital Político</div></div>
       <div class="gestor-item"><div class="gestor-item-val" style="color:${esgCor}">${g.esgotamento}</div><div class="gestor-item-label">Esgotamento</div></div>`;
   }
-  // Decisões cruciais — modo revisão
+  
   const cruciaisSec=document.getElementById("result-cruciais-section"), cruciaisLst=document.getElementById("result-cruciais-lista");
   if (cruciaisSec && cruciaisLst && decisoesCruciais?.length) {
     cruciaisSec.style.display="";
@@ -2502,12 +2392,10 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
   } else if (cruciaisSec) { cruciaisSec.style.display="none"; }
 }
 
-/* ════════════════════════════════════════════════════
-   GLOSSÁRIO
-════════════════════════════════════════════════════ */
-// Conjunto padrão, embarcado no código — funciona 100% offline e é usado
-// enquanto a versão vinda da nuvem (Firestore, editável pelo Painel de
-// Controle) ainda não foi baixada/cacheada. Ver _sincronizarGlossarioCloud().
+
+
+
+
 const _GLOSSARIO_SECOES_PADRAO = [
   { categoria: "Indicadores e Mecânicas do Jogo", termos: [
     { termo:"SLA", def:"Acordo de Nível de Serviço (Service Level Agreement). Define metas de prazo e qualidade entre fornecedor e cliente. Ex: entregar 95% dos pedidos em até 48h." },
@@ -2600,25 +2488,25 @@ const _GLOSSARIO_SECOES_PADRAO = [
   ]},
 ];
 
-// Dado "ativo" que o jogo realmente usa em tela — começa como o padrão
-// embarcado, mas é substituído (a) por qualquer cache local salvo de uma
-// sincronização anterior, e depois (b) pela versão mais nova vinda do
-// Firestore assim que a sincronização em background terminar.
+
+
+
+
 let GLOSSARIO_SECOES = _GLOSSARIO_SECOES_PADRAO;
 
-// Lista plana derivada das seções, mantida para qualquer código legado
-// que ainda espere o formato antigo (array simples de {termo, def}).
+
+
 let GLOSSARIO_TERMOS = GLOSSARIO_SECOES.flatMap(s => s.termos);
 
 const GLOSSARIO_CACHE_KEY = 'gsp_glossario_cache_v1';
 
-// Aplica um novo conjunto de seções como o dado ativo do glossário,
-// recalculando tudo que depende dele (lista plana, ordenação por tamanho
-// de termo usada na marcação inline, e a UI se estiver aberta na tela).
+
+
+
 function _aplicarGlossario(secoes) {
   GLOSSARIO_SECOES = secoes;
   GLOSSARIO_TERMOS = GLOSSARIO_SECOES.flatMap(s => s.termos);
-  _glossarioTermosOrdenados = null; // força reordenar na próxima marcação
+  _glossarioTermosOrdenados = null; 
   const overlay = document.getElementById('overlay-glossary');
   if (overlay && overlay.classList.contains('active')) {
     _renderGlossarioTabs();
@@ -2627,26 +2515,26 @@ function _aplicarGlossario(secoes) {
   }
 }
 
-// Carrega, de forma síncrona, o último glossário cacheado localmente
-// (salvo por uma sincronização anterior com o Firestore). Chamado uma vez
-// no boot, antes de qualquer tela aparecer — assim o jogo já usa a versão
-// mais recente conhecida mesmo sem internet, sem esperar rede nenhuma.
+
+
+
+
 function _carregarGlossarioCache() {
   const cache = LS.get(GLOSSARIO_CACHE_KEY);
   if (cache?.secoes?.length) _aplicarGlossario(cache.secoes);
 }
 
-// Busca a versão mais atual do glossário no Firestore (leitura pública,
-// não exige login — funciona inclusive para convidados). Chamada (a) uma
-// vez em background no boot, e (b) toda vez que o jogador abre a tela do
-// glossário — nesse caso sempre busca de novo, na hora, mesmo que já
-// tenha sincronizado antes na sessão.
-//   • Achou termos na nuvem e é diferente do que está na tela → troca.
-//   • Achou termos na nuvem e é igual ao que já está na tela → não faz nada.
-//   • Nuvem sem seções ou sem termos (zerada no painel) → volta pro
-//     glossário padrão embarcado no código, e limpa o cache local.
-//   • Sem internet ou erro de rede → não mexe em nada, mantém o que já
-//     estava na tela (cache local ou o padrão).
+
+
+
+
+
+
+
+
+
+
+
 async function _sincronizarGlossarioCloud() {
   try {
     const [rSecoes, rTermos] = await Promise.all([
@@ -2662,7 +2550,7 @@ async function _sincronizarGlossarioCloud() {
         }),
       }),
     ]);
-    if (!rSecoes.ok || !rTermos.ok) return; // sem internet/erro — mantém o que já está ativo
+    if (!rSecoes.ok || !rTermos.ok) return; 
 
     const docSecoes = await rSecoes.json();
     const nomesSecoes = (docSecoes?.fields?.nomes?.arrayValue?.values || [])
@@ -2679,33 +2567,33 @@ async function _sincronizarGlossarioCloud() {
 
     let novoConjunto;
     if (!nomesSecoes.length || !termosPlano.length) {
-      // Nuvem zerada (sem seções ou sem termos) — volta pro padrão embarcado.
+      
       novoConjunto = _GLOSSARIO_SECOES_PADRAO;
     } else {
       const secoes = nomesSecoes
         .map(categoria => ({ categoria, termos: termosPlano.filter(t => t.categoria === categoria) }))
         .filter(s => s.termos.length > 0);
 
-      // Termos cuja categoria não corresponde a nenhuma seção conhecida
-      // (ex: seção renomeada/removida no painel) ainda entram no jogo, só
-      // que agrupados numa seção genérica, para não sumir silenciosamente.
+      
+      
+      
       const orfaos = termosPlano.filter(t => !nomesSecoes.includes(t.categoria));
       if (orfaos.length) secoes.push({ categoria: 'Outros', termos: orfaos });
 
       novoConjunto = secoes.length ? secoes : _GLOSSARIO_SECOES_PADRAO;
     }
 
-    // Só troca (e só re-renderiza) se for realmente diferente do que já está na tela.
+    
     if (JSON.stringify(novoConjunto) === JSON.stringify(GLOSSARIO_SECOES)) return;
 
     _aplicarGlossario(novoConjunto);
     if (novoConjunto === _GLOSSARIO_SECOES_PADRAO) LS.remove(GLOSSARIO_CACHE_KEY);
     else LS.set(GLOSSARIO_CACHE_KEY, { secoes: novoConjunto, ts: Date.now() });
   } catch (e) {
-    // Offline ou erro de rede — silencioso, o jogo segue com o dado que já tinha.
+    
   }
 }
-_carregarGlossarioCache(); // aplica o cache local (se houver) assim que o script carrega
+_carregarGlossarioCache(); 
 
 let _glossarioAbaAtiva = "todos";
 
@@ -2748,8 +2636,8 @@ function _renderGlossario(filtro) {
     return;
   }
 
-  // Na aba "Todos", mostra o título de cada seção para orientação visual.
-  // Numa aba específica, omite o título repetido (já está selecionado acima).
+  
+  
   const mostrarTitulo = _glossarioAbaAtiva === "todos";
 
   content.innerHTML = secoesFiltradas.map(secao => `
@@ -2774,17 +2662,15 @@ async function openGlossary() {
   _glossarioAbaAtiva = "todos";
   _renderGlossarioTabs();
   _renderGlossario('');
-  // Toda vez que o glossário é aberto, busca de novo no Firestore. Se vier
-  // algo diferente do que já está na tela, troca sozinho (_aplicarGlossario
-  // re-renderiza); se não vier nada de diferente, ou a busca falhar, a tela
-  // que já foi aberta acima continua exatamente como está.
+  
+  
+  
+  
   await _sincronizarGlossarioCloud();
 }
 function closeGlossary() { const el=document.getElementById("overlay-glossary"); _fecharOverlay('overlay-glossary'); }
 
-/* ════════════════════════════════════════════════════
-   CONFIGURAÇÕES
-════════════════════════════════════════════════════ */
+
 function openSettings() {
   _abrirOverlay('overlay-settings');
   _atualizarToggleTimer();
@@ -2803,33 +2689,33 @@ function irParaConfig() {
 }
 
 function _atualizarTelaConfig() {
-  // Timer
-  // Timer agora está na seleção de setor (sector-toggle-timer-btn)
+  
+  
   const sectorTimerBtn = document.getElementById('sector-toggle-timer-btn');
   if (sectorTimerBtn) {
     sectorTimerBtn.textContent = _settings.timer ? 'ON' : 'OFF';
     sectorTimerBtn.className = `toggle-btn ${_settings.timer ? 'on' : 'off'}`;
   }
-  // Cloud
+  
   const cloudBtn = document.getElementById('config-toggle-cloud-btn');
   if (cloudBtn) {
     const on = _settings.cloudStatus !== false;
     cloudBtn.textContent = on ? 'ON' : 'OFF';
     cloudBtn.className = `toggle-btn ${on ? 'on' : 'off'}`;
   }
-  // Fullscreen
+  
   _atualizarBotaoFullscreen();
-  // Status online
+  
   const statusBtn = document.getElementById('config-toggle-status-btn');
   if (statusBtn) {
     const on = _settings.mostrarStatus === true;
     statusBtn.textContent = on ? 'ON' : 'OFF';
     statusBtn.className = `toggle-btn ${on ? 'on' : 'off'}`;
   }
-  // Nome atual
+  
   const nomeEl = document.getElementById('config-nome-atual');
   if (nomeEl) nomeEl.textContent = _player?.nome || '—';
-  // Foto de perfil — só mostra se logado com Google
+  
   const rowFoto = document.getElementById('config-row-foto');
   if (rowFoto) {
     const isGoogle = _player?.tipo === 'google' || window.GSPAuth?.currentUser?.providerData?.some(p => p.providerId === 'google.com');
@@ -2853,14 +2739,14 @@ function toggleMostrarStatus() {
     btn.textContent = _settings.mostrarStatus ? 'ON' : 'OFF';
     btn.className = `toggle-btn ${_settings.mostrarStatus ? 'on' : 'off'}`;
   }
-  // Reaplicar o status atual com a nova configuração
+  
   const dot = document.getElementById('firebase-status-dot');
   const isOnline = dot?.classList.contains('firebase-dot--online');
   const isOffline = dot?.classList.contains('firebase-dot--offline');
   if (isOffline) {
     _setFirebaseStatus('offline');
   } else if (isOnline) {
-    // Re-lê o ping exibido atualmente
+    
     const pingEl = document.getElementById('firebase-ping');
     const pingMs = pingEl?.textContent ? parseInt(pingEl.textContent) : null;
     _setFirebaseStatus('online', pingMs);
@@ -2873,7 +2759,7 @@ function toggleTimerSetting() {
   _settings.timer = !_settings.timer;
   LS.set(SK.SETTINGS, _settings);
   _atualizarToggleTimer();
-  // Atualiza botão na seleção de setor (novo local)
+  
   const sectorBtn = document.getElementById('sector-toggle-timer-btn');
   if (sectorBtn) {
     sectorBtn.textContent = _settings.timer ? 'ON' : 'OFF';
@@ -2884,10 +2770,10 @@ function toggleTimerSetting() {
 function toggleCloudStatus() {
   _settings.cloudStatus = !_settings.cloudStatus;
   LS.set(SK.SETTINGS, _settings);
-  // Overlay
+  
   const btn = document.getElementById('toggle-cloud-btn');
   if (btn) { btn.textContent = _settings.cloudStatus ? 'ON' : 'OFF'; btn.className = `toggle-btn ${_settings.cloudStatus ? 'on' : 'off'}`; }
-  // Tela config
+  
   const configBtn = document.getElementById('config-toggle-cloud-btn');
   if (configBtn) { configBtn.textContent = _settings.cloudStatus ? 'ON' : 'OFF'; configBtn.className = `toggle-btn ${_settings.cloudStatus ? 'on' : 'off'}`; }
 }
@@ -2895,10 +2781,10 @@ function toggleCloudStatus() {
 function toggleFotoPerfil() {
   const fotoOn = _settings.fotoPerfil === true;
   if (!fotoOn) {
-    // Vai ativar — pede confirmação
+    
     _abrirOverlay('overlay-confirmar-foto');
   } else {
-    // Vai desativar — faz direto
+    
     _settings.fotoPerfil = false;
     LS.set(SK.SETTINGS, _settings);
     const btn = document.getElementById('toggle-foto-btn');
@@ -2942,7 +2828,7 @@ async function salvarNome() {
   fecharEditarNome();
   const nomeEl = document.getElementById('config-nome-atual');
   if (nomeEl) nomeEl.textContent = novoNome;
-  // Tenta salvar no Firestore se logado
+  
   if (_player?.uid && window.GSPAuth?.isReady()) {
     try {
       const tok = await window.GSPAuth.getToken();
@@ -2952,7 +2838,7 @@ async function salvarNome() {
         headers: { 'Authorization': `Bearer ${tok}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: { nome: { stringValue: novoNome } } })
       });
-    } catch(e) { /* silencioso */ }
+    } catch(e) {  }
   }
   mostrarAviso('Nome atualizado!');
 }
@@ -2960,9 +2846,7 @@ async function salvarNome() {
 function _atualizarToggleTimer() {
 }
 
-/* ════════════════════════════════════════════════════
-   UTILIDADES
-════════════════════════════════════════════════════ */
+
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen?.()
@@ -2984,10 +2868,10 @@ function _atualizarBotaoFullscreen() {
 document.addEventListener("fullscreenchange", _atualizarBotaoFullscreen);
 
 function reverTutorial() {
-  // Não remove gsp_tutorial_done — evita que o tutorial reapareça
-  // no boot caso o usuário feche o app sem terminar de ver
+  
+  
   _fecharOverlay('overlay-settings');
-  // Salva a tela de origem para pularTutorial saber para onde voltar
+  
   const telaAtual = document.querySelector('.screen.active')?.id;
   window._tutorialOrigem = telaAtual || 'screen-home';
   _tutorialStep = 0;
@@ -3050,19 +2934,15 @@ function _textoFlag(flag) {
   return MAPA[flag] || `🔔 ${flag}`;
 }
 
-/* ════════════════════════════════════════════════════
-   REGISTRO NO ENGINE + BOOT
-════════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════════
-   TUTORIAL
-════════════════════════════════════════════════════ */
+
+
 let _tutorialStep = 0;
 const _TUTORIAL_TOTAL = 4;
 
 function pularTutorial() {
-  localStorage.setItem('gsp_tutorial_done', '1'); // cache local, evita re-checar Firestore na mesma sessão
-  if (_player?.uid) _marcarTutorialVistoRemoto(_player.uid); // fonte de verdade real
-  // Se veio de dentro do jogo (via reverTutorial), volta pra tela de origem
+  localStorage.setItem('gsp_tutorial_done', '1'); 
+  if (_player?.uid) _marcarTutorialVistoRemoto(_player.uid); 
+  
   const origem = window._tutorialOrigem;
   window._tutorialOrigem = null;
   const TELAS_JOGO = ['screen-game', 'screen-intro', 'screen-feedback', 'screen-result'];
@@ -3090,7 +2970,7 @@ function tutorialStep(dir) {
   if (nextBtn) nextBtn.textContent = _tutorialStep === _TUTORIAL_TOTAL - 1 ? 'Começar →' : 'Próximo →';
 }
 
-// BUG #7 FIX: dots do tutorial agora são clicáveis
+
 function irParaSlide(step) {
   const slides = document.querySelectorAll('.tutorial-slide');
   const dots   = document.querySelectorAll('.tut-dot');
@@ -3105,11 +2985,9 @@ function irParaSlide(step) {
   if (nextBtn) nextBtn.textContent = _tutorialStep === _TUTORIAL_TOTAL - 1 ? 'Começar →' : 'Próximo →';
 }
 
-/* ════════════════════════════════════════════════════
-   PERFIL DO JOGADOR
-════════════════════════════════════════════════════ */
+
 async function irParaPerfil() {
-  // Configura hold 3s no avatar para admin
+  
   setTimeout(() => {
     const av = document.getElementById('perfil-avatar');
     if (av && !av._adminListened) {
@@ -3127,11 +3005,11 @@ async function irParaPerfil() {
   if (playerSalvo) { _player = playerSalvo; window._player = _player; }
   const isGuest = _player?.tipo === "guest" || !_player?.uid;
 
-  // Renderiza IMEDIATAMENTE com dados locais
+  
   const hist = LS.get(isGuest ? SK.HIST_GUEST : SK.HISTORICO) || [];
   const nome = _player?.nome || 'Jogador';
 
-  // Avatar
+  
   const av = document.getElementById('perfil-avatar');
   if (av) {
     const photoURL = window.GSPAuth?.currentUser?.photoURL;
@@ -3145,7 +3023,7 @@ async function irParaPerfil() {
   const pn = document.getElementById('perfil-nome');
   if (pn) pn.textContent = nome;
 
-  // ID curto + email (só para logados)
+  
   const metaRow = document.getElementById('perfil-meta-row');
   if (metaRow) {
     if (!isGuest && _player?.uid) {
@@ -3159,7 +3037,7 @@ async function irParaPerfil() {
     }
   }
 
-  // Botão logout visível só para logados
+  
   const logoutBtn = document.getElementById('perfil-logout-btn');
   if (logoutBtn) logoutBtn.style.display = (!isGuest && _player?.uid) ? '' : 'none';
 
@@ -3187,7 +3065,7 @@ async function irParaPerfil() {
     <div class="perfil-stat-label">${s.label}</div>
   </div>`).join('');
 
-  // Gráfico de evolução (últimas 10 partidas, do mais antigo ao mais recente)
+  
   const grafEl = document.getElementById('perfil-grafico');
   if (grafEl) {
     const ultimas = hist.slice(0, 10).reverse();
@@ -3202,7 +3080,7 @@ async function irParaPerfil() {
         return { x, y, score: h.score, sector: h.sector };
       });
       const polyline = pts.map(p => `${p.x},${p.y}`).join(' ');
-      // Area fill path
+      
       const areaPath = `M${pts[0].x},${H - PAD} ` + pts.map(p => `L${p.x},${p.y}`).join(' ') + ` L${pts[pts.length-1].x},${H-PAD} Z`;
       const dots = pts.map((p, i) => {
         const cor = p.score >= 70 ? '#2ecc71' : p.score >= 45 ? '#f39c12' : '#e74c3c';
@@ -3210,7 +3088,7 @@ async function irParaPerfil() {
           <title>${icones[p.sector]||''} ${p.score} pts</title>
         </circle>`;
       }).join('');
-      // Y axis labels
+      
       const yLabels = [0,50,100].map(v => {
         const y = H - PAD - ((v - min) / (max - min)) * (H - PAD * 2);
         return `<text x="1" y="${y+3}" font-size="7" fill="var(--t3)" font-family="monospace">${v}</text>`;
@@ -3276,16 +3154,16 @@ async function irParaPerfil() {
   }
   sessionStorage.setItem('gsp_prev_unlocked', JSON.stringify(conquistas.filter(c => c.unlocked).map(c => c.nome)));
 
-  // Sincroniza Firestore em background — não bloqueia a UI
+  
   if (!isGuest && _player?.uid && window.GSPSync) {
     window.GSPSync.carregarHistorico(_player.uid).then(histFS => {
       if (histFS.length > 0) {
         const c = histFS.map(h => ({ ...h, ts: h.ts?.toMillis ? h.ts.toMillis() : (h.ts || Date.now()) }));
         const localHist = LS.get(SK.HISTORICO) || [];
-        // Só re-renderiza se vier dado novo do servidor
+        
         if (c.length !== localHist.length) {
           LS.set(SK.HISTORICO, c);
-          // Re-renderiza apenas os stats silenciosamente
+          
           const total2  = c.length;
           const melhor2 = total2 ? Math.max(...c.map(h => h.score)) : 0;
           const media2  = total2 ? Math.round(c.reduce((a,h) => a + h.score, 0) / total2) : 0;
@@ -3331,13 +3209,11 @@ function _calcularConquistas(hist) {
   ];
 }
 
-/* ════════════════════════════════════════════════════
-   PÓDIO — com filtro por setor
-════════════════════════════════════════════════════ */
+
 let _podioFiltro = 'all';
 
 function filtrarPodio(setor) {
-  // Guest não tem acesso — filtro não deve buscar Firestore
+  
   if (!_player?.uid || _player?.tipo === 'guest') return;
 
   _podioFiltro = setor;
@@ -3350,16 +3226,16 @@ function filtrarPodio(setor) {
   const isAll = !setor || setor === 'all';
 
   if (isAll) {
-    // "Todos" — usa cache 'all' ou localStorage
+    
     const dados = _podioCache['all'] || LS.get(SK.PODIO) || [];
     _renderPodio(lista, dados, 'all');
     return;
   }
 
-  // Filtro por setor — filtra os dados 'all' já carregados localmente
+  
   const dadosAll = _podioCache['all'] || LS.get(SK.PODIO) || [];
   if (dadosAll.length) {
-    // Filtra por setor e reordena pelo melhor score naquele setor
+    
     const filtrados = dadosAll
       .filter(p => p.sector === setor || (p.melhorPorSetor && p.melhorPorSetor[setor]))
       .map(p => {
@@ -3375,7 +3251,7 @@ function filtrarPodio(setor) {
     _renderPodio(lista, filtrados, setor);
   }
 
-  // Busca Firestore em background para dados mais precisos do setor
+  
   if (_podioCache[setor]) {
     _renderPodio(lista, _podioCache[setor], setor);
   } else {
@@ -3383,7 +3259,7 @@ function filtrarPodio(setor) {
   }
 }
 
-// Cache por setor para não rebuscar dados já carregados
+
 let _podioCache = {};
 
 function irParaPodio() {
@@ -3396,7 +3272,7 @@ function irParaPodio() {
   const lista = document.getElementById('podio-lista');
   if (!lista) return;
 
-  // Convidados não têm acesso ao pódio
+  
   if (!_player?.uid || _player?.tipo === 'guest') {
     lista.innerHTML = `<div class="podio-empty">🔒 Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
     return;
@@ -3430,7 +3306,7 @@ function _buscarEAtualizarPodio(lista, setor) {
       ...p, ts: p.ts?.toMillis ? p.ts.toMillis() : (p.ts || Date.now())
     }));
     _podioCache[setor] = c;
-    // Sempre atualiza localStorage para espelhar o banco (inclusive quando vazio)
+    
     if (setor === 'all' || !setor) LS.set(SK.PODIO, c);
     if (_podioFiltro === (setor || 'all')) _renderPodio(lista, c, setor);
   }).catch(e => {
@@ -3450,7 +3326,7 @@ function _renderPodio(lista, podio, setor) {
     return;
   }
 
-  // Score único: melhorScore no modo Todos, score do setor no modo filtrado
+  
   const scoreLabel = isAll ? 'Melhor' : 'Score';
   const getScore   = p => isAll ? (p.melhorScore ?? p.score ?? 0) : (p.score ?? 0);
 
@@ -3458,7 +3334,7 @@ function _renderPodio(lista, podio, setor) {
   const top3   = sorted.slice(0, 3);
   const resto  = sorted.slice(3);
 
-  // Escada: ordem visual = 2º (esquerda) · 1º (centro) · 3º (direita)
+  
   const visualOrder = [
     top3[1] ? { p: top3[1], pos: 2, cls: 'podio-top3-2', rk: 'silver' } : null,
     top3[0] ? { p: top3[0], pos: 1, cls: 'podio-top3-1', rk: 'gold'   } : null,
@@ -3515,9 +3391,7 @@ function _renderPodio(lista, podio, setor) {
   lista.innerHTML = top3Html + restoHtml;
 }
 
-/* ════════════════════════════════════════════════════
-   PAUSA
-════════════════════════════════════════════════════ */
+
 let _jogoPausado = false;
 
 function pausarJogo() {
@@ -3538,7 +3412,7 @@ function continuarJogo() {
   _jogoPausado = false;
   const overlay = document.getElementById('overlay-pause');
   _fecharOverlay('overlay-pause');
-  // BUG #11 FIX: se timer chegou a 0 durante pausa, forçar escolha imediata
+  
   if (_settings.timer && !_escolhaFeita && _timerSegs <= 0) { _escolherPorOmissao(); return; }
   if (_settings.timer && !_escolhaFeita && _timerSegs > 0) {
     const el = document.getElementById('timer-display');
@@ -3558,7 +3432,7 @@ function abandonarJogo() {
   _fecharOverlay('overlay-pause');
   _pararTimer();
   _pararVerificacaoManutencao();
-  // Grava rodada de abandono para dashboard antes de limpar sessão
+  
   try {
     const _stateAbandono = BetaState.get();
     if (_stateAbandono?.currentRound !== undefined) {
@@ -3570,9 +3444,7 @@ function abandonarJogo() {
   mostrarTela('screen-home');
 }
 
-/* ════════════════════════════════════════════════════
-   CONFIRMAÇÃO DE SAÍDA
-════════════════════════════════════════════════════ */
+
 let _saidaTipo = null;
 
 function pedirConfirmacaoSaida(tipo) {
@@ -3617,7 +3489,7 @@ function pedirConfirmacaoSaida(tipo) {
     btn.className   = 'btn confirmar-saida-confirmar ' + cfg.btnClass;
   }
 
-  // Garante que aparece acima de qualquer overlay (z-index 100001 no HTML)
+  
   if (overlay.parentNode !== document.body) document.body.appendChild(overlay);
   overlay.style.display = 'flex';
 }
@@ -3639,11 +3511,9 @@ function confirmarSaida() {
   _saidaTipo = null;
 }
 
-/* ════════════════════════════════════════════════════
-   TOOLTIP DE INDICADORES DO GESTOR
-════════════════════════════════════════════════════ */
+
 const INDICADOR_INFO = {
-  // ── Indicadores do Gestor ──
+  
   reputacaoInterna: {
     titulo: '🧑 Reputação Interna',
     desc: 'Reflete como o time percebe sua liderança. Decisões que prejudicam as pessoas reduzem a reputação; decisões inclusivas e transparentes aumentam.',
@@ -3659,7 +3529,7 @@ const INDICADOR_INFO = {
     desc: 'Mede o desgaste acumulado do gestor. Aumenta com crises mal resolvidas e alta pressão de trabalho.',
     consequence: '🔴 Se chegar a 10, você é afastado por burnout e o mandato é encerrado imediatamente.',
   },
-  // ── Indicadores da Empresa (comuns) ──
+  
   financeiro: {
     titulo: '💰 Financeiro',
     desc: 'Saúde financeira geral da empresa. Afetado por investimentos, cortes de custo e resultados operacionais.',
@@ -3680,7 +3550,7 @@ const INDICADOR_INFO = {
     desc: 'Eficiência operacional interna. Reflete a maturidade dos processos e a capacidade de execução.',
     consequence: '⚠ Processos deficientes aumentam custos e reduzem a qualidade das entregas.',
   },
-  // ── Varejo ──
+  
   margem: {
     titulo: '📊 Margem Operacional',
     desc: 'Percentual de lucro sobre as vendas. Impactado por precificação, custos e mix de produtos.',
@@ -3701,7 +3571,7 @@ const INDICADOR_INFO = {
     desc: 'Presença e desempenho nos canais digitais de venda. Cada vez mais essencial para o varejo moderno.',
     consequence: '⚠ Atraso digital cede espaço para concorrentes mais ágeis.',
   },
-  // ── Logística ──
+  
   sla: {
     titulo: '⏱️ Cumprimento de SLA',
     desc: 'Taxa de entregas dentro do prazo acordado. Principal métrica de confiabilidade para clientes.',
@@ -3712,7 +3582,7 @@ const INDICADOR_INFO = {
     desc: 'Condição e disponibilidade dos veículos. Frota bem mantida garante operação confiável e segura.',
     consequence: '⚠ Frota degradada aumenta paradas e custos de manutenção emergencial.',
   },
-  // ── Indústria ──
+  
   manutencao: {
     titulo: '🔧 Manutenção de Ativos',
     desc: 'Estado de conservação das máquinas e equipamentos produtivos. Manutenção preventiva reduz paradas.',
@@ -3728,7 +3598,7 @@ const INDICADOR_INFO = {
     desc: 'Aderência às normas e regulações do setor. Envolve licenças, certificações e auditorias.',
     consequence: '⚠ Não conformidade pode resultar em multas, interdições e danos à reputação.',
   },
-  // ── Tecnologia (rh/clientes já cobertos pelas entradas padrão acima) ──
+  
   produtividade: {
     titulo: '⚡ Produtividade',
     desc: 'Velocidade e eficiência das entregas de tecnologia. Impactada por dívida técnica, processos e motivação.',
@@ -3744,7 +3614,7 @@ const INDICADOR_INFO = {
     desc: 'Capacidade de desenvolver novos produtos e tecnologias. Motor de crescimento e diferenciação competitiva.',
     consequence: '⚠ Sem inovação a empresa perde relevância para concorrentes mais ágeis.',
   },
-  // ── Segurança (compartilhado) ──
+  
   seguranca: {
     titulo: '🦺 Segurança Operacional',
     desc: 'Nível de segurança nas operações. Envolve prevenção de acidentes, normas e cultura de segurança.',
@@ -3761,8 +3631,8 @@ function abrirTooltipIndicador(key) {
   const info = INDICADOR_INFO[key];
   if (!info) return;
   const state = BetaState.get();
-  // Gestor indicators: reputacaoInterna, capitalPolitico, esgotamento (scale 0-10)
-  // Empresa indicators: all others (scale 0-20)
+  
+  
   const GESTOR_KEYS = ['reputacaoInterna', 'capitalPolitico', 'esgotamento'];
   const isGestor = GESTOR_KEYS.includes(key);
   const val = isGestor
@@ -3789,9 +3659,9 @@ function closeTooltip() {
   _fecharOverlay('overlay-tooltip');
 }
 
-// Tooltip informativo genérico — reaproveita o overlay-tooltip, mas sem
-// depender de um indicador do jogo. Usado para explicações de
-// configuração (ex: Timer por Rodada, Modo Treino).
+
+
+
 function abrirTooltipInfo(titulo, htmlCorpo) {
   const overlay = document.getElementById('overlay-tooltip');
   const title   = document.getElementById('tooltip-title');
@@ -3817,9 +3687,7 @@ function abrirInfoModoTreino() {
   `);
 }
 
-/* ════════════════════════════════════════════════════
-   MODO TREINO
-════════════════════════════════════════════════════ */
+
 let _modoTreino = false;
 
 function toggleModoTreino() {
@@ -3828,9 +3696,7 @@ function toggleModoTreino() {
   if (btn) { btn.textContent = _modoTreino ? 'ON' : 'OFF'; btn.className = `toggle-btn ${_modoTreino ? 'on' : 'off'}`; }
 }
 
-/* ════════════════════════════════════════════════════
-   COMPARTILHAR RESULTADO
-════════════════════════════════════════════════════ */
+
 function compartilharResultado() {
   const score  = document.getElementById('result-score-num')?.textContent || '—';
   const titulo = document.getElementById('result-title')?.textContent || 'Mandato';
@@ -3852,9 +3718,7 @@ Joguei Under Pressure — o simulador de decisões executivas!`;
   }
 }
 
-/* ════════════════════════════════════════════════════
-   ANIMAÇÃO DE SCORE + CONFETTI
-════════════════════════════════════════════════════ */
+
 function _animarScore(elId, valorFinal, cor, duracao = 1200) {
   const el = document.getElementById(elId);
   if (!el || isNaN(valorFinal)) return;
@@ -3862,7 +3726,7 @@ function _animarScore(elId, valorFinal, cor, duracao = 1200) {
   const tick  = () => {
     const elapsed  = Date.now() - start;
     const progress = Math.min(elapsed / duracao, 1);
-    const ease     = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    const ease     = 1 - Math.pow(1 - progress, 3); 
     el.textContent = Math.round(ease * valorFinal);
     el.style.color = cor;
     if (progress < 1) { requestAnimationFrame(tick); }
@@ -3884,17 +3748,17 @@ function _lancarConfetti() {
   }
 }
 
-/* Wrapper animado para renderResultado */
+
 function renderResultadoAnimado({ motivo, score, scoreGestor, gestor, indicators,
                                    history, companyName, empresa, sector, epilogo, decisoesCruciais }) {
   renderResultado({ motivo, score, scoreGestor, gestor, indicators, history, companyName, empresa, sector, epilogo, decisoesCruciais });
-  // Estado visual
+  
   const screen = document.getElementById('screen-result');
   if (screen) {
     screen.classList.remove('state-excelente','state-regular','state-dificil');
     screen.classList.add(score >= 70 ? 'state-excelente' : score >= 45 ? 'state-regular' : 'state-dificil');
   }
-  // Animar scores (começa em 0)
+  
   const corEmp = score >= 70 ? 'var(--good)' : score >= 45 ? 'var(--warn)' : 'var(--danger)';
   const corGes = scoreGestor >= 70 ? 'var(--purple)' : scoreGestor >= 45 ? 'var(--warn)' : 'var(--danger)';
   const ne = document.getElementById('result-score-num');
@@ -3906,7 +3770,7 @@ function renderResultadoAnimado({ motivo, score, scoreGestor, gestor, indicators
     _animarScore('result-manager-num', scoreGestor, corGes);
   }, 400);
   if (score >= 70) setTimeout(_lancarConfetti, 800);
-  // Modo Treino: não salvar
+  
   if (_modoTreino) {
     const ml = document.getElementById('result-motivo-label');
     if (ml) ml.textContent = 'MODO TREINO · Resultado não salvo';
@@ -3917,15 +3781,11 @@ function renderResultadoAnimado({ motivo, score, scoreGestor, gestor, indicators
   }
 }
 
-/* ════════════════════════════════════════════════════
-   REGISTRO NO ENGINE + BOOT
-════════════════════════════════════════════════════ */
+
 registrarUI({ mostrarTela, mostrarIntro, renderSidebar, renderRodada, mostrarFeedback, mostrarFeedbackOmissao, renderResultado: renderResultadoAnimado });
 
 
-/* ════════════════════════════════════════════════════
-   AUTH FUNCTIONS
-════════════════════════════════════════════════════ */
+
 function irParaAuth() {
   mostrarTela('screen-auth');
   authMudarAba('login');
@@ -4035,7 +3895,7 @@ async function authCadastrar() {
 }
 
 async function authGoogle() {
-  // Aguarda Firebase ficar pronto (até 3s)
+  
   if (!window.GSPAuth?.isReady()) {
     let t = 0;
     while (!window.GSPAuth?.isReady() && t < 30) {
@@ -4051,8 +3911,8 @@ async function authGoogle() {
     const player = await window.GSPAuth.loginGoogle();
 
     if (!player) {
-      // Popup bloqueado — redirect em andamento, página vai recarregar
-      // Mostra login com mensagem para o usuário não ficar perdido
+      
+      
       mostrarTela('screen-auth');
       authMudarAba('login');
       mostrarAviso('Redirecionando para o Google...');
@@ -4095,8 +3955,8 @@ async function _loginOk(player) {
   window._player = _player;
   LS.set(SK.PLAYER, _player);
 
-  // Carrega nome customizado do Firestore antes de qualquer coisa
-  // Evita sobrescrever nome editado pelo usuário com o displayName do Google
+  
+  
   if (player.uid && window.GSPSync?.carregarPerfil) {
     try {
       const perfil = await window.GSPSync.carregarPerfil(player.uid);
@@ -4105,29 +3965,29 @@ async function _loginOk(player) {
         window._player = _player;
         LS.set(SK.PLAYER, _player);
       }
-    } catch(e) { /* usa nome do Google mesmo */ }
+    } catch(e) {  }
   }
 
-  // Atualizar avatar agora que Firebase Auth está resolvido
+  
   _atualizarHome();
-  // Verifica se é admin antes de qualquer outra coisa
+  
   await _atualizarBotaoAdmin(player.uid);
 
-  // Inicia o polling universal (ban + manutenção + mensagem global).
-  // await garante que o primeiro _tick (com re-check de admin) termine ANTES de
-  // mostrar a tela home — elimina o flash do overlay de manutenção para admins.
+  
+  
+  
   await _iniciarPollingGlobal(player.uid);
-  // Inicia inbox em tempo real
+  
   _iniciarInbox(player.uid);
 
-  // Onboarding (tutorial + boas-vindas) — decide via Firestore, não
-  // localStorage, para não repetir em outro dispositivo ou após limpar
-  // o cache. Mostra progresso porque essa checagem faz 1-2 requisições
-  // extras ao Firestore, perceptíveis em conexões mais lentas.
+  
+  
+  
+  
   _setLoadingMsg('Preparando sua conta...', 'Fazendo verificações iniciais', 92);
   const { mostrarTutorial } = await _verificarOnboarding(player.uid, player.nome || 'Gestor');
 
-  // Entra no painel imediatamente — sem esperar Firestore
+  
   _restaurarSala();
   _restaurarGrupo();
   _atualizarHome();
@@ -4138,20 +3998,18 @@ async function _loginOk(player) {
     _verificarSessaoSalva();
   }
 
-  // Sincroniza dados em background (não bloqueia a UI)
+  
   _sincronizarFirebaseBackground(player);
 }
 
 
-/* ════════════════════════════════════════════════════
-   PAINEL ADMIN
-════════════════════════════════════════════════════ */
+
 
 async function _atualizarBotaoAdmin(uid) {
   if (!uid) return;
   console.log('[AdminCheck] 🔍 Iniciando verificação de admin para uid:', uid, '| timestamp:', Date.now());
 
-  // ── Passo 1: obter token Firebase (necessário para qualquer caminho) ──────
+  
   let _tok = null;
   if (window.GSPAuth?.getToken) {
     console.log('[AdminCheck] 🔑 Aguardando token Firebase...');
@@ -4168,7 +4026,7 @@ async function _atualizarBotaoAdmin(uid) {
  return;
   }
 
-  // ── Passo 2: verificação via window.ADMIN (aguarda até 5s) ───────────────
+  
   if (!window.ADMIN) {
     console.log('[AdminCheck] ⏳ window.ADMIN não disponível — aguardando até 5s...');
     let t = 0;
@@ -4177,7 +4035,7 @@ async function _atualizarBotaoAdmin(uid) {
   }
 
   if (window.ADMIN) {
-    // Caminho normal: usa admin.js com retry para tolerar falhas transitórias
+    
     let resultado;
     for (let tentativa = 1; tentativa <= 5; tentativa++) {
       resultado = await window.ADMIN.verificarAdmin(uid).catch(e => {
@@ -4193,7 +4051,7 @@ async function _atualizarBotaoAdmin(uid) {
     window._isAdmin = _isAdmin;
     console.log('[AdminCheck] 🏁 Resultado final (via ADMIN):', resultado, '→ _isAdmin =', _isAdmin);
   } else {
-    // ── Passo 3: fallback REST direto — admin.js não carregou ───────────────
+    
     console.warn('[AdminCheck] ⚠️ window.ADMIN indisponível — usando fallback REST direto para verificar admin.');
     const FS = 'https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents';
     let resultado = false;
@@ -4210,7 +4068,7 @@ async function _atualizarBotaoAdmin(uid) {
         const owner = fields.owner?.stringValue || '';
         resultado = uids.includes(uid) || uid === owner;
         console.log('[AdminCheck] ✅ Fallback REST tentativa', tentativa, '| uids:', uids, '| owner:', owner, '| resultado:', resultado);
-        break; // sucesso
+        break; 
       } catch(e) {
         console.warn('[AdminCheck] ❌ Fallback REST tentativa', tentativa, 'falhou:', e?.message);
         if (tentativa < 5) await new Promise(r => setTimeout(r, 1000));
@@ -4244,21 +4102,18 @@ function _cancelarHoldAdmin() {
 
 async function irParaAdmin() {
   if (!_player?.uid) return;
-  // Usa _isAdmin já calculado no boot — evita nova verificação que pode falhar por RTDB vazio
+  
   const isAdmin = _isAdmin || (await window.ADMIN?.verificarAdmin(_player.uid).catch(() => null));
   if (isAdmin) {
     location.href = '/admin/painel-controle.html';
   }
 }
 
-/* ════════════════════════════════════════════════════
-   SALA — Sprint 1
-   Funções de UI para entrar/sair de sala e pódio da sala
-════════════════════════════════════════════════════ */
 
-/* ── Helpers de UI ── */
+
+
 function _setSalaStatus(msg, tipo) {
-  // tipo: 'info' | 'erro' | 'ok'
+  
   const el = document.getElementById('sala-status');
   if (!el) return;
   el.textContent = msg;
@@ -4278,13 +4133,13 @@ function _atualizarBadgeSala() {
 }
 
 
-/* ── Parar polling ── */
+
 function _pararPollingPartida() {
   if (_partidaInterval)    { clearInterval(_partidaInterval);    _partidaInterval = null; }
   if (_heartbeatInterval)  { clearInterval(_heartbeatInterval);  _heartbeatInterval = null; }
 }
 
-/* ── Painel anfitrião na sala ── */
+
 async function abrirPainelAnfitriao() {
   if (!_sala || _sala.criadaPor !== _player?.uid) return;
   mostrarTela('screen-painel-anfitriao');
@@ -4359,28 +4214,26 @@ async function anfitriaoEncerrarSala() {
 }
 
 
-/* ════════════════════════════════════════════════════
-   MODO DE JOGO — Solo vs Em Grupo
-════════════════════════════════════════════════════ */
 
-// Cache da flag. Atualizado pelo polling global a cada tick.
+
+
 let _modoSalaAtivo = false;
 
-// Chamado pelo polling global sempre que chega config do Firestore.
-// Fonte única de verdade: campo modoSalaAtivo (salvo pelo admin).
+
+
 function _atualizarModoSala(cfg) {
   _modoSalaAtivo = !!(cfg?.modoSalaAtivo);
 }
 
-/* ── Botão "Iniciar Mandato" ── */
+
 async function abrirModalModo() {
-  // Modo sala desativado → vai direto para seleção de empresa (modo individual)
+  
   if (!_modoSalaAtivo) {
     irParaSetores();
     return;
   }
 
-  // Modo sala ativado → mostra modal Solo / Em Grupo
+  
   const salaAtual  = SalaMode.getSala();
   const grupoAtual = SalaMode.getGrupo();
   const descEl     = document.getElementById('modo-grupo-desc');
@@ -4415,43 +4268,41 @@ function escolherModoSolo() {
 async function escolherModoGrupo() {
   const avisoEl = document.getElementById('modo-grupo-aviso');
 
-  // Fix: usa getters do SalaMode (variáveis locais _sala/_grupoAtual do mainBeta
-  // não são preenchidas para jogadores comuns que entram via SalaMode.entrar())
+  
+  
   const _salaAtual  = SalaMode.getSala();
   const _grupoAtual = SalaMode.getGrupo();
 
-  // Não está em sala → abre modal de código
+  
   if (!_salaAtual) {
     fecharModalModo();
     SalaMode.abrirModal();
     return;
   }
 
-  // Está em sala mas não escolheu grupo → vai para tela de grupos
+  
   if (!_grupoAtual) {
     fecharModalModo();
     await SalaMode.irGrupos();
     return;
   }
 
-  // Está em grupo → vai para lobby
+  
   fecharModalModo();
   await SalaMode.irLobby();
 }
 
 
-/* _mostrarOverlayManutencao / _esconderOverlayManutencao / manutencaoSalvarSair → maintenance.js */
+
 function _mostrarOverlayManutencao(msg) { window.Maintenance.mostrarOverlay(msg); }
 function _esconderOverlayManutencao()   { window.Maintenance.esconderOverlay(); }
 function manutencaoSalvarSair()         { window.Maintenance.salvarSair(); }
 
-/* ════════════════════════════════════════════════════
-   CRIAR SALA — só admin
-════════════════════════════════════════════════════ */
+
 
 let _codigoSalaCriada = null;
 
-/* Mostra/esconde botão "Criar Sala" no modal de modo */
+
 function _atualizarBotaoCriarSala() {
   const wrap = document.getElementById('modo-criar-sala-wrap');
   if (wrap) wrap.style.display = _isAdmin ? 'block' : 'none';
@@ -4461,7 +4312,7 @@ function abrirModalCriarSala() {
   fecharModalModo();
   const modal = document.getElementById('modal-criar-sala');
   if (!modal) return;
-  // Reset form
+  
   const nomeEl = document.getElementById('criar-sala-nome');
   if (nomeEl) nomeEl.value = '';
   document.querySelector('input[name="criar-sala-setor"][value="livre"]').checked = true;
@@ -4473,7 +4324,7 @@ function abrirModalCriarSala() {
   if (statusEl) statusEl.style.display = 'none';
   modal.style.display = 'flex';
 
-  // Toggle setor fixo/livre
+  
   document.querySelectorAll('input[name="criar-sala-setor"]').forEach(r => {
     r.onchange = () => {
       const wrap = document.getElementById('criar-sala-setor-fixo-wrap');
@@ -4522,14 +4373,14 @@ async function confirmarCriarSala() {
 
     _codigoSalaCriada = result.codigo;
 
-    // Entra automaticamente na sala criada
+    
     await window.GSPSalas.entrarSala(result.codigo, { uid: _player.uid, nome: _player.nome });
     _sala = { ...result, ativa: true };
     LS.set(SK.SALA, _sala);
 
     fecharModalCriarSala();
 
-    // Mostra modal com código gerado
+    
     const modalCod = document.getElementById('modal-codigo-gerado');
     const codEl    = document.getElementById('codigo-gerado-valor');
     if (codEl) codEl.textContent = result.codigo;
@@ -4561,7 +4412,7 @@ async function irParaSalaAposCriar() {
 }
 
 
-/* ── Gerenciar grupos (anfitrião) ── */
+
 async function abrirGerenciarGrupos() {
   const modal = document.getElementById('modal-gerenciar-grupos');
   if (modal) modal.style.display = 'flex';
@@ -4582,7 +4433,7 @@ async function _renderGerenciarGrupos() {
     const grupos  = await window.GSPSalas.carregarGrupos(_sala.codigo);
     const membros = await window.GSPSalas.carregarMembrosSala(_sala.codigo);
 
-    // Mapa uid → grupo atual
+    
     const uidParaGrupo = {};
     membros.forEach(m => { if (m.grupo) uidParaGrupo[m.uid] = m.grupo; });
 
@@ -4645,7 +4496,7 @@ async function moverMembroGrupo(uid, grupoAtual) {
 async function removerMembroGrupo(uid, nomeGrupo) {
   if (!confirm('Remover este membro do grupo?')) return;
   try {
-    // Remove do array membros do grupo
+    
     const grupos = await window.GSPSalas.carregarGrupos(_sala.codigo);
     const grupo  = grupos.find(g => g.nomeGrupo === nomeGrupo);
     if (!grupo) return;
@@ -4668,9 +4519,7 @@ async function removerMembroGrupo(uid, nomeGrupo) {
 
 
 
-/* ════════════════════════════════════════════════════
-   CAIXA DE ENTRADA (INBOX) — COMUNICADOS DO ADMIN
-════════════════════════════════════════════════════ */
+
 let _inboxMensagens   = [];
 let _inboxUnsubscribe = null;
 const _FS_BASE = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents`;
@@ -4722,7 +4571,7 @@ async function _buscarMensagens(uid) {
         expiraEm:          _v(f.expiraEm) || 0,
         broadcast:         _v(f.broadcast) || false,
       };
-    }).filter(m => !m.expiraEm || m.expiraEm > agora) // remove expiradas
+    }).filter(m => !m.expiraEm || m.expiraEm > agora) 
       .sort((a, b) => {
         if (a.fixada && !b.fixada) return -1;
         if (!a.fixada && b.fixada) return 1;
@@ -4733,14 +4582,14 @@ async function _buscarMensagens(uid) {
     _inboxMensagens = docs;
     const atual = docs.filter(m => !m.lida).length;
 
-    // Toast de nova mensagem se chegou algo novo
+    
     if (atual > anterior && anterior >= 0 && document.visibilityState !== undefined) {
       _showToast('📬 Você tem um novo comunicado', 'ok', 4000);
     }
 
     _atualizarBadgeInbox();
-    _renderizarPerfilMsgs(); // atualiza aba no perfil se estiver aberta
-  } catch(e) { /* silencioso */ }
+    _renderizarPerfilMsgs(); 
+  } catch(e) {  }
 }
 
 function _atualizarBadgeInbox() {
@@ -4748,7 +4597,7 @@ function _atualizarBadgeInbox() {
   const btn   = document.getElementById('btn-inbox');
   const badge = document.getElementById('inbox-badge');
   if (!btn) return;
-  btn.style.display = ''; // sempre visível quando logado
+  btn.style.display = ''; 
   if (badge) {
     badge.style.display = naoLidas > 0 ? '' : 'none';
     badge.textContent   = naoLidas > 9 ? '9+' : String(naoLidas);
@@ -4796,9 +4645,9 @@ function _renderInboxMensagens() {
       ? `<button class="inbox-confirmar-btn" onclick="BetaUI._confirmarLeitura('${m.id}')">✅ Entendido</button>`
       : '';
     const apagar_btn = `<button class="inbox-msg-apagar" onclick="BetaUI._apagarMsg('${m.id}')" title="Apagar">🗑️</button>`;
-    // _escapeHtml + white-space:pre-line no CSS preserva as quebras de
-    // linha digitadas pelo admin, em vez do texto sair tudo corrido numa
-    // única linha (era a reclamação original sobre a formatação).
+    
+    
+    
     const textoSeguro = _escapeHtml(m.texto || '');
     return `
       <div class="inbox-msg-item ${lida_cl}${fix_cl}" id="inbox-item-${m.id}">
@@ -4819,9 +4668,9 @@ function _renderInboxMensagens() {
   }).join('');
 }
 
-// Renderiza o changelog publicado pelo admin (documento config/changelog
-// no Firestore, mesmo padrão de leitura pública usado em config/admins).
-// Se nada foi publicado ainda, mostra um estado vazio em vez de quebrar.
+
+
+
 async function _renderChangelog() {
   const wrap = document.getElementById('inbox-changelog-content');
   if (!wrap) return;
@@ -4840,17 +4689,17 @@ async function _renderChangelog() {
       wrap.innerHTML = '<div class="inbox-vazio">Nenhuma novidade publicada ainda.</div>';
       return;
     }
-    // Expiração automática — definida pelo admin ao publicar (0 = sem expiração).
-    // Se já passou, trata como se nada estivesse publicado, sem precisar de
-    // uma ação separada do admin para "esconder" o changelog vencido.
+    
+    
+    
     const expiraEmStr = fields.expiraEm?.timestampValue || null;
     if (expiraEmStr && new Date(expiraEmStr).getTime() <= Date.now()) {
       wrap.innerHTML = '<div class="inbox-vazio">Nenhuma novidade publicada ainda.</div>';
       return;
     }
-    // O jogador nunca vê o campo "versao" (hash/número técnico de deploy) —
-    // só o título editável que o admin escreveu ao publicar. "Novidades"
-    // é o fallback caso o admin não tenha preenchido um título.
+    
+    
+    
     const titulo = _escapeHtml(fields.titulo?.stringValue || 'Novidades');
     const tsStr  = fields.ts?.timestampValue || null;
     const data   = tsStr ? new Date(tsStr).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }) : '';
@@ -4872,7 +4721,7 @@ function abrirInbox() {
   document.getElementById('inbox-painel-mensagem')?.classList.add('active');
   document.getElementById('inbox-painel-changelog')?.classList.remove('active');
   _renderInboxMensagens();
-  // Marca simples como lidas ao abrir (não as que exigem confirmação)
+  
   if (_player?.uid) _marcarLidasSimples(_player.uid);
 }
 
@@ -4886,7 +4735,7 @@ async function _lerMensagem(msgId) {
   const msg = _inboxMensagens.find(m => m.id === msgId);
   if (!msg || msg.lida) return;
   msg.lida = true;
-  // Atualiza visual inline
+  
   const item = document.getElementById(`inbox-item-${msgId}`);
   if (item) {
     item.classList.replace('nao-lida', 'lida');
@@ -4902,9 +4751,9 @@ async function _lerMensagem(msgId) {
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields: { lida: { booleanValue: true } } })
     });
-    // Atualiza lidoPor no log se broadcast
+    
     if (msg.broadcast) _incrementarLidoPor(msgId);
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
 async function _confirmarLeitura(msgId) {
@@ -4929,7 +4778,7 @@ async function _confirmarLeitura(msgId) {
       body: JSON.stringify({ fields: { lida: { booleanValue: true }, confirmada: { booleanValue: true } } })
     });
     if (msg.broadcast) _incrementarLidoPor(msgId);
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
 async function _apagarMsg(msgId) {
@@ -4944,7 +4793,7 @@ async function _apagarMsg(msgId) {
     await fetch(`${_FS_BASE}/usuarios/${_player.uid}/mensagens/${msgId}`, {
       method: 'DELETE', headers: { Authorization: `Bearer ${tok}` }
     });
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
 async function apagarTodasMsgs() {
@@ -4961,7 +4810,7 @@ async function apagarTodasMsgs() {
         method: 'DELETE', headers: { Authorization: `Bearer ${tok}` }
       }).catch(() => {});
     }
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
 async function marcarTodasLidas() {
@@ -4981,7 +4830,7 @@ async function marcarTodasLidas() {
       }).catch(() => {});
       if (msg.broadcast) _incrementarLidoPor(msg.id);
     }
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
 async function _marcarLidasSimples(uid) {
@@ -5000,7 +4849,7 @@ async function _marcarLidasSimples(uid) {
       }).catch(() => {});
       if (msg.broadcast) _incrementarLidoPor(msg.id);
     }
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
 async function _incrementarLidoPor(msgId) {
@@ -5016,7 +4865,7 @@ async function _incrementarLidoPor(msgId) {
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields: { lidoPor: { integerValue: String(atual + 1) } } })
     });
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
 function _renderizarPerfilMsgs() {
@@ -5043,16 +4892,16 @@ function _renderizarPerfilMsgs() {
   }).join('');
 }
 
-// Public wrapper for profile screen delete refresh
+
 function _renderPerfilMsgsPublic() { _renderizarPerfilMsgs(); }
 
-// Leitura simples (sem side-effects) do status do tutorial no Firestore.
-// Usado no fluxo de sessão salva, onde não faz sentido reavaliar
-// boas-vindas — só precisamos saber se o tutorial já foi visto.
+
+
+
 async function _checarTutorialVisto(uid) {
   try {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
-    if (!tok) return true; // sem token, assume visto para não travar o boot
+    if (!tok) return true; 
     const r = await fetch(`${_FS_BASE}/usuarios/${uid}`, { headers: { Authorization: `Bearer ${tok}` } });
     if (!r.ok) return true;
     const doc = await r.json();
@@ -5060,16 +4909,16 @@ async function _checarTutorialVisto(uid) {
   } catch(e) { return true; }
 }
 
-// Onboarding de novo jogador — unifica duas verificações num único
-// documento (usuarios/{uid}), em vez de depender de localStorage
-// (gsp_tutorial_done) ou de "checar se já tem mensagem" como proxy.
-// Isso garante que tutorial e boas-vindas aparecem exatamente uma vez
-// por jogador, mesmo trocando de dispositivo ou limpando o cache/app.
-//
-// Retorna { mostrarTutorial: boolean } para quem chamou decidir a
-// navegação (mostrarTela('screen-tutorial') vs 'screen-home').
+
+
+
+
+
+
+
+
 async function _verificarOnboarding(uid, nome) {
-  let mostrarTutorial = true; // padrão seguro: mostra tutorial se não der pra confirmar
+  let mostrarTutorial = true; 
   try {
     const tok = await window.GSPAuth?.getToken().catch(() => null);
     if (!tok) return { mostrarTutorial };
@@ -5082,17 +4931,17 @@ async function _verificarOnboarding(uid, nome) {
     const boasVindasRecebida = fields.boasVindasRecebidas?.booleanValue === true;
     mostrarTutorial = !tutorialVisto;
 
-    // Se o tutorial ainda não foi marcado como visto neste documento (ex:
-    // jogador que já tinha localStorage de um dispositivo antigo, mas
-    // nunca teve o campo no Firestore), a tela de tutorial decide isso
-    // sozinha via mostrarTutorial; aqui só cuidamos da marcação em si
-    // não ser perdida — quem fecha o tutorial já grava tutorialVisto=true
-    // (ver fecharTutorial()).
+    
+    
+    
+    
+    
+    
 
     if (!boasVindasRecebida) {
-      // Busca o texto configurável pelo admin. Se o documento ainda não
-      // existir (admin nunca configurou), usa um texto padrão de fallback
-      // para não deixar o jogador sem nenhuma mensagem de boas-vindas.
+      
+      
+      
       let texto = `Bem-vindo(a) ao Under Pressure, ${nome}! 🎮 Aqui você vai tomar decisões críticas como CEO e ver os resultados em tempo real. Boa sorte nos mandatos!`;
       try {
         const rMsg = await fetch(`${_FS_BASE}/config/mensagemBoasVindas`, { headers });
@@ -5101,7 +4950,7 @@ async function _verificarOnboarding(uid, nome) {
           const t = docMsg?.fields?.texto?.stringValue;
           if (t) texto = t.replace(/\{nome\}/g, nome);
         }
-      } catch(e) { /* usa o fallback */ }
+      } catch(e) {  }
 
       const msgId = `bv_${Date.now()}`;
       await fetch(`${_FS_BASE}/usuarios/${uid}/mensagens/${msgId}?updateMask.fieldPaths=texto&updateMask.fieldPaths=de&updateMask.fieldPaths=ts&updateMask.fieldPaths=lida&updateMask.fieldPaths=confirmada&updateMask.fieldPaths=categoria&updateMask.fieldPaths=fixada&updateMask.fieldPaths=exigirConfirmacao&updateMask.fieldPaths=expiraEm`, {
@@ -5120,21 +4969,21 @@ async function _verificarOnboarding(uid, nome) {
         }})
       });
 
-      // Marca no documento do usuário para nunca mais reenviar, em
-      // qualquer dispositivo — isso é o que resolve o problema de
-      // reaparecer após trocar de aparelho ou limpar o cache.
+      
+      
+      
       await fetch(`${_FS_BASE}/usuarios/${uid}?updateMask.fieldPaths=boasVindasRecebidas`, {
         method: 'PATCH',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: { boasVindasRecebidas: { booleanValue: true } } })
       });
     }
-  } catch(e) { /* silencioso — onboarding não deve travar o login */ }
+  } catch(e) {  }
   return { mostrarTutorial };
 }
 
-// Marca o tutorial como visto no Firestore (documento do usuário), em vez
-// de só localStorage. Chamado quando o jogador fecha/completa o tutorial.
+
+
 async function _marcarTutorialVistoRemoto(uid) {
   if (!uid) return;
   try {
@@ -5145,7 +4994,7 @@ async function _marcarTutorialVistoRemoto(uid) {
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields: { tutorialVisto: { booleanValue: true } } })
     });
-  } catch(e) { /* silencioso */ }
+  } catch(e) {  }
 }
 
 
@@ -5160,7 +5009,7 @@ window.BetaUI = {
   openGlossary, closeGlossary, filtrarGlossario, selecionarAbaGlossario, openSettings, closeSettings, toggleTimerSetting, toggleCloudStatus, toggleMostrarStatus,
   toggleFullscreen, voltar,
   irParaConfig, toggleFotoPerfil, confirmarFotoPerfil, cancelarFotoPerfil, abrirEditarNome, fecharEditarNome, salvarNome,
-  // Novos
+  
   pularTutorial, tutorialStep, irParaSlide, reverTutorial,
   pausarJogo, continuarJogo, abandonarJogo,
   pedirConfirmacaoSaida, cancelarSaida, confirmarSaida,
@@ -5169,7 +5018,7 @@ window.BetaUI = {
   compartilharResultado,
   irParaAdmin,
   gerarNomeAleatorio,
-  // Sala — via SalaMode (sala-mode-new.js)
+  
   abrirModalSala:       () => SalaMode.abrirModal(),
   fecharModalSala:      () => SalaMode.fecharModal(),
   entrarNaSala:         () => SalaMode.entrar(),
@@ -5188,17 +5037,17 @@ window.BetaUI = {
   anfitriaoRevelarPodio:() => SalaMode.anfRevelar(),
   anfitriaoNovoCiclo:   () => SalaMode.anfNovoCiclo(),
   anfitriaoEncerrarSala:() => SalaMode.anfEncerrar(),
-  // Modo de jogo
+  
   abrirModalModo, fecharModalModo, escolherModoSolo, escolherModoGrupo,
-  // Inbox
+  
   abrirInbox, fecharInbox, mudarAbaInbox, marcarTodasLidas, _lerMensagem,
   _confirmarLeitura, _apagarMsg, apagarTodasMsgs, _renderPerfilMsgsPublic,
-  // Manutenção
+  
   manutencaoSalvarSair,
-  // Criar sala (admin)
+  
   abrirModalCriarSala, fecharModalCriarSala, confirmarCriarSala,
   copiarCodigoSala, irParaSalaAposCriar,
-  // Anfitrião inline
+  
   recarregarGrupos:      () => SalaMode.recarregarGrupos(),
   abrirGerenciarGrupos:  () => SalaMode.abrirGerenciar(),
   fecharGerenciarGrupos: () => SalaMode.fecharGerenciar(),
@@ -5206,10 +5055,8 @@ window.BetaUI = {
   removerMembroGrupo:    (g,u) => SalaMode._removerGrupo && SalaMode._removerGrupo(g,u),
 };
 
-// Inicializa o jogo
-/* ════════════════════════════════════════════════════
-   BOTÃO VOLTAR — popstate
-════════════════════════════════════════════════════ */
+
+
 function _telaAtiva() {
   return document.querySelector('.screen.active')?.id || '';
 }
@@ -5223,16 +5070,16 @@ function _overlayAberto() {
 }
 
 function _iniciarPopstate() {
-  // Garante que há um estado inicial no histórico
+  
   history.replaceState({ gsp: true }, '');
-  // Adiciona um segundo estado — assim o primeiro popstate não sai do site
+  
   history.pushState({ gsp: true }, '');
 
   window.addEventListener('popstate', function() {
-    // Repõe o estado para o browser não sair do site
+    
     history.pushState({ gsp: true }, '');
 
-    // 1. Overlay aberto → fecha o overlay
+    
     const overlay = _overlayAberto();
     if (overlay) {
       _fecharOverlay(overlay);
@@ -5241,25 +5088,25 @@ function _iniciarPopstate() {
 
     const tela = _telaAtiva();
 
-    // 2. Durante o jogo → abre pausa
+    
     if (tela === 'screen-game' || tela === 'screen-intro' || tela === 'screen-feedback') {
       pausarJogo();
       return;
     }
 
-    // 3. Telas que voltam para home
+    
     if (['screen-perfil','screen-podio','screen-historico-jogos','screen-sector','screen-inbox'].includes(tela)) {
       voltar('screen-home');
       return;
     }
 
-    // 4. Seleção de empresa → volta para setor
+    
     if (tela === 'screen-company') {
       voltar('screen-sector');
       return;
     }
 
-    // 5. Auth — cadastro/recuperar → volta para login
+    
     if (tela === 'screen-auth') {
       const abaAtiva = document.getElementById('auth-form-cadastro')?.style.display !== 'none'
         || document.getElementById('auth-form-recuperar')?.style.display !== 'none';
@@ -5269,7 +5116,7 @@ function _iniciarPopstate() {
       return;
     }
 
-    // 6. Home, login, tutorial → não faz nada
+    
   });
 }
 

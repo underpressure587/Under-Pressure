@@ -1,7 +1,4 @@
-/* ════════════════════════════════════════════════════
-   UNDER PRESSURE — PAINEL ADMIN
-   Todas as consultas via REST API do Firestore
-════════════════════════════════════════════════════ */
+
 
 const ADMIN = (() => {
 
@@ -9,26 +6,24 @@ const ADMIN = (() => {
   const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/default/documents`;
 
   let _adminUids = [];
-  let _adminOwner = '';          // UID do owner do sistema (protegido)
-  let _adminPermissoes = {};     // { uid: ['jogadores','config',...] }
+  let _adminOwner = '';          
+  let _adminPermissoes = {};     
   let _currentSection = 'visao-geral';
-  let _setorSelecionado = '';  // setor ativo no dropdown do pódio
-  let _banUid = '';            // uid do jogador sendo analisado no modal de ban
-  let _adminNomes = {};          // { uid: 'Nome Exibido' }
-  let _pollingAdminInterval = null;  // polling de revogação de acesso (RTDB)
-  let _auditUnsubscribe    = null;  // listener RTDB — auditoria
-  let _configUnsubscribe   = null;  // listener RTDB — config/global
-  let _adminsUnsubscribe   = null;  // listener RTDB — config/admins
-  let _sectionPolling      = null;  // polling da seção ativa (Firestore)
-  const _POLLING_SECAO_MS  = 8000; // 8s — atualização da seção visível
+  let _setorSelecionado = '';  
+  let _banUid = '';            
+  let _adminNomes = {};          
+  let _pollingAdminInterval = null;  
+  let _auditUnsubscribe    = null;  
+  let _configUnsubscribe   = null;  
+  let _adminsUnsubscribe   = null;  
+  let _sectionPolling      = null;  
+  const _POLLING_SECAO_MS  = 8000; 
 
-  /* ══════════════════════════════════════════════════
-     CONFIRM MODAL — substitui window.confirm()
-  ══════════════════════════════════════════════════ */
+  
   function _confirmar({ titulo, mensagem, labelOk = 'Confirmar', labelCancel = 'Cancelar', perigoso = false }) {
     return new Promise(resolve => {
       const ov = document.getElementById('admin-modal-confirm');
-      if (!ov) { resolve(window.confirm(mensagem)); return; } // fallback seguro
+      if (!ov) { resolve(window.confirm(mensagem)); return; } 
 
       document.getElementById('acm-titulo').textContent   = titulo;
       document.getElementById('acm-mensagem').textContent = mensagem;
@@ -39,7 +34,7 @@ const ADMIN = (() => {
 
       document.getElementById('acm-cancel').textContent = labelCancel;
 
-      // Limpa handlers anteriores clonando os botões
+      
       const newOk     = btnOk.cloneNode(true);
       const newCancel = document.getElementById('acm-cancel').cloneNode(true);
       btnOk.replaceWith(newOk);
@@ -52,19 +47,19 @@ const ADMIN = (() => {
     });
   }
 
-  /* ── TOKEN ─────────────────────────────────────── */
+  
   async function _token() {
-    // 1. Espera GSPAuth ficar pronto (firebase-config.js é type=module, carrega depois)
+    
     let t = 0;
     while (!window.GSPAuth?.isReady() && t < 50) {
       await new Promise(r => setTimeout(r, 100));
       t++;
     }
-    // 2. Espera o usuário autenticado estar disponível (currentUser pode ser null inicialmente)
+    
     if (window.GSPAuth?.waitForAuthReady) {
       await window.GSPAuth.waitForAuthReady();
     }
-    // 3. Tenta obter token com retry (até 5s)
+    
     let tok = null;
     for (let i = 0; i < 10; i++) {
       tok = await window.GSPAuth?.getToken().catch(() => null);
@@ -112,7 +107,7 @@ const ADMIN = (() => {
     return r.json();
   }
 
-  /* ── PARSE FIRESTORE VALUE ──────────────────────── */
+  
   function _val(v) {
     if (!v) return null;
     if (v.stringValue  !== undefined) return v.stringValue;
@@ -125,8 +120,8 @@ const ADMIN = (() => {
     return null;
   }
 
-  // Escapa texto dinâmico antes de inserir via innerHTML, evitando que
-  // caracteres como <, >, & quebrem o layout ou permitam injeção de HTML.
+  
+  
   function _esc(str) {
     const div = document.createElement('div');
     div.textContent = str == null ? '' : String(str);
@@ -143,7 +138,7 @@ const ADMIN = (() => {
   function _fsBool(v) { return { booleanValue: !!v }; }
   function _fsInt(v)  { return { integerValue: String(parseInt(v)) }; }
 
-  /* ── VERIFICAR ADMIN ────────────────────────────── */
+  
   const _SECOES = [
     { id: 'visao-geral', label: '📊 Geral'      },
     { id: 'dashboard',   label: '📈 Dashboard'   },
@@ -163,9 +158,9 @@ const ADMIN = (() => {
     { id: 'logs',        label: '🐛 Logs'        },
   ];
 
-  // Agrupamento das seções em categorias — espelha o hub de cards da tela
-  // inicial do painel. Cada categoria vira uma página com sub-navegação
-  // própria, montada dinamicamente a partir daqui.
+  
+  
+  
   const _CATEGORIAS = [
     { id: 'analise',     label: '📊 Análise',          secoes: ['visao-geral', 'dashboard'] },
     { id: 'jogadores',   label: '👥 Jogadores',        secoes: ['jogadores', 'podio', 'sessoes'] },
@@ -179,7 +174,7 @@ const ADMIN = (() => {
 
   function _minhasPermissoes() {
     const meUID = window._player?.uid || '';
-    if (!meUID || meUID === _adminOwner) return null; // dono/sem uid = sem restrição
+    if (!meUID || meUID === _adminOwner) return null; 
     return Array.isArray(_adminPermissoes[meUID]) ? _adminPermissoes[meUID] : null;
   }
 
@@ -189,7 +184,7 @@ const ADMIN = (() => {
 
     const perms = _minhasPermissoes();
     const secoesVisiveis = cat.secoes.filter(id => !perms || perms.includes(id));
-    if (!secoesVisiveis.length) return; // sem nenhuma seção liberada nessa categoria
+    if (!secoesVisiveis.length) return; 
 
     _categoriaAtiva = catId;
 
@@ -218,7 +213,7 @@ const ADMIN = (() => {
   async function verificarAdmin(uid) {
     if (!uid) { console.warn('[ADMIN] verificarAdmin chamado sem uid'); return false; }
 
-    // — Tentativa 1: RTDB (mais rápido e não sofre de indisponibilidade do Firestore) —
+    
     if (window.GSPRtdb) {
       try {
         const { db, ref, onValue } = window.GSPRtdb;
@@ -226,7 +221,7 @@ const ADMIN = (() => {
         const result = await new Promise((resolve, reject) => {
           const admRef = ref(db, 'config/admins');
           const unsub = onValue(admRef, (snapshot) => {
-            unsub(); // leitura única
+            unsub(); 
             resolve(snapshot.val());
           }, (err) => {
             unsub();
@@ -239,9 +234,9 @@ const ADMIN = (() => {
           const owner = result.owner;
           _adminUids       = uids;
           _adminOwner      = owner;
-          // Carrega permissões/nomes já nessa checagem inicial — antes disso,
-          // ficavam em branco até o admin entrar na aba Config, deixando
-          // qualquer restrição de permissão sem efeito até lá.
+          
+          
+          
           _adminPermissoes = (result.permissoes && typeof result.permissoes === 'object') ? result.permissoes : {};
           _adminNomes      = (result.nomes      && typeof result.nomes      === 'object') ? result.nomes      : {};
           const isAdmin = !!(uids.includes(uid) || uid === owner);
@@ -254,7 +249,7 @@ const ADMIN = (() => {
       }
     }
 
-    // — Tentativa 2: Firestore REST (fallback) —
+    
     try {
       const doc = await _get('config/admins');
       console.log('[ADMIN] verificarAdmin via Firestore — doc recebido:', JSON.stringify(doc?.fields));
@@ -277,12 +272,12 @@ const ADMIN = (() => {
     }
   }
 
-  // Chamada uma vez, logo após verificarAdmin confirmar acesso — aplica as
-  // permissões já carregadas na navegação ANTES da primeira tela aparecer,
-  // e liga o listener ao vivo + o polling de 30s pro resto da sessão.
-  // Antes, as duas coisas só começavam a valer se o admin entrasse na aba
-  // Config primeiro. Retorna true se o acesso ficou bloqueado (zero
-  // permissões) — o chamador não deve abrir o hub por cima disso.
+  
+  
+  
+  
+  
+  
   function iniciarSessaoAdmin() {
     _aplicarPermissoesNav();
     carregarAdmins();
@@ -291,11 +286,11 @@ const ADMIN = (() => {
     return !!(ov && ov.style.display !== 'none');
   }
 
-  /* ── VISÃO GERAL ────────────────────────────────── */
+  
   async function carregarVisaoGeral() {
     _setLoading('admin-visao-geral', true);
     try {
-      // Total de jogadores registrados
+      
       const jogadores = await _query({
         structuredQuery: {
           from: [{ collectionId: 'usuarios' }],
@@ -307,7 +302,7 @@ const ADMIN = (() => {
       const scores = docs.map(r => _val(r.document.fields?.melhorScore) || 0);
       const mediaScore = total ? Math.round(scores.reduce((a,b)=>a+b,0) / total) : 0;
 
-      // Dados do pódio: total real de partidas (soma de totalJogos) + atividade recente
+      
       const podioRes = await _query({
         structuredQuery: {
           from: [{ collectionId: 'podio' }],
@@ -332,7 +327,7 @@ const ADMIN = (() => {
     _setLoading('admin-visao-geral', false);
   }
 
-  /* ── JOGADORES ──────────────────────────────────── */
+  
   async function carregarJogadores(busca = '') {
     _setLoading('admin-jogadores-lista', true);
     try {
@@ -360,13 +355,13 @@ const ADMIN = (() => {
         );
       }
 
-      // Aplica filtro de status
+      
       if (_filtroJogadores === 'banidos') jogadores = jogadores.filter(j => j.banido);
       if (_filtroJogadores === 'ativos')  jogadores = jogadores.filter(j => !j.banido);
 
       jogadores.sort((a,b) => (b.melhorScore||0) - (a.melhorScore||0));
 
-      // Atualiza contadores nas abas
+      
       const totalTodos   = res.filter(r => r.document).length;
       const totalBanidos = res.filter(r => r.document && _val(r.document.fields?.banido)).length;
       document.querySelectorAll('.admin-filtro-btn[data-filtro]').forEach(b => {
@@ -416,7 +411,7 @@ const ADMIN = (() => {
 
     try {
       const tok = await _token();
-      // FIX: consulta direto na subcoleção do usuário, sem collection group nem filtro por uid
+      
       const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/default/documents/usuarios/${uid}:runQuery`;
       const r = await fetch(url, {
         method: 'POST',
@@ -471,11 +466,11 @@ const ADMIN = (() => {
     });
   }
 
-  /* ── PÓDIO ──────────────────────────────────────── */
+  
   async function carregarPodioAdmin() {
     _setLoading('admin-podio-lista', true);
     try {
-      // Monta query: sem where = todos; com setor = filtrado
+      
       const query = {
         from: [{ collectionId: 'podio' }],
         select: { fields: [
@@ -498,7 +493,7 @@ const ADMIN = (() => {
         return { uid, ..._parseFields(r.document.fields) };
       }).sort((a,b) => (b.melhorScore||0) - (a.melhorScore||0));
 
-      // Atualiza contador na toolbar
+      
       const countEl = document.getElementById('admin-podio-count');
       if (countEl) {
         const label = _setorSelecionado
@@ -573,7 +568,7 @@ const ADMIN = (() => {
     });
   }
 
-  /* ── SETORES ────────────────────────────────────── */
+  
   async function carregarSetores() {
     _setLoading('admin-conteudo-body', true);
     try {
@@ -613,12 +608,12 @@ const ADMIN = (() => {
     return map[s] || '🏢';
   }
 
-  /* ── RTDB SYNC: mantém config/admins no RTDB sincronizado ── */
+  
   async function _rtdbSyncAdmins(uids, owner) {
     if (!window.GSPRtdb) return;
     try {
       const { db, ref, set } = window.GSPRtdb;
-      // Inclui permissoes e nomes para que o listener de carregarAdmins tenha dados completos
+      
       await set(ref(db, 'config/admins'), {
         uids:       Array.isArray(uids)       ? uids  : _adminUids,
         owner:      typeof owner === 'string' ? owner : _adminOwner,
@@ -630,7 +625,7 @@ const ADMIN = (() => {
     }
   }
 
-  /* ── CONFIGURAÇÕES GLOBAIS ──────────────────────── */
+  
   async function adicionarAdmin() {
     const meUID = window._player?.uid || '';
     if (meUID !== _adminOwner) {
@@ -650,8 +645,8 @@ const ADMIN = (() => {
       ],
       executar: async () => {
         const uids = [..._adminUids, uid];
-        // Admin novo começa sem NENHUMA permissão — o dono libera seção por
-        // seção depois, em vez de vir com acesso total por padrão.
+        
+        
         const novasPermissoes = { ..._adminPermissoes, [uid]: [] };
         const tok  = await _token();
         const r = await fetch(`${FS}/config/admins?updateMask.fieldPaths=uids&updateMask.fieldPaths=permissoes`, {
@@ -724,7 +719,7 @@ const ADMIN = (() => {
     });
   }
 
-  /* ── DROPDOWN CUSTOMIZADO (pódio) ──────────────── */
+  
   function toggleDropdown() {
     const menu = document.getElementById('admin-setor-menu');
     const dropdown = document.getElementById('admin-setor-dropdown');
@@ -732,7 +727,7 @@ const ADMIN = (() => {
     const isOpen = menu.style.display !== 'none';
     menu.style.display = isOpen ? 'none' : 'block';
     dropdown?.classList.toggle('open', !isOpen);
-    // Fecha ao clicar fora
+    
     if (!isOpen) {
       const close = (e) => {
         if (!dropdown?.contains(e.target)) {
@@ -750,29 +745,29 @@ const ADMIN = (() => {
     const labelEl = document.getElementById('admin-setor-label');
     if (labelEl) labelEl.textContent = label;
 
-    // Destaca item ativo no menu
+    
     document.querySelectorAll('.admin-dropdown-item').forEach(btn => {
       btn.classList.toggle('active', btn.textContent.trim() === label.trim());
     });
 
-    // Fecha o menu
+    
     const menu     = document.getElementById('admin-setor-menu');
     const dropdown = document.getElementById('admin-setor-dropdown');
     if (menu) menu.style.display = 'none';
     dropdown?.classList.remove('open');
 
-    // Atualiza estado do botão Resetar Setor (desabilitado quando "Todos")
+    
     const btnResetSetor = document.getElementById('btn-resetar-setor');
     if (btnResetSetor) {
       btnResetSetor.disabled = !valor;
       btnResetSetor.title    = valor ? `Apagar todas as entradas de ${valor}` : 'Selecione um setor para resetar';
     }
 
-    // Recarrega a lista com o novo filtro
+    
     carregarPodioAdmin();
   }
 
-  // Reseta pódio completo (todos os setores)
+  
   async function resetarPodioTotal() {
     const ok = await _confirmar({ titulo: '⚠️ Limpar pódio completo', mensagem: 'Isso vai apagar TODO o pódio de TODOS os setores. Esta ação não pode ser desfeita.', labelOk: 'Limpar tudo', perigoso: true });
     if (!ok) return;
@@ -799,11 +794,11 @@ const ADMIN = (() => {
     });
   }
 
-  /* ── MODAL MENSAGEM GLOBAL ──────────────────────── */
+  
   async function abrirModalMsg() {
     const modal = document.getElementById('admin-modal-msg');
     if (!modal) return;
-    // Carrega valor atual do Firestore
+    
     try {
       const doc = await _get('config/global');
       const fields = _parseFields(doc.fields || {});
@@ -812,7 +807,7 @@ const ADMIN = (() => {
       _atualizarPreviewMsg(fields.mensagem || '');
     } catch(e) {}
     modal.style.display = 'flex';
-    // Atualiza preview ao digitar
+    
     const ta = document.getElementById('admin-msg-global');
     if (ta) ta.oninput = () => _atualizarPreviewMsg(ta.value);
   }
@@ -859,7 +854,7 @@ const ADMIN = (() => {
     await salvarMensagemGlobal();
   }
 
-  /* ── MODAL BANIMENTO ────────────────────────────── */
+  
   const BAN_MOTIVOS = [
     'Comportamento inadequado',
     'Uso indevido do sistema',
@@ -897,21 +892,21 @@ const ADMIN = (() => {
       ? '<div class="admin-ban-badge-ativo">Jogador atualmente BANIDO</div>'
       : '<div class="admin-ban-badge-livre">Jogador com acesso normal</div>';
 
-    // Área de motivo — só para banir (não para desbanir)
+    
     const motivoSection = document.getElementById('admin-ban-motivo-section');
     if (motivoSection) {
       if (estaBanido) {
         motivoSection.style.display = 'none';
       } else {
         motivoSection.style.display = 'block';
-        // Renderiza botões de motivo predefinido
+        
         const motivoGrid = document.getElementById('admin-ban-motivo-grid');
         if (motivoGrid) {
           motivoGrid.innerHTML = BAN_MOTIVOS.map(m => `
             <button class="admin-motivo-btn" onclick="ADMIN.selecionarMotivo('${m.replace(/'/g,"\'")}', this)">${m}</button>
           `).join('');
         }
-        // Limpa campo de detalhe
+        
         const detalhe = document.getElementById('admin-ban-detalhe');
         const detalheWrap = document.getElementById('admin-ban-detalhe-wrap');
         if (detalhe) { detalhe.value = ''; _atualizarContadorDetalhe(); }
@@ -919,7 +914,7 @@ const ADMIN = (() => {
       }
     }
 
-    // Histórico de bans anteriores
+    
     await _carregarHistBanAdmin(uid);
 
     foot.innerHTML = `
@@ -936,7 +931,7 @@ const ADMIN = (() => {
     _banMotivoSelecionado = motivo;
     document.querySelectorAll('.admin-motivo-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    // Mostra campo de detalhe livre só para "Outro"
+    
     const detalheWrap = document.getElementById('admin-ban-detalhe-wrap');
     if (detalheWrap) detalheWrap.style.display = motivo.startsWith('Outro') ? 'block' : 'none';
   }
@@ -1009,23 +1004,23 @@ const ADMIN = (() => {
   let _banConfirmTimer = null;
 
   async function confirmarBan(uid, estaBanido) {
-    // Desbanimento: ação reversível, clique único
+    
     if (estaBanido) {
       await _executarBan(uid, true);
       return;
     }
 
-    // Banimento: requer duplo clique para evitar acidente
+    
     const btn = document.querySelector('#admin-ban-foot .admin-btn-danger');
     if (!btn) return;
 
     if (!_banConfirmPending) {
-      // Primeiro clique — entra em estado de confirmação
+      
       _banConfirmPending = true;
       btn.textContent = '⚠️ Clique novamente para confirmar';
       btn.style.background = 'rgba(231,76,60,.35)';
       btn.style.borderColor = 'var(--err)';
-      // Cancela automaticamente após 3s
+      
       _banConfirmTimer = setTimeout(() => {
         _banConfirmPending = false;
         btn.textContent = '🚫 Confirmar Banimento';
@@ -1033,7 +1028,7 @@ const ADMIN = (() => {
         btn.style.borderColor = '';
       }, 3000);
     } else {
-      // Segundo clique — executa
+      
       clearTimeout(_banConfirmTimer);
       _banConfirmPending = false;
       await _executarBan(uid, false);
@@ -1041,7 +1036,7 @@ const ADMIN = (() => {
   }
 
   async function _executarBan(uid, estaBanido) {
-    // Valida motivo obrigatório para ban
+    
     if (!estaBanido && !_banMotivoSelecionado) {
       _showAdminToast('Selecione um motivo antes de banir.', true);
       return;
@@ -1051,7 +1046,7 @@ const ADMIN = (() => {
     const btns = foot?.querySelectorAll('button');
     btns?.forEach(b => { b.disabled = true; });
 
-    // Determina o motivo final antes de entrar no feedback
+    
     let motivoFinal = _banMotivoSelecionado;
     if (!estaBanido) motivoFinal = '';
     else if (motivoFinal.startsWith('Outro')) {
@@ -1103,7 +1098,7 @@ const ADMIN = (() => {
     btns?.forEach(b => { b.disabled = false; });
   }
 
-  /* ── INBOX (MENSAGENS PARA JOGADOR) ─────────────── */
+  
   let _inboxUid = '';
   let _inboxNome = '';
 
@@ -1196,7 +1191,7 @@ const ADMIN = (() => {
           try {
             await _patch(`usuarios/${uid}/mensagens/${msgId}`, campos);
             totalEnviado++;
-          } catch(e) { /* continua tentando os demais jogadores */ }
+          } catch(e) {  }
         }
         await _patch(`mensagens_log/${msgId}`, {
           ...campos,
@@ -1214,7 +1209,7 @@ const ADMIN = (() => {
   }
 
 
-  /* ── NOVA MENSAGEM INDIVIDUAL (aba Mensagens) ───── */
+  
   let _novaMsgUid       = '';
   let _novaMsgNome      = '';
   let _novaMsgCategoria = 'geral';
@@ -1233,7 +1228,7 @@ const ADMIN = (() => {
     if (txt)   txt.value = '';
     if (fixar) fixar.checked = false;
     if (conf)  conf.checked  = false;
-    // Reseta botões de categoria
+    
     modal.querySelectorAll('.admin-msg-cat-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.cat === 'geral');
     });
@@ -1260,7 +1255,7 @@ const ADMIN = (() => {
     const conf  = !!(document.getElementById('admin-nova-msg-confirmar')?.checked);
 
     if (!_novaMsgUid) {
-      // Sem destinatário definido — abre o fluxo de broadcast em vez de enviar aqui
+      
       fecharNovaMsg();
       abrirBroadcast();
       return;
@@ -1300,7 +1295,7 @@ const ADMIN = (() => {
     });
   }
 
-  /* ── HISTÓRICO DE MENSAGENS ─────────────────────── */
+  
   async function carregarMensagens() {
     _carregarStatusBoasVindas();
     const lista = document.getElementById('admin-msgs-lista');
@@ -1372,7 +1367,7 @@ const ADMIN = (() => {
       executar: async () => {
         const tok = await _token();
 
-        // 1. Busca todos os usuários
+        
         const res = await _query({
           structuredQuery: {
             from: [{ collectionId: 'usuarios' }],
@@ -1381,7 +1376,7 @@ const ADMIN = (() => {
         });
         const uids = res.filter(r => r.document).map(r => r.document.name.split('/').pop());
 
-        // 2. Para cada usuário, busca mensagens via runQuery scoped ao documento do usuário
+        
         for (const uid of uids) {
           try {
             const r = await fetch(`${FS}/usuarios/${uid}:runQuery`, {
@@ -1407,7 +1402,7 @@ const ADMIN = (() => {
           } catch(e) { erros++; }
         }
 
-        // 3. Apaga todo o mensagens_log via _query + _delete
+        
         const logRes = await _query({
           structuredQuery: {
             from: [{ collectionId: 'mensagens_log' }],
@@ -1419,7 +1414,7 @@ const ADMIN = (() => {
           try {
             const path = doc.document.name.split('/documents/')[1];
             await _delete(path);
-          } catch(e) { /* continua */ }
+          } catch(e) {  }
         }
       },
       sucesso: 'Todas as mensagens foram apagadas!',
@@ -1427,7 +1422,7 @@ const ADMIN = (() => {
     });
   }
 
-  /* ── BROADCAST ──────────────────────────────────── */
+  
   function abrirBroadcast() {
     const modal = document.getElementById('admin-modal-broadcast');
     const txt   = document.getElementById('admin-broadcast-texto');
@@ -1464,7 +1459,7 @@ const ADMIN = (() => {
               broadcast: { booleanValue: true },
             });
             totalEnviado++;
-          } catch(e) { /* continua tentando os demais jogadores */ }
+          } catch(e) {  }
         }
         await _patch(`mensagens_log/${msgId}`, {
           texto: { stringValue: texto }, destUid: { stringValue: '' }, destNome: { stringValue: '' },
@@ -1488,7 +1483,7 @@ const ADMIN = (() => {
     _banUid = '';
   }
 
-  /* ── VERIFICAR BAN / CONFIG GLOBAL ─────────────── */
+  
   async function verificarBan(uid) {
     try {
       const doc = await _get(`usuarios/${uid}`);
@@ -1496,7 +1491,7 @@ const ADMIN = (() => {
     } catch(e) { return false; }
   }
 
-  // Retorna dados de banimento (motivoBan) para o overlay do jogador
+  
   async function _getBanInfo(uid) {
     try {
       const doc = await _get(`usuarios/${uid}`);
@@ -1522,7 +1517,7 @@ const ADMIN = (() => {
     }
   }
 
-  // ── Adicionar / remover UID da lista de liberados durante manutenção ──
+  
   async function toggleLiberado(uid, adicionar) {
     uid = (uid || '').trim();
     if (!uid) { _showAdminToast('⚠ Informe um UID válido.', true); return; }
@@ -1544,10 +1539,7 @@ const ADMIN = (() => {
     }
   }
 
-  /* ══════════════════════════════════════════════════
-     TELA MANUTENÇÃO — liberar jogadores por UID
-     Busca (nome/e-mail/UID) → modal de confirmação → _opFeedback
-  ══════════════════════════════════════════════════ */
+  
   let _manutLiberadosCache = [];
 
   function _linhaJogadorManut(j, estaLiberado) {
@@ -1571,7 +1563,7 @@ const ADMIN = (() => {
       </div>`;
   }
 
-  // Lista os jogadores atualmente liberados (com nome/e-mail resolvidos)
+  
   async function carregarManutencao() {
     const lista  = document.getElementById('admin-manut-liberados-lista');
     const banner = document.getElementById('admin-manut-banner');
@@ -1597,7 +1589,7 @@ const ADMIN = (() => {
           const f   = _parseFields(doc.fields || {});
           return { uid, nome: f.nome || '', email: f.email || '' };
         } catch(e) {
-          return { uid, nome: '', email: '' }; // conta pode ter sido excluída
+          return { uid, nome: '', email: '' }; 
         }
       }));
 
@@ -1607,7 +1599,7 @@ const ADMIN = (() => {
     }
   }
 
-  // Busca jogador por nome, e-mail ou UID para liberar/remover da manutenção
+  
   async function buscarJogadorManutencao(busca = '') {
     const resultEl = document.getElementById('admin-manut-busca-resultado');
     if (!resultEl) return;
@@ -1647,7 +1639,7 @@ const ADMIN = (() => {
     }
   }
 
-  // Overlay de confirmação — mostra nome/e-mail/UID antes de liberar ou remover
+  
   function abrirModalLiberar(uid, nome, email, estaLiberado) {
     const modal      = document.getElementById('admin-modal-liberar');
     const title      = document.getElementById('admin-liberar-title');
@@ -1690,7 +1682,7 @@ const ADMIN = (() => {
     if (modal) modal.style.display = 'none';
   }
 
-  // Executa a liberação/remoção com tela de progresso (mesmo padrão de _executarBan)
+  
   async function confirmarLiberar(uid, nome, estaLiberado) {
     const foot = document.getElementById('admin-liberar-foot');
     const btns = foot?.querySelectorAll('button');
@@ -1729,7 +1721,7 @@ const ADMIN = (() => {
     btns?.forEach(b => { b.disabled = false; });
   }
 
-  /* ── UI HELPERS ─────────────────────────────────── */
+  
   function _setLoading(id, on) {
     const el = document.getElementById(id);
     if (el && on) el.innerHTML = '<div class="admin-loading">Carregando...</div>';
@@ -1749,11 +1741,9 @@ const ADMIN = (() => {
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
 
-  /* ══════════════════════════════════════════════════
-     FEEDBACK DE OPERAÇÃO — tela de loading com etapas
-  ══════════════════════════════════════════════════ */
+  
 
-  // Converte código HTTP / mensagem de erro em texto amigável
+  
   function _traduzirErro(e) {
     const msg = (e?.message || String(e)).toLowerCase();
     const status = parseInt((e?.message || '').match(/\d{3}/)?.[0] || '0');
@@ -1774,7 +1764,7 @@ const ADMIN = (() => {
     return { titulo: 'Erro inesperado', detalhe: e?.message || 'Ocorreu um problema desconhecido. Tente novamente.', tipo: 'generic' };
   }
 
-  // Ícones SVG para os estados
+  
   const _opIcons = {
     loading: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
     ok:      `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
@@ -1782,17 +1772,7 @@ const ADMIN = (() => {
     revoked: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
   };
 
-  /**
-   * _opFeedback(config)
-   *
-   * config: {
-   *   etapas:  string[]           — ex: ['Verificando permissões…', 'Salvando dados…']
-   *   executar: async () => any   — função que faz a operação real
-   *   sucesso:  string            — mensagem de sucesso
-   *   onSucesso?: () => void      — callback pós-sucesso (fechar modal, recarregar lista…)
-   *   fecharBotao?: string        — texto do botão de fechar no estado de sucesso (default: 'Fechar')
-   * }
-   */
+  
   async function _opFeedback({ etapas = [], executar, sucesso, onSucesso, fecharBotao = 'Fechar' }) {
     const ov = document.getElementById('admin-op-feedback');
     const iconEl   = document.getElementById('aof-icon');
@@ -1801,9 +1781,9 @@ const ADMIN = (() => {
     const barraEl  = document.getElementById('aof-barra-fill');
     const listaEl  = document.getElementById('aof-lista');
     const footerEl = document.getElementById('aof-footer');
-    if (!ov) return;  // fallback seguro: se o HTML não tiver o overlay, ignora
+    if (!ov) return;  
 
-    // Reset
+    
     iconEl.innerHTML   = _opIcons.loading;
     iconEl.className   = 'aof-icon aof-loading';
     tituloEl.textContent = 'Aguarde…';
@@ -1813,7 +1793,7 @@ const ADMIN = (() => {
     footerEl.innerHTML   = '';
     ov.style.display     = 'flex';
 
-    // Renderiza etapas como itens pendentes
+    
     const itens = etapas.map((txt, i) => {
       const li = document.createElement('div');
       li.className = 'aof-item aof-pending';
@@ -1822,7 +1802,7 @@ const ADMIN = (() => {
       return li;
     });
 
-    // Avança visualmente pelas etapas com delay mínimo para o olho perceber
+    
     async function _avancarEtapa(i) {
       if (i > 0 && itens[i-1]) {
         itens[i-1].className = 'aof-item aof-done';
@@ -1836,14 +1816,14 @@ const ADMIN = (() => {
       await new Promise(r => setTimeout(r, 320));
     }
 
-    // Executa etapas visuais antes da operação real
+    
     for (let i = 0; i < etapas.length - 1; i++) {
       await _avancarEtapa(i);
     }
-    // Última etapa visual fica "rodando" enquanto o fetch real acontece
+    
     if (etapas.length > 0) await _avancarEtapa(etapas.length - 1);
 
-    // ── Verifica permissão em tempo real antes de executar ─────────────────
+    
     try {
       const meUID = window._player?.uid || '';
       if (meUID) {
@@ -1852,46 +1832,46 @@ const ADMIN = (() => {
         const ownerLive = _val(docAdmins.fields?.owner) || '';
         const permsLive = _val(docAdmins.fields?.permissoes) || {};
 
-        // UID removido completamente
+        
         if (meUID !== ownerLive && !uidsLive.includes(meUID)) {
           _pararPollingAdmin();
           _mostrarOverlayAcessoRevogado();
           throw new Error('403: acesso revogado');
         }
 
-        // Permissões zeradas (mas ainda é admin)
+        
         const minhasPerms = Array.isArray(permsLive[meUID]) ? permsLive[meUID] : null;
         if (meUID !== ownerLive && minhasPerms && minhasPerms.length === 0) {
           _mostrarOverlaySemPermissao();
           throw new Error('403: sem permissões ativas');
         }
 
-        // Tem permissões, mas não pra ESTA seção especificamente — ter
-        // alguma permissão não bastava antes; precisa ser a permissão
-        // certa pra ação que está sendo executada agora.
+        
+        
+        
         if (meUID !== ownerLive && minhasPerms && !minhasPerms.includes(_currentSection)) {
           _adminPermissoes = permsLive;
           _aplicarPermissoesNav();
           throw new Error(`403: sem permissão para a seção "${_currentSection}"`);
         }
 
-        // Atualiza estado local para refletir mudanças ocorridas durante a sessão
+        
         _adminUids       = uidsLive;
         _adminOwner      = ownerLive;
         _adminPermissoes = permsLive;
       }
     } catch(pErr) {
-      // Se o erro foi de permissão, propaga para o catch do _opFeedback
+      
       if (pErr?.message?.startsWith('403')) throw pErr;
-      // Erros de rede na verificação não bloqueiam (fail open — o Firestore vai rejeitar de qualquer forma)
+      
       console.warn('[ADMIN] pré-verificação falhou (não crítico):', pErr?.message);
     }
 
-    // ── Executa a operação real ──────────────────────
+    
     try {
       await executar();
 
-      // Sucesso
+      
       itens.forEach(li => {
         li.className = 'aof-item aof-done';
         li.querySelector('.aof-item-dot').innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
@@ -1911,7 +1891,7 @@ const ADMIN = (() => {
       }
 
     } catch(e) {
-      // Marca a última etapa em execução como falha
+      
       const emExec = itens.find(li => li.classList.contains('aof-running'));
       if (emExec) {
         emExec.className = 'aof-item aof-fail';
@@ -1936,8 +1916,8 @@ const ADMIN = (() => {
     }
   }
 
-  /* ── NAVEGAÇÃO ENTRE SEÇÕES ─────────────────────── */
-  // Seções que usam RTDB (listeners próprios, não precisam de polling)
+  
+  
   const _SECOES_RTDB = new Set(['visao-geral', 'sessoes', 'config']);
 
   function _pararPollingSecao() {
@@ -1946,14 +1926,14 @@ const ADMIN = (() => {
 
   function _iniciarPollingSecao(id) {
     _pararPollingSecao();
-    if (_SECOES_RTDB.has(id)) return; // já tem listener RTDB
+    if (_SECOES_RTDB.has(id)) return; 
     const fn = {
       jogadores: () => carregarJogadores(document.getElementById('admin-busca')?.value || ''),
       podio:     () => carregarPodioAdmin(),
       dashboard: () => carregarDashboard(),
       historias: () => carregarHistorias(),
       feedback:  () => carregarFeedback(),
-      versao:    () => {}, // estático, não precisa
+      versao:    () => {}, 
       logs:      () => carregarLogs(),
       mensagens: () => carregarMensagens(),
       manutencao: () => {
@@ -1968,7 +1948,7 @@ const ADMIN = (() => {
   function irParaSecao(id) {
     _currentSection = id;
 
-    // Para listeners RTDB de seções que não são a ativa
+    
     if (id !== 'config')    { if (_configUnsubscribe) { _configUnsubscribe(); _configUnsubscribe = null; } }
     if (id !== 'auditoria') { if (_auditUnsubscribe)  { _auditUnsubscribe();  _auditUnsubscribe  = null; } }
 
@@ -1979,7 +1959,7 @@ const ADMIN = (() => {
     if (sec) sec.style.display = 'block';
     if (btn) btn.classList.add('active');
 
-    // Carga inicial da seção
+    
     if (id === 'visao-geral')  { carregarVisaoGeral(); carregarAoVivo(); }
     if (id === 'jogadores')    carregarJogadores();
     if (id === 'podio')        carregarPodioAdmin();
@@ -1995,7 +1975,7 @@ const ADMIN = (() => {
     if (id === 'mensagens')    carregarMensagens();
     if (id === 'manutencao')   carregarManutencao();
 
-    // Polling para seções Firestore (8s)
+    
     _iniciarPollingSecao(id);
   }
 
@@ -2004,14 +1984,12 @@ const ADMIN = (() => {
     if (modal) modal.style.display = 'none';
   }
 
-  /* ════════════════════════════════════════════════════
-     VERSÃO
-  ════════════════════════════════════════════════════ */
+  
   let _versaoAtual = null;
 
   async function carregarVersao() {
     try {
-      // Busca o version.json gerado pelo deploy
+      
       const r = await fetch('/version.json?t=' + Date.now());
       if (!r.ok) { _renderVersaoSemDados(); return; }
       const v = await r.json();
@@ -2021,7 +1999,7 @@ const ADMIN = (() => {
       document.getElementById('versao-hash-atual').textContent   = v.hash  || '';
       document.getElementById('versao-deploy-atual').textContent = v.deployedAt ? _formatarData(v.deployedAt) : '—';
 
-      // Mensagem do commit — injeta dinamicamente se elemento não existir
+      
       const hashEl = document.getElementById('versao-hash-atual');
       if (hashEl && v.commitMsg) {
         let commitEl = document.getElementById('versao-commit-msg');
@@ -2035,7 +2013,7 @@ const ADMIN = (() => {
         commitEl.style.display = 'block';
       }
 
-      // Arquivos alterados — injeta dinamicamente se elemento não existir
+      
       if (v.arquivosAlterados?.length) {
         let arquivosEl = document.getElementById('versao-arquivos-lista');
         if (!arquivosEl) {
@@ -2054,7 +2032,7 @@ const ADMIN = (() => {
         }
       }
 
-      // Carrega changelog do Firestore (404 = ainda não salvo, não é erro)
+      
       let snap = null;
       try { snap = await _get(`versoes/${v.hash}`); } catch(e) { if (!e.message.includes('404')) throw e; }
       if (snap?.fields) {
@@ -2064,13 +2042,13 @@ const ADMIN = (() => {
         document.getElementById('versao-critica-check').checked = cr;
       }
 
-      // Estatísticas de usuários por versão
+      
       _carregarStatsVersao(v.hash);
 
-      // Histórico
+      
       _carregarHistoricoVersoes();
 
-      // Status do changelog publicado para os jogadores
+      
       _carregarStatusChangelogPublicado();
 
     } catch(e) { console.error('[Versao] erro:', e); _renderVersaoSemDados(); }
@@ -2103,13 +2081,13 @@ const ADMIN = (() => {
     });
   }
 
-  // Publica o texto do campo de changelog no documento config/changelog,
-  // lido pelo Inbox do jogo (aba "Changelog"). Ação separada de
-  // salvarChangelog(): salvar o histórico técnico não publica
-  // automaticamente para os jogadores.
-  // Duração (em dias) que o changelog fica no ar após publicar. 0 = sem
-  // expiração. Só o admin escolhe isso — o jogador nunca vê essa opção,
-  // só o resultado (changelog visível ou já expirado).
+  
+  
+  
+  
+  
+  
+  
   let _changelogDuracaoDias = 7;
 
   function selecionarDuracaoChangelog(dias) {
@@ -2132,9 +2110,9 @@ const ADMIN = (() => {
         const campos = {
           texto:   { stringValue: texto },
           titulo:  { stringValue: titulo },
-          // "versao" continua gravada para referência técnica/auditoria do
-          // admin (aparece no badge do status abaixo), mas o jogador nunca
-          // vê esse campo — só "titulo" é exibido no Inbox do jogo.
+          
+          
+          
           versao:  { stringValue: versaoLabel },
           ts:      { timestampValue: new Date().toISOString() },
         };
@@ -2142,7 +2120,7 @@ const ADMIN = (() => {
           const expiraEm = new Date(Date.now() + dias * 24 * 60 * 60 * 1000);
           campos.expiraEm = { timestampValue: expiraEm.toISOString() };
         } else {
-          // Sem expiração — nullValue limpa explicitamente um prazo anterior
+          
           campos.expiraEm = { nullValue: null };
         }
         await _patch('config/changelog', campos);
@@ -2189,8 +2167,8 @@ const ADMIN = (() => {
       const ts        = f?.ts?.timestampValue || '';
       const expiraEm  = f?.expiraEm?.timestampValue || '';
       const jaExpirou = expiraEm && new Date(expiraEm).getTime() <= Date.now();
-      // Pré-carrega o título atual no input, para facilitar reeditar sem
-      // precisar lembrar o que foi digitado da última vez.
+      
+      
       if (inputTitulo && !inputTitulo.value) inputTitulo.value = titulo;
       if (!texto || jaExpirou) {
         el.className = 'admin-changelog-publicado vazio';
@@ -2208,15 +2186,15 @@ const ADMIN = (() => {
         <span class="admin-changelog-publicado-badge">${_esc(titulo || 'Novidades')}</span>
         <span>Publicado em ${dataFmt}. ${expiraFmt}</span>`;
     } catch (e) {
-      // Documento ainda não existe — estado normal antes da primeira publicação
+      
       el.className = 'admin-changelog-publicado vazio';
       el.innerHTML = 'Nenhuma novidade publicada para os jogadores ainda.';
     }
   }
 
-  // Texto padrão usado como fallback no jogo quando o admin nunca
-  // configurou (ou apagou) o texto de boas-vindas. Mantido igual ao
-  // fallback dentro de mainBeta.js para os dois lados ficarem coerentes.
+  
+  
+  
   const _BOASVINDAS_PADRAO = 'Bem-vindo(a) ao Under Pressure, {nome}! 🎮 Aqui você vai tomar decisões críticas como CEO e ver os resultados em tempo real. Boa sorte nos mandatos!';
 
   async function _carregarStatusBoasVindas() {
@@ -2279,7 +2257,7 @@ const ADMIN = (() => {
 
   async function _carregarStatsVersao(hashAtual) {
     try {
-      // Conta sessões ativas com versão registrada
+      
       const snapRaw = await _query({ structuredQuery: { from: [{ collectionId: 'sessoes_ativas' }] } });
       const docs = (snapRaw || []).filter(r => r.document).map(r => r.document);
       let atuais = 0, antigos = 0;
@@ -2329,7 +2307,7 @@ const ADMIN = (() => {
     }
   }
 
-  // Aliases removidos — usar _get, _patch, _token diretamente (definidos no topo)
+  
 
   function _formatarData(iso) {
     try {
@@ -2338,20 +2316,18 @@ const ADMIN = (() => {
     } catch(e) { return iso; }
   }
 
-  /* ════════════════════════════════════════════════════
-     AO VIVO (Geral) — Firebase Realtime Database
-  ════════════════════════════════════════════════════ */
-  let _aoVivoUnsubscribe = null; // guarda o unsubscribe do listener RTDB
+  
+  let _aoVivoUnsubscribe = null; 
 
   function carregarAoVivo() {
     const lista = document.getElementById('admin-aovivo-lista');
     if (!lista) return;
 
-    // — RTDB (tempo real) —
+    
     if (window.GSPRtdb) {
       const { db, ref, onValue } = window.GSPRtdb;
 
-      // Cancela listener anterior se existir
+      
       if (_aoVivoUnsubscribe) { _aoVivoUnsubscribe(); _aoVivoUnsubscribe = null; }
 
       lista.innerHTML = '<div class="admin-loading">Conectando...</div>';
@@ -2389,7 +2365,7 @@ const ADMIN = (() => {
       return;
     }
 
-    // — Fallback: Firestore REST (RTDB não configurado) —
+    
     (async () => {
       try {
         const res = await _query({
@@ -2415,9 +2391,7 @@ const ADMIN = (() => {
     })();
   }
 
-  /* ════════════════════════════════════════════════════
-     FILTROS DE JOGADORES
-  ════════════════════════════════════════════════════ */
+  
   let _filtroJogadores = 'todos';
   function filtrarJogadores(filtro) {
     _filtroJogadores = filtro;
@@ -2427,9 +2401,7 @@ const ADMIN = (() => {
     carregarJogadores(document.getElementById('admin-busca')?.value || '');
   }
 
-  /* ════════════════════════════════════════════════════
-     EXPORT CSV — JOGADORES
-  ════════════════════════════════════════════════════ */
+  
   async function exportarCSVJogadores() {
     try {
       const res = await _query({
@@ -2448,9 +2420,7 @@ const ADMIN = (() => {
     } catch(e) { _showAdminToast('Erro ao exportar: ' + e.message, true); }
   }
 
-  /* ════════════════════════════════════════════════════
-     EXPORT CSV — PÓDIO
-  ════════════════════════════════════════════════════ */
+  
   async function exportarCSVPodio() {
     try {
       const res = await _query({
@@ -2479,9 +2449,7 @@ const ADMIN = (() => {
     URL.revokeObjectURL(url);
   }
 
-  /* ════════════════════════════════════════════════════
-     DASHBOARD
-  ════════════════════════════════════════════════════ */
+  
   let _periodoAtual = 'hoje';
 
   function mudarPeriodoDash(periodo) {
@@ -2507,7 +2475,7 @@ const ADMIN = (() => {
       const docs = res.filter(r => r.document).map(r => _parseFields(r.document.fields));
       const recentes = docs.filter(d => d.ultimaPartida && (agora - d.ultimaPartida) < limite);
 
-      // Métricas gerais
+      
       const partidas = recentes.reduce((a, d) => a + (d.totalJogos || 0), 0);
       const setoresCount = {};
       docs.forEach(d => {
@@ -2520,7 +2488,7 @@ const ADMIN = (() => {
       document.getElementById('dash-setores').textContent  = totalSetores || '—';
       document.getElementById('dash-abandono').textContent = '—';
 
-      // Setores mais jogados
+      
       const setoresOrdenados = Object.entries(setoresCount).sort((a,b) => b[1]-a[1]);
       const maxCount = setoresOrdenados[0]?.[1] || 1;
       const setoresEl = document.getElementById('dash-setores-lista');
@@ -2531,11 +2499,11 @@ const ADMIN = (() => {
           <span class="admin-dash-pct">${c}</span>
         </div>`).join('') || '<div class="admin-empty">Sem dados.</div>';
 
-      // Abandono por rodada (baseado em stats/diario)
+      
       try {
         const stats = await _get('stats/diario');
         const hoje = new Date().toISOString().slice(0,10);
-        // Campo do dia é gravado como stringValue com JSON
+        
         const rawHoje = stats.fields?.[hoje]?.stringValue;
         const dadosHoje = rawHoje ? JSON.parse(rawHoje) : {};
         const abandono = dadosHoje.abandonoPorRodada || {};
@@ -2555,9 +2523,7 @@ const ADMIN = (() => {
     }
   }
 
-  /* ════════════════════════════════════════════════════
-     HISTÓRIAS
-  ════════════════════════════════════════════════════ */
+  
   const _HISTORIAS_CONFIG = {
     tecnologia: [
       { id: 0, nome: 'SaaS B2B', sub: 'Dívida técnica e rotatividade' },
@@ -2588,14 +2554,14 @@ const ADMIN = (() => {
     try {
       const snap = await _get('config/historias');
       estadoAtual = _parseFields(snap.fields || {});
-    } catch(e) { /* sem doc ainda — todas ativas por padrão */ }
+    } catch(e) {  }
 
     let html = '';
     for (const [setor, historias] of Object.entries(_HISTORIAS_CONFIG)) {
       html += `<div class="admin-sec-title">${_emojiSetor(setor)} ${setor.charAt(0).toUpperCase()+setor.slice(1)}</div>`;
       historias.forEach(h => {
         const chave = `${setor}_${h.id}`;
-        const ativa = estadoAtual[chave] !== false; // padrão: ativa
+        const ativa = estadoAtual[chave] !== false; 
         html += `
           <div class="admin-historia-row">
             <div class="admin-historia-info">
@@ -2637,13 +2603,11 @@ const ADMIN = (() => {
     });
   }
 
-  /* ════════════════════════════════════════════════════
-     GLOSSÁRIO
-  ════════════════════════════════════════════════════ */
+  
 
-  // Conjunto de termos padrão que já existiam hardcoded no jogo
-  // (mainBeta.js). Usado só pelo botão "Importar termos padrão" —
-  // depois de importados uma vez, essa constante deixa de ser necessária.
+  
+  
+  
 const _GLOSSARIO_PADRAO_SECOES = [
   { categoria: "Indicadores e Mecânicas do Jogo", termos: [
     { termo:"SLA", def:"Acordo de Nível de Serviço (Service Level Agreement). Define metas de prazo e qualidade entre fornecedor e cliente. Ex: entregar 95% dos pedidos em até 48h." },
@@ -2736,15 +2700,15 @@ const _GLOSSARIO_PADRAO_SECOES = [
   ]},
 ];
 
-  let _glossarioCache        = [];   // [{id, termo, def, categoria}]
-  let _glossarioSecoesCache  = [];   // [nomeDaSecao, ...] em config/glossarioSecoes
-  let _glossarioSecoesAbertas = new Set();  // nomes de seções expandidas na UI
+  let _glossarioCache        = [];   
+  let _glossarioSecoesCache  = [];   
+  let _glossarioSecoesAbertas = new Set();  
   let _glossarioBusca        = '';
-  let _glossarioEditandoId   = null;  // null = criando novo termo
+  let _glossarioEditandoId   = null;  
 
   function _slugTermo(termo) {
     return String(termo)
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // remove acentos
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
@@ -2756,7 +2720,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
       const doc = await _get('config/glossarioSecoes');
       const nomes = _val(doc.fields?.nomes) || [];
       return Array.isArray(nomes) ? nomes.filter(Boolean) : [];
-    } catch(e) { return []; }  // doc ainda não existe
+    } catch(e) { return []; }  
   }
 
   async function _setSecoesGlossario(nomes) {
@@ -2783,7 +2747,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
         .filter(r => r.document)
         .map(r => ({ id: r.document.name.split('/').pop(), ..._parseFields(r.document.fields) }));
 
-      // Abre todas as seções na primeira carga
+      
       if (!_glossarioSecoesAbertas.size) secoes.forEach(s => _glossarioSecoesAbertas.add(s));
 
       _popularSelectCategorias();
@@ -2826,10 +2790,10 @@ const _GLOSSARIO_PADRAO_SECOES = [
 
     let html = '';
 
-    // Seções conhecidas, na ordem em que foram criadas
+    
     _glossarioSecoesCache.forEach(secao => {
       const termos = _glossarioCache.filter(t => t.categoria === secao && passaBusca(t));
-      if (busca && !termos.length) return;  // some da lista na busca se não bate com nada
+      if (busca && !termos.length) return;  
       const aberta = _glossarioSecoesAbertas.has(secao);
       html += `
         <div class="admin-glossario-secao ${aberta ? 'aberta' : ''}">
@@ -2856,8 +2820,8 @@ const _GLOSSARIO_PADRAO_SECOES = [
         </div>`;
     });
 
-    // Termos órfãos: categoria não corresponde a nenhuma seção cadastrada
-    // (ex: dado importado antes de uma seção existir, ou seção renomeada)
+    
+    
     const orfaos = _glossarioCache.filter(t => !_glossarioSecoesCache.includes(t.categoria) && passaBusca(t));
     if (orfaos.length) {
       html += `
@@ -2886,7 +2850,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     lista.innerHTML = html;
   }
 
-  /* ── SEÇÕES ─────────────────────────────────────── */
+  
   function abrirModalSecaoGlossario() {
     document.getElementById('admin-secao-glossario-nome').value = '';
     document.getElementById('admin-modal-secao-glossario').style.display = 'flex';
@@ -2945,7 +2909,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     });
   }
 
-  /* ── TERMOS ─────────────────────────────────────── */
+  
   function abrirModalGlossario(id, secaoPadrao) {
     if (!_glossarioSecoesCache.length) {
       _showAdminToast('Crie uma seção primeiro.', true);
@@ -2977,8 +2941,8 @@ const _GLOSSARIO_PADRAO_SECOES = [
     if (!def)       { _showAdminToast('Digite a definição.', true); return; }
     if (!categoria) { _showAdminToast('Selecione uma seção.', true); return; }
 
-    // Editando: mantém o mesmo id do documento. Criando: gera slug a partir do termo,
-    // e evita colisão com um termo diferente que já use o mesmo slug.
+    
+    
     const id = _glossarioEditandoId || (() => {
       let base = _slugTermo(termo);
       let candidato = base;
@@ -3024,7 +2988,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     });
   }
 
-  /* ── IMPORTAÇÃO DOS TERMOS PADRÃO ────────────────── */
+  
   async function importarGlossarioPadrao() {
     const ok = await _confirmar({
       titulo: 'Importar termos padrão',
@@ -3036,7 +3000,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     await _opFeedback({
       etapas: ['Verificando permissões…', 'Criando seções…', 'Importando termos…'],
       executar: async () => {
-        // 1) Garante que todas as seções padrão existam
+        
         const secoesPadrao = _GLOSSARIO_PADRAO_SECOES.map(s => s.categoria);
         const secoesAtuais = await _getSecoesGlossario();
         const novasSecoes = [...secoesAtuais];
@@ -3045,7 +3009,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
         _glossarioSecoesCache = novasSecoes;
         novasSecoes.forEach(s => _glossarioSecoesAbertas.add(s));
 
-        // 2) Descobre quais termos já existem (por id) para não sobrescrever edições
+        
         const res = await _query({ structuredQuery: { from: [{ collectionId: 'glossario' }] } });
         const idsExistentes = new Set((Array.isArray(res) ? res : [])
           .filter(r => r.document)
@@ -3055,7 +3019,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
         for (const secao of _GLOSSARIO_PADRAO_SECOES) {
           for (const t of secao.termos) {
             const id = _slugTermo(t.termo);
-            if (idsExistentes.has(id)) continue;  // já existe — não sobrescreve
+            if (idsExistentes.has(id)) continue;  
             await _patch(`glossario/${id}`, {
               termo:     { stringValue: t.termo },
               categoria: { stringValue: secao.categoria },
@@ -3072,9 +3036,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     });
   }
 
-  /* ════════════════════════════════════════════════════
-     FEEDBACK
-  ════════════════════════════════════════════════════ */
+  
   async function carregarFeedback() {
     document.getElementById('feedback-por-historia').innerHTML = '<div class="admin-loading">Carregando...</div>';
     document.getElementById('feedback-recentes').innerHTML = '';
@@ -3093,14 +3055,14 @@ const _GLOSSARIO_PADRAO_SECOES = [
         return;
       }
 
-      // Média geral
+      
       const notas = docs.filter(d => d.nota).map(d => d.nota);
       const media = notas.length ? (notas.reduce((a,b) => a+b, 0) / notas.length).toFixed(1) : '—';
       document.getElementById('feedback-nota-media').textContent = media;
       document.getElementById('feedback-estrelas-media').textContent = '★'.repeat(Math.round(Number(media))) + '☆'.repeat(5 - Math.round(Number(media)));
       document.getElementById('feedback-total').textContent = `${notas.length} avaliações`;
 
-      // Por história
+      
       const porHist = {};
       docs.forEach(d => {
         const k = d.historiaId || 'geral';
@@ -3116,7 +3078,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
         </div>`;
       }).join('');
 
-      // Recentes com texto
+      
       document.getElementById('feedback-recentes').innerHTML = docs.filter(d => d.texto).slice(0, 10).map(d => `
         <div class="admin-feedback-recente">
           <div class="admin-feedback-recente-header">
@@ -3129,21 +3091,19 @@ const _GLOSSARIO_PADRAO_SECOES = [
     } catch(e) { _showAdminError('admin-sec-feedback', 'Erro: ' + e.message); }
   }
 
-  /* ════════════════════════════════════════════════════
-     SESSÕES — Firebase Realtime Database
-  ════════════════════════════════════════════════════ */
-  let _sessoesUnsubscribe = null; // guarda o unsubscribe do listener RTDB
+  
+  let _sessoesUnsubscribe = null; 
 
   function carregarSessoes() {
     const lista = document.getElementById('admin-sessoes-lista');
     const contador = document.getElementById('sessoes-contador');
     if (!lista) return;
 
-    // — RTDB (tempo real) —
+    
     if (window.GSPRtdb) {
       const { db, ref, onValue } = window.GSPRtdb;
 
-      // Cancela listener anterior se existir
+      
       if (_sessoesUnsubscribe) { _sessoesUnsubscribe(); _sessoesUnsubscribe = null; }
 
       lista.innerHTML = '<div class="admin-loading">Conectando...</div>';
@@ -3184,7 +3144,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
       return;
     }
 
-    // — Fallback: Firestore REST —
+    
     (async () => {
       lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
       try {
@@ -3216,9 +3176,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     })();
   }
 
-  /* ════════════════════════════════════════════════════
-     LOGS
-  ════════════════════════════════════════════════════ */
+  
   let _filtroLogs = 'todos';
 
   function filtrarLogs(filtro) {
@@ -3255,9 +3213,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     } catch(e) { lista.innerHTML = '<div class="admin-empty">Sem logs ou erro ao carregar.</div>'; }
   }
 
-  /* ════════════════════════════════════════════════════
-     LOG DE AUDITORIA
-  ════════════════════════════════════════════════════ */
+  
   async function _registrarAuditoria(acao) {
     try {
       const ts   = Date.now().toString();
@@ -3266,7 +3222,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
       const uid  = user?.uid  || 'desconhecido';
       const entrada = { acao, uid, nome, ts: Date.now() };
 
-      // Grava no Firestore (persistência)
+      
       await _patch(`auditoria/${ts}`, {
         acao:  _fsStr(acao),
         uid:   _fsStr(uid),
@@ -3274,12 +3230,12 @@ const _GLOSSARIO_PADRAO_SECOES = [
         ts:    _fsInt(Date.now()),
       });
 
-      // Replica no RTDB para tempo real (outros admins veem na hora)
+      
       if (window.GSPRtdb) {
         const { db, ref, set } = window.GSPRtdb;
         set(ref(db, `auditoria_live/${ts}`), entrada).catch(() => {});
       }
-    } catch(e) { /* silencioso */ }
+    } catch(e) {  }
   }
 
   function _renderAuditLog(docs) {
@@ -3305,10 +3261,10 @@ const _GLOSSARIO_PADRAO_SECOES = [
     const el = document.getElementById('admin-audit-log');
     if (!el) return;
 
-    // Cancela listener anterior se existir
+    
     if (_auditUnsubscribe) { _auditUnsubscribe(); _auditUnsubscribe = null; }
 
-    // ── RTDB: escuta o nó auditoria em tempo real ──────────────────────────
+    
     if (window.GSPRtdb) {
       const { db, ref, onValue } = window.GSPRtdb;
       el.innerHTML = '<div class="admin-loading">Conectando...</div>';
@@ -3322,16 +3278,16 @@ const _GLOSSARIO_PADRAO_SECOES = [
         _renderAuditLog(docs);
       }, (err) => {
         console.warn('[ADMIN] audit RTDB err:', err);
-        _carregarAuditLogFirestore(); // fallback para Firestore REST
+        _carregarAuditLogFirestore(); 
       });
       return;
     }
 
-    // Fallback: Firestore REST
+    
     _carregarAuditLogFirestore();
   }
 
-  // Fallback Firestore (usado quando RTDB não disponível)
+  
   async function _carregarAuditLogFirestore() {
     try {
       const res = await _query({
@@ -3379,9 +3335,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     });
   }
 
-  /* ════════════════════════════════════════════════════
-     AGENDAMENTO DE MANUTENÇÃO
-  ════════════════════════════════════════════════════ */
+  
   function _aplicarConfigUI(cfg) {
     const cb = document.getElementById('admin-manutencao');
     if (cb) cb.checked = !!cfg.manutencao;
@@ -3398,50 +3352,50 @@ const _GLOSSARIO_PADRAO_SECOES = [
   }
 
   async function carregarConfigGlobal() {
-    // Cancela listener anterior
+    
     if (_configUnsubscribe) { _configUnsubscribe(); _configUnsubscribe = null; }
 
     if (window.GSPRtdb) {
-      // ── RTDB: tempo real — qualquer mudança em config_live reflete aqui ──
+      
       const { db, ref, onValue } = window.GSPRtdb;
       const cfgRef = ref(db, 'config_live');
       _configUnsubscribe = onValue(cfgRef, (snapshot) => {
         const cfg = snapshot.val();
         if (cfg) _aplicarConfigUI(cfg);
       }, () => {
-        // Fallback: Firestore REST
+        
         _get('config/global').then(doc => _aplicarConfigUI(_parseFields(doc.fields || {}))).catch(() => {});
       });
     } else {
-      // Sem RTDB: Firestore REST
+      
       try {
         const doc = await _get('config/global');
         _aplicarConfigUI(_parseFields(doc.fields || {}));
       } catch(e) { console.warn('[ADMIN] Config:', e); }
     }
 
-    // Admins e polling de acesso
+    
     carregarAdmins();
     _iniciarPollingAdmin();
   }
 
-  // Chamado por salvarConfigGlobal após gravar — sincroniza RTDB config_live
+  
   async function _sincronizarConfigLive(cfg) {
     if (!window.GSPRtdb) return;
     try {
       const { db, ref, set } = window.GSPRtdb;
       await set(ref(db, 'config_live'), cfg);
-    } catch(e) { /* não crítico */ }
+    } catch(e) {  }
   }
 
   async function carregarAdmins() {
-    // Cancela listener anterior
+    
     if (_adminsUnsubscribe) { _adminsUnsubscribe(); _adminsUnsubscribe = null; }
 
     const _aplicarDadosAdmins = async (uids, owner, permissoes, nomes) => {
-      // Nunca aplica um estado sem dono — isso nunca é legítimo (o dono
-      // sempre existe), então só pode ser dado vazio/ainda-não-escrito.
-      // Aplicar isso trancaria todo mundo, incluindo o dono real, por engano.
+      
+      
+      
       if (!owner) {
         console.warn('[ADMIN] carregarAdmins: dado sem "owner" recebido — ignorado (provável nó vazio, não estado real)');
         return;
@@ -3457,26 +3411,26 @@ const _GLOSSARIO_PADRAO_SECOES = [
       _adminNomes      = nomes;
       const permDepois = JSON.stringify(_adminPermissoes[meUID] ?? null);
 
-      // Verifica se o admin atual foi removido
+      
       if (meUID && meUID !== owner && !uids.includes(meUID)) {
         _pararPollingAdmin();
         _mostrarOverlayAcessoRevogado();
         return;
       }
 
-      // Registra displayName se mudou
+      
       if (meUID && meNome && _adminNomes[meUID] !== meNome) {
         _gravarNomeAdmin(meUID, meNome).catch(() => {});
       }
 
       _renderAdminLista();
 
-      // Reavalia nav e overlays se permissões mudaram
+      
       if (permAntes !== permDepois) _aplicarPermissoesNav();
     };
 
-    // Busca os dados no Firestore (fonte da verdade) — usado quando o RTDB
-    // ainda não tem nada gravado no caminho, ou dá erro de permissão.
+    
+    
     const _fallbackFirestore = async () => {
       try {
         const doc = await _get('config/admins');
@@ -3494,14 +3448,14 @@ const _GLOSSARIO_PADRAO_SECOES = [
     };
 
     if (window.GSPRtdb) {
-      // RTDB agora serve só de "aviso" de que algo mudou em config/admins —
-      // nunca como fonte do dado em si. O campo permissoes ali só fica
-      // atualizado quando a escrita no RTDB funciona (pode falhar por
-      // regra), então confiar nele direto fazia uma permissão recém-
-      // revogada "voltar sozinha" quando o RTDB reconectava (ex: trocou de
-      // wifi pra dados, saiu e voltou do app) e reenviava o dado antigo.
-      // Toda vez que dispara — sucesso ou erro — revalida direto no
-      // Firestore, que nunca fica desatualizado.
+      
+      
+      
+      
+      
+      
+      
+      
       const { db, ref, onValue } = window.GSPRtdb;
       const admRef = ref(db, 'config/admins');
       const _revalidar = async () => {
@@ -3510,7 +3464,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
       };
       _adminsUnsubscribe = onValue(admRef, _revalidar, _revalidar);
     } else {
-      // Sem RTDB: Firestore REST
+      
       try {
         const doc = await _get('config/admins');
         await _aplicarDadosAdmins(
@@ -3524,7 +3478,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     }
   }
 
-  // Grava apenas o mapa "nomes" no config/admins (permitido pelas Firestore Rules para qualquer admin)
+  
   async function _gravarNomeAdmin(uid, nome) {
     try {
       const nomes = { ..._adminNomes, [uid]: nome };
@@ -3539,7 +3493,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
         }})
       });
       if (r.ok) _adminNomes = nomes;
-    } catch(e) { /* silencioso — não crítico */ }
+    } catch(e) {  }
   }
 
   function _renderAdminLista() {
@@ -3598,7 +3552,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
   function _aplicarPermissoesNav() {
     const meUID = window._player?.uid || '';
     if (!meUID || meUID === _adminOwner) {
-      // Owner: garante que tudo aparece
+      
       document.querySelectorAll('.admin-hub-card').forEach(c => c.style.display = '');
       document.querySelectorAll('#admin-subnav-botoes .admin-nav-btn').forEach(b => b.style.display = '');
       _esconderOverlayBloqueio();
@@ -3607,7 +3561,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
 
     const perms = Array.isArray(_adminPermissoes[meUID]) ? _adminPermissoes[meUID] : null;
 
-    // Admin com zero permissões ativas → overlay de sem-permissão
+    
     if (perms && perms.length === 0) {
       _mostrarOverlaySemPermissao();
       return;
@@ -3615,29 +3569,29 @@ const _GLOSSARIO_PADRAO_SECOES = [
 
     _esconderOverlayBloqueio();
 
-    // Cards do hub — uma categoria só some se NENHUMA seção dela for permitida
+    
     document.querySelectorAll('.admin-hub-card').forEach(card => {
       const cat = _CATEGORIAS.find(c => c.id === card.dataset.cat);
       const temAlguma = !perms || (cat && cat.secoes.some(id => perms.includes(id)));
       card.style.display = temAlguma ? '' : 'none';
     });
 
-    // Botões da categoria aberta agora, se houver uma
+    
     document.querySelectorAll('#admin-subnav-botoes .admin-nav-btn').forEach(btn => {
       const sec = btn.dataset.sec;
-      // null = sem restrição definida ainda → mostra tudo
+      
       btn.style.display = (!perms || perms.includes(sec)) ? '' : 'none';
     });
 
-    // Se a seção atual não é mais permitida, redireciona
+    
     if (perms && _categoriaAtiva && !perms.includes(_currentSection)) {
       const primeiraBtnVisivel = document.querySelector('#admin-subnav-botoes .admin-nav-btn:not([style*="none"])');
       if (primeiraBtnVisivel) primeiraBtnVisivel.click();
-      else irParaHub(); // nenhuma seção dessa categoria continua permitida
+      else irParaHub(); 
     }
   }
 
-  /* ── OVERLAYS DE BLOQUEIO ───────────────────────── */
+  
   function _mostrarOverlayAcessoRevogado() {
     let ov = document.getElementById('admin-overlay-revogado');
     if (!ov) return;
@@ -3652,7 +3606,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
   function _mostrarOverlaySemPermissao() {
     let ov = document.getElementById('admin-overlay-sem-permissao');
     if (!ov) return;
-    // Esconde o conteúdo principal (hub, sub-navegação e seção aberta)
+    
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
     const hub = document.getElementById('admin-hub');
     const sub = document.getElementById('admin-subnav');
@@ -3667,14 +3621,14 @@ const _GLOSSARIO_PADRAO_SECOES = [
     const estavaBloqueado = (ov1 && ov1.style.display !== 'none') || (ov2 && ov2.style.display !== 'none');
     if (ov1) ov1.style.display = 'none';
     if (ov2) ov2.style.display = 'none';
-    // Só força volta ao hub se estava mesmo bloqueado antes — evita
-    // interromper a navegação normal do dono a cada verificação de rotina.
+    
+    
     if (estavaBloqueado) irParaHub();
   }
 
-  /* ── POLLING: revogação imediata de acesso ──────── */
+  
   function _iniciarPollingAdmin() {
-    if (_pollingAdminInterval) return; // já rodando
+    if (_pollingAdminInterval) return; 
     _pollingAdminInterval = setInterval(_verificarAcessoAdmin, 30_000);
   }
 
@@ -3683,7 +3637,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
       clearInterval(_pollingAdminInterval);
       _pollingAdminInterval = null;
     }
-    // Também para polling de seção e listeners RTDB
+    
     _pararPollingSecao();
     if (_adminsUnsubscribe) { _adminsUnsubscribe(); _adminsUnsubscribe = null; }
     if (_configUnsubscribe) { _configUnsubscribe(); _configUnsubscribe = null; }
@@ -3700,7 +3654,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
       const permissoes = _val(doc.fields?.permissoes)  || {};
       const nomes      = _val(doc.fields?.nomes)       || {};
 
-      // ① Acesso totalmente revogado (UID removido da lista)
+      
       const aindaAdmin = uids.includes(meUID) || meUID === owner;
       if (!aindaAdmin) {
         _pararPollingAdmin();
@@ -3708,14 +3662,14 @@ const _GLOSSARIO_PADRAO_SECOES = [
         return;
       }
 
-      // ② Atualiza estado local sem precisar chamar carregarAdmins inteiro
+      
       const permAntes = JSON.stringify(_adminPermissoes[meUID] ?? null);
       _adminUids       = uids;
       _adminOwner      = owner;
       _adminPermissoes = permissoes;
       _adminNomes      = nomes;
 
-      // Reavalia permissões se mudaram
+      
       const permDepois = JSON.stringify(_adminPermissoes[meUID] ?? null);
       if (permAntes !== permDepois) {
         _renderAdminLista();
@@ -3842,7 +3796,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
         if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
         _adminPermissoes = novasPermissoes;
         _registrarAuditoria(`Permissões de ${uid.slice(0,8)} atualizadas`);
-        // Sincroniza RTDB para que outros admins vejam a mudança em tempo real
+        
         await _rtdbSyncAdmins(_adminUids, _adminOwner);
       },
       sucesso: `${selecionadas.length} seção(ões) salvas para ${nomeExib}`,
@@ -3878,15 +3832,13 @@ const _GLOSSARIO_PADRAO_SECOES = [
       },
       sucesso: 'Configurações globais salvas com sucesso!',
       onSucesso: async () => {
-        // Sincroniza config_live no RTDB para todos os admins verem na hora
+        
         await _sincronizarConfigLive({ manutencao: manut, manutencaoInicio: inicio, manutencaoFim: fim, modoSalaAtivo: modoSala, mensagem });
       },
     });
   }
 
-  /* ════════════════════════════════════════════════════
-     HELPERS UTILITÁRIOS
-  ════════════════════════════════════════════════════ */
+  
   function _tempoRelativo(ts) {
     const diff = Math.floor((Date.now() - ts) / 1000);
     if (diff < 60)  return `${diff}s atrás`;

@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════
-   BETA · EMPRESA · Varejo
-═══════════════════════════════════════════════════════ */
+
 
 const EmpresaVarejo = {
     id:   "varejo",
@@ -40,7 +38,7 @@ const EmpresaVarejo = {
             rodape: "Você tem {totalRounds} rodadas para tomar decisões e reconstruir a rentabilidade da rede."
         },
 
-        /* ── 2 ─────────────────────────────────────── */
+        
         {
             badge:     "Rede de Farmácias · Varejo de Saúde",
             subtitulo: "As redes nacionais chegaram na sua cidade. E trouxeram preços que você não consegue bater.",
@@ -70,7 +68,7 @@ const EmpresaVarejo = {
             rodape: "Você tem {totalRounds} rodadas para reposicionar a rede antes que a erosão de clientes se torne irreversível."
         },
 
-        /* ── 3 ─────────────────────────────────────── */
+        
         {
             badge:     "Atacarejo Regional · Autosserviço",
             subtitulo: "Você dobrou o tamanho em 3 anos. Agora o crescimento rápido está cobrando a conta.",

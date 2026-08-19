@@ -1,15 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════
-   UNDER PRESSURE — SALA MODE v2.0
-   Substitui as seções de sala em mainBeta.js
-   Inserir antes do fechamento do bundle ou como script separado.
-═══════════════════════════════════════════════════════════════ */
+
 
 const SalaMode = (() => {
 'use strict';
 
-/* ═══════════════════════════════════════════
-   CONSTANTES
-═══════════════════════════════════════════ */
+
 const PAPEIS = {
   CEO:  { id:'CEO',  emoji:'👔', nome:'CEO — Diretor Executivo', cor:'#f39c12',
           desc:'Seu voto tem peso de desempate. 1 veto disponível por jogo.',
@@ -47,7 +41,7 @@ const CONFIANCA = [
   { id:'arrojado',    emoji:'🚀', label:'Arrojado'    },
 ];
 
-// Duração em segundos de cada fase
+
 const DURACAO = {
   alerta:      4,
   deliberacao: 20,
@@ -61,13 +55,11 @@ const FASES_SEQUENCIA = ['alerta','deliberacao','votacao','revelacao','impacto',
 
 const CORES_GRUPO = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63'];
 
-/* ═══════════════════════════════════════════
-   ESTADO INTERNO
-═══════════════════════════════════════════ */
-let _sala           = null; // sala ativa
-let _grupoAtual     = null; // grupo do jogador
-let _papelMeu       = null; // papel executivo do jogador
-let _papeis         = {};   // { uid: idPapel }
+
+let _sala           = null; 
+let _grupoAtual     = null; 
+let _papelMeu       = null; 
+let _papeis         = {};   
 let _partidaId      = null;
 let _partidaEstado  = null;
 let _faseAtual      = 'lobby';
@@ -77,16 +69,14 @@ let _timerInt       = null;
 let _timerInicio    = null;
 let _timerDuracao   = 0;
 let _meuSinal       = null;
-let _meuVoto        = null;  // { letra, confianca }
+let _meuVoto        = null;  
 let _vetoUsado      = false;
-let _betaState      = null;  // cópia local do BetaState para o grupo
-let _indsAnteriores = null;  // snapshot dos indicadores antes do impacto
+let _betaState      = null;  
+let _indsAnteriores = null;  
 let _corSelecionada = CORES_GRUPO[0];
-let _scoreAnterior  = 0;    // para calcular tendência no placar
+let _scoreAnterior  = 0;    
 
-/* ═══════════════════════════════════════════
-   HELPERS GLOBAIS
-═══════════════════════════════════════════ */
+
 function _getPlayer() { return window._player || null; }
 function _GSP() { return window.GSPSalas || null; }
 function _mostrarAviso(m) { if (typeof mostrarAviso === 'function') mostrarAviso(m); else alert(m); }
@@ -117,11 +107,9 @@ function _calcScore(state) {
   return Math.round((media / 20) * 100);
 }
 
-function _svgTimerCircum() { return Math.PI * 2 * 18; } // r=18 → C=113.1
+function _svgTimerCircum() { return Math.PI * 2 * 18; } 
 
-/* ═══════════════════════════════════════════
-   RESTAURAR DO LOCALSTORAGE
-═══════════════════════════════════════════ */
+
 function restaurar() {
   const sala  = _LS_get('gsp_sala');
   const grupo = _LS_get('gsp_sala_grupo');
@@ -129,9 +117,7 @@ function restaurar() {
   if (grupo) { _grupoAtual = grupo; _atualizarBadge(); }
 }
 
-/* ═══════════════════════════════════════════
-   BADGE NA HOME
-═══════════════════════════════════════════ */
+
 function _atualizarBadge() {
   const badge = document.getElementById('home-sala-badge');
   if (!badge) return;
@@ -146,9 +132,7 @@ function _atualizarBadge() {
   }
 }
 
-/* ════════════════════════════════════════
-   MODAL DE ENTRADA NA SALA
-════════════════════════════════════════ */
+
 function abrirModal() {
   const modal = document.getElementById('modal-sala');
   if (!modal) return;
@@ -227,9 +211,7 @@ function sair() {
   _mostrarSucesso('Você saiu da sala.');
 }
 
-/* ════════════════════════════════════════
-   SCREEN GRUPOS (WAR ROOM)
-════════════════════════════════════════ */
+
 async function irGrupos() {
   if (!_sala) { _mostrarAviso('Você não está em nenhuma sala.'); return; }
   _mostrarTela('screen-grupos');
@@ -377,9 +359,7 @@ function _htmlGrupoCard(g, player) {
     </div>`;
 }
 
-/* ════════════════════════════════════════
-   CRIAR / ENTRAR EM GRUPO
-════════════════════════════════════════ */
+
 function abrirCriarGrupo() {
   const modal = document.getElementById('modal-criar-grupo');
   if (!modal) return;
@@ -462,9 +442,7 @@ async function entrarGrupo(nomeGrupo) {
   }
 }
 
-/* ════════════════════════════════════════
-   LOBBY DO GRUPO
-════════════════════════════════════════ */
+
 async function irLobby() {
   if (!_sala || !_grupoAtual) { _mostrarAviso('Entre em um grupo antes.'); return; }
 
@@ -492,21 +470,21 @@ function _renderLobby() {
   if (dotEl) dotEl.style.background = cor;
   _setText('ns-lobby-sala-badge', _sala?.nome || _sala?.codigo || 'Sala');
 
-  // Papel meu
+  
   _renderMeuPapelNoLobby();
 
-  // Setor (modo livre)
+  
   const setorWrap = document.getElementById('ns-lobby-setor-wrap');
   if (setorWrap) setorWrap.style.display = _sala.setorFixo ? 'none' : 'block';
 
-  // Botão iniciar (só líder)
+  
   const isLider = _grupoAtual?.lider === player?.uid;
   const btnIni  = document.getElementById('ns-btn-iniciar');
   const aguardo = document.getElementById('ns-lobby-aguardo');
   if (btnIni)  btnIni.style.display  = isLider ? 'block' : 'none';
   if (aguardo) aguardo.style.display = isLider ? 'none'  : 'block';
 
-  // Info de papéis
+  
   _renderInfoPapeis();
 }
 
@@ -550,10 +528,10 @@ async function _tickLobby() {
     if (!estado) return;
     _partidaEstado = estado;
 
-    // Renderiza jogadores
+    
     _renderJogadoresLobby(estado);
 
-    // Recupera papeis do estado
+    
     if (estado.papeis) {
       _papeis = estado.papeis;
       const uid = _getPlayer()?.uid;
@@ -563,11 +541,11 @@ async function _tickLobby() {
       }
     }
 
-    // Transição para o jogo se a partida iniciou
+    
     if (estado.status === 'votando' || estado.status === 'em_jogo') {
       _entrarNoJogo(estado);
     }
-  } catch(e) { /* ignora rede */ }
+  } catch(e) {  }
 }
 
 function _renderJogadoresLobby(estado) {
@@ -593,9 +571,7 @@ function _renderJogadoresLobby(estado) {
   }).join('');
 }
 
-/* ════════════════════════════════════════
-   INICIAR PARTIDA (líder)
-════════════════════════════════════════ */
+
 async function iniciarPartida() {
   if (!_sala || !_grupoAtual || !_partidaId) return;
   if (_grupoAtual.lider !== _getPlayer()?.uid) { _mostrarAviso('Só o líder pode iniciar.'); return; }
@@ -604,20 +580,20 @@ async function iniciarPartida() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Iniciando...'; }
 
   try {
-    // Define setor
+    
     let sector = _sala.setorFixo || _grupoAtual.sector || '';
     if (!sector) {
       const sel = document.getElementById('ns-lobby-setor');
       sector = sel?.value || 'tecnologia';
     }
 
-    // Inicializa BetaState local
+    
     if (typeof iniciar === 'function') {
       await iniciar(sector, _grupoAtual.nomeGrupo, _grupoAtual.nomeGrupo, true);
     }
     _betaState = JSON.parse(JSON.stringify(BetaState.get()));
 
-    // Atribui papéis executivos
+    
     const membros = _grupoAtual.membros || [];
     const papeis  = _atribuirPapeis(membros);
     _papeis = papeis;
@@ -627,13 +603,13 @@ async function iniciarPartida() {
       _renderMeuPapelNoLobby();
     }
 
-    // Jogadores
+    
     const jogadores = {};
     membros.forEach(u => { jogadores[u] = _betaState.groupName || u; });
 
     const firstRound = _betaState.gameRounds?.[0] || {};
 
-    // Cria/atualiza doc
+    
     const gsp = _GSP();
     await gsp.criarPartida(_sala.codigo, {
       grupo: _grupoAtual.nomeGrupo, sector,
@@ -664,21 +640,19 @@ function _atribuirPapeis(membros) {
   const papeis = {};
   if (!membros.length) return papeis;
   const list = [...PAPEIS_LIST];
-  // Líder fica com CEO
+  
   const lider = _grupoAtual.lider;
   papeis[lider] = 'CEO';
   const resto = membros.filter(u => u !== lider);
-  // Shuffle papeis restantes
-  // BUG E FIX: Fisher-Yates no sorteio de papéis
+  
+  
   const _fy = (arr) => { const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; };
   const outros = _fy(list.filter(p => p !== 'CEO'));
   resto.forEach((uid, i) => { papeis[uid] = outros[i % outros.length]; });
   return papeis;
 }
 
-/* ════════════════════════════════════════
-   ENTRAR NO JOGO + POLLING
-════════════════════════════════════════ */
+
 function _entrarNoJogo(estado) {
   _pararPolling();
   _mostrarTela('screen-jogo-grupo');
@@ -700,7 +674,7 @@ async function _tickJogo() {
     _partidaEstado = estado;
     _renderEstado(estado);
 
-    // Se a fase mudou, re-renderiza completo
+    
     if (estado.fase !== faseAnterior) {
       _renderFase(estado);
     }
@@ -708,7 +682,7 @@ async function _tickJogo() {
     if (estado.status === 'encerrada') {
       _encerrar(estado);
     }
-  } catch(e) { /* ignora */ }
+  } catch(e) {  }
 }
 
 function _pararPolling() {
@@ -717,9 +691,7 @@ function _pararPolling() {
   if (_timerInt)      { clearInterval(_timerInt);      _timerInt      = null; }
 }
 
-/* ════════════════════════════════════════
-   RENDER PRINCIPAL DO ESTADO
-════════════════════════════════════════ */
+
 function _renderEstado(estado) {
   _renderHeader(estado);
   _renderIndicadores(estado);
@@ -751,7 +723,7 @@ function _renderIndicadores(estado) {
     const cls   = v <= 4 ? 'jg-ind--critico' : v <= 7 ? 'jg-ind--alerta' : '';
     const labelsMap = (typeof BetaIndicadores !== 'undefined' && BetaIndicadores.LABELS) || {};
     const fullLabel = labelsMap[k] || k;
-    // Remove emoji do label
+    
     const label = fullLabel.replace(/^[^\w]+ ?/, '').split(' ').slice(0, 2).join(' ');
     const deltaHtml = delta !== 0
       ? `<div class="jg-ind-delta jg-ind-delta--${delta > 0 ? 'pos' : 'neg'}">${delta > 0 ? '+' : ''}${delta}</div>`
@@ -793,16 +765,14 @@ function _renderAvatares(estado) {
   }).join('');
 }
 
-/* ════════════════════════════════════════
-   RENDER POR FASE
-════════════════════════════════════════ */
+
 function _renderFase(estado) {
   const fase  = estado.fase || 'votacao';
   const corpo = document.getElementById('jg-corpo');
   const screen= document.getElementById('screen-jogo-grupo');
   if (!corpo) return;
 
-  // Atualiza badge
+  
   const badgeTexts = {
     alerta:      '🚨 Nova Crise',
     deliberacao: '💬 Deliberação',
@@ -814,7 +784,7 @@ function _renderFase(estado) {
   const badge = document.getElementById('jg-fase-badge');
   if (badge) badge.textContent = badgeTexts[fase] || fase;
 
-  // Classe no screen para temas
+  
   if (screen) {
     screen.className = screen.className.replace(/jg-fase--\S+/g, '').trim();
     screen.classList.add('jg-fase--' + fase);
@@ -830,11 +800,11 @@ function _renderFase(estado) {
     default:            corpo.innerHTML = _htmlFaseVotacao(estado);
   }
 
-  // Lógica do líder: auto-avança fase quando timer esgota
+  
   _agendarTransicaoFase(estado);
 }
 
-/* ── FASE: ALERTA ── */
+
 function _htmlFaseAlerta(estado) {
   const sit = estado.situacaoAtual || {};
   const sev = _calcSeveridade(estado.indicators || {});
@@ -853,7 +823,7 @@ function _htmlFaseAlerta(estado) {
   </div>`;
 }
 
-/* ── FASE: DELIBERAÇÃO ── */
+
 function _htmlFaseDeliberacao(estado) {
   const sit     = estado.situacaoAtual || {};
   const choices = sit.choices || sit.opcoes || [];
@@ -861,7 +831,7 @@ function _htmlFaseDeliberacao(estado) {
   const player  = _getPlayer();
   const jogadores = estado.jogadores || {};
 
-  // Insight do papel
+  
   const papelId = _papelMeu || (_papeis[player?.uid]);
   const papel = papelId ? PAPEIS[papelId] : null;
   let insightHtml = '';
@@ -880,7 +850,7 @@ function _htmlFaseDeliberacao(estado) {
     }
   }
 
-  // Sinais dos outros
+  
   const outrosSinais = Object.entries(sinaisOthers)
     .filter(([uid]) => uid !== player?.uid && sinaisOthers[uid])
     .map(([uid, sinal]) => {
@@ -889,7 +859,7 @@ function _htmlFaseDeliberacao(estado) {
       return sInfo ? `<div class="jg-sinal-outro">${sInfo.emoji} <span>${nome.split(' ')[0]}</span></div>` : '';
     }).join('');
 
-  // Opções preview
+  
   const opcoesHtml = choices.map((c, i) => {
     const letra = String.fromCharCode(65 + i);
     return `<div class="jg-opcao-preview">
@@ -898,7 +868,7 @@ function _htmlFaseDeliberacao(estado) {
     </div>`;
   }).join('');
 
-  // Grid de sinais
+  
   const sinaisHtml = SINAIS.map(s => `
     <button class="jg-sinal-btn ${_meuSinal === s.id ? 'jg-sinal-btn--ativo' : ''}"
       onclick="SalaMode.enviarSinal('${s.id}')">
@@ -919,7 +889,7 @@ function _htmlFaseDeliberacao(estado) {
   </div>`;
 }
 
-/* ── FASE: VOTAÇÃO ── */
+
 function _htmlFaseVotacao(estado) {
   const sit    = estado.situacaoAtual || {};
   const choices= sit.choices || sit.opcoes || [];
@@ -960,14 +930,14 @@ function _htmlFaseVotacao(estado) {
   </div>`;
 }
 
-/* ── FASE: REVELAÇÃO ── */
+
 function _htmlFaseRevelacao(estado) {
   const votos    = estado.votos || {};
   const decisao  = estado.decisaoFinal;
   const sit      = estado.situacaoAtual || {};
   const choices  = sit.choices || sit.opcoes || [];
 
-  // Contagem
+  
   const contagem = {};
   Object.values(votos).forEach(v => {
     const letra = typeof v === 'object' ? v.letra : v;
@@ -1004,7 +974,7 @@ function _htmlFaseRevelacao(estado) {
   </div>`;
 }
 
-/* ── FASE: IMPACTO ── */
+
 function _htmlFaseImpacto(estado) {
   const atual = estado.indicators || {};
   const antes = _indsAnteriores || atual;
@@ -1032,7 +1002,7 @@ function _htmlFaseImpacto(estado) {
   </div>`;
 }
 
-/* ── FASE: PLACAR ── */
+
 function _htmlFasePlacar(estado) {
   const grupos = estado.placarGrupos || [];
   const meu    = _grupoAtual?.nomeGrupo;
@@ -1072,9 +1042,7 @@ function _htmlFasePlacar(estado) {
   </div>`;
 }
 
-/* ════════════════════════════════════════
-   TIMER CIRCULAR POR FASE
-════════════════════════════════════════ */
+
 function _iniciarTimerFase(estado) {
   if (_timerInt) { clearInterval(_timerInt); _timerInt = null; }
   const fase     = estado.fase || 'votacao';
@@ -1086,7 +1054,7 @@ function _iniciarTimerFase(estado) {
   const timerRing = document.getElementById('jg-timer-ring');
   const timerWrap = document.getElementById('jg-timer-wrap');
 
-  // Cor do anel por fase
+  
   const corFase = {
     alerta:      '#e74c3c',
     deliberacao: '#f39c12',
@@ -1116,7 +1084,7 @@ function _iniciarTimerFase(estado) {
 }
 
 function _agendarTransicaoFase(estado) {
-  // Só o líder processa transições
+  
   if (_grupoAtual?.lider !== _getPlayer()?.uid) return;
 
   const fase    = estado.fase || 'votacao';
@@ -1124,12 +1092,12 @@ function _agendarTransicaoFase(estado) {
   const inicio  = estado.faseInicio ? new Date(estado.faseInicio).getTime() : Date.now();
   const restante= Math.max(0, (inicio + duracao * 1000) - Date.now());
 
-  // Limpa agendamento anterior
+  
   if (window._salaFaseTimeout) clearTimeout(window._salaFaseTimeout);
 
   window._salaFaseTimeout = setTimeout(() => {
     _transitarFase(estado, fase);
-  }, restante + 300); // +300ms de margem
+  }, restante + 300); 
 }
 
 async function _transitarFase(estadoAtual, faseAtual) {
@@ -1138,14 +1106,14 @@ async function _transitarFase(estadoAtual, faseAtual) {
 
   const proxIdx = FASES_SEQUENCIA.indexOf(faseAtual) + 1;
 
-  // Última fase do ciclo: placar
+  
   if (faseAtual === 'placar') {
     const rodadaAtual = estadoAtual.rodadaAtual || 0;
     const totalRodadas= estadoAtual.totalRodadas || 15;
     const proxRodada  = rodadaAtual + 1;
 
     if (proxRodada >= totalRodadas) {
-      // Jogo terminou
+      
       const scoreFinal = _calcScore(_betaState);
       await gsp.encerrarPartida(_sala.codigo, _partidaId, {
         grupo:   _grupoAtual.nomeGrupo,
@@ -1158,7 +1126,7 @@ async function _transitarFase(estadoAtual, faseAtual) {
       return;
     }
 
-    // Próxima rodada: volta para alerta
+    
     const nextState = _betaState;
     const nextRound = nextState?.gameRounds?.[proxRodada] || {};
     _indsAnteriores = { ...(estadoAtual.indicators || {}) };
@@ -1179,22 +1147,22 @@ async function _transitarFase(estadoAtual, faseAtual) {
     return;
   }
 
-  // Transição normal entre fases
+  
   const proxFase = FASES_SEQUENCIA[proxIdx];
   if (!proxFase) return;
 
   let extra = {};
 
-  // Na revelação: calcular decisão final antes de avançar
+  
   if (faseAtual === 'votacao') {
     const votos = estadoAtual.votos || {};
     const decisao = _calcDecisao(votos, estadoAtual);
     extra = { decisaoFinal: decisao };
-    // Enfileira processamento do efeito da decisão
+    
     _aplicarDecisao(estadoAtual, decisao);
   }
 
-  // No impacto: snapshot dos indicadores antes de revelar no placar
+  
   if (faseAtual === 'revelacao') {
     _indsAnteriores = { ...(estadoAtual.indicators || {}) };
   }
@@ -1205,7 +1173,7 @@ async function _transitarFase(estadoAtual, faseAtual) {
     faseDuracao:DURACAO[proxFase],
     ...extra,
   }).catch(async () => {
-    // Fallback: usa avancarRodada com campo extra
+    
     await gsp.avancarRodada(_sala.codigo, _partidaId, {
       novaRodada:    estadoAtual.rodadaAtual || 0,
       indicators:    estadoAtual.indicators,
@@ -1226,14 +1194,14 @@ function _calcDecisao(votos, estado) {
     const letra = typeof v === 'object' ? v.letra : v;
     if (letra) contagem[letra] = (contagem[letra] || 0) + 1;
   });
-  // Empate: CEO decide
+  
   const sorted = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
-  if (!sorted.length) return 'A'; // fallback
+  if (!sorted.length) return 'A'; 
   return sorted[0][0];
 }
 
 async function _aplicarDecisao(estado, decisao) {
-  // Aplica efeitos no BetaState local (só o líder)
+  
   try {
     if (!_betaState) return;
     const idx    = decisao.charCodeAt(0) - 65;
@@ -1245,30 +1213,28 @@ async function _aplicarDecisao(estado, decisao) {
       BetaState.nextRound();
       _betaState = JSON.parse(JSON.stringify(BetaState.get()));
     }
-    // Atualiza indicators no Firestore para a fase de impacto
+    
     const gsp = _GSP();
     await gsp?.avancarFase?.(_sala.codigo, _partidaId, {
       fase:        'impacto',
-      faseInicio:  Date.now() + 5500, // Após revelacao
+      faseInicio:  Date.now() + 5500, 
       faseDuracao: DURACAO.impacto,
       indicators:  _betaState.indicators,
     }).catch(() => {});
   } catch(e) { console.error('[ApliDecisao]', e); }
 }
 
-/* ════════════════════════════════════════
-   AÇÕES DO JOGADOR
-════════════════════════════════════════ */
+
 async function votar(letra) {
   if (!_sala || !_partidaId || !_getPlayer()?.uid) return;
   if (_faseAtual !== 'votacao') return;
   _meuVoto = _meuVoto ? { ..._meuVoto, letra } : { letra, confianca: 'moderado' };
   try {
     const gsp = _GSP();
-    // Tenta versão nova com objeto, fallback para string
+    
     await (gsp.registrarVotoCompleto?.(_sala.codigo, _partidaId, _getPlayer().uid, _meuVoto)
       ?? gsp.registrarVoto(_sala.codigo, _partidaId, _getPlayer().uid, letra));
-    // Re-renderiza só os botões
+    
     const corpo = document.getElementById('jg-corpo');
     if (corpo && _partidaEstado) corpo.innerHTML = _htmlFaseVotacao({ ..._partidaEstado, votos: { ...(_partidaEstado.votos || {}), [_getPlayer().uid]: _meuVoto } });
   } catch(e) { _mostrarAviso('Erro ao votar.'); }
@@ -1277,7 +1243,7 @@ async function votar(letra) {
 async function setConfianca(nivel) {
   if (_faseAtual !== 'votacao') return;
   _meuVoto = _meuVoto ? { ..._meuVoto, confianca: nivel } : { letra: null, confianca: nivel };
-  // Re-renderiza confiança
+  
   const corpo = document.getElementById('jg-corpo');
   if (corpo && _partidaEstado) {
     const fake = { ..._partidaEstado, votos: { ...(_partidaEstado.votos || {}), [_getPlayer()?.uid]: _meuVoto } };
@@ -1293,8 +1259,8 @@ async function enviarSinal(sinalId) {
     if (gsp.registrarSinal) {
       await gsp.registrarSinal(_sala.codigo, _partidaId, _getPlayer()?.uid, sinalId);
     }
-  } catch(e) { /* silencioso */ }
-  // Re-render sinais
+  } catch(e) {  }
+  
   if (_partidaEstado) {
     const fake = { ..._partidaEstado, sinais: { ...(_partidaEstado.sinais || {}), [_getPlayer()?.uid]: sinalId } };
     if (document.getElementById('jg-corpo')) {
@@ -1303,9 +1269,7 @@ async function enviarSinal(sinalId) {
   }
 }
 
-/* ════════════════════════════════════════
-   ENCERRAR JOGO
-════════════════════════════════════════ */
+
 function _encerrar(estado) {
   _pararPolling();
   if (window._salaFaseTimeout) clearTimeout(window._salaFaseTimeout);
@@ -1325,7 +1289,7 @@ function _renderResultado(estado, score) {
     scoreEl.style.color = score >= 70 ? 'var(--good)' : score >= 45 ? 'var(--warn,#e67e22)' : 'var(--danger)';
   }
 
-  // Indicadores finais
+  
   const indsEl = document.getElementById('ns-res-inds');
   if (indsEl && estado.indicators) {
     const labelsMap = (typeof BetaIndicadores !== 'undefined' && BetaIndicadores.LABELS) || {};
@@ -1341,7 +1305,7 @@ function _renderResultado(estado, score) {
     }).join('');
   }
 
-  // Conquistas
+  
   const conquistas = _calcConquistas(estado);
   const conquEl = document.getElementById('ns-res-conquistas');
   if (conquEl) {
@@ -1377,9 +1341,7 @@ async function _verificarEspera() {
   }
 }
 
-/* ════════════════════════════════════════
-   PÓDIO DA SALA
-════════════════════════════════════════ */
+
 async function irPodio() {
   if (!_sala) { _mostrarAviso('Você não está em nenhuma sala.'); return; }
   _mostrarTela('screen-podio-sala');
@@ -1400,7 +1362,7 @@ async function _carregarPodio() {
     if (!sala.podioVisivel) {
       if (espera) espera.style.display = 'flex';
       lista.innerHTML = '';
-      // Tenta novamente em 5s
+      
       setTimeout(_carregarPodio, 5000);
       return;
     }
@@ -1435,9 +1397,7 @@ async function _carregarPodio() {
   }
 }
 
-/* ════════════════════════════════════════
-   ANFITRIÃO
-════════════════════════════════════════ */
+
 async function anfRevelar() {
   const gsp = _GSP();
   if (!gsp || !_sala) return;
@@ -1478,7 +1438,7 @@ async function _renderPainelAnfCompleto() {
   const body = document.getElementById('ns-painel-anf-body');
   if (!body) return;
   body.innerHTML = '<div class="podio-loading">Carregando...</div>';
-  // Reutiliza render do inline
+  
   await _renderPainelAnf();
   body.innerHTML = document.getElementById('ns-painel-anf')?.innerHTML || '';
 }
@@ -1526,9 +1486,7 @@ async function _removerGrupo(nome) {
   } catch(e) { _mostrarAviso('Erro: ' + e.message); }
 }
 
-/* ════════════════════════════════════════
-   HELPERS
-════════════════════════════════════════ */
+
 function _calcSeveridade(indicators) {
   if (!indicators) return 'medio';
   const vals = Object.values(indicators);
@@ -1541,7 +1499,7 @@ function _calcSeveridade(indicators) {
 }
 
 function _calcTendencia(indicador, estado) {
-  // Usa histórico do BetaState se disponível
+  
   if (!_betaState?.history) return 0;
   const hist = _betaState.history;
   const len  = hist.length;
@@ -1552,13 +1510,10 @@ function _calcTendencia(indicador, estado) {
   return cur - prev;
 }
 
-// _atualizarModoSala removida daqui — gerenciada exclusivamente por mainBeta.js
 
-/* ════════════════════════════════════════
-   COMPATIBILIDADE COM BetaUI
-   (re-exporta funções que BetaUI chama)
-════════════════════════════════════════ */
-// Exposições para onclick no HTML legado:
+
+
+
 window.entrarNaSala      = () => entrar();
 window.fecharModalSala   = () => fecharModal();
 window.sairDaSala        = () => sair();
@@ -1577,13 +1532,13 @@ window.anfitriaoNovoCiclo    = () => anfNovoCiclo();
 window.anfitriaoEncerrarSala = () => anfEncerrar();
 window.abrirGerenciarGrupos  = () => abrirGerenciar();
 window.fecharGerenciarGrupos = () => fecharGerenciar();
-// _atualizarModoSala é definida em mainBeta.js — não re-exportar daqui
+
 window._restaurarSala        = () => restaurar();
 window._restaurarGrupo       = () => restaurar();
 window._atualizarBadgeSala   = () => _atualizarBadge();
 window._atualizarBadgeGrupo  = () => _atualizarBadge();
 
-// Bridging para BetaUI namespace
+
 if (typeof BetaUI !== 'undefined') {
   BetaUI.abrirModalSala      = () => abrirModal();
   BetaUI.fecharModalSala     = () => fecharModal();
@@ -1602,30 +1557,28 @@ if (typeof BetaUI !== 'undefined') {
   BetaUI.irPainelAnf         = () => irPainelAnf();
 }
 
-/* ════════════════════════════════════════
-   INIT AUTOMÁTICO
-════════════════════════════════════════ */
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', restaurar);
 } else {
   restaurar();
 }
 
-/* API PÚBLICA */
+
 return {
-  // Modal
+  
   abrirModal, fecharModal, entrar, sair,
-  // Grupos
+  
   irGrupos, recarregarGrupos, abrirCriarGrupo, fecharCriarGrupo,
   confirmarCriarGrupo, entrarGrupo, _selecionarCor,
-  // Lobby + jogo
+  
   irLobby, iniciarPartida, votar, setConfianca, enviarSinal,
-  // Pódio
+  
   irPodio,
-  // Anfitrião
+  
   anfRevelar, anfNovoCiclo, anfEncerrar, irPainelAnf,
   abrirGerenciar, fecharGerenciar, _removerGrupo,
-  // Estado
+  
   getSala:   () => _sala,
   getGrupo:  () => _grupoAtual,
   getPapel:  () => _papelMeu,

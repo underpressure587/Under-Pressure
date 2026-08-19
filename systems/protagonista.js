@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════
-   BETA · PROTAGONISTA · v5.0
-   NPCs com memória acumulada e frases contextuais.
-   Frases expandidas (8 pos / 8 neg) para reduzir repetição.
-   Estado do gestor influencia as reações.
-═══════════════════════════════════════════════════════ */
+
 
 const Protagonista = (() => {
 
@@ -30,7 +25,7 @@ const Protagonista = (() => {
         ],
     };
 
-    // Frases expandidas — 8 variações por polaridade para reduzir repetição em 15 rodadas
+    
     const FRASES_POS = [
         "Aprovou a decisão. Isso fortalece sua credibilidade com o time.",
         "Ficou satisfeito com a direção tomada. Seu mandato ganha respaldo.",
@@ -52,7 +47,7 @@ const Protagonista = (() => {
         "Registrou formalmente sua objeção. O capital político sofreu.",
     ];
 
-    // Frases especiais quando gestor está esgotado ou com capital baixo
+    
     const FRASES_PREOCUPACAO = [
         "Perguntou se você estava bem. O desgaste está visível para o time.",
         "Comentou nos bastidores que a gestão parece sobrecarregada.",
@@ -63,7 +58,7 @@ const Protagonista = (() => {
         const npcs = NPCS[sector] || [];
         if (!npcs.length) return null;
 
-        // NPC mais impactado
+        
         let maisAfetado  = null;
         let maiorImpacto = 0;
 
@@ -80,7 +75,7 @@ const Protagonista = (() => {
             (a, k) => a + (efeitosEmpresa[k] ?? 0), 0
         );
 
-        // Verifica esgotamento visível
+        
         const esgotamento = state?.gestor?.esgotamento ?? 0;
         if (esgotamento >= 7 && Math.random() < 0.35) {
             const frase = FRASES_PREOCUPACAO[Math.floor(Math.random() * FRASES_PREOCUPACAO.length)];
