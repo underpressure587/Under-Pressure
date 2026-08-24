@@ -840,6 +840,38 @@ a { color: inherit; text-decoration: none; }
 .admin-historia-badge { font-size: .62rem; font-weight: 700; padding: 3px 9px; border-radius: 10px; text-transform: uppercase; letter-spacing: .06em; }
 .admin-historia-badge.ativa   { background: rgba(34,197,94,.12); color: #22c55e; }
 .admin-historia-badge.inativa { background: var(--bg4); color: var(--t3); }
+.admin-historia-badge.rascunho { background: var(--bg4); color: var(--t3); }
+.admin-historia-badge.aguardando_aprovacao { background: rgba(245,158,11,.14); color: #f59e0b; }
+.admin-historia-badge.publicada { background: rgba(34,197,94,.12); color: #22c55e; }
+
+/* Tela 1 — setores */
+.hist-setores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.hist-setor-card {
+  background: var(--bg3); border: 1px solid var(--line2); border-radius: var(--r2);
+  padding: 18px 10px; text-align: center; cursor: pointer; transition: all .18s;
+}
+.hist-setor-card:hover { border-color: var(--gold-bd); background: var(--bg4); }
+.hist-setor-card .ic { font-size: 1.6rem; }
+.hist-setor-card .nome { font-size: .8rem; font-weight: 700; color: var(--t1); margin-top: 6px; }
+.hist-setor-card .qtd { font-size: .68rem; color: var(--t3); margin-top: 2px; }
+
+/* Telas 2/3 — topbar comum */
+.hist-topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.hist-topbar-titulo { font-size: .84rem; font-weight: 700; color: var(--t1); flex: 1; }
+
+/* Tela 3 — editor */
+.hist-editor-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 900px) { .hist-editor-grid { grid-template-columns: 2.2fr 1fr; } }
+.hist-field-lbl { display: block; font-size: .68rem; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .04em; margin: 12px 0 4px; }
+.hist-secoes-grid { display: grid; grid-template-columns: 1fr; gap: 4px 16px; }
+@media (min-width: 700px) { .hist-secoes-grid { grid-template-columns: 1fr 1fr; } }
+.hist-editor-actions { display: flex; align-items: center; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+.hist-checklist-aviso { font-size: .7rem; color: var(--err); }
+.hist-editor-col-side { background: var(--bg3); border: 1px solid var(--line2); border-radius: var(--r2); padding: 14px; align-self: start; }
+.hist-ind-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.hist-ind-row label { flex: 1; font-size: .74rem; color: var(--t2); }
+.hist-ind-row input { width: 64px; }
+.hist-autoria { font-size: .72rem; color: var(--t3); line-height: 1.6; }
 
 
 .admin-glossario-row {

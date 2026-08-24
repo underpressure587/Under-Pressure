@@ -2524,82 +2524,383 @@ const ADMIN = (() => {
   }
 
   
-  const _HISTORIAS_CONFIG = {
-    tecnologia: [
-      { id: 0, nome: 'SaaS B2B', sub: 'Dívida técnica e rotatividade' },
-      { id: 1, nome: 'EdTech B2C', sub: 'Pós-pandemia e pivot' },
-      { id: 2, nome: 'Scale-up de IA', sub: 'Pipeline travado' },
-    ],
-    varejo: [
-      { id: 0, nome: 'Rede Omnichannel', sub: 'Margem em queda' },
-      { id: 1, nome: 'Rede de Farmácias', sub: 'Concorrência nacional' },
-      { id: 2, nome: 'Atacarejo Regional', sub: 'Expansão desequilibrada' },
-    ],
-    logistica: [
-      { id: 0, nome: 'Last-Mile Delivery', sub: 'SLA em descumprimento' },
-      { id: 1, nome: 'Cadeia do Frio', sub: 'Falha no monitoramento' },
-      { id: 2, nome: 'Fulfillment E-commerce', sub: 'Volume no limite' },
-    ],
-    industria: [
-      { id: 0, nome: 'Metalúrgica', sub: 'Segurança e ISO em risco' },
-      { id: 1, nome: 'Embalagens ESG', sub: 'Adequação urgente' },
-      { id: 2, nome: 'Química Ambiental', sub: 'Autuação do IBAMA' },
-    ],
+  const _SETORES = ['tecnologia', 'varejo', 'logistica', 'industria'];
+
+  const _INDICADORES_SETOR = {
+    tecnologia: ['financeiro','rh','clientes','qualidade','produtividade','reputacao','inovacao','seguranca'],
+    varejo:     ['financeiro','rh','clientes','processos','margem','estoque','marca','digital'],
+    logistica:  ['financeiro','rh','clientes','processos','sla','frota','seguranca','tecnologia'],
+    industria:  ['financeiro','rh','clientes','processos','seguranca','manutencao','qualidade','conformidade'],
   };
 
-  async function carregarHistorias() {
-    const lista = document.getElementById('admin-historias-lista');
-    lista.innerHTML = '<div class="admin-loading">Carregando...</div>';
-    let estadoAtual = {};
-    try {
-      const snap = await _get('config/historias');
-      estadoAtual = _parseFields(snap.fields || {});
-    } catch(e) {  }
+  const _STATUS_LABEL = {
+    rascunho: 'Rascunho',
+    aguardando_aprovacao: 'Aguardando aprovação',
+    publicada: 'Publicada',
+  };
 
-    let html = '';
-    for (const [setor, historias] of Object.entries(_HISTORIAS_CONFIG)) {
-      html += `<div class="admin-sec-title">${_emojiSetor(setor)} ${setor.charAt(0).toUpperCase()+setor.slice(1)}</div>`;
-      historias.forEach(h => {
-        const chave = `${setor}_${h.id}`;
-        const ativa = estadoAtual[chave] !== false; 
-        html += `
-          <div class="admin-historia-row">
-            <div class="admin-historia-info">
-              <div class="admin-historia-nome">${h.nome}</div>
-              <div class="admin-historia-sub">${h.sub}</div>
-            </div>
-            <span class="admin-historia-badge ${ativa ? 'ativa' : 'inativa'}" id="hist-badge-${chave}">${ativa ? 'Ativa' : 'Inativa'}</span>
-            <label class="admin-switch" style="margin-left:8px">
-              <input type="checkbox" ${ativa ? 'checked' : ''} onchange="ADMIN.toggleHistoria('${chave}', this.checked)">
-              <span class="admin-switch-track"></span>
-            </label>
-          </div>`;
-      });
-    }
-    lista.innerHTML = html;
+  let _histSetorAtual   = null;
+  let _histListaCache   = [];
+  let _histEditandoId   = null;
+  let _histEditandoDoc  = null;
+
+  function _souOwner() {
+    const meUID = window._player?.uid || '';
+    return !!meUID && meUID === _adminOwner;
   }
 
-  async function toggleHistoria(chave, ativa) {
-    await _opFeedback({
-      etapas: ['Verificando permissões…', `${ativa ? 'Ativando' : 'Desativando'} história…`],
-      executar: async () => {
-        const campos = { [chave]: _fsBool(ativa) };
-        const mask   = Object.keys(campos).map(k => `updateMask.fieldPaths=${k}`).join('&');
-        const tok    = await _token();
-        const r = await fetch(`${FS}/config/historias?${mask}`, {
-          method:  'PATCH',
-          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ fields: campos })
-        });
-        if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
-        const badge = document.getElementById(`hist-badge-${chave}`);
-        if (badge) {
-          badge.textContent = ativa ? 'Ativa' : 'Inativa';
-          badge.className   = `admin-historia-badge ${ativa ? 'ativa' : 'inativa'}`;
+  
+  async function carregarHistorias() {
+    document.getElementById('hist-view-setores').style.display = '';
+    document.getElementById('hist-view-lista').style.display = 'none';
+    document.getElementById('hist-view-editor').style.display = 'none';
+
+    const grid = document.getElementById('hist-setores-grid');
+    grid.innerHTML = '<div class="admin-loading"></div>';
+    try {
+      const res = await _query({
+        structuredQuery: { from: [{ collectionId: 'historias' }] }
+      });
+      const todas = (Array.isArray(res) ? res : [])
+        .filter(r => r.document)
+        .map(r => _parseFields(r.document.fields || {}));
+
+      grid.innerHTML = _SETORES.map(s => {
+        const qtd = todas.filter(h => h.setor === s).length;
+        const nome = s.charAt(0).toUpperCase() + s.slice(1);
+        return `
+          <div class="hist-setor-card" onclick="ADMIN.abrirSetorHistorias('${s}')">
+            <div class="ic">${_emojiSetor(s)}</div>
+            <div class="nome">${nome}</div>
+            <div class="qtd">${qtd} história${qtd === 1 ? '' : 's'}</div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      grid.innerHTML = `<div class="admin-empty">Erro ao carregar: ${_esc(e.message)}</div>`;
+    }
+  }
+
+  function voltarParaSetores() {
+    document.getElementById('hist-view-lista').style.display = 'none';
+    document.getElementById('hist-view-editor').style.display = 'none';
+    document.getElementById('hist-view-setores').style.display = '';
+    carregarHistorias();
+  }
+
+  async function abrirSetorHistorias(setor) {
+    _histSetorAtual = setor;
+    document.getElementById('hist-view-setores').style.display = 'none';
+    document.getElementById('hist-view-editor').style.display = 'none';
+    document.getElementById('hist-view-lista').style.display = '';
+    document.getElementById('hist-lista-titulo').textContent =
+      `${_emojiSetor(setor)} ${setor.charAt(0).toUpperCase() + setor.slice(1)} · Histórias`;
+
+    const corpo = document.getElementById('hist-lista-corpo');
+    corpo.innerHTML = '<div class="admin-loading"></div>';
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'historias' }],
+          where: { fieldFilter: { field: { fieldPath: 'setor' }, op: 'EQUAL', value: _fsStr(setor) } },
         }
-        _registrarAuditoria(ativa ? `História ${chave} ativada` : `História ${chave} desativada`);
+      });
+      _histListaCache = (Array.isArray(res) ? res : [])
+        .filter(r => r.document)
+        .map(r => ({ id: r.document.name.split('/').pop(), ..._parseFields(r.document.fields || {}) }));
+
+      if (!_histListaCache.length) {
+        corpo.innerHTML = '<div class="admin-empty">Nenhuma história neste setor ainda. Crie a primeira acima.</div>';
+        return;
+      }
+
+      corpo.innerHTML = _histListaCache.map(h => {
+        const status = h.status || 'rascunho';
+        return `
+          <div class="admin-historia-row">
+            <div class="admin-historia-info" style="cursor:pointer" onclick="ADMIN.abrirEditorHistoria('${h.id}')">
+              <div class="admin-historia-nome">${_esc(h.badge || '(sem badge)')}</div>
+              <div class="admin-historia-sub">${_esc(h.subtitulo || '')} ${h.criadoPorNome ? `· por ${_esc(h.criadoPorNome)}` : ''}</div>
+            </div>
+            <span class="admin-historia-badge ${status}">${_STATUS_LABEL[status] || status}</span>
+            ${status === 'publicada' ? `
+              <label class="admin-switch" style="margin-left:8px">
+                <input type="checkbox" ${h.ativa !== false ? 'checked' : ''} onchange="ADMIN.toggleHistoriaAtiva('${h.id}', this.checked)">
+                <span class="admin-switch-track"></span>
+              </label>` : ''}
+          </div>`;
+      }).join('');
+    } catch(e) {
+      corpo.innerHTML = `<div class="admin-empty">Erro ao carregar: ${_esc(e.message)}</div>`;
+    }
+  }
+
+  function voltarParaLista() {
+    document.getElementById('hist-view-editor').style.display = 'none';
+    document.getElementById('hist-view-lista').style.display = '';
+  }
+
+  function _renderIndicadoresEditor(setor, valores) {
+    const chaves = _INDICADORES_SETOR[setor] || [];
+    const wrap = document.getElementById('hist-indicadores-lista');
+    wrap.innerHTML = chaves.map(k => `
+      <div class="hist-ind-row">
+        <label>${k}</label>
+        <input type="number" class="admin-input" id="hist-ind-${k}" value="${valores?.[k] ?? 10}" min="0" max="20">
+      </div>`).join('');
+  }
+
+  function novaHistoria() {
+    _histEditandoId = null;
+    _histEditandoDoc = null;
+    document.getElementById('hist-view-lista').style.display = 'none';
+    document.getElementById('hist-view-editor').style.display = '';
+    document.getElementById('hist-editor-titulo').textContent = 'Nova História';
+    document.getElementById('hist-editor-status-badge').textContent = '';
+    document.getElementById('hist-editor-status-badge').className = 'admin-historia-badge';
+
+    ['badge','subtitulo','empresa-titulo','empresa-corpo','mercado-titulo','mercado-corpo',
+     'situacao-titulo','situacao-corpo','desafio-titulo','desafio-corpo','alerta-titulo','rodape']
+      .forEach(f => { const el = document.getElementById(`hist-f-${f}`); if (el) el.value = ''; });
+
+    _renderIndicadoresEditor(_histSetorAtual, null);
+    document.getElementById('hist-autoria-info').textContent = 'Ainda não salva.';
+    document.getElementById('hist-aprovacao-info').textContent = '—';
+    document.getElementById('hist-aprovacao-acoes').style.display = 'none';
+    document.getElementById('hist-btn-despublicar').style.display = 'none';
+    document.getElementById('hist-checklist-aviso').textContent = '';
+  }
+
+  async function abrirEditorHistoria(id) {
+    const h = _histListaCache.find(x => x.id === id);
+    if (!h) return;
+    _histEditandoId = id;
+    _histEditandoDoc = h;
+    _histSetorAtual = h.setor;
+
+    document.getElementById('hist-view-lista').style.display = 'none';
+    document.getElementById('hist-view-editor').style.display = '';
+    document.getElementById('hist-editor-titulo').textContent = h.badge || 'Editar História';
+
+    const status = h.status || 'rascunho';
+    const badgeEl = document.getElementById('hist-editor-status-badge');
+    badgeEl.textContent = _STATUS_LABEL[status] || status;
+    badgeEl.className = `admin-historia-badge ${status}`;
+
+    document.getElementById('hist-f-badge').value = h.badge || '';
+    document.getElementById('hist-f-subtitulo').value = h.subtitulo || '';
+    document.getElementById('hist-f-empresa-titulo').value = h.secaoEmpresaTitulo || 'A Empresa';
+    document.getElementById('hist-f-empresa-corpo').value = h.secaoEmpresaCorpo || '';
+    document.getElementById('hist-f-mercado-titulo').value = h.secaoMercadoTitulo || 'Contexto de Mercado';
+    document.getElementById('hist-f-mercado-corpo').value = h.secaoMercadoCorpo || '';
+    document.getElementById('hist-f-situacao-titulo').value = h.secaoSituacaoTitulo || 'Situação Atual';
+    document.getElementById('hist-f-situacao-corpo').value = h.secaoSituacaoCorpo || '';
+    document.getElementById('hist-f-desafio-titulo').value = h.secaoDesafioTitulo || 'Desafio Estratégico';
+    document.getElementById('hist-f-desafio-corpo').value = h.secaoDesafioCorpo || '';
+    document.getElementById('hist-f-alerta-titulo').value = h.alertaTitulo || '';
+    document.getElementById('hist-f-rodape').value = h.rodape || '';
+
+    _renderIndicadoresEditor(h.setor, h.indicadoresIniciais || null);
+
+    const contribuidores = Array.isArray(h.contribuidoresNomes) ? h.contribuidoresNomes : [];
+    document.getElementById('hist-autoria-info').innerHTML =
+      `Criado por ${_esc(h.criadoPorNome || '—')}` +
+      (contribuidores.length ? `<br>Editado também por ${_esc(contribuidores.join(', '))}` : '');
+
+    const aprovEl = document.getElementById('hist-aprovacao-info');
+    const aprovAcoes = document.getElementById('hist-aprovacao-acoes');
+    if (status === 'aguardando_aprovacao') {
+      aprovEl.textContent = 'Aguardando o owner aprovar antes de ir ao ar.';
+      aprovAcoes.style.display = _souOwner() ? '' : 'none';
+    } else if (status === 'publicada') {
+      aprovEl.textContent = 'Publicada e aprovada.';
+      aprovAcoes.style.display = 'none';
+    } else {
+      aprovEl.textContent = 'Ainda em rascunho — nada enviado pro owner.';
+      aprovAcoes.style.display = 'none';
+    }
+
+    document.getElementById('hist-btn-despublicar').style.display = status === 'publicada' ? '' : 'none';
+    document.getElementById('hist-checklist-aviso').textContent = '';
+  }
+
+  function _lerCamposEditor() {
+    const g = id => document.getElementById(id)?.value?.trim() || '';
+    const setor = _histEditandoDoc?.setor || _histSetorAtual;
+    const chaves = _INDICADORES_SETOR[setor] || [];
+    const indicadoresIniciais = {};
+    chaves.forEach(k => {
+      const v = parseInt(document.getElementById(`hist-ind-${k}`)?.value, 10);
+      indicadoresIniciais[k] = Number.isFinite(v) ? v : 10;
+    });
+    return {
+      setor,
+      badge: g('hist-f-badge'),
+      subtitulo: g('hist-f-subtitulo'),
+      secaoEmpresaTitulo: g('hist-f-empresa-titulo'),
+      secaoEmpresaCorpo: g('hist-f-empresa-corpo'),
+      secaoMercadoTitulo: g('hist-f-mercado-titulo'),
+      secaoMercadoCorpo: g('hist-f-mercado-corpo'),
+      secaoSituacaoTitulo: g('hist-f-situacao-titulo'),
+      secaoSituacaoCorpo: g('hist-f-situacao-corpo'),
+      secaoDesafioTitulo: g('hist-f-desafio-titulo'),
+      secaoDesafioCorpo: g('hist-f-desafio-corpo'),
+      alertaTitulo: g('hist-f-alerta-titulo'),
+      rodape: g('hist-f-rodape'),
+      indicadoresIniciais,
+    };
+  }
+
+  function _checklistHistoriaFaltando(campos) {
+    const faltando = [];
+    if (!campos.badge) faltando.push('badge');
+    if (!campos.subtitulo) faltando.push('subtítulo');
+    if (!campos.secaoEmpresaCorpo) faltando.push('seção "A Empresa"');
+    if (!campos.secaoMercadoCorpo) faltando.push('seção "Contexto de Mercado"');
+    if (!campos.secaoSituacaoCorpo) faltando.push('seção "Situação Atual"');
+    if (!campos.secaoDesafioCorpo) faltando.push('seção "Desafio Estratégico"');
+    if (!campos.alertaTitulo) faltando.push('alerta');
+    if (!campos.rodape) faltando.push('rodapé');
+    return faltando;
+    
+  }
+
+  function _fsFieldsFromObj(obj) {
+    const out = {};
+    for (const k in obj) {
+      const v = obj[k];
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        out[k] = { mapValue: { fields: _fsFieldsFromObj(v) } };
+      } else if (Array.isArray(v)) {
+        out[k] = { arrayValue: { values: v.map(x => typeof x === 'string' ? _fsStr(x) : { mapValue: { fields: _fsFieldsFromObj(x) } }) } };
+      } else if (typeof v === 'number') {
+        out[k] = Number.isInteger(v) ? _fsInt(v) : { doubleValue: v };
+      } else if (typeof v === 'boolean') {
+        out[k] = _fsBool(v);
+      } else {
+        out[k] = _fsStr(v ?? '');
+      }
+    }
+    return out;
+  }
+
+  async function salvarHistoria(publicar) {
+    const campos = _lerCamposEditor();
+    if (!campos.badge) { _showAdminToast('Preencha ao menos o badge da história.', true); return; }
+
+    let faltando = [];
+    if (publicar) {
+      faltando = _checklistHistoriaFaltando(campos);
+      if (faltando.length) {
+        document.getElementById('hist-checklist-aviso').textContent =
+          `Faltando pra publicar: ${faltando.join(', ')}.`;
+        _showAdminToast('Complete o checklist antes de publicar.', true);
+        return;
+      }
+    }
+    document.getElementById('hist-checklist-aviso').textContent = '';
+
+    const meUID  = window._player?.uid  || '';
+    const meNome = window._player?.nome || 'Admin';
+    const isNovo = !_histEditandoId;
+    const statusAtual = _histEditandoDoc?.status || 'rascunho';
+
+    const doc = { ...campos };
+    if (isNovo) {
+      doc.status = 'rascunho';
+      doc.ativa = false;
+      doc.criadoPorUid = meUID;
+      doc.criadoPorNome = meNome;
+      doc.contribuidoresNomes = [];
+    } else {
+      doc.status = statusAtual;
+      doc.ativa = _histEditandoDoc?.ativa !== false;
+      doc.criadoPorUid = _histEditandoDoc?.criadoPorUid || meUID;
+      doc.criadoPorNome = _histEditandoDoc?.criadoPorNome || meNome;
+      const jaContribuiu = _histEditandoDoc?.contribuidoresNomes || [];
+      doc.contribuidoresNomes = (meUID && meUID !== doc.criadoPorUid && !jaContribuiu.includes(meNome))
+        ? [...jaContribuiu, meNome]
+        : jaContribuiu;
+    }
+    if (publicar) doc.status = 'aguardando_aprovacao';
+
+    const id = _histEditandoId || (`${campos.setor}-${Date.now().toString(36)}`);
+
+    await _opFeedback({
+      etapas: ['Verificando permissões…', publicar ? 'Enviando pra aprovação…' : 'Salvando…'],
+      executar: async () => {
+        const tok = await _token();
+        const fields = _fsFieldsFromObj(doc);
+        const mask = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
+        const r = await fetch(`${FS}/historias/${id}?${mask}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields })
+        });
+        if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,120)}`); }
+        _histEditandoId = id;
+        _histEditandoDoc = { id, ...doc };
+        _registrarAuditoria(publicar ? `História "${campos.badge}" enviada pra aprovação` : `História "${campos.badge}" salva`);
       },
-      sucesso: ativa ? 'História ativada com sucesso!' : 'História desativada.',
+      sucesso: publicar ? 'Enviado pro owner aprovar!' : 'Rascunho salvo!',
+      onSucesso: () => { abrirSetorHistorias(campos.setor); },
+    });
+  }
+
+  async function despublicarHistoria() {
+    if (!_histEditandoId) return;
+    const ok = await _confirmar({
+      titulo: 'Despublicar história',
+      mensagem: 'Ela volta pra rascunho e some da lista do jogador até ser publicada de novo.',
+      labelOk: 'Despublicar',
+      perigoso: true,
+    });
+    if (!ok) return;
+
+    await _opFeedback({
+      etapas: ['Despublicando…'],
+      executar: async () => {
+        await _patch(`historias/${_histEditandoId}`, { status: _fsStr('rascunho'), ativa: _fsBool(false) });
+        _registrarAuditoria(`História "${_histEditandoDoc?.badge || _histEditandoId}" despublicada`);
+      },
+      sucesso: 'Despublicada — voltou pra rascunho.',
+      onSucesso: () => abrirSetorHistorias(_histEditandoDoc?.setor || _histSetorAtual),
+    });
+  }
+
+  async function toggleHistoriaAtiva(id, ativa) {
+    await _opFeedback({
+      etapas: [`${ativa ? 'Ativando' : 'Desativando'} história…`],
+      executar: async () => {
+        await _patch(`historias/${id}`, { ativa: _fsBool(ativa) });
+        _registrarAuditoria(`História ${id} ${ativa ? 'ativada' : 'desativada'}`);
+      },
+      sucesso: ativa ? 'Ativada!' : 'Desativada.',
+    });
+  }
+
+  async function aprovarHistoria() {
+    if (!_histEditandoId || !_souOwner()) return;
+    await _opFeedback({
+      etapas: ['Aprovando e publicando…'],
+      executar: async () => {
+        await _patch(`historias/${_histEditandoId}`, { status: _fsStr('publicada'), ativa: _fsBool(true) });
+        _registrarAuditoria(`História "${_histEditandoDoc?.badge}" aprovada e publicada`);
+      },
+      sucesso: 'Publicada!',
+      onSucesso: () => abrirSetorHistorias(_histEditandoDoc?.setor || _histSetorAtual),
+    });
+  }
+
+  async function recusarHistoria() {
+    if (!_histEditandoId || !_souOwner()) return;
+    await _opFeedback({
+      etapas: ['Recusando…'],
+      executar: async () => {
+        await _patch(`historias/${_histEditandoId}`, { status: _fsStr('rascunho') });
+        _registrarAuditoria(`História "${_histEditandoDoc?.badge}" recusada pelo owner`);
+      },
+      sucesso: 'Recusada — voltou pra rascunho.',
+      onSucesso: () => abrirSetorHistorias(_histEditandoDoc?.setor || _histSetorAtual),
     });
   }
 
@@ -3876,7 +4177,9 @@ const _GLOSSARIO_PADRAO_SECOES = [
     abrirModalBan, fecharModalBan, confirmarBan, selecionarMotivo, _atualizarContadorDetalhe,
     carregarVersao, salvarChangelog, publicarChangelogJogadores, selecionarDuracaoChangelog, apagarChangelogJogadores,
     carregarDashboard, mudarPeriodoDash,
-    carregarHistorias, toggleHistoria,
+    carregarHistorias, voltarParaSetores, abrirSetorHistorias, voltarParaLista,
+    novaHistoria, abrirEditorHistoria, salvarHistoria, despublicarHistoria,
+    toggleHistoriaAtiva, aprovarHistoria, recusarHistoria,
     carregarGlossario, filtrarGlossario, abrirModalGlossario, fecharModalGlossario, salvarTermoGlossario, excluirTermoGlossario,
     toggleSecaoGlossario, abrirModalSecaoGlossario, fecharModalSecaoGlossario, salvarSecaoGlossario, excluirSecaoGlossario,
     importarGlossarioPadrao,
