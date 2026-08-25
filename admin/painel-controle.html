@@ -290,11 +290,18 @@
                 <label class="hist-field-lbl">Rodapé</label>
                 <textarea id="hist-f-rodape" class="admin-input" rows="2"></textarea>
 
-                <div class="hist-editor-actions">
+                <div class="hist-editor-actions" id="hist-editor-actions-normal">
                   <button class="admin-btn-sm" onclick="ADMIN.salvarHistoria(false)">Salvar</button>
                   <button class="admin-btn-sm admin-btn-ok" id="hist-btn-publicar" onclick="ADMIN.salvarHistoria(true)">Publicar</button>
                   <button class="admin-btn-sm admin-btn-danger" id="hist-btn-despublicar" style="display:none" onclick="ADMIN.despublicarHistoria()">Despublicar</button>
                   <span id="hist-checklist-aviso" class="hist-checklist-aviso"></span>
+                </div>
+                <div class="hist-editor-actions" id="hist-editor-actions-nativa" style="display:none">
+                  <span class="hist-autoria" id="hist-nativa-msg"></span>
+                  <label class="admin-switch" id="hist-nativa-toggle-wrap" style="margin-left:auto">
+                    <input type="checkbox" id="hist-nativa-toggle" onchange="ADMIN.toggleHistoriaNativa(this.checked)">
+                    <span class="admin-switch-track"></span>
+                  </label>
                 </div>
               </div>
 

@@ -843,6 +843,7 @@ a { color: inherit; text-decoration: none; }
 .admin-historia-badge.rascunho { background: var(--bg4); color: var(--t3); }
 .admin-historia-badge.aguardando_aprovacao { background: rgba(245,158,11,.14); color: #f59e0b; }
 .admin-historia-badge.publicada { background: rgba(34,197,94,.12); color: #22c55e; }
+.admin-historia-badge.nativa { background: var(--bg4); color: var(--t3); border: 1px dashed var(--line3); }
 
 /* Tela 1 — setores */
 .hist-setores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }

@@ -1924,6 +1924,18 @@ const ADMIN = (() => {
     if (_sectionPolling) { clearInterval(_sectionPolling); _sectionPolling = null; }
   }
 
+  function _pollHistorias() {
+    
+    
+    const editorAberto = document.getElementById('hist-view-editor')?.style.display !== 'none';
+    if (editorAberto) return; 
+
+    const listaAberta = document.getElementById('hist-view-lista')?.style.display !== 'none';
+    if (listaAberta && _histSetorAtual) { abrirSetorHistorias(_histSetorAtual); return; }
+
+    carregarHistorias();
+  }
+
   function _iniciarPollingSecao(id) {
     _pararPollingSecao();
     if (_SECOES_RTDB.has(id)) return; 
@@ -1931,7 +1943,7 @@ const ADMIN = (() => {
       jogadores: () => carregarJogadores(document.getElementById('admin-busca')?.value || ''),
       podio:     () => carregarPodioAdmin(),
       dashboard: () => carregarDashboard(),
-      historias: () => carregarHistorias(),
+      historias: () => _pollHistorias(),
       feedback:  () => carregarFeedback(),
       versao:    () => {}, 
       logs:      () => carregarLogs(),
@@ -2539,6 +2551,36 @@ const ADMIN = (() => {
     publicada: 'Publicada',
   };
 
+  
+  
+  
+  const _HISTORIAS_NATIVAS = {
+    tecnologia: [
+      { id: 0, badge: 'SaaS B2B', sub: 'Dívida técnica e rotatividade' },
+      { id: 1, badge: 'EdTech B2C', sub: 'Pós-pandemia e pivot' },
+      { id: 2, badge: 'Scale-up de IA', sub: 'Pipeline travado' },
+    ],
+    varejo: [
+      { id: 0, badge: 'Rede Omnichannel', sub: 'Margem em queda' },
+      { id: 1, badge: 'Rede de Farmácias', sub: 'Concorrência nacional' },
+      { id: 2, badge: 'Atacarejo Regional', sub: 'Expansão desequilibrada' },
+    ],
+    logistica: [
+      { id: 0, badge: 'Last-Mile Delivery', sub: 'SLA em descumprimento' },
+      { id: 1, badge: 'Cadeia do Frio', sub: 'Falha no monitoramento' },
+      { id: 2, badge: 'Fulfillment E-commerce', sub: 'Volume no limite' },
+    ],
+    industria: [
+      { id: 0, badge: 'Metalúrgica', sub: 'Segurança e ISO em risco' },
+      { id: 1, badge: 'Embalagens ESG', sub: 'Adequação urgente' },
+      { id: 2, badge: 'Química Ambiental', sub: 'Autuação do IBAMA' },
+    ],
+  };
+  const _ROUNDS_POR_HISTORIA_NATIVA = 15; 
+
+  let _histNativaAtual = null; 
+  let _estadoNativasCache = {}; 
+
   let _histSetorAtual   = null;
   let _histListaCache   = [];
   let _histEditandoId   = null;
@@ -2550,6 +2592,14 @@ const ADMIN = (() => {
   }
 
   
+  async function _getEstadoNativas() {
+    try {
+      const snap = await _get('config/historias');
+      _estadoNativasCache = _parseFields(snap.fields || {});
+    } catch(e) { _estadoNativasCache = {}; }
+    return _estadoNativasCache;
+  }
+
   async function carregarHistorias() {
     document.getElementById('hist-view-setores').style.display = '';
     document.getElementById('hist-view-lista').style.display = 'none';
@@ -2566,7 +2616,9 @@ const ADMIN = (() => {
         .map(r => _parseFields(r.document.fields || {}));
 
       grid.innerHTML = _SETORES.map(s => {
-        const qtd = todas.filter(h => h.setor === s).length;
+        const qtdCriadas = todas.filter(h => h.setor === s).length;
+        const qtdNativas  = (_HISTORIAS_NATIVAS[s] || []).length;
+        const qtd = qtdCriadas + qtdNativas;
         const nome = s.charAt(0).toUpperCase() + s.slice(1);
         return `
           <div class="hist-setor-card" onclick="ADMIN.abrirSetorHistorias('${s}')">
@@ -2598,22 +2650,23 @@ const ADMIN = (() => {
     const corpo = document.getElementById('hist-lista-corpo');
     corpo.innerHTML = '<div class="admin-loading"></div>';
     try {
-      const res = await _query({
-        structuredQuery: {
-          from: [{ collectionId: 'historias' }],
-          where: { fieldFilter: { field: { fieldPath: 'setor' }, op: 'EQUAL', value: _fsStr(setor) } },
-        }
-      });
+      const [res] = await Promise.all([
+        _query({
+          structuredQuery: {
+            from: [{ collectionId: 'historias' }],
+            where: { fieldFilter: { field: { fieldPath: 'setor' }, op: 'EQUAL', value: _fsStr(setor) } },
+          }
+        }),
+        _getEstadoNativas(),
+      ]);
       _histListaCache = (Array.isArray(res) ? res : [])
         .filter(r => r.document)
         .map(r => ({ id: r.document.name.split('/').pop(), ..._parseFields(r.document.fields || {}) }));
 
-      if (!_histListaCache.length) {
-        corpo.innerHTML = '<div class="admin-empty">Nenhuma história neste setor ainda. Crie a primeira acima.</div>';
-        return;
-      }
+      const nativas = _HISTORIAS_NATIVAS[setor] || [];
+      const souOwner = _souOwner();
 
-      corpo.innerHTML = _histListaCache.map(h => {
+      const htmlCriadas = _histListaCache.map(h => {
         const status = h.status || 'rascunho';
         return `
           <div class="admin-historia-row">
@@ -2629,6 +2682,28 @@ const ADMIN = (() => {
               </label>` : ''}
           </div>`;
       }).join('');
+
+      const htmlNativas = nativas.map(n => {
+        const chave = `${setor}_${n.id}`;
+        const ativa = _estadoNativasCache[chave] !== false;
+        return `
+          <div class="admin-historia-row">
+            <div class="admin-historia-info" style="cursor:pointer" onclick="ADMIN.visualizarHistoriaNativa('${setor}', ${n.id})">
+              <div class="admin-historia-nome">${_esc(n.badge)}</div>
+              <div class="admin-historia-sub">${_esc(n.sub)} · ${_ROUNDS_POR_HISTORIA_NATIVA} rounds</div>
+            </div>
+            <span class="admin-historia-badge nativa">Nativa</span>
+            ${souOwner ? `
+              <label class="admin-switch" style="margin-left:8px">
+                <input type="checkbox" ${ativa ? 'checked' : ''} onchange="ADMIN.toggleHistoriaNativaLista('${chave}', this.checked)">
+                <span class="admin-switch-track"></span>
+              </label>` : `
+              <span class="admin-historia-badge ${ativa ? 'ativa' : 'inativa'}" style="margin-left:8px">${ativa ? 'Ativa' : 'Inativa'}</span>`}
+          </div>`;
+      }).join('');
+
+      corpo.innerHTML = (htmlCriadas + htmlNativas) ||
+        '<div class="admin-empty">Nenhuma história neste setor ainda. Crie a primeira acima.</div>';
     } catch(e) {
       corpo.innerHTML = `<div class="admin-empty">Erro ao carregar: ${_esc(e.message)}</div>`;
     }
@@ -2649,8 +2724,96 @@ const ADMIN = (() => {
       </div>`).join('');
   }
 
-  function novaHistoria() {
+  
+  function _setEditorReadonly(readonly) {
+    document.querySelectorAll('#hist-view-editor input, #hist-view-editor textarea')
+      .forEach(el => { el.disabled = readonly; });
+    document.getElementById('hist-editor-actions-normal').style.display = readonly ? 'none' : '';
+    document.getElementById('hist-editor-actions-nativa').style.display = readonly ? 'flex' : 'none';
+  }
+
+  function visualizarHistoriaNativa(setor, id) {
+    const item = (_HISTORIAS_NATIVAS[setor] || []).find(h => h.id === id);
+    if (!item) return;
     _histEditandoId = null;
+    _histEditandoDoc = null;
+    _histNativaAtual = { setor, id, chave: `${setor}_${id}`, ...item };
+
+    document.getElementById('hist-view-lista').style.display = 'none';
+    document.getElementById('hist-view-editor').style.display = '';
+    document.getElementById('hist-editor-titulo').textContent = item.badge;
+
+    const badgeEl = document.getElementById('hist-editor-status-badge');
+    badgeEl.textContent = 'Nativa';
+    badgeEl.className = 'admin-historia-badge nativa';
+
+    document.getElementById('hist-f-badge').value = item.badge;
+    document.getElementById('hist-f-subtitulo').value = item.sub;
+    ['empresa-titulo','empresa-corpo','mercado-titulo','mercado-corpo',
+     'situacao-titulo','situacao-corpo','desafio-titulo','desafio-corpo',
+     'alerta-titulo','rodape'].forEach(f => {
+      const el = document.getElementById(`hist-f-${f}`);
+      if (el) el.value = '';
+    });
+
+    document.getElementById('hist-indicadores-lista').innerHTML =
+      `<div class="hist-autoria">${_ROUNDS_POR_HISTORIA_NATIVA} rounds e indicadores iniciais fixos no código-fonte do jogo — não dá pra editar por aqui.</div>`;
+
+    document.getElementById('hist-autoria-info').textContent =
+      'História e rounds do código nativo do jogo — vêm junto com o app, não são criados nem editados por aqui.';
+    document.getElementById('hist-aprovacao-info').textContent =
+      'Conteúdo embutido no app, sem fluxo de aprovação.';
+    document.getElementById('hist-aprovacao-acoes').style.display = 'none';
+    document.getElementById('hist-btn-despublicar').style.display = 'none';
+    document.getElementById('hist-checklist-aviso').textContent = '';
+
+    const ativa = _estadoNativasCache[_histNativaAtual.chave] !== false;
+    document.getElementById('hist-nativa-msg').textContent =
+      _souOwner()
+        ? (ativa ? 'Ativa pros jogadores — só o owner pode desativar.' : 'Desativada — só o owner pode reativar.')
+        : `${ativa ? 'Ativa' : 'Inativa'} pros jogadores. Só o owner pode alterar.`;
+    document.getElementById('hist-nativa-toggle').checked = ativa;
+    document.getElementById('hist-nativa-toggle-wrap').style.display = _souOwner() ? '' : 'none';
+
+    _setEditorReadonly(true);
+  }
+
+  async function toggleHistoriaNativa(ativa) {
+    if (!_histNativaAtual || !_souOwner()) return;
+    await _toggleHistoriaNativaChave(_histNativaAtual.chave, ativa);
+    document.getElementById('hist-nativa-msg').textContent =
+      ativa ? 'Ativa pros jogadores — só o owner pode desativar.' : 'Desativada — só o owner pode reativar.';
+  }
+
+  async function toggleHistoriaNativaLista(chave, ativa) {
+    if (!_souOwner()) return;
+    await _toggleHistoriaNativaChave(chave, ativa);
+  }
+
+  async function _toggleHistoriaNativaChave(chave, ativa) {
+    await _opFeedback({
+      etapas: [`${ativa ? 'Ativando' : 'Desativando'} história nativa…`],
+      executar: async () => {
+        const tok = await _token();
+        const campos = { [chave]: _fsBool(ativa) };
+        const mask = Object.keys(campos).map(k => `updateMask.fieldPaths=${k}`).join('&');
+        const r = await fetch(`${FS}/config/historias?${mask}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: campos })
+        });
+        if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,80)}`); }
+        _estadoNativasCache[chave] = ativa;
+        _registrarAuditoria(`História nativa ${chave} ${ativa ? 'ativada' : 'desativada'}`);
+      },
+      sucesso: ativa ? 'Ativada!' : 'Desativada.',
+    });
+  }
+
+  function novaHistoria() {
+    _setEditorReadonly(false);
+    _histEditandoId = null;
+
     _histEditandoDoc = null;
     document.getElementById('hist-view-lista').style.display = 'none';
     document.getElementById('hist-view-editor').style.display = '';
@@ -2673,6 +2836,7 @@ const ADMIN = (() => {
   async function abrirEditorHistoria(id) {
     const h = _histListaCache.find(x => x.id === id);
     if (!h) return;
+    _setEditorReadonly(false);
     _histEditandoId = id;
     _histEditandoDoc = h;
     _histSetorAtual = h.setor;
@@ -4180,6 +4344,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     carregarHistorias, voltarParaSetores, abrirSetorHistorias, voltarParaLista,
     novaHistoria, abrirEditorHistoria, salvarHistoria, despublicarHistoria,
     toggleHistoriaAtiva, aprovarHistoria, recusarHistoria,
+    visualizarHistoriaNativa, toggleHistoriaNativa, toggleHistoriaNativaLista,
     carregarGlossario, filtrarGlossario, abrirModalGlossario, fecharModalGlossario, salvarTermoGlossario, excluirTermoGlossario,
     toggleSecaoGlossario, abrirModalSecaoGlossario, fecharModalSecaoGlossario, salvarSecaoGlossario, excluirSecaoGlossario,
     importarGlossarioPadrao,
