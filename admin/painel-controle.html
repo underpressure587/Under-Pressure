@@ -251,44 +251,49 @@
 
             <div class="hist-editor-grid">
               <div class="hist-editor-col-main">
-                <label class="hist-field-lbl">Badge</label>
+                <label class="hist-field-lbl">Badge <span class="req-mark">*</span></label>
                 <input type="text" id="hist-f-badge" class="admin-input" placeholder='Ex: "Startup de Tecnologia · SaaS B2B"'>
 
-                <label class="hist-field-lbl">Subtítulo</label>
+                <label class="hist-field-lbl">Subtítulo <span class="req-mark">*</span></label>
                 <input type="text" id="hist-f-subtitulo" class="admin-input" placeholder="Você acaba de assumir a gestão...">
 
                 <div class="hist-secoes-grid">
                   <div>
                     <label class="hist-field-lbl">🏢 A Empresa — título</label>
                     <input type="text" id="hist-f-empresa-titulo" class="admin-input">
-                    <label class="hist-field-lbl">Corpo</label>
+                    <label class="hist-field-lbl">Corpo <span class="req-mark">*</span></label>
                     <textarea id="hist-f-empresa-corpo" class="admin-input" rows="3"></textarea>
                   </div>
                   <div>
                     <label class="hist-field-lbl">📉 Contexto de Mercado — título</label>
                     <input type="text" id="hist-f-mercado-titulo" class="admin-input">
-                    <label class="hist-field-lbl">Corpo</label>
+                    <label class="hist-field-lbl">Corpo <span class="req-mark">*</span></label>
                     <textarea id="hist-f-mercado-corpo" class="admin-input" rows="3"></textarea>
                   </div>
                   <div>
                     <label class="hist-field-lbl">⚠️ Situação Atual — título</label>
                     <input type="text" id="hist-f-situacao-titulo" class="admin-input">
-                    <label class="hist-field-lbl">Corpo</label>
+                    <label class="hist-field-lbl">Corpo <span class="req-mark">*</span></label>
                     <textarea id="hist-f-situacao-corpo" class="admin-input" rows="3"></textarea>
                   </div>
                   <div>
                     <label class="hist-field-lbl">🎯 Desafio Estratégico — título</label>
                     <input type="text" id="hist-f-desafio-titulo" class="admin-input">
-                    <label class="hist-field-lbl">Corpo</label>
+                    <label class="hist-field-lbl">Corpo <span class="req-mark">*</span></label>
                     <textarea id="hist-f-desafio-corpo" class="admin-input" rows="3"></textarea>
                   </div>
                 </div>
 
-                <label class="hist-field-lbl">🚨 Alerta — título</label>
+                <label class="hist-field-lbl">🚨 Alerta — título <span class="req-mark">*</span></label>
                 <input type="text" id="hist-f-alerta-titulo" class="admin-input" placeholder="Crise em Andamento">
 
-                <label class="hist-field-lbl">Rodapé</label>
+                <label class="hist-field-lbl">Rodapé <span class="req-mark">*</span></label>
                 <textarea id="hist-f-rodape" class="admin-input" rows="2"></textarea>
+
+                <div class="hist-field-lbl" style="margin-top:16px">Rounds</div>
+                <div id="hist-rounds-atalho">
+                  <span class="hist-autoria">Salve a história pelo menos uma vez pra poder criar rounds.</span>
+                </div>
 
                 <div class="hist-editor-actions" id="hist-editor-actions-normal">
                   <button class="admin-btn-sm" onclick="ADMIN.salvarHistoria(false)">Salvar</button>
@@ -329,6 +334,74 @@
               <span class="hist-topbar-titulo" id="hist-rounds-nativa-titulo"></span>
             </div>
             <div id="hist-rounds-nativa-corpo"><div class="admin-loading"></div></div>
+          </div>
+
+          <!-- TELA 4 — Rounds de uma história criada no editor -->
+          <div id="hist-view-rounds-lista" style="display:none">
+            <div class="hist-topbar">
+              <button class="admin-btn-sm" onclick="ADMIN.voltarParaEditorDaHistoria()">← Voltar</button>
+              <span class="hist-topbar-titulo" id="hist-rounds-lista-titulo"></span>
+              <button class="admin-btn-sm admin-btn-ok" onclick="ADMIN.novoRound()">+ Novo Round</button>
+            </div>
+            <div class="hist-fase-contador" id="hist-fase-contador"></div>
+            <div id="hist-rounds-lista-corpo"><div class="admin-loading"></div></div>
+          </div>
+
+          <!-- TELA 5 — Editor de round -->
+          <div id="hist-view-round-editor" style="display:none">
+            <div class="hist-topbar">
+              <button class="admin-btn-sm" onclick="ADMIN.voltarParaRoundsLista()">← Rounds</button>
+              <span class="hist-topbar-titulo" id="round-editor-titulo">Novo Round</span>
+              <button class="admin-btn-sm admin-btn-danger" id="round-btn-excluir" style="display:none" onclick="ADMIN.excluirRound()">Excluir</button>
+            </div>
+
+            <div class="hist-editor-grid">
+              <div class="hist-editor-col-main">
+                <div style="display:flex;gap:10px">
+                  <div style="flex:2">
+                    <label class="hist-field-lbl">Título <span class="req-mark">*</span></label>
+                    <input type="text" id="round-f-titulo" class="admin-input">
+                  </div>
+                  <div style="flex:1">
+                    <label class="hist-field-lbl">Fase</label>
+                    <select id="round-f-fase" class="admin-input">
+                      <option value="diagnostico">Diagnóstico</option>
+                      <option value="pressao">Pressão</option>
+                      <option value="decisao">Decisão</option>
+                    </select>
+                  </div>
+                </div>
+
+                <label class="hist-field-lbl">Descrição (narrativa) <span class="req-mark">*</span></label>
+                <textarea id="round-f-descricao" class="admin-input" rows="4"></textarea>
+
+                <div class="hist-field-lbl" style="margin-top:16px;display:flex;align-items:center;justify-content:space-between">
+                  <span>Choices <span class="req-mark">*</span> <span style="text-transform:none;font-weight:400">(2 a 5 — pelo menos 1 avaliada como "boa")</span></span>
+                  <button class="admin-btn-sm" id="round-btn-add-choice" onclick="ADMIN.adicionarChoice()">+ Choice</button>
+                </div>
+                <div id="round-choices-lista"></div>
+
+                <div id="round-checklist-aviso" class="hist-checklist-aviso"></div>
+                <div class="hist-editor-actions">
+                  <button class="admin-btn-sm admin-btn-ok" onclick="ADMIN.salvarRound()">Salvar Round</button>
+                </div>
+              </div>
+
+              <div class="hist-editor-col-side">
+                <label class="hist-field-lbl">Feedback de omissão (tempo esgotado)</label>
+                <textarea id="round-f-omissao-texto" class="admin-input" rows="3" placeholder="Deixe em branco pra usar o texto genérico do jogo"></textarea>
+
+                <label class="hist-field-lbl" style="margin-top:10px">Efeito nos indicadores</label>
+                <div style="display:flex;gap:14px;font-size:.76rem;color:var(--t2);margin-bottom:6px">
+                  <label><input type="radio" name="round-omissao-modo" value="automatico" checked onchange="ADMIN.mudarModoOmissao('automatico')"> Automático</label>
+                  <label><input type="radio" name="round-omissao-modo" value="manual" onchange="ADMIN.mudarModoOmissao('manual')"> Manual</label>
+                </div>
+                <div id="round-omissao-manual" style="display:none">
+                  <div id="round-omissao-efeitos-lista"></div>
+                  <button class="admin-btn-sm" onclick="ADMIN.adicionarEfeito('round-omissao-efeitos-lista')">+ Indicador</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
