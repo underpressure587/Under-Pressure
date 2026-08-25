@@ -2554,32 +2554,35 @@ const ADMIN = (() => {
   
   
   
-  const _HISTORIAS_NATIVAS = {
-    tecnologia: [
-      { id: 0, badge: 'SaaS B2B', sub: 'Dívida técnica e rotatividade' },
-      { id: 1, badge: 'EdTech B2C', sub: 'Pós-pandemia e pivot' },
-      { id: 2, badge: 'Scale-up de IA', sub: 'Pipeline travado' },
-    ],
-    varejo: [
-      { id: 0, badge: 'Rede Omnichannel', sub: 'Margem em queda' },
-      { id: 1, badge: 'Rede de Farmácias', sub: 'Concorrência nacional' },
-      { id: 2, badge: 'Atacarejo Regional', sub: 'Expansão desequilibrada' },
-    ],
-    logistica: [
-      { id: 0, badge: 'Last-Mile Delivery', sub: 'SLA em descumprimento' },
-      { id: 1, badge: 'Cadeia do Frio', sub: 'Falha no monitoramento' },
-      { id: 2, badge: 'Fulfillment E-commerce', sub: 'Volume no limite' },
-    ],
-    industria: [
-      { id: 0, badge: 'Metalúrgica', sub: 'Segurança e ISO em risco' },
-      { id: 1, badge: 'Embalagens ESG', sub: 'Adequação urgente' },
-      { id: 2, badge: 'Química Ambiental', sub: 'Autuação do IBAMA' },
-    ],
-  };
-  const _ROUNDS_POR_HISTORIA_NATIVA = 15; 
-
+  async function _fetchSetorFonte(setor) {
+    if (_fonteNativaCache[setor]?.ok) return _fonteNativaCache[setor];
+    const cap = setor.charAt(0).toUpperCase() + setor.slice(1);
+    try {
+      const cacheBust = `?v=${Date.now()}`;
+      const [empresaTxt, roundsTxt] = await Promise.all([
+        fetch(`/empresas/${setor}.js${cacheBust}`).then(r => { if (!r.ok) throw new Error(`empresas/${setor}.js: HTTP ${r.status}`); return r.text(); }),
+        fetch(`/empresas/${setor}-rounds.js${cacheBust}`).then(r => { if (!r.ok) throw new Error(`${setor}-rounds.js: HTTP ${r.status}`); return r.text(); }),
+      ]);
+      
+      const empresa = new Function(`${empresaTxt}\nreturn Empresa${cap};`)();
+      let rounds = [];
+      try {
+        rounds = new Function(`${roundsTxt}\nreturn ${cap}Rounds;`)();
+      } catch(eRounds) {
+        rounds = { _erro: eRounds.message };
+      }
+      const resultado = { ok: true, empresa, rounds };
+      _fonteNativaCache[setor] = resultado;
+      return resultado;
+    } catch(e) {
+      const resultado = { ok: false, erro: e.message };
+      _fonteNativaCache[setor] = resultado;
+      return resultado;
+    }
+  }
   let _histNativaAtual = null; 
   let _estadoNativasCache = {}; 
+  let _fonteNativaCache = {}; 
 
   let _histSetorAtual   = null;
   let _histListaCache   = [];
@@ -2604,20 +2607,23 @@ const ADMIN = (() => {
     document.getElementById('hist-view-setores').style.display = '';
     document.getElementById('hist-view-lista').style.display = 'none';
     document.getElementById('hist-view-editor').style.display = 'none';
+    document.getElementById('hist-view-rounds-nativa').style.display = 'none';
 
     const grid = document.getElementById('hist-setores-grid');
     grid.innerHTML = '<div class="admin-loading"></div>';
     try {
-      const res = await _query({
-        structuredQuery: { from: [{ collectionId: 'historias' }] }
-      });
+      const [res, ...fontes] = await Promise.all([
+        _query({ structuredQuery: { from: [{ collectionId: 'historias' }] } }),
+        ..._SETORES.map(s => _fetchSetorFonte(s)),
+      ]);
       const todas = (Array.isArray(res) ? res : [])
         .filter(r => r.document)
         .map(r => _parseFields(r.document.fields || {}));
 
-      grid.innerHTML = _SETORES.map(s => {
+      grid.innerHTML = _SETORES.map((s, i) => {
         const qtdCriadas = todas.filter(h => h.setor === s).length;
-        const qtdNativas  = (_HISTORIAS_NATIVAS[s] || []).length;
+        const fonte = fontes[i];
+        const qtdNativas = fonte.ok ? (fonte.empresa?.intros?.length || 0) : 0;
         const qtd = qtdCriadas + qtdNativas;
         const nome = s.charAt(0).toUpperCase() + s.slice(1);
         return `
@@ -2635,6 +2641,7 @@ const ADMIN = (() => {
   function voltarParaSetores() {
     document.getElementById('hist-view-lista').style.display = 'none';
     document.getElementById('hist-view-editor').style.display = 'none';
+    document.getElementById('hist-view-rounds-nativa').style.display = 'none';
     document.getElementById('hist-view-setores').style.display = '';
     carregarHistorias();
   }
@@ -2650,20 +2657,20 @@ const ADMIN = (() => {
     const corpo = document.getElementById('hist-lista-corpo');
     corpo.innerHTML = '<div class="admin-loading"></div>';
     try {
-      const [res] = await Promise.all([
+      const [res, fonte] = await Promise.all([
         _query({
           structuredQuery: {
             from: [{ collectionId: 'historias' }],
             where: { fieldFilter: { field: { fieldPath: 'setor' }, op: 'EQUAL', value: _fsStr(setor) } },
           }
         }),
+        _fetchSetorFonte(setor),
         _getEstadoNativas(),
       ]);
       _histListaCache = (Array.isArray(res) ? res : [])
         .filter(r => r.document)
         .map(r => ({ id: r.document.name.split('/').pop(), ..._parseFields(r.document.fields || {}) }));
 
-      const nativas = _HISTORIAS_NATIVAS[setor] || [];
       const souOwner = _souOwner();
 
       const htmlCriadas = _histListaCache.map(h => {
@@ -2683,24 +2690,31 @@ const ADMIN = (() => {
           </div>`;
       }).join('');
 
-      const htmlNativas = nativas.map(n => {
-        const chave = `${setor}_${n.id}`;
-        const ativa = _estadoNativasCache[chave] !== false;
-        return `
-          <div class="admin-historia-row">
-            <div class="admin-historia-info" style="cursor:pointer" onclick="ADMIN.visualizarHistoriaNativa('${setor}', ${n.id})">
-              <div class="admin-historia-nome">${_esc(n.badge)}</div>
-              <div class="admin-historia-sub">${_esc(n.sub)} · ${_ROUNDS_POR_HISTORIA_NATIVA} rounds</div>
-            </div>
-            <span class="admin-historia-badge nativa">Nativa</span>
-            ${souOwner ? `
-              <label class="admin-switch" style="margin-left:8px">
-                <input type="checkbox" ${ativa ? 'checked' : ''} onchange="ADMIN.toggleHistoriaNativaLista('${chave}', this.checked)">
-                <span class="admin-switch-track"></span>
-              </label>` : `
-              <span class="admin-historia-badge ${ativa ? 'ativa' : 'inativa'}" style="margin-left:8px">${ativa ? 'Ativa' : 'Inativa'}</span>`}
-          </div>`;
-      }).join('');
+      let htmlNativas = '';
+      if (fonte.ok) {
+        const intros = fonte.empresa?.intros || [];
+        htmlNativas = intros.map((intro, idx) => {
+          const chave = `${setor}_${idx}`;
+          const ativa = _estadoNativasCache[chave] !== false;
+          const qtdRounds = Array.isArray(fonte.rounds?.[idx]) ? fonte.rounds[idx].length : '?';
+          return `
+            <div class="admin-historia-row">
+              <div class="admin-historia-info" style="cursor:pointer" onclick="ADMIN.visualizarHistoriaNativa('${setor}', ${idx})">
+                <div class="admin-historia-nome">${_esc(intro.badge || `História ${idx + 1}`)}</div>
+                <div class="admin-historia-sub">${_esc(intro.subtitulo || '')} · ${qtdRounds} rounds</div>
+              </div>
+              <span class="admin-historia-badge nativa">Nativa</span>
+              ${souOwner ? `
+                <label class="admin-switch" style="margin-left:8px">
+                  <input type="checkbox" ${ativa ? 'checked' : ''} onchange="ADMIN.toggleHistoriaNativaLista('${chave}', this.checked)">
+                  <span class="admin-switch-track"></span>
+                </label>` : `
+                <span class="admin-historia-badge ${ativa ? 'ativa' : 'inativa'}" style="margin-left:8px">${ativa ? 'Ativa' : 'Inativa'}</span>`}
+            </div>`;
+        }).join('');
+      } else {
+        htmlNativas = `<div class="admin-empty">Não deu pra carregar as histórias nativas: ${_esc(fonte.erro)}</div>`;
+      }
 
       corpo.innerHTML = (htmlCriadas + htmlNativas) ||
         '<div class="admin-empty">Nenhuma história neste setor ainda. Crie a primeira acima.</div>';
@@ -2711,6 +2725,7 @@ const ADMIN = (() => {
 
   function voltarParaLista() {
     document.getElementById('hist-view-editor').style.display = 'none';
+    document.getElementById('hist-view-rounds-nativa').style.display = 'none';
     document.getElementById('hist-view-lista').style.display = '';
   }
 
@@ -2732,37 +2747,62 @@ const ADMIN = (() => {
     document.getElementById('hist-editor-actions-nativa').style.display = readonly ? 'flex' : 'none';
   }
 
-  function visualizarHistoriaNativa(setor, id) {
-    const item = (_HISTORIAS_NATIVAS[setor] || []).find(h => h.id === id);
-    if (!item) return;
+  async function visualizarHistoriaNativa(setor, id) {
     _histEditandoId = null;
     _histEditandoDoc = null;
-    _histNativaAtual = { setor, id, chave: `${setor}_${id}`, ...item };
+    _histNativaAtual = { setor, id, chave: `${setor}_${id}` };
 
     document.getElementById('hist-view-lista').style.display = 'none';
     document.getElementById('hist-view-editor').style.display = '';
-    document.getElementById('hist-editor-titulo').textContent = item.badge;
+    document.getElementById('hist-editor-titulo').textContent = 'Carregando…';
+    _setEditorReadonly(true);
+    document.getElementById('hist-nativa-toggle-wrap').style.display = 'none';
+    document.getElementById('hist-nativa-msg').textContent = '';
 
+    const fonte = await _fetchSetorFonte(setor);
+    if (!fonte.ok) {
+      document.getElementById('hist-editor-titulo').textContent = 'Erro ao carregar';
+      document.getElementById('hist-nativa-msg').textContent = `Não deu pra ler o código-fonte: ${fonte.erro}`;
+      return;
+    }
+    const intro = fonte.empresa?.intros?.[id];
+    if (!intro) {
+      document.getElementById('hist-editor-titulo').textContent = 'Não encontrada';
+      document.getElementById('hist-nativa-msg').textContent = 'Essa história não existe mais no código-fonte.';
+      return;
+    }
+    _histNativaAtual.intro = intro;
+    _histNativaAtual.rounds = Array.isArray(fonte.rounds?.[id]) ? fonte.rounds[id] : null;
+
+    document.getElementById('hist-editor-titulo').textContent = intro.badge || `História ${id + 1}`;
     const badgeEl = document.getElementById('hist-editor-status-badge');
     badgeEl.textContent = 'Nativa';
     badgeEl.className = 'admin-historia-badge nativa';
 
-    document.getElementById('hist-f-badge').value = item.badge;
-    document.getElementById('hist-f-subtitulo').value = item.sub;
-    ['empresa-titulo','empresa-corpo','mercado-titulo','mercado-corpo',
-     'situacao-titulo','situacao-corpo','desafio-titulo','desafio-corpo',
-     'alerta-titulo','rodape'].forEach(f => {
-      const el = document.getElementById(`hist-f-${f}`);
-      if (el) el.value = '';
+    document.getElementById('hist-f-badge').value = intro.badge || '';
+    document.getElementById('hist-f-subtitulo').value = intro.subtitulo || '';
+    const secoes = intro.secoes || [];
+    const chaves = ['empresa', 'mercado', 'situacao', 'desafio'];
+    chaves.forEach((chave, i) => {
+      document.getElementById(`hist-f-${chave}-titulo`).value = secoes[i]?.titulo || '';
+      document.getElementById(`hist-f-${chave}-corpo`).value = secoes[i]?.corpo || '';
     });
+    document.getElementById('hist-f-alerta-titulo').value = intro.alerta?.titulo || '';
+    document.getElementById('hist-f-rodape').value = intro.rodape || '';
 
-    document.getElementById('hist-indicadores-lista').innerHTML =
-      `<div class="hist-autoria">${_ROUNDS_POR_HISTORIA_NATIVA} rounds e indicadores iniciais fixos no código-fonte do jogo — não dá pra editar por aqui.</div>`;
+    const qtdRounds = _histNativaAtual.rounds ? _histNativaAtual.rounds.length : null;
+    document.getElementById('hist-indicadores-lista').innerHTML = `
+      <div class="hist-autoria">Indicadores iniciais definidos em <code>Core/state.js</code> — não editável por aqui.</div>
+      <button class="admin-btn-sm" style="margin-top:8px" onclick="ADMIN.verRoundsNativos()">
+        ▤ Ver os ${qtdRounds ?? '?'} rounds
+      </button>
+      ${_histNativaAtual.rounds === null ? '<div class="hist-checklist-aviso" style="margin-top:6px">Estrutura de rounds com problema no código-fonte — não consegui ler.</div>' : ''}
+    `;
 
     document.getElementById('hist-autoria-info').textContent =
-      'História e rounds do código nativo do jogo — vêm junto com o app, não são criados nem editados por aqui.';
+      'História e rounds do código nativo — fazem parte do jogo/site, não são criados nem editados por aqui.';
     document.getElementById('hist-aprovacao-info').textContent =
-      'Conteúdo embutido no app, sem fluxo de aprovação.';
+      'Conteúdo embutido no jogo/site, sem fluxo de aprovação.';
     document.getElementById('hist-aprovacao-acoes').style.display = 'none';
     document.getElementById('hist-btn-despublicar').style.display = 'none';
     document.getElementById('hist-checklist-aviso').textContent = '';
@@ -2774,8 +2814,38 @@ const ADMIN = (() => {
         : `${ativa ? 'Ativa' : 'Inativa'} pros jogadores. Só o owner pode alterar.`;
     document.getElementById('hist-nativa-toggle').checked = ativa;
     document.getElementById('hist-nativa-toggle-wrap').style.display = _souOwner() ? '' : 'none';
+  }
 
-    _setEditorReadonly(true);
+  function verRoundsNativos() {
+    if (!_histNativaAtual) return;
+    const { setor, id, intro, rounds } = _histNativaAtual;
+
+    document.getElementById('hist-view-editor').style.display = 'none';
+    document.getElementById('hist-view-lista').style.display = 'none';
+    document.getElementById('hist-view-rounds-nativa').style.display = '';
+    document.getElementById('hist-rounds-nativa-titulo').textContent =
+      `${intro.badge || `História ${id + 1}`} · Rounds`;
+
+    const corpo = document.getElementById('hist-rounds-nativa-corpo');
+    if (!Array.isArray(rounds) || !rounds.length) {
+      corpo.innerHTML = '<div class="admin-empty">Não consegui ler os rounds dessa história no código-fonte.</div>';
+      return;
+    }
+    const faseLabel = { diagnostico: '🔵 Diagnóstico', pressao: '🟠 Pressão', decisao: '🟣 Decisão' };
+    corpo.innerHTML = rounds.map((r, i) => `
+      <div class="admin-historia-row">
+        <div class="admin-historia-info">
+          <div class="admin-historia-nome">${i + 1}. ${_esc(r.title || '(sem título)')}</div>
+          <div class="admin-historia-sub">${_esc((r.description || '').slice(0, 90))}${(r.description || '').length > 90 ? '…' : ''}</div>
+        </div>
+        <span class="admin-historia-badge nativa">${faseLabel[r.fase] || r.fase || '—'}</span>
+      </div>
+    `).join('');
+  }
+
+  function voltarParaVisualizacaoNativa() {
+    document.getElementById('hist-view-rounds-nativa').style.display = 'none';
+    document.getElementById('hist-view-editor').style.display = '';
   }
 
   async function toggleHistoriaNativa(ativa) {
@@ -4345,6 +4415,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     novaHistoria, abrirEditorHistoria, salvarHistoria, despublicarHistoria,
     toggleHistoriaAtiva, aprovarHistoria, recusarHistoria,
     visualizarHistoriaNativa, toggleHistoriaNativa, toggleHistoriaNativaLista,
+    verRoundsNativos, voltarParaVisualizacaoNativa,
     carregarGlossario, filtrarGlossario, abrirModalGlossario, fecharModalGlossario, salvarTermoGlossario, excluirTermoGlossario,
     toggleSecaoGlossario, abrirModalSecaoGlossario, fecharModalSecaoGlossario, salvarSecaoGlossario, excluirSecaoGlossario,
     importarGlossarioPadrao,
