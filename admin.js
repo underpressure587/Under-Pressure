@@ -1943,8 +1943,10 @@ const ADMIN = (() => {
   function _pollHistorias() {
     
     
-    const editorAberto = document.getElementById('hist-view-editor')?.style.display !== 'none';
-    if (editorAberto) return; 
+    const telaDeTrabalhoAberta = [
+      'hist-view-editor', 'hist-view-round-editor', 'hist-view-rounds-nativa', 'hist-view-rounds-lista'
+    ].some(id => document.getElementById(id)?.style.display !== 'none');
+    if (telaDeTrabalhoAberta) return; 
 
     const listaAberta = document.getElementById('hist-view-lista')?.style.display !== 'none';
     if (listaAberta && _histSetorAtual) { abrirSetorHistorias(_histSetorAtual); return; }
@@ -2857,13 +2859,62 @@ const ADMIN = (() => {
     const faseLabel = { diagnostico: '🔵 Diagnóstico', pressao: '🟠 Pressão', decisao: '🟣 Decisão' };
     corpo.innerHTML = rounds.map((r, i) => `
       <div class="admin-historia-row">
-        <div class="admin-historia-info">
+        <div class="admin-historia-info" style="cursor:pointer" onclick="ADMIN.visualizarRoundNativo(${i})">
           <div class="admin-historia-nome">${i + 1}. ${_esc(r.title || '(sem título)')}</div>
-          <div class="admin-historia-sub">${_esc((r.description || '').slice(0, 90))}${(r.description || '').length > 90 ? '…' : ''}</div>
+          <div class="admin-historia-sub">${_esc((r.description || '').slice(0, 90))}${(r.description || '').length > 90 ? '…' : ''} · ${(r.choices || []).length} choices</div>
         </div>
         <span class="admin-historia-badge nativa">${faseLabel[r.fase] || r.fase || '—'}</span>
       </div>
     `).join('');
+  }
+
+  
+  function _renderChoiceReadonlyHTML(c) {
+    const efeitos = Object.entries(c.effects || {})
+      .map(([k, v]) => `${k}: ${v > 0 ? '+' : ''}${v}`).join(' · ') || '—';
+    const g = c.gestorEffects || {};
+    const gestorTxt = Object.entries(g).filter(([, v]) => v)
+      .map(([k, v]) => `${k}: ${v > 0 ? '+' : ''}${v}`).join(' · ');
+    const reqMin = c.requisitos?.indicadorMinimo || {};
+    const reqTxt = Object.entries(reqMin).map(([k, v]) => `${k} ≥ ${v}`).join(' · ');
+    const avaliacaoLabel = { boa: '✅ Boa', media: '⚠️ Média', ruim: '❌ Ruim' }[c.avaliacao] || c.avaliacao || '—';
+    return `
+      <div class="round-choice-card">
+        <div class="round-choice-head">
+          <span class="num">${_esc(c.text || '(sem texto)')}</span>
+          ${c.risco ? `<span class="admin-historia-badge nativa">Risco: ${_esc(c.risco)}</span>` : ''}
+        </div>
+        <div class="hist-autoria">Avaliação: ${avaliacaoLabel}</div>
+        <div class="hist-autoria">Efeitos nos indicadores: ${_esc(efeitos)}</div>
+        ${gestorTxt ? `<div class="hist-autoria">Efeitos no gestor: ${_esc(gestorTxt)}</div>` : ''}
+        ${reqTxt ? `<div class="hist-autoria">Requisito mínimo: ${_esc(reqTxt)}</div>` : ''}
+        ${c.ensinamento ? `<div class="hist-autoria" style="margin-top:6px"><i>${_esc(c.ensinamento)}</i></div>` : ''}
+      </div>`;
+  }
+
+  function visualizarRoundNativo(idx) {
+    const round = _histNativaAtual?.rounds?.[idx];
+    if (!round) return;
+    _roundNativoAtual = round;
+
+    document.getElementById('hist-view-rounds-nativa').style.display = 'none';
+    document.getElementById('hist-view-round-editor').style.display = '';
+    document.getElementById('round-editor-titulo').textContent = round.title || 'Round';
+
+    document.getElementById('round-f-titulo').value = round.title || '';
+    document.getElementById('round-f-descricao').value = round.description || '';
+    document.getElementById('round-f-fase').value = round.fase || 'diagnostico';
+    document.getElementById('round-f-omissao-texto').value = '';
+    document.querySelector('input[name="round-omissao-modo"][value="automatico"]').checked = true;
+    document.getElementById('round-omissao-manual').style.display = 'none';
+    document.getElementById('round-checklist-aviso').textContent = '';
+
+    document.getElementById('round-choices-lista').innerHTML =
+      (round.choices || []).map(_renderChoiceReadonlyHTML).join('') ||
+      '<div class="admin-empty">Sem choices.</div>';
+
+    document.getElementById('round-btn-excluir').style.display = 'none';
+    _setRoundEditorReadonly(true);
   }
 
   function voltarParaVisualizacaoNativa() {
@@ -3182,6 +3233,7 @@ const ADMIN = (() => {
   let _roundsListaCache = [];
   let _roundEditandoId  = null;
   let _roundEditandoDoc = null;
+  let _roundNativoAtual = null; 
   let _choiceSeq = 0;
 
   const _FASE_LABEL = { diagnostico: '🔵 Diagnóstico', pressao: '🟠 Pressão', decisao: '🟣 Decisão' };
@@ -3235,9 +3287,25 @@ const ADMIN = (() => {
     document.getElementById('hist-view-editor').style.display = '';
   }
 
+  function _setRoundEditorReadonly(readonly) {
+    document.querySelectorAll('#hist-view-round-editor input, #hist-view-round-editor textarea, #hist-view-round-editor select')
+      .forEach(el => { el.disabled = readonly; });
+    document.querySelectorAll('#hist-view-round-editor button').forEach(btn => {
+      if (btn.id === 'round-btn-voltar') return; 
+      btn.style.display = readonly ? 'none' : '';
+    });
+    const acoes = document.querySelector('#hist-view-round-editor .hist-editor-actions');
+    if (acoes) acoes.style.display = readonly ? 'none' : '';
+  }
+
   function voltarParaRoundsLista() {
     document.getElementById('hist-view-round-editor').style.display = 'none';
-    document.getElementById('hist-view-rounds-lista').style.display = '';
+    if (_roundNativoAtual) {
+      _roundNativoAtual = null;
+      document.getElementById('hist-view-rounds-nativa').style.display = '';
+    } else {
+      document.getElementById('hist-view-rounds-lista').style.display = '';
+    }
   }
 
   
@@ -3360,9 +3428,11 @@ const ADMIN = (() => {
     document.getElementById('hist-view-rounds-lista').style.display = 'none';
     document.getElementById('hist-view-round-editor').style.display = '';
     document.getElementById('round-editor-titulo').textContent = 'Novo Round';
-    document.getElementById('round-btn-excluir').style.display = 'none';
     _roundEditandoId  = null;
     _roundEditandoDoc = null;
+    _roundNativoAtual = null;
+    _setRoundEditorReadonly(false);
+    document.getElementById('round-btn-excluir').style.display = 'none';
 
     document.getElementById('round-f-titulo').value = '';
     document.getElementById('round-f-descricao').value = '';
@@ -3382,9 +3452,11 @@ const ADMIN = (() => {
     document.getElementById('hist-view-rounds-lista').style.display = 'none';
     document.getElementById('hist-view-round-editor').style.display = '';
     document.getElementById('round-editor-titulo').textContent = r.title || 'Editar Round';
-    document.getElementById('round-btn-excluir').style.display = '';
     _roundEditandoId  = id;
     _roundEditandoDoc = r;
+    _roundNativoAtual = null;
+    _setRoundEditorReadonly(false);
+    document.getElementById('round-btn-excluir').style.display = '';
 
     document.getElementById('round-f-titulo').value = r.title || '';
     document.getElementById('round-f-descricao').value = r.description || '';
@@ -4772,7 +4844,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     novaHistoria, abrirEditorHistoria, salvarHistoria, despublicarHistoria,
     toggleHistoriaAtiva, aprovarHistoria, recusarHistoria,
     visualizarHistoriaNativa, toggleHistoriaNativa, toggleHistoriaNativaLista,
-    verRoundsNativos, voltarParaVisualizacaoNativa,
+    verRoundsNativos, voltarParaVisualizacaoNativa, visualizarRoundNativo,
     abrirRoundsHistoria, voltarParaEditorDaHistoria, voltarParaRoundsLista,
     novoRound, abrirEditorRound, salvarRound, excluirRound,
     adicionarChoice, removerChoice, adicionarEfeito, mudarModoOmissao,
