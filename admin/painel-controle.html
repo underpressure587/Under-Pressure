@@ -249,6 +249,8 @@
               <span class="admin-historia-badge" id="hist-editor-status-badge"></span>
             </div>
 
+            <div id="hist-sugestoes-lista"></div>
+
             <div class="hist-editor-grid">
               <div class="hist-editor-col-main">
                 <label class="hist-field-lbl">Badge <span class="req-mark">*</span></label>
@@ -296,7 +298,7 @@
                 </div>
 
                 <div class="hist-editor-actions" id="hist-editor-actions-normal">
-                  <button class="admin-btn-sm" onclick="ADMIN.salvarHistoria(false)">Salvar</button>
+                  <button class="admin-btn-sm" id="hist-btn-salvar" onclick="ADMIN.salvarHistoria(false)">Salvar</button>
                   <button class="admin-btn-sm admin-btn-ok" id="hist-btn-publicar" onclick="ADMIN.salvarHistoria(true)">Publicar</button>
                   <button class="admin-btn-sm admin-btn-danger" id="hist-btn-despublicar" style="display:none" onclick="ADMIN.despublicarHistoria()">Despublicar</button>
                   <span id="hist-checklist-aviso" class="hist-checklist-aviso"></span>

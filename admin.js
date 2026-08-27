@@ -2783,6 +2783,7 @@ const ADMIN = (() => {
     document.getElementById('hist-nativa-toggle-wrap').style.display = 'none';
     document.getElementById('hist-nativa-msg').textContent = '';
     document.getElementById('hist-rounds-atalho').innerHTML = '';
+    document.getElementById('hist-sugestoes-lista').innerHTML = '';
 
     const fonte = await _fetchSetorFonte(setor);
     if (!fonte.ok) {
@@ -2975,6 +2976,9 @@ const ADMIN = (() => {
     document.getElementById('hist-aprovacao-acoes').style.display = 'none';
     document.getElementById('hist-btn-despublicar').style.display = 'none';
     document.getElementById('hist-checklist-aviso').textContent = '';
+    document.getElementById('hist-btn-salvar').textContent = 'Salvar';
+    document.getElementById('hist-btn-publicar').style.display = '';
+    document.getElementById('hist-sugestoes-lista').innerHTML = '';
     document.getElementById('hist-rounds-atalho').innerHTML =
       '<span class="hist-autoria">Salve a história pelo menos uma vez pra poder criar rounds.</span>';
   }
@@ -3033,6 +3037,108 @@ const ADMIN = (() => {
     document.getElementById('hist-checklist-aviso').textContent = '';
     document.getElementById('hist-rounds-atalho').innerHTML =
       '<button class="admin-btn-sm" onclick="ADMIN.abrirRoundsHistoria()">▤ Rounds</button>';
+
+    
+    const meUID = window._player?.uid || '';
+    const souDono = !!meUID && meUID === h.criadoPorUid;
+    const podeEditarDireto = souDono || _souOwner();
+    document.getElementById('hist-btn-salvar').textContent = podeEditarDireto ? 'Salvar' : 'Enviar Sugestão';
+    document.getElementById('hist-btn-publicar').style.display = podeEditarDireto ? '' : 'none';
+    if (!podeEditarDireto) document.getElementById('hist-btn-despublicar').style.display = 'none';
+
+    const sugWrap = document.getElementById('hist-sugestoes-lista');
+    if (podeEditarDireto) {
+      _carregarSugestoesPendentes(id);
+    } else {
+      sugWrap.innerHTML = '';
+    }
+  }
+
+  async function _carregarSugestoesPendentes(histId) {
+    const wrap = document.getElementById('hist-sugestoes-lista');
+    wrap.innerHTML = '';
+    try {
+      const res = await _querySub(`historias/${histId}`, {
+        structuredQuery: {
+          from: [{ collectionId: 'sugestoes' }],
+          where: { fieldFilter: { field: { fieldPath: 'status' }, op: 'EQUAL', value: _fsStr('pendente') } },
+        }
+      });
+      const sugestoes = (Array.isArray(res) ? res : [])
+        .filter(r => r.document)
+        .map(r => ({ id: r.document.name.split('/').pop(), ..._parseFields(r.document.fields || {}) }));
+      if (!sugestoes.length) return;
+
+      const labelCampo = {
+        badge: 'Badge', subtitulo: 'Subtítulo',
+        secaoEmpresaCorpo: 'A Empresa', secaoMercadoCorpo: 'Contexto de Mercado',
+        secaoSituacaoCorpo: 'Situação Atual', secaoDesafioCorpo: 'Desafio Estratégico',
+        alertaTitulo: 'Alerta', rodape: 'Rodapé',
+      };
+      wrap.innerHTML = `<div class="hist-field-lbl">💡 Sugestões pendentes</div>` + sugestoes.map(s => {
+        const mudou = Object.keys(labelCampo)
+          .filter(k => (s.campos?.[k] || '') !== (_histEditandoDoc?.[k] || ''))
+          .map(k => labelCampo[k]);
+        return `
+          <div class="hist-sugestao-card">
+            <div class="hist-sugestao-head">
+              <span>Sugestão de <b>${_esc(s.autorNome || '—')}</b></span>
+              <span class="hist-sugestao-data">${s.criadoEm ? new Date(s.criadoEm).toLocaleDateString('pt-BR') : ''}</span>
+            </div>
+            <div class="hist-autoria">Alterou: ${mudou.length ? _esc(mudou.join(', ')) : '(sem mudança de texto — conferir indicadores)'}</div>
+            <div class="hist-editor-actions" style="margin-top:8px">
+              <button class="admin-btn-sm admin-btn-ok" onclick="ADMIN.aceitarSugestao('${s.id}')">✓ Aceitar</button>
+              <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.recusarSugestao('${s.id}')">✕ Recusar</button>
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) {  }
+  }
+
+  async function aceitarSugestao(sugestaoId) {
+    if (!_histEditandoId) return;
+    const histId = _histEditandoId;
+    await _opFeedback({
+      etapas: ['Aplicando sugestão…'],
+      executar: async () => {
+        const snap = await _get(`historias/${histId}/sugestoes/${sugestaoId}`);
+        const s = _parseFields(snap.fields || {});
+        const campos = s.campos || {};
+
+        const jaContribuiu = _histEditandoDoc?.contribuidoresNomes || [];
+        const novosContribuidores = (s.autorNome && !jaContribuiu.includes(s.autorNome))
+          ? [...jaContribuiu, s.autorNome] : jaContribuiu;
+
+        const fields = _fsFieldsFromObj({ ...campos, contribuidoresNomes: novosContribuidores });
+        const mask = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
+        const tok = await _token();
+        const r = await fetch(`${FS}/historias/${histId}?${mask}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields })
+        });
+        if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,120)}`); }
+
+        await _delete(`historias/${histId}/sugestoes/${sugestaoId}`);
+        _registrarAuditoria(`Sugestão de ${s.autorNome} aceita em "${_histEditandoDoc?.badge}"`);
+      },
+      sucesso: 'Sugestão aplicada — contribuidor creditado!',
+      onSucesso: () => abrirSetorHistorias(_histEditandoDoc?.setor || _histSetorAtual),
+    });
+  }
+
+  async function recusarSugestao(sugestaoId) {
+    if (!_histEditandoId) return;
+    const histId = _histEditandoId;
+    await _opFeedback({
+      etapas: ['Recusando sugestão…'],
+      executar: async () => {
+        await _delete(`historias/${histId}/sugestoes/${sugestaoId}`);
+        _registrarAuditoria(`Sugestão recusada em "${_histEditandoDoc?.badge}"`);
+      },
+      sucesso: 'Sugestão recusada.',
+      onSucesso: () => _carregarSugestoesPendentes(histId),
+    });
   }
 
   function _lerCamposEditor() {
@@ -3099,6 +3205,37 @@ const ADMIN = (() => {
     const campos = _lerCamposEditor();
     if (!campos.badge) { _showAdminToast('Preencha ao menos o badge da história.', true); return; }
 
+    const meUID  = window._player?.uid  || '';
+    const meNome = window._player?.nome || 'Admin';
+    const isNovo = !_histEditandoId;
+    const souDono = isNovo || (_histEditandoDoc?.criadoPorUid === meUID);
+    const editaDireto = isNovo || souDono || _souOwner();
+
+    if (!editaDireto) {
+      
+      const histId = _histEditandoId;
+      const sugId = `sug-${Date.now().toString(36)}`;
+      await _opFeedback({
+        etapas: ['Enviando sugestão…'],
+        executar: async () => {
+          const tok = await _token();
+          const doc = { campos, autorUid: meUID, autorNome: meNome, criadoEm: Date.now(), status: 'pendente' };
+          const fields = _fsFieldsFromObj(doc);
+          const mask = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
+          const r = await fetch(`${FS}/historias/${histId}/sugestoes/${sugId}?${mask}`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fields })
+          });
+          if (!r.ok) { const b = await r.text(); throw new Error(`HTTP ${r.status}: ${b.slice(0,120)}`); }
+          _registrarAuditoria(`Sugestão enviada por ${meNome} em "${_histEditandoDoc?.badge}"`);
+        },
+        sucesso: 'Sugestão enviada! O dono da história vai revisar.',
+        onSucesso: () => abrirSetorHistorias(_histEditandoDoc?.setor || _histSetorAtual),
+      });
+      return;
+    }
+
     let faltando = [];
     if (publicar) {
       faltando = _checklistHistoriaFaltando(campos);
@@ -3111,9 +3248,6 @@ const ADMIN = (() => {
     }
     document.getElementById('hist-checklist-aviso').textContent = '';
 
-    const meUID  = window._player?.uid  || '';
-    const meNome = window._player?.nome || 'Admin';
-    const isNovo = !_histEditandoId;
     const statusAtual = _histEditandoDoc?.status || 'rascunho';
 
     const doc = { ...campos };
@@ -4843,6 +4977,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     carregarHistorias, voltarParaSetores, abrirSetorHistorias, voltarParaLista,
     novaHistoria, abrirEditorHistoria, salvarHistoria, despublicarHistoria,
     toggleHistoriaAtiva, aprovarHistoria, recusarHistoria,
+    aceitarSugestao, recusarSugestao,
     visualizarHistoriaNativa, toggleHistoriaNativa, toggleHistoriaNativaLista,
     verRoundsNativos, voltarParaVisualizacaoNativa, visualizarRoundNativo,
     abrirRoundsHistoria, voltarParaEditorDaHistoria, voltarParaRoundsLista,
