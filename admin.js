@@ -206,6 +206,7 @@ const ADMIN = (() => {
 
     document.getElementById('admin-hub').style.display = 'none';
     document.getElementById('admin-subnav').style.display = 'flex';
+    document.querySelector('.admin-body').style.display = '';
     document.getElementById('admin-nav-cat-titulo').textContent = cat.label;
 
     const wrap = document.getElementById('admin-subnav-botoes');
@@ -223,6 +224,7 @@ const ADMIN = (() => {
     document.querySelectorAll('.admin-section').forEach(el => el.style.display = 'none');
     document.getElementById('admin-subnav').style.display = 'none';
     document.getElementById('admin-subnav-botoes').innerHTML = '';
+    document.querySelector('.admin-body').style.display = 'none';
     document.getElementById('admin-hub').style.display = 'grid';
   }
 
