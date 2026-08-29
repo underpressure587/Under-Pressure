@@ -224,7 +224,7 @@
 
         
         <div id="admin-sec-historias" class="admin-section" style="display:none">
-          <div class="admin-historias-info">Setores, histórias e rounds do jogo — editados aqui, sem precisar de deploy.</div>
+          <div class="admin-historias-info">Crie, edite e publique as histórias e rounds do jogo por aqui.</div>
 
           <!-- TELA 1 — Setores -->
           <div id="hist-view-setores">
@@ -408,7 +408,7 @@
         </div>
 
         <div id="admin-sec-glossario" class="admin-section" style="display:none">
-          <div class="admin-historias-info">Organize o glossário em seções — sem precisar de deploy.</div>
+          <div class="admin-historias-info">Organize o glossário em seções.</div>
           <div class="admin-busca-row">
             <input type="text" id="admin-glossario-busca" class="admin-input" placeholder="Buscar termo..." oninput="ADMIN.filtrarGlossario(this.value)">
             <button class="admin-btn-sm" onclick="ADMIN.abrirModalSecaoGlossario()">+ Seção</button>
@@ -1060,7 +1060,7 @@ onAuthStateChanged(auth, async user => {
     t++;
   }
   if (!window.ADMIN) {
-    showLogin('Erro interno: admin.js não carregou. Verifique o servidor.');
+    showLogin('Erro interno ao carregar o painel. Verifique sua conexão e tente novamente.');
     return;
   }
 

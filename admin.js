@@ -1773,11 +1773,11 @@ const ADMIN = (() => {
     if (status === 404 || msg.includes('not found') || msg.includes('não encontrado'))
       return { titulo: 'Recurso não encontrado', detalhe: 'O documento que tentou acessar não existe ou foi removido.', tipo: 'notfound' };
     if (status >= 500 || msg.includes('unavailable') || msg.includes('internal'))
-      return { titulo: 'Falha no servidor', detalhe: 'O Firestore retornou um erro interno. Tente novamente em instantes.', tipo: 'server' };
+      return { titulo: 'Falha no servidor', detalhe: 'O servidor retornou um erro interno. Tente novamente em instantes.', tipo: 'server' };
     if (msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('network') || msg.includes('offline') || msg.includes('conexão'))
       return { titulo: 'Falha na conexão', detalhe: 'Não foi possível alcançar o servidor. Verifique sua internet e tente novamente.', tipo: 'network' };
     if (status === 429 || msg.includes('quota') || msg.includes('limit'))
-      return { titulo: 'Limite atingido', detalhe: 'O Firestore atingiu o limite de requisições. Aguarde alguns segundos.', tipo: 'quota' };
+      return { titulo: 'Limite atingido', detalhe: 'O sistema atingiu o limite de requisições. Aguarde alguns segundos.', tipo: 'quota' };
 
     return { titulo: 'Erro inesperado', detalhe: e?.message || 'Ocorreu um problema desconhecido. Tente novamente.', tipo: 'generic' };
   }
@@ -2088,7 +2088,7 @@ const ADMIN = (() => {
 
   function _renderVersaoSemDados() {
     const el = document.getElementById('versao-deploy-atual');
-    if (el) el.textContent = 'version.json não encontrado — faça um deploy via GitHub Actions';
+    if (el) el.textContent = 'Nenhuma versão publicada ainda';
   }
 
   async function salvarChangelog() {
@@ -2595,6 +2595,7 @@ const ADMIN = (() => {
       _fonteNativaCache[setor] = resultado;
       return resultado;
     } catch(e) {
+      console.error('[Histórias] erro ao carregar setor', setor, e);
       const resultado = { ok: false, erro: e.message };
       _fonteNativaCache[setor] = resultado;
       return resultado;
@@ -2790,13 +2791,13 @@ const ADMIN = (() => {
     const fonte = await _fetchSetorFonte(setor);
     if (!fonte.ok) {
       document.getElementById('hist-editor-titulo').textContent = 'Erro ao carregar';
-      document.getElementById('hist-nativa-msg').textContent = `Não deu pra ler o código-fonte: ${fonte.erro}`;
+      document.getElementById('hist-nativa-msg').textContent = `Não foi possível carregar esta história agora. Tente de novo em instantes.`;
       return;
     }
     const intro = fonte.empresa?.intros?.[id];
     if (!intro) {
       document.getElementById('hist-editor-titulo').textContent = 'Não encontrada';
-      document.getElementById('hist-nativa-msg').textContent = 'Essa história não existe mais no código-fonte.';
+      document.getElementById('hist-nativa-msg').textContent = 'Essa história não existe mais.';
       return;
     }
     _histNativaAtual.intro = intro;
@@ -2820,11 +2821,11 @@ const ADMIN = (() => {
 
     const qtdRounds = _histNativaAtual.rounds ? _histNativaAtual.rounds.length : null;
     document.getElementById('hist-indicadores-lista').innerHTML = `
-      <div class="hist-autoria">Indicadores iniciais definidos em <code>Core/state.js</code> — não editável por aqui.</div>
+      <div class="hist-autoria">Indicadores iniciais vêm de dentro do jogo — não editável por aqui.</div>
       <button class="admin-btn-sm" style="margin-top:8px" onclick="ADMIN.verRoundsNativos()">
         ▤ Ver os ${qtdRounds ?? '?'} rounds
       </button>
-      ${_histNativaAtual.rounds === null ? '<div class="hist-checklist-aviso" style="margin-top:6px">Estrutura de rounds com problema no código-fonte — não consegui ler.</div>' : ''}
+      ${_histNativaAtual.rounds === null ? '<div class="hist-checklist-aviso" style="margin-top:6px">Não foi possível ler as rodadas.</div>' : ''}
     `;
 
     document.getElementById('hist-autoria-info').textContent =
@@ -2856,7 +2857,7 @@ const ADMIN = (() => {
 
     const corpo = document.getElementById('hist-rounds-nativa-corpo');
     if (!Array.isArray(rounds) || !rounds.length) {
-      corpo.innerHTML = '<div class="admin-empty">Não consegui ler os rounds dessa história no código-fonte.</div>';
+      corpo.innerHTML = '<div class="admin-empty">Não foi possível ler as rodadas dessa história.</div>';
       return;
     }
     const faseLabel = { diagnostico: '🔵 Diagnóstico', pressao: '🟠 Pressão', decisao: '🟣 Decisão' };
@@ -4092,7 +4093,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
   async function importarGlossarioPadrao() {
     const ok = await _confirmar({
       titulo: 'Importar termos padrão',
-      mensagem: 'Isso cria as seções e termos que já existem hoje no código (cerca de 90 termos). Termos que já existirem no Firestore com o mesmo nome são pulados, não sobrescritos. Continuar?',
+      mensagem: 'Isso cria as seções e termos padrão do glossário (cerca de 90 termos). Termos que já existirem com o mesmo nome são pulados, não sobrescritos. Continuar?',
       labelOk: 'Importar',
     });
     if (!ok) return;
