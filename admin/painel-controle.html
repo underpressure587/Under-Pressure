@@ -71,7 +71,304 @@
           <span class="admin-hub-label">Jogadores</span>
         </button>
         <button class="admin-hub-card" data-cat="conteudo" onclick="ADMIN.abrirCategoria('conteudo')">
-          <span class="admin-hub-icon">🎮</span>
+          <span class="admin-hub-icon">🎮
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#2a2415" />
+      <stop offset="100%" stop-color="#0f0e0c" />
+    </radialGradient>
+
+    <!-- Gold Gradients for Controller Body -->
+    <linearGradient id="goldBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffe885" />
+      <stop offset="20%" stop-color="#f7ce46" />
+      <stop offset="50%" stop-color="#e5a919" />
+      <stop offset="80%" stop-color="#b27903" />
+      <stop offset="100%" stop-color="#6a4500" />
+    </linearGradient>
+
+    <linearGradient id="goldHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8" />
+      <stop offset="30%" stop-color="#fff3a1" stop-opacity="0.5" />
+      <stop offset="70%" stop-color="#d49000" stop-opacity="0" />
+      <stop offset="100%" stop-color="#543700" stop-opacity="0.6" />
+    </linearGradient>
+
+    <radialGradient id="goldGripGlow" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#fff5b8" />
+      <stop offset="50%" stop-color="#dba112" />
+      <stop offset="100%" stop-color="#593900" />
+    </radialGradient>
+
+    <!-- Inner Plate Dark Gold Accent -->
+    <linearGradient id="darkGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8a5c00" />
+      <stop offset="50%" stop-color="#472f00" />
+      <stop offset="100%" stop-color="#1f1400" />
+    </linearGradient>
+
+    <!-- Metallic Button Gradients -->
+    <linearGradient id="btnMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#555" />
+      <stop offset="50%" stop-color="#222" />
+      <stop offset="100%" stop-color="#050505" />
+    </linearGradient>
+
+    <radialGradient id="goldBtn" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#fff8d1" />
+      <stop offset="40%" stop-color="#ffd23c" />
+      <stop offset="85%" stop-color="#996a00" />
+      <stop offset="100%" stop-color="#422d00" />
+    </radialGradient>
+
+    <!-- D-Pad Metallic Gradient -->
+    <linearGradient id="dpadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4a4a4a" />
+      <stop offset="50%" stop-color="#2b2b2b" />
+      <stop offset="100%" stop-color="#141414" />
+    </linearGradient>
+
+    <!-- Thumbstick Dome Gradient -->
+    <radialGradient id="stickDome" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#666666" />
+      <stop offset="70%" stop-color="#1a1a1a" />
+      <stop offset="100%" stop-color="#080808" />
+    </radialGradient>
+
+    <linearGradient id="stickBase" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#111" />
+      <stop offset="100%" stop-color="#333" />
+    </linearGradient>
+
+    <!-- Drop Shadows and Filters -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#000000" flood-opacity="0.8" />
+    </filter>
+
+    <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feComponentTransfer in="SourceAlpha">
+        <feFuncA type="linear" slope="0.7"/>
+      </feComponentTransfer>
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feOffset dx="0" dy="4"/>
+      <feComposite operator="out" in2="SourceAlpha" result="inverse"/>
+      <feFlood flood-color="black" result="color"/>
+      <feComposite operator="in" in2="inverse" result="shadow"/>
+      <feComposite operator="over" in2="SourceGraphic"/>
+    </filter>
+
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="lightGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bgGlow)" />
+
+  <!-- Ambient Light Pattern/Grid (Decorative) -->
+  <g opacity="0.05" stroke="#ffe885" stroke-width="1">
+    <path d="M0,100 L800,100 M0,200 L800,200 M0,300 L800,300 M0,400 L800,400 M0,500 L800,500" />
+    <path d="M100,0 L100,600 M200,0 L200,600 M300,0 L300,600 M400,0 L400,600 M500,0 L500,600 M600,0 L600,600 M700,0 L700,600" />
+  </g>
+
+  <!-- Main Gamepad Group -->
+  <g transform="translate(0, 30)">
+    
+    <!-- Shadow Cast -->
+    <path d="M 160,260 
+             C 160,140 270,120 400,120 
+             C 530,120 640,140 640,260 
+             C 640,390 580,480 510,480 
+             C 470,480 440,430 400,430 
+             C 360,430 330,480 290,480 
+             C 220,480 160,390 160,260 Z" 
+          fill="#000000" opacity="0.6" filter="url(#dropShadow)" />
+
+    <!-- Bumpers / Triggers (Top) -->
+    <g id="bumpers">
+      <!-- Left Bumper -->
+      <path d="M 210,152 C 230,130 310,120 370,125 L 365,145 C 310,140 240,148 222,165 Z" fill="url(#darkGold)" stroke="#f7ce46" stroke-width="1"/>
+      <!-- Right Bumper -->
+      <path d="M 590,152 C 570,130 490,120 430,125 L 435,145 C 490,140 560,148 578,165 Z" fill="url(#darkGold)" stroke="#f7ce46" stroke-width="1"/>
+    </g>
+
+    <!-- Main Controller Body -->
+    <g id="main-body">
+      <!-- Base Outer Body (Gold) -->
+      <path id="body-base" 
+            d="M 160,250 
+               C 155,140 270,125 400,125 
+               C 530,125 645,140 640,250 
+               C 635,380 575,475 510,475 
+               C 465,475 435,420 400,420 
+               C 365,420 335,475 290,475 
+               C 225,475 165,380 160,250 Z" 
+            fill="url(#goldBody)" 
+            stroke="#fffae0" 
+            stroke-width="2" />
+
+      <!-- Body Highlight Overlay (Specular Light) -->
+      <path d="M 160,250 
+               C 155,140 270,125 400,125 
+               C 530,125 645,140 640,250 
+               C 635,280 620,330 600,370 
+               C 580,320 540,150 400,150 
+               C 260,150 220,320 200,370 
+               C 180,330 165,280 160,250 Z" 
+            fill="url(#goldHighlight)" />
+
+      <!-- Left Grip Highlight -->
+      <path d="M 165,260 C 165,360 210,450 280,460 C 240,430 200,350 195,260 C 195,210 210,170 230,150 C 180,175 165,210 165,260 Z" fill="url(#goldGripGlow)" opacity="0.6"/>
+      
+      <!-- Right Grip Highlight -->
+      <path d="M 635,260 C 635,360 590,450 520,460 C 560,430 600,350 605,260 C 605,210 590,170 570,150 C 620,175 635,210 635,260 Z" fill="url(#goldGripGlow)" opacity="0.3"/>
+
+      <!-- Center Inner Panel (Dark Inset) -->
+      <path d="M 280,165 
+               C 340,155 460,155 520,165 
+               C 545,220 535,300 480,320 
+               C 440,335 360,335 320,320 
+               C 265,300 255,220 280,165 Z" 
+            fill="url(#darkGold)" 
+            stroke="#a37409" 
+            stroke-width="2" 
+            filter="url(#innerShadow)"/>
+    </g>
+
+    <!-- Center Branding & Accent Lights -->
+    <g id="center-details">
+      <!-- Glowing Logo Button (Gold Shield/Gem) -->
+      <circle cx="400" cy="205" r="28" fill="url(#goldBtn)" stroke="#ffe885" stroke-width="2" filter="url(#lightGlow)"/>
+      <!-- Inner Logo Symbol (Stylized 'G' / Gamepad) -->
+      <path d="M 390,205 L 400,192 L 410,205 L 400,218 Z" fill="#1f1400"/>
+      <circle cx="400" cy="205" r="6" fill="#1f1400"/>
+
+      <!-- LED Indicators -->
+      <circle cx="380" cy="250" r="3" fill="#ffea75" filter="url(#lightGlow)"/>
+      <circle cx="393" cy="253" r="3" fill="#ffea75" filter="url(#lightGlow)"/>
+      <circle cx="407" cy="253" r="3" fill="#332200"/>
+      <circle cx="420" cy="250" r="3" fill="#332200"/>
+
+      <!-- Select / Start Buttons -->
+      <rect x="335" y="200" width="18" height="8" rx="4" transform="rotate(-15 335 200)" fill="url(#dpadGrad)" stroke="#8a5c00" stroke-width="1"/>
+      <rect x="447" y="196" width="18" height="8" rx="4" transform="rotate(15 447 196)" fill="url(#dpadGrad)" stroke="#8a5c00" stroke-width="1"/>
+    </g>
+
+    <!-- D-PAD (Directional Pad) -->
+    <g id="dpad" transform="translate(255, 235)">
+      <!-- D-Pad Base Shadow/Well -->
+      <circle cx="0" cy="0" r="46" fill="#100b00" />
+      <circle cx="0" cy="0" r="45" fill="url(#darkGold)" stroke="#664400" stroke-width="1"/>
+
+      <!-- D-Pad Cross -->
+      <path d="M -14,-42 L 14,-42 L 14,-14 L 42,-14 L 42,14 L 14,14 L 14,42 L -14,42 L -14,14 L -42,14 L -42,-14 L -14,-14 Z" 
+            fill="url(#dpadGrad)" 
+            stroke="#d49000" 
+            stroke-width="1.5" 
+            filter="url(#dropShadow)" />
+      
+      <!-- Direction Indicators (Gold Arrows) -->
+      <polygon points="0,-34 -7,-22 7,-22" fill="url(#goldBody)"/>
+      <polygon points="0,34 -7,22 7,22" fill="url(#goldBody)"/>
+      <polygon points="-34,0 -22,-7 -22,7" fill="url(#goldBody)"/>
+      <polygon points="34,0 22,-7 22,7" fill="url(#goldBody)"/>
+
+      <!-- Center Indent -->
+      <circle cx="0" cy="0" r="8" fill="#1a1a1a" opacity="0.5"/>
+    </g>
+
+    <!-- ACTION BUTTONS (X, Y, A, B) -->
+    <g id="action-buttons" transform="translate(545, 235)">
+      <!-- Button Cluster Base/Well -->
+      <circle cx="0" cy="0" r="52" fill="#100b00" />
+      <circle cx="0" cy="0" r="50" fill="url(#darkGold)" stroke="#664400" stroke-width="1"/>
+
+      <!-- Button Y (Top) -->
+      <g transform="translate(0, -27)">
+        <circle cx="0" cy="0" r="14" fill="url(#goldBtn)" stroke="#fff" stroke-width="1" filter="url(#dropShadow)"/>
+        <text x="0" y="5" font-family="Arial, sans-serif" font-weight="900" font-size="15" fill="#3b2600" text-anchor="middle">Y</text>
+      </g>
+
+      <!-- Button A (Bottom) -->
+      <g transform="translate(0, 27)">
+        <circle cx="0" cy="0" r="14" fill="url(#goldBtn)" stroke="#fff" stroke-width="1" filter="url(#dropShadow)"/>
+        <text x="0" y="5" font-family="Arial, sans-serif" font-weight="900" font-size="15" fill="#3b2600" text-anchor="middle">A</text>
+      </g>
+
+      <!-- Button X (Left) -->
+      <g transform="translate(-27, 0)">
+        <circle cx="0" cy="0" r="14" fill="url(#goldBtn)" stroke="#fff" stroke-width="1" filter="url(#dropShadow)"/>
+        <text x="0" y="5" font-family="Arial, sans-serif" font-weight="900" font-size="15" fill="#3b2600" text-anchor="middle">X</text>
+      </g>
+
+      <!-- Button B (Right) -->
+      <g transform="translate(27, 0)">
+        <circle cx="0" cy="0" r="14" fill="url(#goldBtn)" stroke="#fff" stroke-width="1" filter="url(#dropShadow)"/>
+        <text x="0" y="5" font-family="Arial, sans-serif" font-weight="900" font-size="15" fill="#3b2600" text-anchor="middle">B</text>
+      </g>
+    </g>
+
+    <!-- THUMBSTICKS (ANALOG STICKS) -->
+    
+    <!-- Left Thumbstick (Offset Down/Right-ish typical for modern controllers, or aligned) -->
+    <g id="left-stick" transform="translate(340, 335)">
+      <!-- Outer Base Well -->
+      <circle cx="0" cy="0" r="43" fill="#140d00"/>
+      <circle cx="0" cy="0" r="40" fill="url(#stickBase)" stroke="#593900" stroke-width="2"/>
+      <!-- Angled Shaft Effect -->
+      <circle cx="-2" cy="-2" r="33" fill="#0a0a0a"/>
+      <!-- Movable Joystick Top -->
+      <circle cx="-4" cy="-4" r="30" fill="url(#stickDome)" stroke="#cca010" stroke-width="1.5" filter="url(#dropShadow)"/>
+      <!-- Texture Ring on Stick Top -->
+      <circle cx="-4" cy="-4" r="23" fill="none" stroke="#2b2b2b" stroke-width="3" stroke-dasharray="8, 4"/>
+      <!-- Inner Concave Center -->
+      <circle cx="-4" cy="-4" r="16" fill="#121212" stroke="#080808" stroke-width="2"/>
+    </g>
+
+    <!-- Right Thumbstick -->
+    <g id="right-stick" transform="translate(460, 335)">
+      <!-- Outer Base Well -->
+      <circle cx="0" cy="0" r="43" fill="#140d00"/>
+      <circle cx="0" cy="0" r="40" fill="url(#stickBase)" stroke="#593900" stroke-width="2"/>
+      <!-- Angled Shaft Effect -->
+      <circle cx="2" cy="-2" r="33" fill="#0a0a0a"/>
+      <!-- Movable Joystick Top -->
+      <circle cx="4" cy="-4" r="30" fill="url(#stickDome)" stroke="#cca010" stroke-width="1.5" filter="url(#dropShadow)"/>
+      <!-- Texture Ring on Stick Top -->
+      <circle cx="4" cy="-4" r="23" fill="none" stroke="#2b2b2b" stroke-width="3" stroke-dasharray="8, 4"/>
+      <!-- Inner Concave Center -->
+      <circle cx="4" cy="-4" r="16" fill="#121212" stroke="#080808" stroke-width="2"/>
+    </g>
+
+    <!-- Speaker Grille / Vent Holes (Center Lower) -->
+    <g id="speaker-dots" fill="#291b00" opacity="0.8">
+      <circle cx="392" cy="365" r="2"/>
+      <circle cx="400" cy="365" r="2"/>
+      <circle cx="408" cy="365" r="2"/>
+      <circle cx="388" cy="372" r="2"/>
+      <circle cx="396" cy="372" r="2"/>
+      <circle cx="404" cy="372" r="2"/>
+      <circle cx="412" cy="372" r="2"/>
+      <circle cx="392" cy="379" r="2"/>
+      <circle cx="400" cy="379" r="2"/>
+      <circle cx="408" cy="379" r="2"/>
+    </g>
+
+    <!-- Gold Accent Lines / Trims -->
+    <path d="M 210,210 C 230,280 250,330 275,370" fill="none" stroke="url(#goldHighlight)" stroke-width="2" opacity="0.6"/>
+    <path d="M 590,210 C 570,280 550,330 525,370" fill="none" stroke="url(#goldHighlight)" stroke-width="2" opacity="0.3"/>
+
+  </g>
+</svg>
+</span>
           <span class="admin-hub-label">Conteúdo do Jogo</span>
         </button>
         <button class="admin-hub-card" data-cat="modo-sala" onclick="ADMIN.abrirCategoria('modo-sala')">
