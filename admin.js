@@ -2919,6 +2919,7 @@ const ADMIN = (() => {
 
     document.getElementById('round-btn-excluir').style.display = 'none';
     _setRoundEditorReadonly(true);
+    _cselRefreshAll(document.getElementById('hist-view-round-editor'));
   }
 
   function voltarParaVisualizacaoNativa() {
@@ -3428,7 +3429,7 @@ const ADMIN = (() => {
     document.querySelectorAll('#hist-view-round-editor input, #hist-view-round-editor textarea, #hist-view-round-editor select')
       .forEach(el => { el.disabled = readonly; });
     document.querySelectorAll('#hist-view-round-editor button').forEach(btn => {
-      if (btn.id === 'round-btn-voltar') return; 
+      if (btn.id === 'round-btn-voltar' || btn.classList.contains('csel-trigger')) return; 
       btn.style.display = readonly ? 'none' : '';
     });
     const acoes = document.querySelector('#hist-view-round-editor .hist-editor-actions');
@@ -3446,6 +3447,71 @@ const ADMIN = (() => {
   }
 
   
+  
+  
+  function _cselBuild(selectEl) {
+    if (!selectEl || selectEl.dataset.cselDone) return;
+    selectEl.dataset.cselDone = '1';
+    selectEl.classList.add('csel-native');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'csel';
+    selectEl.parentNode.insertBefore(wrap, selectEl);
+    wrap.appendChild(selectEl);
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'csel-trigger';
+    trigger.innerHTML = '<span class="csel-label"></span><span class="csel-arrow">▾</span>';
+    wrap.appendChild(trigger);
+
+    const menu = document.createElement('div');
+    menu.className = 'csel-menu';
+    wrap.appendChild(menu);
+
+    function refresh() {
+      const atual = selectEl.options[selectEl.selectedIndex];
+      trigger.querySelector('.csel-label').textContent = atual ? atual.textContent : '';
+      menu.innerHTML = '';
+      Array.from(selectEl.options).forEach(opt => {
+        const item = document.createElement('div');
+        item.className = 'csel-opt' + (opt.value === selectEl.value ? ' sel' : '');
+        item.textContent = opt.textContent;
+        item.onclick = () => {
+          selectEl.value = opt.value;
+          selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+          refresh();
+          wrap.classList.remove('open');
+        };
+        menu.appendChild(item);
+      });
+    }
+
+    trigger.onclick = (e) => {
+      e.stopPropagation();
+      if (selectEl.disabled) return;
+      const jaAberto = wrap.classList.contains('open');
+      document.querySelectorAll('.csel.open').forEach(o => o.classList.remove('open'));
+      if (!jaAberto) wrap.classList.add('open');
+    };
+
+    selectEl._cselRefresh = refresh;
+    refresh();
+  }
+
+  
+  function _cselRefreshAll(root) {
+    (root || document).querySelectorAll('select').forEach(_cselBuild);
+    (root || document).querySelectorAll('select.csel-native').forEach(s => s._cselRefresh && s._cselRefresh());
+  }
+
+  if (!window._cselFechaAoClicarFora) {
+    window._cselFechaAoClicarFora = true;
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.csel.open').forEach(o => o.classList.remove('open'));
+    });
+  }
+
   function _indOptionsHTML(setor, selecionado) {
     return (_INDICADORES_SETOR[setor] || [])
       .map(k => `<option value="${k}" ${k === selecionado ? 'selected' : ''}>${k}</option>`).join('');
@@ -3470,7 +3536,9 @@ const ADMIN = (() => {
 
   function adicionarEfeito(containerId) {
     const setor = _histEditandoDoc?.setor || _histSetorAtual;
-    document.getElementById(containerId)?.insertAdjacentHTML('beforeend', _efeitoRowHTML(setor, '', 0));
+    const container = document.getElementById(containerId);
+    container?.insertAdjacentHTML('beforeend', _efeitoRowHTML(setor, '', 0));
+    _cselRefreshAll(container);
   }
 
   function _renderChoiceCard(cid, c = {}) {
@@ -3545,8 +3613,9 @@ const ADMIN = (() => {
   function adicionarChoice() {
     const atuais = document.querySelectorAll('#round-choices-lista .round-choice-card').length;
     if (atuais >= 5) { _showAdminToast('Máximo de 5 choices por round.', true); return; }
-    document.getElementById('round-choices-lista')
-      .insertAdjacentHTML('beforeend', _renderChoiceCard('c' + (_choiceSeq++), {}));
+    const lista = document.getElementById('round-choices-lista');
+    lista.insertAdjacentHTML('beforeend', _renderChoiceCard('c' + (_choiceSeq++), {}));
+    _cselRefreshAll(lista);
     _atualizarBotaoAddChoice();
   }
 
@@ -3581,6 +3650,7 @@ const ADMIN = (() => {
     document.getElementById('round-checklist-aviso').textContent = '';
 
     _renderChoicesEditor([{}, {}]);
+    _cselRefreshAll(document.getElementById('hist-view-round-editor'));
   }
 
   function abrirEditorRound(id) {
@@ -3608,6 +3678,7 @@ const ADMIN = (() => {
     document.getElementById('round-checklist-aviso').textContent = '';
 
     _renderChoicesEditor(Array.isArray(r.choices) && r.choices.length ? r.choices : [{}, {}]);
+    _cselRefreshAll(document.getElementById('hist-view-round-editor'));
   }
 
   function _lerChoicesDoDOM() {
@@ -3864,6 +3935,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     sel.innerHTML = _glossarioSecoesCache.length
       ? _glossarioSecoesCache.map(s => `<option value="${_esc(s)}">${_esc(s)}</option>`).join('')
       : '<option value="">— crie uma seção primeiro —</option>';
+    _cselRefreshAll(sel.closest('.csel') || sel.parentNode);
   }
 
   function filtrarGlossario(termo) {
@@ -4024,6 +4096,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     document.getElementById('admin-glossario-def').value   = item?.def   || '';
     _popularSelectCategorias();
     document.getElementById('admin-glossario-categoria').value = item?.categoria || secaoPadrao || _glossarioSecoesCache[0];
+    document.getElementById('admin-glossario-categoria')._cselRefresh?.();
 
     document.getElementById('admin-modal-glossario').style.display = 'flex';
   }
