@@ -134,6 +134,67 @@ const ADMIN = (() => {
 
   
   
+  
+  
+  const _ICONS = {
+    'save': `<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>`,
+    'ban': `<circle cx="12" cy="12" r="10" /> <path d="M4.929 4.929 19.07 19.071" />`,
+    'book-open': `<path d="M12 5v16" /> <path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z" />`,
+    'bookmark': `<path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z" />`,
+    'bug': `<path d="M12 20v-9" /> <path d="M14 7a4 4 0 0 1 4 4v3a6 6 0 0 1-12 0v-3a4 4 0 0 1 4-4z" /> <path d="M14.12 3.88 16 2" /> <path d="M21 21a4 4 0 0 0-3.81-4" /> <path d="M21 5a4 4 0 0 1-3.55 3.97" /> <path d="M22 13h-4" /> <path d="M3 21a4 4 0 0 1 3.81-4" /> <path d="M3 5a4 4 0 0 0 3.55 3.97" /> <path d="M6 13H2" /> <path d="m8 2 1.88 1.88" /> <path d="M9 7.13V6a3 3 0 1 1 6 0v1.13" />`,
+    'building-2': `<path d="M10 12h4" /> <path d="M10 8h4" /> <path d="M14 21v-3a2 2 0 0 0-4 0v3" /> <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /> <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" />`,
+    'chart-column': `<path d="M3 3v16a2 2 0 0 0 2 2h16" /> <path d="M18 17V9" /> <path d="M13 17V5" /> <path d="M8 17v-3" />`,
+    'check': `<path d="M20 6 9 17l-5-5" />`,
+    'circle-check': `<circle cx="12" cy="12" r="10" /> <path d="m16 9-5.5 5.5L8 12" />`,
+    'circle-x': `<circle cx="12" cy="12" r="10" /> <path d="m15 9-6 6" /> <path d="m9 9 6 6" />`,
+    'clipboard-list': `<rect width="8" height="4" x="8" y="2" rx="1" ry="1" /> <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /> <path d="M12 11h4" /> <path d="M12 16h4" /> <path d="M8 11h.01" /> <path d="M8 16h.01" />`,
+    'crown': `<path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z" /> <path d="M5 21h14" />`,
+    'eye': `<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /> <circle cx="12" cy="12" r="3" />`,
+    'factory': `<path d="M12 16h.01" /> <path d="M16 16h.01" /> <path d="M3 19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5a.5.5 0 0 0-.769-.422l-4.462 2.844A.5.5 0 0 1 15 10.5v-2a.5.5 0 0 0-.769-.422L9.77 10.922A.5.5 0 0 1 9 10.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z" /> <path d="M8 16h.01" />`,
+    'file-text': `<path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="M10 9H8" /> <path d="M16 13H8" /> <path d="M16 17H8" />`,
+    'folder': `<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />`,
+    'folder-open': `<path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" />`,
+    'gamepad-2': `<line x1="6" x2="10" y1="11" y2="11" /> <line x1="8" x2="8" y1="9" y2="13" /> <line x1="15" x2="15.01" y1="12" y2="12" /> <line x1="18" x2="18.01" y1="10" y2="10" /> <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z" />`,
+    'globe': `<circle cx="12" cy="12" r="10" /> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path d="M2 12h20" />`,
+    'home': `<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />`,
+    'lightbulb': `<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path d="M9 18h6" /> <path d="M10 22h4" />`,
+    'loader-circle': `<path d="M21 12a9 9 0 1 1-6.219-8.56" />`,
+    'lock': `<rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" />`,
+    'lock-open': `<rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 9.9-1" />`,
+    'mail': `<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /> <rect x="2" y="4" width="20" height="16" rx="2" />`,
+    'megaphone': `<path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /> <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" /> <path d="M8 6v8" />`,
+    'message-circle': `<path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" />`,
+    'monitor': `<rect width="20" height="14" x="2" y="3" rx="2" /> <line x1="8" x2="16" y1="21" y2="21" /> <line x1="12" x2="12" y1="17" y2="21" />`,
+    'pencil': `<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /> <path d="m15 5 4 4" />`,
+    'pin': `<path d="M12 17v5" /> <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />`,
+    'plus': `<path d="M5 12h14" /> <path d="M12 5v14" />`,
+    'refresh-cw': `<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" />`,
+    'rocket': `<path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /> <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /> <path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /> <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" />`,
+    'school': `<path d="M14 21v-3a2 2 0 0 0-4 0v3" /> <path d="M18 4.933V21" /> <path d="m4 6 7.106-3.79a2 2 0 0 1 1.788 0L20 6" /> <path d="m6 11-3.52 2.147a1 1 0 0 0-.48.854V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a1 1 0 0 0-.48-.853L18 11" /> <path d="M6 4.933V21" /> <circle cx="12" cy="9" r="2" />`,
+    'send': `<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" /> <path d="m21.854 2.147-10.94 10.939" />`,
+    'settings': `<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /> <circle cx="12" cy="12" r="3" />`,
+    'shopping-cart': `<path d="m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18" /> <path d="M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25" /> <circle cx="18" cy="20" r="2" /> <circle cx="8" cy="20" r="2" />`,
+    'siren': `<path d="M7 18v-6a5 5 0 1 1 10 0v6" /> <path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z" /> <path d="M21 12h1" /> <path d="M18.5 4.5 18 5" /> <path d="M2 12h1" /> <path d="M12 2v1" /> <path d="m4.929 4.929.707.707" /> <path d="M12 12v6" />`,
+    'star': `<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />`,
+    'target': `<circle cx="12" cy="12" r="10" /> <circle cx="12" cy="12" r="6" /> <circle cx="12" cy="12" r="2" />`,
+    'trash-2': `<path d="M10 11v6" /> <path d="M14 11v6" /> <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path d="M3 6h18" /> <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />`,
+    'trending-up': `<path d="M16 7h6v6" /> <path d="m22 7-8.5 8.5-5-5L2 17" />`,
+    'triangle-alert': `<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path d="M12 9v4" /> <path d="M12 17h.01" />`,
+    'trophy': `<path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2" /> <path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2" /> <path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3" /> <path d="M4 22h16" /> <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" /> <path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3" />`,
+    'truck': `<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" /> <path d="M15 18H9" /> <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" /> <circle cx="17" cy="18" r="2" /> <circle cx="7" cy="18" r="2" />`,
+    'users': `<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path d="M16 3.128a4 4 0 0 1 0 7.744" /> <path d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle cx="9" cy="7" r="4" />`,
+    'wrench': `<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z" />`,
+    'x': `<path d="M18 6 6 18" /> <path d="m6 6 12 12" />`,
+  };
+
+  function _icon(name, size, extraClass) {
+    const paths = _ICONS[name];
+    if (!paths) return '';
+    const s = size || 16;
+    const cls = extraClass ? ` class="${extraClass}"` : '';
+    return `<svg${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;flex-shrink:0">${paths}</svg>`;
+  }
+
   function _esc(str) {
     const div = document.createElement('div');
     div.textContent = str == null ? '' : String(str);
@@ -156,34 +217,34 @@ const ADMIN = (() => {
 
   
   const _SECOES = [
-    { id: 'visao-geral', label: '📊 Geral'      },
-    { id: 'dashboard',   label: '📈 Dashboard'   },
-    { id: 'jogadores',   label: '👥 Jogadores'   },
-    { id: 'podio',       label: '🏆 Pódio'       },
-    { id: 'sessoes',     label: '🖥️ Sessões'     },
-    { id: 'historias',   label: '🎮 Histórias'   },
-    { id: 'glossario',   label: '📖 Glossário'   },
-    { id: 'modo-sala',   label: '🏫 Modo Sala'   },
-    { id: 'mensagens',   label: '✉️ Mensagens'   },
-    { id: 'feedback',    label: '💬 Feedback'    },
-    { id: 'versao',      label: '🔖 Versão'      },
-    { id: 'config',      label: '⚙️ Config'      },
-    { id: 'manutencao',  label: '🔓 Manutenção'  },
-    { id: 'admins',      label: '👑 Admins'      },
-    { id: 'auditoria',   label: '📋 Auditoria'   },
-    { id: 'logs',        label: '🐛 Logs'        },
+    { id: 'visao-geral', label: 'Geral',      icon: 'chart-column'  },
+    { id: 'dashboard',   label: 'Dashboard',   icon: 'trending-up'   },
+    { id: 'jogadores',   label: 'Jogadores',   icon: 'users'         },
+    { id: 'podio',       label: 'Pódio',       icon: 'trophy'        },
+    { id: 'sessoes',     label: 'Sessões',     icon: 'monitor'       },
+    { id: 'historias',   label: 'Histórias',   icon: 'gamepad-2'     },
+    { id: 'glossario',   label: 'Glossário',   icon: 'book-open'     },
+    { id: 'modo-sala',   label: 'Modo Sala',   icon: 'school'        },
+    { id: 'mensagens',   label: 'Mensagens',   icon: 'mail'          },
+    { id: 'feedback',    label: 'Feedback',    icon: 'message-circle'},
+    { id: 'versao',      label: 'Versão',      icon: 'bookmark'      },
+    { id: 'config',      label: 'Config',      icon: 'settings'      },
+    { id: 'manutencao',  label: 'Manutenção',  icon: 'lock-open'     },
+    { id: 'admins',      label: 'Admins',      icon: 'crown'         },
+    { id: 'auditoria',   label: 'Auditoria',   icon: 'clipboard-list'},
+    { id: 'logs',        label: 'Logs',        icon: 'bug'           },
   ];
 
   
   
   
   const _CATEGORIAS = [
-    { id: 'analise',     label: '📊 Análise',          secoes: ['visao-geral', 'dashboard'] },
-    { id: 'jogadores',   label: '👥 Jogadores',        secoes: ['jogadores', 'podio', 'sessoes'] },
-    { id: 'conteudo',    label: '🎮 Conteúdo do Jogo', secoes: ['historias', 'glossario'] },
-    { id: 'modo-sala',   label: '🏫 Modo Sala',        secoes: ['modo-sala'] },
-    { id: 'comunicacao', label: '✉️ Comunicação',      secoes: ['mensagens', 'feedback', 'versao'] },
-    { id: 'sistema',     label: '🔧 Sistema',          secoes: ['config', 'manutencao', 'admins', 'auditoria', 'logs'] },
+    { id: 'analise',     label: 'Análise',          icon: 'chart-column', secoes: ['visao-geral', 'dashboard'] },
+    { id: 'jogadores',   label: 'Jogadores',        icon: 'users',        secoes: ['jogadores', 'podio', 'sessoes'] },
+    { id: 'conteudo',    label: 'Conteúdo do Jogo', icon: 'gamepad-2',    secoes: ['historias', 'glossario'] },
+    { id: 'modo-sala',   label: 'Modo Sala',        icon: 'school',       secoes: ['modo-sala'] },
+    { id: 'comunicacao', label: 'Comunicação',      icon: 'mail',         secoes: ['mensagens', 'feedback', 'versao'] },
+    { id: 'sistema',     label: 'Sistema',          icon: 'wrench',       secoes: ['config', 'manutencao', 'admins', 'auditoria', 'logs'] },
   ];
 
   let _categoriaAtiva = null;
@@ -207,12 +268,13 @@ const ADMIN = (() => {
     document.getElementById('admin-hub').style.display = 'none';
     document.getElementById('admin-subnav').style.display = 'flex';
     document.querySelector('.admin-body').style.display = '';
-    document.getElementById('admin-nav-cat-titulo').textContent = cat.label;
+    document.getElementById('admin-nav-cat-titulo').innerHTML = `${_icon(cat.icon, 15)} ${cat.label}`;
 
     const wrap = document.getElementById('admin-subnav-botoes');
     wrap.innerHTML = secoesVisiveis.map(id => {
       const s = _SECOES.find(s => s.id === id);
-      return `<button class="admin-nav-btn" data-sec="${id}" onclick="ADMIN.irParaSecao('${id}')">${s ? s.label : id}</button>`;
+      const rotulo = s ? `${_icon(s.icon, 15)} ${s.label}` : id;
+      return `<button class="admin-nav-btn" data-sec="${id}" onclick="ADMIN.irParaSecao('${id}')">${rotulo}</button>`;
     }).join('');
 
     irParaSecao(secoesVisiveis[0]);
@@ -404,10 +466,10 @@ const ADMIN = (() => {
             <div class="admin-jogador-stats">${j.mandatos || 0} mandatos · Melhor: ${j.melhorScore || 0} pts</div>
           </div>
           <div class="admin-jogador-acoes">
-            <button class="admin-btn-sm" onclick="ADMIN.verHistoricoJogador('${j.uid}', '${(j.nome||'').replace(/'/g,"\'")}')">📋 Histórico</button>
-            <button class="admin-btn-sm" onclick="ADMIN.abrirModalInbox('${j.uid}', '${(j.nome||'').replace(/'/g,"\\'")}')">✉️ Msg</button>
+            <button class="admin-btn-sm" onclick="ADMIN.verHistoricoJogador('${j.uid}', '${(j.nome||'').replace(/'/g,"\'")}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg> Histórico</button>
+            <button class="admin-btn-sm" onclick="ADMIN.abrirModalInbox('${j.uid}', '${(j.nome||'').replace(/'/g,"\\'")}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg> Msg</button>
             <button class="admin-btn-sm ${j.banido ? 'admin-btn-ok' : 'admin-btn-danger'}" onclick="ADMIN.abrirModalBan('${j.uid}', '${(j.nome||'').replace(/'/g,"\'")}', ${!!j.banido})">
-              ${j.banido ? '✅ Desbanir' : '🚫 Banir'}
+              ${j.banido ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M20 6 9 17l-5-5"/></svg> Desbanir' : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg> Banir'}
             </button>
           </div>
         </div>
@@ -533,7 +595,7 @@ const ADMIN = (() => {
             <div class="admin-podio-detalhe">${p.totalJogos || 0} jogos · ${p.ultimaPartida ? new Date(p.ultimaPartida).toLocaleDateString('pt-BR') : '—'}${p.sector && !_setorSelecionado ? ` · <span style="color:var(--gold2);font-weight:600">${p.sector}</span>` : ''}</div>
           </div>
           <div class="admin-podio-score">${p.melhorScore || 0}</div>
-          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerDoPodio('${p.uid}', '${(p.player||'').replace(/'/g,"\\'")}')">🗑️</button>
+          <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerDoPodio('${p.uid}', '${(p.player||'').replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
         </div>
       `).join('');
     } catch(e) {
@@ -621,9 +683,9 @@ const ADMIN = (() => {
     _setLoading('admin-conteudo-body', false);
   }
 
-  function _emojiSetor(s) {
-    const map = { tecnologia:'🚀', varejo:'🛒', logistica:'🚛', industria:'🏭' };
-    return map[s] || '🏢';
+  function _emojiSetor(s, size) {
+    const map = { tecnologia:'rocket', varejo:'shopping-cart', logistica:'truck', industria:'factory' };
+    return _icon(map[s] || 'building-2', size || 14);
   }
 
   
@@ -647,7 +709,7 @@ const ADMIN = (() => {
   async function adicionarAdmin() {
     const meUID = window._player?.uid || '';
     if (meUID !== _adminOwner) {
-      _showAdminToast('Só o 👑 owner pode adicionar novos admins.', true);
+      _showAdminToast('Só o owner pode adicionar novos admins.', true);
       return;
     }
     const input = document.getElementById('admin-novo-uid');
@@ -686,7 +748,7 @@ const ADMIN = (() => {
         if (input) input.value = '';
         _registrarAuditoria(`Admin adicionado: ${uid.slice(0,8)}`);
       },
-      sucesso: 'Admin adicionado com sucesso! Ele começa sem nenhuma seção liberada — use "⚙️ Permissões" pra dar acesso.',
+      sucesso: 'Admin adicionado com sucesso! Ele começa sem nenhuma seção liberada — use "Permissões" pra dar acesso.',
       onSucesso: () => _renderAdminLista(),
     });
   }
@@ -694,7 +756,7 @@ const ADMIN = (() => {
   async function removerAdmin(uid) {
     const meUID = window._player?.uid || '';
     if (meUID !== _adminOwner) {
-      _showAdminToast('Só o 👑 owner pode remover administradores.', true);
+      _showAdminToast('Só o owner pode remover administradores.', true);
       return;
     }
     if (uid === _adminOwner) { _showAdminToast('Owner não pode ser removido.', true); return; }
@@ -765,7 +827,7 @@ const ADMIN = (() => {
 
     
     document.querySelectorAll('.admin-dropdown-item').forEach(btn => {
-      btn.classList.toggle('active', btn.textContent.trim() === label.trim());
+      btn.classList.toggle('active', (btn.dataset.valor || '') === valor);
     });
 
     
@@ -787,7 +849,7 @@ const ADMIN = (() => {
 
   
   async function resetarPodioTotal() {
-    const ok = await _confirmar({ titulo: '⚠️ Limpar pódio completo', mensagem: 'Isso vai apagar TODO o pódio de TODOS os setores. Esta ação não pode ser desfeita.', labelOk: 'Limpar tudo', perigoso: true });
+    const ok = await _confirmar({ titulo: 'Limpar pódio completo', mensagem: 'Isso vai apagar TODO o pódio de TODOS os setores. Esta ação não pode ser desfeita.', labelOk: 'Limpar tudo', perigoso: true });
     if (!ok) return;
 
     let _total = 0;
@@ -1035,13 +1097,13 @@ const ADMIN = (() => {
     if (!_banConfirmPending) {
       
       _banConfirmPending = true;
-      btn.textContent = '⚠️ Clique novamente para confirmar';
+      btn.textContent = 'Clique novamente para confirmar';
       btn.style.background = 'rgba(231,76,60,.35)';
       btn.style.borderColor = 'var(--err)';
       
       _banConfirmTimer = setTimeout(() => {
         _banConfirmPending = false;
-        btn.textContent = '🚫 Confirmar Banimento';
+        btn.textContent = 'Confirmar Banimento';
         btn.style.background = '';
         btn.style.borderColor = '';
       }, 3000);
@@ -1349,8 +1411,8 @@ const ADMIN = (() => {
           </div>
           <div style="font-size:.85rem;color:var(--t1);margin-bottom:6px">${m.texto || ''}</div>
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:.72rem;color:var(--t3)">👁 Lidos: ${lidos}${m.totalEnviado ? ' / ' + m.totalEnviado : ''}</span>
-            <button class="admin-btn" style="padding:3px 10px;font-size:.72rem;background:transparent;border:1px solid var(--line2);color:var(--t3)" onclick="ADMIN.apagarMensagemLog('${m.id}')">🗑 Apagar</button>
+            <span style="font-size:.72rem;color:var(--t3)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg> Lidos: ${lidos}${m.totalEnviado ? ' / ' + m.totalEnviado : ''}</span>
+            <button class="admin-btn" style="padding:3px 10px;font-size:.72rem;background:transparent;border:1px solid var(--line2);color:var(--t3)" onclick="ADMIN.apagarMensagemLog('${m.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Apagar</button>
           </div>
         </div>`;
       }).join('');
@@ -1375,7 +1437,7 @@ const ADMIN = (() => {
   }
 
   async function apagarTodasMensagens() {
-    const ok = await _confirmar({ titulo: '⚠️ Apagar todas as mensagens', mensagem: 'Isso apaga TODAS as mensagens de TODOS os jogadores e limpa o log. Esta ação não pode ser desfeita.', labelOk: 'Apagar tudo', perigoso: true });
+    const ok = await _confirmar({ titulo: 'Apagar todas as mensagens', mensagem: 'Isso apaga TODAS as mensagens de TODOS os jogadores e limpa o log. Esta ação não pode ser desfeita.', labelOk: 'Apagar tudo', perigoso: true });
     if (!ok) return;
     let totalApagadas = 0;
     let erros = 0;
@@ -1538,7 +1600,7 @@ const ADMIN = (() => {
   
   async function toggleLiberado(uid, adicionar) {
     uid = (uid || '').trim();
-    if (!uid) { _showAdminToast('⚠ Informe um UID válido.', true); return; }
+    if (!uid) { _showAdminToast('Informe um UID válido.', true); return; }
     try {
       const snap     = await _get('config/global');
       const fields   = _parseFields(snap.fields || {});
@@ -1549,11 +1611,11 @@ const ADMIN = (() => {
       await _patch('config/global', {
         liberados: { arrayValue: { values: atualizado.map(u => ({ stringValue: u })) } }
       });
-      _showAdminToast(adicionar ? `✅ UID liberado` : `🚫 UID removido`);
+      _showAdminToast(adicionar ? `UID liberado` : `UID removido`);
       _registrarAuditoria(adicionar ? `UID liberado em manutenção: ${uid}` : `UID removido dos liberados: ${uid}`);
     } catch(e) {
       console.error('[Admin] toggleLiberado:', e);
-      _showAdminToast('❌ Erro ao atualizar lista de liberados.', true);
+      _showAdminToast('Erro ao atualizar lista de liberados.', true);
     }
   }
 
@@ -1575,7 +1637,7 @@ const ADMIN = (() => {
         </div>
         <div class="admin-jogador-acoes">
           <button class="admin-btn-sm ${estaLiberado ? 'admin-btn-danger' : 'admin-btn-ok'}" onclick="ADMIN.abrirModalLiberar('${j.uid}', '${nomeEsc}', '${emailEsc}', ${estaLiberado})">
-            ${estaLiberado ? '🔒 Remover' : '🔓 Liberar'}
+            ${estaLiberado ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Remover' : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Liberar'}
           </button>
         </div>
       </div>`;
@@ -1667,7 +1729,9 @@ const ADMIN = (() => {
     const foot       = document.getElementById('admin-liberar-foot');
     if (!modal) return;
 
-    title.textContent = estaLiberado ? '🔒 Remover Liberação' : '🔓 Liberar da Manutenção';
+    title.innerHTML = estaLiberado
+      ? `${_icon('lock', 13)} Remover Liberação`
+      : `${_icon('lock-open', 13)} Liberar da Manutenção`;
 
     playerCard.innerHTML = `
       <div class="admin-ban-avatar">${(nome||'?').charAt(0).toUpperCase()}</div>
@@ -1678,8 +1742,8 @@ const ADMIN = (() => {
       </div>`;
 
     statusEl.innerHTML = estaLiberado
-      ? '<div class="admin-ban-badge-livre">🔓 Liberado — acessa mesmo em manutenção</div>'
-      : '<div class="admin-lib-badge-off">🔒 Sujeito à manutenção (não liberado)</div>';
+      ? '<div class="admin-ban-badge-livre"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Liberado — acessa mesmo em manutenção</div>'
+      : '<div class="admin-lib-badge-off"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Sujeito à manutenção (não liberado)</div>';
 
     descEl.textContent = estaLiberado
       ? 'Ao remover, este jogador volta a ser bloqueado normalmente quando a manutenção estiver ativa.'
@@ -1689,7 +1753,7 @@ const ADMIN = (() => {
     foot.innerHTML = `
       <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2)" onclick="ADMIN.fecharModalLiberar()">Cancelar</button>
       <button class="admin-btn admin-btn-ok" onclick="ADMIN.confirmarLiberar('${uid}', '${nomeEsc}', ${estaLiberado})">
-        ${estaLiberado ? '🔒 Confirmar Remoção' : '🔓 Confirmar Liberação'}
+        ${estaLiberado ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Confirmar Remoção' : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Confirmar Liberação'}
       </button>`;
 
     modal.style.display = 'flex';
@@ -2041,7 +2105,7 @@ const ADMIN = (() => {
           commitEl.style.cssText = 'font-size:.78rem;color:var(--t3);margin-top:4px';
           hashEl.parentNode.insertBefore(commitEl, hashEl.nextSibling);
         }
-        commitEl.textContent = '💬 ' + v.commitMsg;
+        commitEl.textContent = v.commitMsg;
         commitEl.style.display = 'block';
       }
 
@@ -2052,7 +2116,7 @@ const ADMIN = (() => {
           arquivosEl = document.createElement('div');
           arquivosEl.id = 'versao-arquivos-lista';
           arquivosEl.style.cssText = 'margin-top:8px';
-          arquivosEl.innerHTML = '<div style="font-size:.72rem;color:var(--t3);margin-bottom:4px">📁 Arquivos alterados:</div><div id="versao-arquivos-tags" style="display:flex;flex-wrap:wrap;gap:4px"></div>';
+          arquivosEl.innerHTML = '<div style="font-size:.72rem;color:var(--t3);margin-bottom:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg> Arquivos alterados:</div><div id="versao-arquivos-tags" style="display:flex;flex-wrap:wrap;gap:4px"></div>';
           const hashCard = document.getElementById('versao-hash-atual');
           if (hashCard) hashCard.parentNode.appendChild(arquivosEl);
         }
@@ -2164,7 +2228,7 @@ const ADMIN = (() => {
 
   async function apagarChangelogJogadores() {
     const ok = await _confirmar({
-      titulo: '🗑️ Apagar novidades publicadas',
+      titulo: 'Apagar novidades publicadas',
       mensagem: 'Isso remove imediatamente o conteúdo da aba "Novidades" dos jogadores. Você pode publicar um novo depois.',
       labelOk: 'Apagar',
       perigoso: true,
@@ -2244,7 +2308,7 @@ const ADMIN = (() => {
         return;
       }
       el.className = 'admin-changelog-publicado';
-      el.innerHTML = '<span>✅ Texto customizado ativo — enviado a cada novo jogador no primeiro login.</span>';
+      el.innerHTML = '<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M20 6 9 17l-5-5"/></svg> Texto customizado ativo — enviado a cada novo jogador no primeiro login.</span>';
       txt.value = texto;
     } catch (e) {
       el.className = 'admin-changelog-publicado vazio';
@@ -2271,7 +2335,7 @@ const ADMIN = (() => {
 
   async function apagarBoasVindas() {
     const ok = await _confirmar({
-      titulo: '🗑️ Restaurar texto padrão',
+      titulo: 'Restaurar texto padrão',
       mensagem: 'Isso remove o texto customizado. Novos jogadores voltarão a receber o texto padrão do jogo.',
       labelOk: 'Restaurar',
       perigoso: true,
@@ -2327,7 +2391,7 @@ const ADMIN = (() => {
         return `
           <div class="admin-versao-hist-item">
             <div class="admin-versao-hist-header">
-              <span class="admin-versao-hist-badge ${critica ? 'critica' : ''}">${critica ? '⚠️ ' : ''}${versao}</span>
+              <span class="admin-versao-hist-badge ${critica ? 'critica' : ''}">${critica ? _icon('triangle-alert',12)+' ' : ''}${versao}</span>
               <span class="admin-versao-hist-date">${data}</span>
             </div>
             <div class="admin-versao-hist-log">${log.replace(/\n/g, '<br>')}</div>
@@ -2380,7 +2444,7 @@ const ADMIN = (() => {
             const emPartida = d.status !== 'home' && d.setor;
             const detalhe = emPartida
               ? `${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1}`
-              : '🏠 Na tela inicial';
+              : 'Na tela inicial';
             return `
             <div class="admin-aovivo-row">
               <div class="admin-sessao-dot ativa"></div>
@@ -2651,7 +2715,7 @@ const ADMIN = (() => {
         const nome = s.charAt(0).toUpperCase() + s.slice(1);
         return `
           <div class="hist-setor-card" onclick="ADMIN.abrirSetorHistorias('${s}')">
-            <div class="ic">${_emojiSetor(s)}</div>
+            <div class="ic">${_emojiSetor(s, 26)}</div>
             <div class="nome">${nome}</div>
             <div class="qtd">${qtd} história${qtd === 1 ? '' : 's'}</div>
           </div>`;
@@ -2860,7 +2924,7 @@ const ADMIN = (() => {
       corpo.innerHTML = '<div class="admin-empty">Não foi possível ler as rodadas dessa história.</div>';
       return;
     }
-    const faseLabel = { diagnostico: '🔵 Diagnóstico', pressao: '🟠 Pressão', decisao: '🟣 Decisão' };
+    const faseLabel = { diagnostico: 'Diagnóstico', pressao: 'Pressão', decisao: 'Decisão' };
     corpo.innerHTML = rounds.map((r, i) => `
       <div class="admin-historia-row">
         <div class="admin-historia-info" style="cursor:pointer" onclick="ADMIN.visualizarRoundNativo(${i})">
@@ -2881,7 +2945,7 @@ const ADMIN = (() => {
       .map(([k, v]) => `${k}: ${v > 0 ? '+' : ''}${v}`).join(' · ');
     const reqMin = c.requisitos?.indicadorMinimo || {};
     const reqTxt = Object.entries(reqMin).map(([k, v]) => `${k} ≥ ${v}`).join(' · ');
-    const avaliacaoLabel = { boa: '✅ Boa', media: '⚠️ Média', ruim: '❌ Ruim' }[c.avaliacao] || c.avaliacao || '—';
+    const avaliacaoLabel = { boa: _icon('circle-check',13)+' Boa', media: _icon('triangle-alert',13)+' Média', ruim: _icon('circle-x',13)+' Ruim' }[c.avaliacao] || c.avaliacao || '—';
     return `
       <div class="round-choice-card">
         <div class="round-choice-head">
@@ -2980,7 +3044,7 @@ const ADMIN = (() => {
     document.getElementById('hist-aprovacao-acoes').style.display = 'none';
     document.getElementById('hist-btn-despublicar').style.display = 'none';
     document.getElementById('hist-checklist-aviso').textContent = '';
-    document.getElementById('hist-btn-salvar').textContent = 'Salvar';
+    document.getElementById('hist-btn-salvar').innerHTML = `${_icon('save', 15)} Salvar`;
     document.getElementById('hist-btn-publicar').style.display = '';
     document.getElementById('hist-sugestoes-lista').innerHTML = '';
     document.getElementById('hist-rounds-atalho').innerHTML =
@@ -3046,7 +3110,9 @@ const ADMIN = (() => {
     const meUID = window._player?.uid || '';
     const souDono = !!meUID && meUID === h.criadoPorUid;
     const podeEditarDireto = souDono || _souOwner();
-    document.getElementById('hist-btn-salvar').textContent = podeEditarDireto ? 'Salvar' : 'Enviar Sugestão';
+    document.getElementById('hist-btn-salvar').innerHTML = podeEditarDireto
+      ? `${_icon('save', 15)} Salvar`
+      : `${_icon('send', 15)} Enviar Sugestão`;
     document.getElementById('hist-btn-publicar').style.display = podeEditarDireto ? '' : 'none';
     if (!podeEditarDireto) document.getElementById('hist-btn-despublicar').style.display = 'none';
 
@@ -3079,7 +3145,7 @@ const ADMIN = (() => {
         secaoSituacaoCorpo: 'Situação Atual', secaoDesafioCorpo: 'Desafio Estratégico',
         alertaTitulo: 'Alerta', rodape: 'Rodapé',
       };
-      wrap.innerHTML = `<div class="hist-field-lbl">💡 Sugestões pendentes</div>` + sugestoes.map(s => {
+      wrap.innerHTML = `<div class="hist-field-lbl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> Sugestões pendentes</div>` + sugestoes.map(s => {
         const mudou = Object.keys(labelCampo)
           .filter(k => (s.campos?.[k] || '') !== (_histEditandoDoc?.[k] || ''))
           .map(k => labelCampo[k]);
@@ -3091,8 +3157,8 @@ const ADMIN = (() => {
             </div>
             <div class="hist-autoria">Alterou: ${mudou.length ? _esc(mudou.join(', ')) : '(sem mudança de texto — conferir indicadores)'}</div>
             <div class="hist-editor-actions" style="margin-top:8px">
-              <button class="admin-btn-sm admin-btn-ok" onclick="ADMIN.aceitarSugestao('${s.id}')">✓ Aceitar</button>
-              <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.recusarSugestao('${s.id}')">✕ Recusar</button>
+              <button class="admin-btn-sm admin-btn-ok" onclick="ADMIN.aceitarSugestao('${s.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M20 6 9 17l-5-5"/></svg> Aceitar</button>
+              <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.recusarSugestao('${s.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Recusar</button>
             </div>
           </div>`;
       }).join('');
@@ -3374,7 +3440,7 @@ const ADMIN = (() => {
   let _roundNativoAtual = null; 
   let _choiceSeq = 0;
 
-  const _FASE_LABEL = { diagnostico: '🔵 Diagnóstico', pressao: '🟠 Pressão', decisao: '🟣 Decisão' };
+  const _FASE_LABEL = { diagnostico: 'Diagnóstico', pressao: 'Pressão', decisao: 'Decisão' };
   const _FASE_MIN   = { diagnostico: 3, pressao: 4, decisao: 3 };
 
   async function abrirRoundsHistoria() {
@@ -3975,7 +4041,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
             <span class="admin-glossario-secao-nome">${_esc(secao)}</span>
             <span class="admin-glossario-secao-count">${termos.length}</span>
             <button class="admin-btn-sm" onclick="event.stopPropagation();ADMIN.abrirModalGlossario(null,'${secao.replace(/'/g,"\\'")}')">+ Termo</button>
-            <button class="admin-btn-sm admin-btn-danger" onclick="event.stopPropagation();ADMIN.excluirSecaoGlossario('${secao.replace(/'/g,"\\'")}')">🗑️</button>
+            <button class="admin-btn-sm admin-btn-danger" onclick="event.stopPropagation();ADMIN.excluirSecaoGlossario('${secao.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
           </div>
           ${aberta ? `<div class="admin-glossario-secao-body">
             ${termos.length ? termos.map(t => `
@@ -3985,8 +4051,8 @@ const _GLOSSARIO_PADRAO_SECOES = [
                   <div class="admin-glossario-def">${_esc(t.def)}</div>
                 </div>
                 <div class="admin-glossario-actions">
-                  <button class="admin-btn-sm" onclick="ADMIN.abrirModalGlossario('${t.id}')">✏️</button>
-                  <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.excluirTermoGlossario('${t.id}')">🗑️</button>
+                  <button class="admin-btn-sm" onclick="ADMIN.abrirModalGlossario('${t.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>
+                  <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.excluirTermoGlossario('${t.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
                 </div>
               </div>`).join('') : '<div class="admin-glossario-secao-vazia">Nenhum termo nesta seção ainda.</div>'}
           </div>` : ''}
@@ -4000,7 +4066,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
       html += `
         <div class="admin-glossario-secao admin-glossario-secao-sem aberta">
           <div class="admin-glossario-secao-head" style="cursor:default">
-            <span class="admin-glossario-secao-nome">⚠️ Sem seção</span>
+            <span class="admin-glossario-secao-nome">${_icon('triangle-alert', 13)} Sem seção</span>
             <span class="admin-glossario-secao-count">${orfaos.length}</span>
           </div>
           <div class="admin-glossario-secao-body">
@@ -4011,8 +4077,8 @@ const _GLOSSARIO_PADRAO_SECOES = [
                   <div class="admin-glossario-def">${_esc(t.def)}</div>
                 </div>
                 <div class="admin-glossario-actions">
-                  <button class="admin-btn-sm" onclick="ADMIN.abrirModalGlossario('${t.id}')">✏️</button>
-                  <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.excluirTermoGlossario('${t.id}')">🗑️</button>
+                  <button class="admin-btn-sm" onclick="ADMIN.abrirModalGlossario('${t.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>
+                  <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.excluirTermoGlossario('${t.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
                 </div>
               </div>`).join('')}
           </div>
@@ -4091,7 +4157,9 @@ const _GLOSSARIO_PADRAO_SECOES = [
     _glossarioEditandoId = id || null;
     const item = id ? _glossarioCache.find(t => t.id === id) : null;
 
-    document.getElementById('admin-glossario-modal-titulo').textContent = item ? '✏️ Editar Termo' : '📖 Novo Termo';
+    document.getElementById('admin-glossario-modal-titulo').innerHTML = item
+      ? `${_icon('pencil', 15)} Editar Termo`
+      : `${_icon('book-open', 15)} Novo Termo`;
     document.getElementById('admin-glossario-termo').value = item?.termo || '';
     document.getElementById('admin-glossario-def').value   = item?.def   || '';
     _popularSelectCategorias();
@@ -4301,7 +4369,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
           const emPartida = d.status !== 'home' && d.setor;
           const detalhe = emPartida
             ? `${_emojiSetor(d.setor)} ${(d.setor||'').charAt(0).toUpperCase()+(d.setor||'').slice(1)} · Rodada ${(d.rodada||0)+1} · ${d.companyName||''}`
-            : '🏠 Na tela inicial';
+            : 'Na tela inicial';
           return `<div class="admin-sessao-row">
             <div class="admin-sessao-dot ativa"></div>
             <div class="admin-sessao-info">
@@ -4417,7 +4485,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     if (!el) return;
     const isOwner = window._player?.uid && window._player.uid === _adminOwner;
     const limparBtn = isOwner
-      ? `<button class="admin-btn admin-btn-danger" style="margin-bottom:8px;font-size:.75rem" onclick="ADMIN.limparAuditLog()">🗑 Limpar log</button>`
+      ? `<button class="admin-btn admin-btn-danger" style="margin-bottom:8px;font-size:.75rem" onclick="ADMIN.limparAuditLog()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Limpar log</button>`
       : '';
     if (!docs.length) {
       el.innerHTML = limparBtn + '<div class="admin-empty">Sem registros.</div>';
@@ -4691,11 +4759,11 @@ const _GLOSSARIO_PADRAO_SECOES = [
       const souOwner   = meUID === _adminOwner;
 
       const permBtns = isOwner
-        ? '<span style="font-size:.7rem;color:var(--warn);font-weight:700">👑 Owner</span>'
+        ? '<span style="font-size:.7rem;color:var(--warn);font-weight:700"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg> Owner</span>'
         : souOwner
-          ? `<button class="admin-btn-sm" style="background:var(--bg3);border:1px solid var(--line2)" onclick="ADMIN.abrirPermissoes('${u}')">⚙️ Permissões</button>
-             <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${u}')">✕</button>`
-          : `<span style="font-size:.68rem;color:var(--t4)">🔒 Só o 👑 pode alterar</span>`;
+          ? `<button class="admin-btn-sm" style="background:var(--bg3);border:1px solid var(--line2)" onclick="ADMIN.abrirPermissoes('${u}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg> Permissões</button>
+             <button class="admin-btn-sm admin-btn-danger" onclick="ADMIN.removerAdmin('${u}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`
+          : `<span style="font-size:.68rem;color:var(--t4)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Só o <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg> pode alterar</span>`;
 
       const meBadge = isMe
         ? '<span style="font-size:.6rem;background:rgba(201,151,58,.15);color:var(--gold);border:1px solid var(--gold-bd);border-radius:4px;padding:1px 5px;font-weight:700;flex-shrink:0">você</span>'
@@ -4881,7 +4949,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
   function abrirPermissoes(uid) {
     const meUID = window._player?.uid || '';
     if (meUID !== _adminOwner) {
-      _showAdminToast('Só o 👑 owner pode alterar permissões de outros admins.', true);
+      _showAdminToast('Só o owner pode alterar permissões de outros admins.', true);
       return;
     }
     const perms      = Array.isArray(_adminPermissoes[uid]) ? _adminPermissoes[uid] : _SECOES.map(s => s.id);
@@ -4891,7 +4959,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     if (!modal || !body) return;
 
     const tituloEl = document.getElementById('admin-modal-title');
-    if (tituloEl) tituloEl.textContent = '⚙️ Permissões';
+    if (tituloEl) tituloEl.textContent = 'Permissões';
 
     body.innerHTML = `
       <div style="padding:16px 20px">
@@ -4912,7 +4980,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
             return `
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <span style="font-size:.72rem;font-weight:700;color:var(--t2);letter-spacing:.02em">${cat.label}</span>
+                <span style="font-size:.72rem;font-weight:700;color:var(--t2);letter-spacing:.02em">${_icon(cat.icon, 13)} ${cat.label}</span>
                 <button onclick="ADMIN._marcarCategoriaPermissoes('${cat.id}')" data-cat-contador="${cat.id}"
                   style="font-size:.64rem;background:transparent;border:none;color:var(--t3);cursor:pointer;padding:0">
                   marcar ${marcadasNaCategoria}/${idsCategoria.length}
@@ -4928,7 +4996,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
                     <input type="checkbox" data-perm="${s.id}" data-cat-grupo="${cat.id}" ${perms.includes(s.id) ? 'checked' : ''}
                       onchange="ADMIN._atualizarContadorPermissoes()"
                       style="width:15px;height:15px;accent-color:var(--gold);flex-shrink:0">
-                    <span style="font-size:.84rem;color:var(--t1)">${s.label}</span>
+                    <span style="font-size:.84rem;color:var(--t1)">${_icon(s.icon, 14)} ${s.label}</span>
                   </label>`;
                 }).join('')}
               </div>
@@ -4936,7 +5004,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
           }).join('')}
         </div>
         <div style="display:flex;gap:8px;margin-top:16px">
-          <button class="admin-btn admin-btn-ok" style="flex:1" onclick="ADMIN.salvarPermissoes('${uid}')">✅ Salvar</button>
+          <button class="admin-btn admin-btn-ok" style="flex:1" onclick="ADMIN.salvarPermissoes('${uid}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar</button>
           <button class="admin-btn" style="flex:1;background:var(--bg3);border:1px solid var(--line2);color:var(--t2);text-transform:none;letter-spacing:0;font-weight:600" onclick="ADMIN.fecharModal()">Cancelar</button>
         </div>
       </div>`;
