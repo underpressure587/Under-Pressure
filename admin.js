@@ -2084,6 +2084,13 @@ const ADMIN = (() => {
   let _versaoAtual = null;
 
   async function carregarVersao() {
+    
+    const campoTitulo = document.getElementById('changelog-titulo-input');
+    if (campoTitulo) {
+      const mesAtual = new Date().toLocaleDateString('pt-BR', { month: 'long' });
+      const mesCapitalizado = mesAtual.charAt(0).toUpperCase() + mesAtual.slice(1);
+      campoTitulo.placeholder = `Ex: Novidades de ${mesCapitalizado}, Atualização de Interface...`;
+    }
     try {
       
       const r = await fetch('/version.json?t=' + Date.now());
@@ -2740,7 +2747,7 @@ const ADMIN = (() => {
     document.getElementById('hist-view-setores').style.display = 'none';
     document.getElementById('hist-view-editor').style.display = 'none';
     document.getElementById('hist-view-lista').style.display = '';
-    document.getElementById('hist-lista-titulo').textContent =
+    document.getElementById('hist-lista-titulo').innerHTML =
       `${_emojiSetor(setor)} ${setor.charAt(0).toUpperCase() + setor.slice(1)} · Histórias`;
 
     const corpo = document.getElementById('hist-lista-corpo');
@@ -2907,6 +2914,7 @@ const ADMIN = (() => {
         : `${ativa ? 'Ativa' : 'Inativa'} pros jogadores. Só o owner pode alterar.`;
     document.getElementById('hist-nativa-toggle').checked = ativa;
     document.getElementById('hist-nativa-toggle-wrap').style.display = _souOwner() ? '' : 'none';
+    _autoGrowAll(document.getElementById('hist-view-editor'));
   }
 
   function verRoundsNativos() {
@@ -2984,6 +2992,7 @@ const ADMIN = (() => {
     document.getElementById('round-btn-excluir').style.display = 'none';
     _setRoundEditorReadonly(true);
     _cselRefreshAll(document.getElementById('hist-view-round-editor'));
+    _autoGrowAll(document.getElementById('hist-view-round-editor'));
   }
 
   function voltarParaVisualizacaoNativa() {
@@ -3049,6 +3058,7 @@ const ADMIN = (() => {
     document.getElementById('hist-sugestoes-lista').innerHTML = '';
     document.getElementById('hist-rounds-atalho').innerHTML =
       '<span class="hist-autoria">Salve a história pelo menos uma vez pra poder criar rounds.</span>';
+    _autoGrowAll(document.getElementById('hist-view-editor'));
   }
 
   async function abrirEditorHistoria(id) {
@@ -3122,6 +3132,7 @@ const ADMIN = (() => {
     } else {
       sugWrap.innerHTML = '';
     }
+    _autoGrowAll(document.getElementById('hist-view-editor'));
   }
 
   async function _carregarSugestoesPendentes(histId) {
@@ -3578,6 +3589,23 @@ const ADMIN = (() => {
     });
   }
 
+  
+  
+  function _autoGrow(el) {
+    if (!el) return;
+    el.style.height = '0px';
+    el.style.height = el.scrollHeight + 'px';
+  }
+  function _autoGrowAll(root) {
+    (root || document).querySelectorAll('textarea.admin-input').forEach(_autoGrow);
+  }
+  if (!window._autoGrowLigado) {
+    window._autoGrowLigado = true;
+    document.addEventListener('input', (e) => {
+      if (e.target.matches && e.target.matches('textarea.admin-input')) _autoGrow(e.target);
+    });
+  }
+
   function _indOptionsHTML(setor, selecionado) {
     return (_INDICADORES_SETOR[setor] || [])
       .map(k => `<option value="${k}" ${k === selecionado ? 'selected' : ''}>${k}</option>`).join('');
@@ -3717,6 +3745,7 @@ const ADMIN = (() => {
 
     _renderChoicesEditor([{}, {}]);
     _cselRefreshAll(document.getElementById('hist-view-round-editor'));
+    _autoGrowAll(document.getElementById('hist-view-round-editor'));
   }
 
   function abrirEditorRound(id) {
@@ -3745,6 +3774,7 @@ const ADMIN = (() => {
 
     _renderChoicesEditor(Array.isArray(r.choices) && r.choices.length ? r.choices : [{}, {}]);
     _cselRefreshAll(document.getElementById('hist-view-round-editor'));
+    _autoGrowAll(document.getElementById('hist-view-round-editor'));
   }
 
   function _lerChoicesDoDOM() {

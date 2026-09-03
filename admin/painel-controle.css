@@ -662,6 +662,7 @@ a { color: inherit; text-decoration: none; }
 }
 .admin-input:focus { outline: none; border-color: var(--gold); }
 .admin-input::placeholder { color: var(--t3); }
+textarea.admin-input { resize: none; overflow-y: hidden; transition: height .1s ease; }
 
 
 .admin-loading {
@@ -861,7 +862,7 @@ a { color: inherit; text-decoration: none; }
   padding: 18px 10px; text-align: center; cursor: pointer; transition: all .18s;
 }
 .hist-setor-card:hover { border-color: var(--gold-bd); background: var(--bg4); }
-.hist-setor-card .ic { font-size: 1.6rem; }
+.hist-setor-card .ic { color: var(--gold); display: flex; justify-content: center; }
 .hist-setor-card .nome { font-size: .8rem; font-weight: 700; color: var(--t1); margin-top: 6px; }
 .hist-setor-card .qtd { font-size: .68rem; color: var(--t3); margin-top: 2px; }
 
