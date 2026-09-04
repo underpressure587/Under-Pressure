@@ -263,6 +263,7 @@ const ADMIN = (() => {
     const secoesVisiveis = cat.secoes.filter(id => !perms || perms.includes(id));
     if (!secoesVisiveis.length) return; 
 
+    _navPush();
     _categoriaAtiva = catId;
 
     document.getElementById('admin-hub').style.display = 'none';
@@ -2743,6 +2744,7 @@ const ADMIN = (() => {
   }
 
   async function abrirSetorHistorias(setor) {
+    _navPush();
     _histSetorAtual = setor;
     document.getElementById('hist-view-setores').style.display = 'none';
     document.getElementById('hist-view-editor').style.display = 'none';
@@ -2846,6 +2848,7 @@ const ADMIN = (() => {
   }
 
   async function visualizarHistoriaNativa(setor, id) {
+    _navPush();
     _histEditandoId = null;
     _histEditandoDoc = null;
     _histNativaAtual = { setor, id, chave: `${setor}_${id}` };
@@ -2919,6 +2922,7 @@ const ADMIN = (() => {
 
   function verRoundsNativos() {
     if (!_histNativaAtual) return;
+    _navPush();
     const { setor, id, intro, rounds } = _histNativaAtual;
 
     document.getElementById('hist-view-editor').style.display = 'none';
@@ -2971,6 +2975,7 @@ const ADMIN = (() => {
   function visualizarRoundNativo(idx) {
     const round = _histNativaAtual?.rounds?.[idx];
     if (!round) return;
+    _navPush();
     _roundNativoAtual = round;
 
     document.getElementById('hist-view-rounds-nativa').style.display = 'none';
@@ -3033,6 +3038,7 @@ const ADMIN = (() => {
   }
 
   function novaHistoria() {
+    _navPush();
     _setEditorReadonly(false);
     _histEditandoId = null;
 
@@ -3064,6 +3070,7 @@ const ADMIN = (() => {
   async function abrirEditorHistoria(id) {
     const h = _histListaCache.find(x => x.id === id);
     if (!h) return;
+    _navPush();
     _setEditorReadonly(false);
     _histEditandoId = id;
     _histEditandoDoc = h;
@@ -3456,6 +3463,7 @@ const ADMIN = (() => {
 
   async function abrirRoundsHistoria() {
     if (!_histEditandoId) { _showAdminToast('Salve a história antes de criar rounds.', true); return; }
+    _navPush();
     document.getElementById('hist-view-editor').style.display = 'none';
     document.getElementById('hist-view-rounds-lista').style.display = '';
     document.getElementById('hist-rounds-lista-titulo').textContent =
@@ -3606,6 +3614,51 @@ const ADMIN = (() => {
     });
   }
 
+  
+  
+  
+  
+  
+  function _dispVisivel(id) {
+    const el = document.getElementById(id);
+    return !!el && el.style.display !== 'none';
+  }
+
+  function _telaAtualDoPainel() {
+    
+    if (_dispVisivel('hist-view-round-editor'))  return 'round-editor';
+    if (_dispVisivel('hist-view-rounds-lista'))  return 'rounds-lista';
+    if (_dispVisivel('hist-view-rounds-nativa')) return 'rounds-nativa';
+    if (_dispVisivel('hist-view-editor'))        return 'hist-editor';
+    if (_dispVisivel('hist-view-lista'))         return 'hist-lista';
+    if (_dispVisivel('admin-subnav'))            return 'categoria';
+    return 'hub';
+  }
+
+  function _voltarUmNivel() {
+    switch (_telaAtualDoPainel()) {
+      case 'round-editor':  voltarParaRoundsLista(); break;
+      case 'rounds-lista':  voltarParaEditorDaHistoria(); break;
+      case 'rounds-nativa': voltarParaVisualizacaoNativa(); break;
+      case 'hist-editor':   voltarParaLista(); break;
+      case 'hist-lista':    voltarParaSetores(); break;
+      case 'categoria':     irParaHub(); break;
+      default: break; 
+    }
+  }
+
+  function _navPush() {
+    history.pushState({ painelNav: true, tela: _telaAtualDoPainel() }, '', location.href);
+  }
+
+  if (!window._painelPopstateLigado) {
+    window._painelPopstateLigado = true;
+    window.addEventListener('popstate', () => {
+      if (_telaAtualDoPainel() === 'hub') return; 
+      _voltarUmNivel();
+    });
+  }
+
   function _indOptionsHTML(setor, selecionado) {
     return (_INDICADORES_SETOR[setor] || [])
       .map(k => `<option value="${k}" ${k === selecionado ? 'selected' : ''}>${k}</option>`).join('');
@@ -3725,6 +3778,7 @@ const ADMIN = (() => {
   }
 
   function novoRound() {
+    _navPush();
     document.getElementById('hist-view-rounds-lista').style.display = 'none';
     document.getElementById('hist-view-round-editor').style.display = '';
     document.getElementById('round-editor-titulo').textContent = 'Novo Round';
@@ -3751,6 +3805,7 @@ const ADMIN = (() => {
   function abrirEditorRound(id) {
     const r = _roundsListaCache.find(x => x.id === id);
     if (!r) return;
+    _navPush();
     document.getElementById('hist-view-rounds-lista').style.display = 'none';
     document.getElementById('hist-view-round-editor').style.display = '';
     document.getElementById('round-editor-titulo').textContent = r.title || 'Editar Round';

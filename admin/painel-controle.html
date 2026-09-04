@@ -90,7 +90,7 @@
 
       
       <nav class="admin-nav" id="admin-subnav" role="navigation" aria-label="Seções da categoria" style="display:none">
-        <button class="admin-nav-btn admin-nav-voltar" onclick="ADMIN.irParaHub()">← Categorias</button>
+        <button class="admin-nav-btn admin-nav-voltar" onclick="history.back()">← Categorias</button>
         <div class="admin-nav-cat-titulo" id="admin-nav-cat-titulo"></div>
         <div id="admin-subnav-botoes" class="admin-subnav-botoes"></div>
       </nav>
@@ -234,7 +234,7 @@
           <!-- TELA 2 — Lista de histórias do setor -->
           <div id="hist-view-lista" style="display:none">
             <div class="hist-topbar">
-              <button class="admin-btn-sm" onclick="ADMIN.voltarParaSetores()">← Setores</button>
+              <button class="admin-btn-sm" onclick="history.back()">← Setores</button>
               <span class="hist-topbar-titulo" id="hist-lista-titulo"></span>
               <button class="admin-btn-sm admin-btn-ok" onclick="ADMIN.novaHistoria()">+ Nova História</button>
             </div>
@@ -244,7 +244,7 @@
           <!-- TELA 3 — Editor da história -->
           <div id="hist-view-editor" style="display:none">
             <div class="hist-topbar">
-              <button class="admin-btn-sm" onclick="ADMIN.voltarParaLista()">← Histórias</button>
+              <button class="admin-btn-sm" onclick="history.back()">← Histórias</button>
               <span class="hist-topbar-titulo" id="hist-editor-titulo">Editar História</span>
               <span class="admin-historia-badge" id="hist-editor-status-badge"></span>
             </div>
@@ -332,7 +332,7 @@
           <!-- Rounds de uma história nativa (somente leitura) -->
           <div id="hist-view-rounds-nativa" style="display:none">
             <div class="hist-topbar">
-              <button class="admin-btn-sm" onclick="ADMIN.voltarParaVisualizacaoNativa()">← Voltar</button>
+              <button class="admin-btn-sm" onclick="history.back()">← Voltar</button>
               <span class="hist-topbar-titulo" id="hist-rounds-nativa-titulo"></span>
             </div>
             <div id="hist-rounds-nativa-corpo"><div class="admin-loading"></div></div>
@@ -341,7 +341,7 @@
           <!-- TELA 4 — Rounds de uma história criada no editor -->
           <div id="hist-view-rounds-lista" style="display:none">
             <div class="hist-topbar">
-              <button class="admin-btn-sm" onclick="ADMIN.voltarParaEditorDaHistoria()">← Voltar</button>
+              <button class="admin-btn-sm" onclick="history.back()">← Voltar</button>
               <span class="hist-topbar-titulo" id="hist-rounds-lista-titulo"></span>
               <button class="admin-btn-sm admin-btn-ok" onclick="ADMIN.novoRound()">+ Novo Round</button>
             </div>
@@ -352,7 +352,7 @@
           <!-- TELA 5 — Editor de round -->
           <div id="hist-view-round-editor" style="display:none">
             <div class="hist-topbar">
-              <button class="admin-btn-sm" id="round-btn-voltar" onclick="ADMIN.voltarParaRoundsLista()">← Rounds</button>
+              <button class="admin-btn-sm" id="round-btn-voltar" onclick="history.back()">← Rounds</button>
               <span class="hist-topbar-titulo" id="round-editor-titulo">Novo Round</span>
               <button class="admin-btn-sm admin-btn-danger" id="round-btn-excluir" style="display:none" onclick="ADMIN.excluirRound()">Excluir</button>
             </div>
