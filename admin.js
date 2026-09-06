@@ -2908,6 +2908,7 @@ const ADMIN = (() => {
       'Conteúdo embutido no jogo/site, sem fluxo de aprovação.';
     document.getElementById('hist-aprovacao-acoes').style.display = 'none';
     document.getElementById('hist-btn-despublicar').style.display = 'none';
+    document.getElementById('hist-btn-excluir').style.display = 'none';
     document.getElementById('hist-checklist-aviso').textContent = '';
 
     const ativa = _estadoNativasCache[_histNativaAtual.chave] !== false;
@@ -3058,6 +3059,7 @@ const ADMIN = (() => {
     document.getElementById('hist-aprovacao-info').textContent = '—';
     document.getElementById('hist-aprovacao-acoes').style.display = 'none';
     document.getElementById('hist-btn-despublicar').style.display = 'none';
+    document.getElementById('hist-btn-excluir').style.display = 'none';
     document.getElementById('hist-checklist-aviso').textContent = '';
     document.getElementById('hist-btn-salvar').innerHTML = `${_icon('save', 15)} Salvar`;
     document.getElementById('hist-btn-publicar').style.display = '';
@@ -3119,6 +3121,7 @@ const ADMIN = (() => {
     }
 
     document.getElementById('hist-btn-despublicar').style.display = status === 'publicada' ? '' : 'none';
+    document.getElementById('hist-btn-excluir').style.display = _souOwner() ? '' : 'none';
     document.getElementById('hist-checklist-aviso').textContent = '';
     document.getElementById('hist-rounds-atalho').innerHTML =
       '<button class="admin-btn-sm" onclick="ADMIN.abrirRoundsHistoria()">▤ Rounds</button>';
@@ -3923,6 +3926,54 @@ const ADMIN = (() => {
       },
       sucesso: 'Round excluído.',
       onSucesso: () => abrirRoundsHistoria(),
+    });
+  }
+
+  async function excluirHistoria() {
+    if (!_histEditandoId || !_souOwner()) return;
+    const histId = _histEditandoId;
+    const setor  = _histEditandoDoc?.setor || _histSetorAtual;
+    const badge  = _histEditandoDoc?.badge || histId;
+
+    const ok = await _confirmar({
+      titulo: 'Excluir história',
+      mensagem: `Isso apaga "${badge}" e todos os rounds dela pra sempre. Essa ação não pode ser desfeita.`,
+      labelOk: 'Excluir tudo',
+      perigoso: true,
+    });
+    if (!ok) return;
+
+    await _opFeedback({
+      etapas: ['Apagando rounds…', 'Apagando sugestões pendentes…', 'Apagando história…'],
+      executar: async () => {
+        
+        const resRounds = await _querySub(`historias/${histId}`, {
+          structuredQuery: { from: [{ collectionId: 'rounds' }] }
+        });
+        const roundIds = (Array.isArray(resRounds) ? resRounds : [])
+          .filter(r => r.document)
+          .map(r => r.document.name.split('/').pop());
+        for (const rid of roundIds) {
+          await _delete(`historias/${histId}/rounds/${rid}`);
+        }
+
+        
+        const resSug = await _querySub(`historias/${histId}`, {
+          structuredQuery: { from: [{ collectionId: 'sugestoes' }] }
+        });
+        const sugIds = (Array.isArray(resSug) ? resSug : [])
+          .filter(r => r.document)
+          .map(r => r.document.name.split('/').pop());
+        for (const sid of sugIds) {
+          await _delete(`historias/${histId}/sugestoes/${sid}`);
+        }
+
+        
+        await _delete(`historias/${histId}`);
+        _registrarAuditoria(`História "${badge}" excluída (${roundIds.length} round(s) junto)`);
+      },
+      sucesso: 'História excluída.',
+      onSucesso: () => abrirSetorHistorias(setor),
     });
   }
 
@@ -5211,6 +5262,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     verRoundsNativos, voltarParaVisualizacaoNativa, visualizarRoundNativo,
     abrirRoundsHistoria, voltarParaEditorDaHistoria, voltarParaRoundsLista,
     novoRound, abrirEditorRound, salvarRound, excluirRound,
+    excluirHistoria,
     adicionarChoice, removerChoice, adicionarEfeito, mudarModoOmissao,
     carregarGlossario, filtrarGlossario, abrirModalGlossario, fecharModalGlossario, salvarTermoGlossario, excluirTermoGlossario,
     toggleSecaoGlossario, abrirModalSecaoGlossario, fecharModalSecaoGlossario, salvarSecaoGlossario, excluirSecaoGlossario,
