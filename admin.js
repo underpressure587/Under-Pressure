@@ -364,7 +364,12 @@ const ADMIN = (() => {
     carregarAdmins();
     _iniciarPollingAdmin();
     const ov = document.getElementById('admin-overlay-sem-permissao');
-    return !!(ov && ov.style.display !== 'none');
+    const bloqueado = !!(ov && ov.style.display !== 'none');
+    if (!bloqueado && _souOwner()) {
+      _iniciarPollingAprovacoes();
+      _verificarPermissaoNotificacao();
+    }
+    return bloqueado;
   }
 
   
@@ -5017,9 +5022,111 @@ const _GLOSSARIO_PADRAO_SECOES = [
     }
     
     _pararPollingSecao();
+    _pararPollingAprovacoes();
     if (_adminsUnsubscribe) { _adminsUnsubscribe(); _adminsUnsubscribe = null; }
     if (_configUnsubscribe) { _configUnsubscribe(); _configUnsubscribe = null; }
     if (_auditUnsubscribe)  { _auditUnsubscribe();  _auditUnsubscribe  = null; }
+  }
+
+  
+  
+  
+
+  let _pollingAprovacoesInterval = null;
+  let _idsAprovacoesVistos = null; 
+
+  function _iniciarPollingAprovacoes() {
+    if (_pollingAprovacoesInterval) return;
+    _verificarAprovacoesPendentes();
+    _pollingAprovacoesInterval = setInterval(_verificarAprovacoesPendentes, 30_000);
+  }
+
+  function _pararPollingAprovacoes() {
+    if (_pollingAprovacoesInterval) {
+      clearInterval(_pollingAprovacoesInterval);
+      _pollingAprovacoesInterval = null;
+    }
+    _idsAprovacoesVistos = null;
+  }
+
+  async function _verificarAprovacoesPendentes() {
+    try {
+      const res = await _query({
+        structuredQuery: {
+          from: [{ collectionId: 'historias' }],
+          where: { fieldFilter: { field: { fieldPath: 'status' }, op: 'EQUAL', value: _fsStr('aguardando_aprovacao') } },
+        }
+      });
+      const pendentes = (Array.isArray(res) ? res : [])
+        .filter(r => r.document)
+        .map(r => ({ id: r.document.name.split('/').pop(), ..._parseFields(r.document.fields || {}) }));
+
+      
+      const sino  = document.getElementById('topbar-sino');
+      const badge = document.getElementById('topbar-sino-badge');
+      if (sino && badge) {
+        if (pendentes.length) {
+          sino.style.display = 'flex';
+          sino.classList.add('tem-pendente');
+          badge.style.display = 'flex';
+          badge.textContent = pendentes.length > 9 ? '9+' : String(pendentes.length);
+        } else {
+          sino.style.display = 'flex';
+          sino.classList.remove('tem-pendente');
+          badge.style.display = 'none';
+        }
+      }
+
+      const idsAtuais = new Set(pendentes.map(p => p.id));
+      if (_idsAprovacoesVistos !== null) {
+        
+        const novos = pendentes.filter(p => !_idsAprovacoesVistos.has(p.id));
+        if (novos.length && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          _dispararNotificacaoAprovacao(novos);
+        }
+      }
+      _idsAprovacoesVistos = idsAtuais;
+    } catch(e) { console.error('[Aprovações] erro ao verificar', e); }
+  }
+
+  function _dispararNotificacaoAprovacao(lista) {
+    try {
+      const titulo = lista.length === 1
+        ? 'Nova solicitação de aprovação'
+        : `${lista.length} histórias aguardando aprovação`;
+      const corpo = lista.length === 1
+        ? `"${lista[0].badge || 'Uma história'}" está esperando sua aprovação.`
+        : lista.slice(0, 3).map(h => h.badge).filter(Boolean).join(', ') + (lista.length > 3 ? '…' : '');
+      const n = new Notification(titulo, {
+        body: corpo,
+        icon: '/logo.jpg',
+        tag: 'aprovacao-historias',
+      });
+      n.onclick = () => { window.focus(); abrirAprovacoesPendentes(); n.close(); };
+    } catch(e) { console.error('[Notificação] erro ao disparar', e); }
+  }
+
+  function abrirAprovacoesPendentes() {
+    abrirCategoria('conteudo');
+  }
+
+  function _verificarPermissaoNotificacao() {
+    if (typeof Notification === 'undefined') return; 
+    if (Notification.permission === 'default') {
+      const ov = document.getElementById('owner-notif-overlay');
+      if (ov) ov.style.display = 'flex';
+    }
+  }
+
+  function dispensarOverlayNotificacao() {
+    const ov = document.getElementById('owner-notif-overlay');
+    if (ov) ov.style.display = 'none';
+  }
+
+  async function habilitarNotificacoes() {
+    dispensarOverlayNotificacao();
+    if (typeof Notification === 'undefined') return;
+    try { await Notification.requestPermission(); } catch(e) {  }
   }
 
   async function _verificarAcessoAdmin() {
@@ -5263,6 +5370,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     abrirRoundsHistoria, voltarParaEditorDaHistoria, voltarParaRoundsLista,
     novoRound, abrirEditorRound, salvarRound, excluirRound,
     excluirHistoria,
+    abrirAprovacoesPendentes, habilitarNotificacoes, dispensarOverlayNotificacao,
     adicionarChoice, removerChoice, adicionarEfeito, mudarModoOmissao,
     carregarGlossario, filtrarGlossario, abrirModalGlossario, fecharModalGlossario, salvarTermoGlossario, excluirTermoGlossario,
     toggleSecaoGlossario, abrirModalSecaoGlossario, fecharModalSecaoGlossario, salvarSecaoGlossario, excluirSecaoGlossario,

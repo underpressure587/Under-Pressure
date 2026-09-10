@@ -48,11 +48,48 @@
       </div>
     </div>
     <div class="topbar-right">
+      <button class="topbar-sino" id="topbar-sino" style="display:none" onclick="ADMIN.abrirAprovacoesPendentes()" title="Histórias aguardando aprovação">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+        <span class="topbar-sino-badge" id="topbar-sino-badge" style="display:none">0</span>
+      </button>
       <div class="topbar-user">
         <div class="topbar-avatar" id="topbar-avatar">?</div>
         <span class="topbar-name" id="topbar-nome"></span>
       </div>
       <button class="topbar-sair" id="btn-sair">Sair</button>
+    </div>
+  </div>
+
+  <div id="owner-notif-overlay"
+    style="display:none;position:fixed;inset:0;z-index:99985;background:rgba(9,9,14,.92);backdrop-filter:blur(6px);
+           align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+    <div style="background:var(--bg1);border:1px solid var(--gold-bd);border-radius:var(--r3);
+                padding:32px 28px;max-width:400px;width:100%;text-align:center;
+                box-shadow:var(--sh-gold),var(--sh3);animation:popIn .3s cubic-bezier(.22,.68,0,1.2)">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--gold-bg);
+                  border:1.5px solid var(--gold-bd);display:flex;align-items:center;
+                  justify-content:center;margin:0 auto 20px;color:var(--gold)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></div>
+      <div style="font-family:var(--serif);font-size:1.2rem;font-weight:800;color:var(--t1);margin-bottom:10px;letter-spacing:-.02em">
+        Ativar notificações?
+      </div>
+      <p style="font-size:.84rem;color:var(--t2);line-height:1.7;margin-bottom:6px">
+        Como owner, você aprova as histórias que outros admins enviam.
+      </p>
+      <p style="font-size:.8rem;color:var(--t3);line-height:1.6;margin-bottom:24px">
+        Ativando, você recebe um aviso assim que alguém pedir aprovação — enquanto o painel estiver aberto em alguma aba, mesmo em segundo plano.
+      </p>
+      <div style="display:flex;gap:10px">
+        <button onclick="ADMIN.dispensarOverlayNotificacao()"
+          style="flex:1;padding:12px;background:var(--bg3);border:1px solid var(--line2);
+                 border-radius:var(--r);color:var(--t2);font-weight:700;font-size:.82rem;cursor:pointer">
+          Agora não
+        </button>
+        <button onclick="ADMIN.habilitarNotificacoes()"
+          style="flex:1;padding:12px;background:var(--gold-bg);border:1px solid var(--gold-bd);
+                 border-radius:var(--r);color:var(--gold);font-weight:700;font-size:.82rem;cursor:pointer">
+          Habilitar
+        </button>
+      </div>
     </div>
   </div>
 
