@@ -169,7 +169,7 @@
           <div class="admin-changelog-publicado" id="boasvindas-status">
             <span class="admin-loading"></span>
           </div>
-          <textarea id="boasvindas-texto" class="admin-versao-textarea" rows="3" placeholder="Bem-vindo(a) ao Under Pressure, {nome}! 🎮 ..."></textarea>
+          <textarea id="boasvindas-texto" class="admin-versao-textarea" rows="1" placeholder="Bem-vindo(a) ao Under Pressure, {nome}! 🎮 ..."></textarea>
           <div class="admin-changelog-publicar-hint">Use <code>{nome}</code> no texto para inserir automaticamente o nome do jogador. Enviada uma única vez, no primeiro login de cada jogador — nunca é reenviada, mesmo em outro dispositivo.</div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <button class="admin-btn admin-btn-ok" style="flex:1" onclick="ADMIN.salvarBoasVindas()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar texto</button>
@@ -299,36 +299,30 @@
 
                 <div class="hist-secoes-grid">
                   <div>
-                    <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M6.5 21V4a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v17"/><path d="M6 12H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> A Empresa — título</label>
-                    <input type="text" id="hist-f-empresa-titulo" class="admin-input">
-                    <label class="hist-field-lbl">Corpo <span class="req-mark">*</span></label>
-                    <textarea id="hist-f-empresa-corpo" class="admin-input" rows="3"></textarea>
+                    <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M6.5 21V4a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v17"/><path d="M6 12H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> A Empresa</label>
+                    <p class="hist-secao-fixa-texto" id="hist-f-empresa-corpo"></p>
                   </div>
                   <div>
-                    <label class="hist-field-lbl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg> Contexto de Mercado — título</label>
-                    <input type="text" id="hist-f-mercado-titulo" class="admin-input">
-                    <label class="hist-field-lbl">Corpo <span class="req-mark">*</span></label>
-                    <textarea id="hist-f-mercado-corpo" class="admin-input" rows="3"></textarea>
+                    <label class="hist-field-lbl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg> Contexto de Mercado</label>
+                    <p class="hist-secao-fixa-texto" id="hist-f-mercado-corpo"></p>
                   </div>
                   <div>
-                    <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Situação Atual — título</label>
-                    <input type="text" id="hist-f-situacao-titulo" class="admin-input">
-                    <label class="hist-field-lbl">Corpo <span class="req-mark">*</span></label>
-                    <textarea id="hist-f-situacao-corpo" class="admin-input" rows="3"></textarea>
+                    <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Situação Atual</label>
+                    <p class="hist-secao-fixa-texto" id="hist-f-situacao-corpo"></p>
                   </div>
                   <div>
-                    <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Desafio Estratégico — título</label>
-                    <input type="text" id="hist-f-desafio-titulo" class="admin-input">
-                    <label class="hist-field-lbl">Corpo <span class="req-mark">*</span></label>
-                    <textarea id="hist-f-desafio-corpo" class="admin-input" rows="3"></textarea>
+                    <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Desafio Estratégico</label>
+                    <p class="hist-secao-fixa-texto" id="hist-f-desafio-corpo"></p>
                   </div>
                 </div>
 
-                <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/></svg> Alerta — título <span class="req-mark">*</span></label>
-                <input type="text" id="hist-f-alerta-titulo" class="admin-input" placeholder="Crise em Andamento">
+                <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/></svg> Crise Ativa <span class="req-mark">*</span></label>
+                <div class="hist-autoria">Marque quais crises já existentes podem ser sorteadas no início dessa história.</div>
+                <div id="hist-crises-lista"></div>
+                <div id="hist-crises-aviso" class="hist-checklist-aviso" style="margin-top:6px"></div>
 
                 <label class="hist-field-lbl">Rodapé <span class="req-mark">*</span></label>
-                <textarea id="hist-f-rodape" class="admin-input" rows="2"></textarea>
+                <textarea id="hist-f-rodape" class="admin-input" rows="1"></textarea>
 
                 <div class="hist-field-lbl" style="margin-top:16px">Rounds</div>
                 <div id="hist-rounds-atalho">
@@ -413,7 +407,7 @@
                 </div>
 
                 <label class="hist-field-lbl">Descrição (narrativa) <span class="req-mark">*</span></label>
-                <textarea id="round-f-descricao" class="admin-input" rows="4"></textarea>
+                <textarea id="round-f-descricao" class="admin-input" rows="1"></textarea>
 
                 <div class="hist-field-lbl" style="margin-top:16px;display:flex;align-items:center;justify-content:space-between">
                   <span>Choices <span class="req-mark">*</span> <span style="text-transform:none;font-weight:400">(2 a 5 — pelo menos 1 avaliada como "boa")</span></span>
@@ -429,7 +423,7 @@
 
               <div class="hist-editor-col-side">
                 <label class="hist-field-lbl">Feedback de omissão (tempo esgotado)</label>
-                <textarea id="round-f-omissao-texto" class="admin-input" rows="3" placeholder="Deixe em branco pra usar o texto genérico do jogo"></textarea>
+                <textarea id="round-f-omissao-texto" class="admin-input" rows="1" placeholder="Deixe em branco pra usar o texto genérico do jogo"></textarea>
 
                 <label class="hist-field-lbl" style="margin-top:10px">Efeito nos indicadores</label>
                 <div style="display:flex;gap:14px;font-size:.76rem;color:var(--t2);margin-bottom:6px">
@@ -496,7 +490,7 @@
               </div>
             </div>
             <div class="admin-versao-section-title" style="margin-top:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Changelog desta versão</div>
-            <textarea id="versao-changelog-input" class="admin-versao-textarea" placeholder="Descreva o que foi alterado nesta versão..."></textarea>
+            <textarea id="versao-changelog-input" class="admin-versao-textarea" rows="1" placeholder="Descreva o que foi alterado nesta versão..."></textarea>
             <div class="admin-versao-flags">
               <label class="admin-versao-flag-label">
                 <input type="checkbox" id="versao-critica-check">
@@ -624,7 +618,7 @@
           
           <div>
             <label class="admin-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg> Mensagem no overlay de manutenção</label>
-            <textarea id="admin-manut-mensagem" class="admin-input" rows="2" placeholder="Ex: Voltamos em breve! Previsão: 14h00." style="resize:vertical;font-size:.82rem;line-height:1.4;min-height:60px"></textarea>
+            <textarea id="admin-manut-mensagem" class="admin-input" rows="1" placeholder="Ex: Voltamos em breve! Previsão: 14h00." style="font-size:.82rem;line-height:1.4"></textarea>
           </div>
 
           <button class="admin-btn admin-btn-ok" onclick="ADMIN.salvarConfigGlobal()" style="width:100%;margin:8px 0 4px">
@@ -676,7 +670,7 @@
       <div class="admin-modal-body">
         <p class="admin-modal-desc">Aparece como notificação para <strong>todos os jogadores</strong> online. Deixe vazio para desativar.</p>
         <label class="admin-label">Mensagem</label>
-        <textarea id="admin-msg-global" class="admin-input admin-textarea" placeholder="Ex: Nova versão disponível! Recarregue a página."></textarea>
+        <textarea id="admin-msg-global" class="admin-input admin-textarea" rows="1" placeholder="Ex: Nova versão disponível! Recarregue a página."></textarea>
         <div class="admin-modal-preview" id="admin-msg-preview" style="display:none">
           <div class="admin-preview-label">Pré-visualização</div>
           <div class="admin-preview-toast" id="admin-msg-preview-text"></div>
@@ -708,7 +702,7 @@
               <span>Detalhe</span>
               <span id="admin-ban-detalhe-contador" style="color:var(--t3);font-weight:400">0/200</span>
             </div>
-            <textarea id="admin-ban-detalhe" class="admin-input admin-textarea" style="min-height:56px" maxlength="200"
+            <textarea id="admin-ban-detalhe" class="admin-input admin-textarea" rows="1" maxlength="200"
               placeholder="Descreva o motivo específico..." oninput="ADMIN._atualizarContadorDetalhe?.()"></textarea>
           </div>
         </div>
@@ -761,7 +755,7 @@
         </div>
         <div>
           <div class="admin-label">Mensagem</div>
-          <textarea id="admin-nova-msg-texto" placeholder="Digite sua mensagem..." class="admin-input" style="min-height:90px;resize:vertical"></textarea>
+          <textarea id="admin-nova-msg-texto" placeholder="Digite sua mensagem..." class="admin-input" rows="1"></textarea>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;color:var(--t2)">
@@ -788,7 +782,7 @@
       </div>
       <div class="admin-modal-body">
         <p style="font-size:.82rem;color:var(--t2);margin:0;line-height:1.65">Enviada para a inbox de <strong style="color:var(--t1)">todos os jogadores</strong> cadastrados.</p>
-        <textarea id="admin-broadcast-texto" placeholder="Digite a mensagem..." class="admin-input" style="min-height:100px;resize:vertical"></textarea>
+        <textarea id="admin-broadcast-texto" placeholder="Digite a mensagem..." class="admin-input" rows="1"></textarea>
       </div>
       <div class="admin-modal-foot">
         <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2);text-transform:none;letter-spacing:0" onclick="ADMIN.fecharBroadcast()">Cancelar</button>
@@ -806,7 +800,7 @@
       </div>
       <div class="admin-modal-body">
         <div id="admin-inbox-dest" style="font-size:.82rem;color:var(--t2);padding:9px 12px;background:var(--bg3);border:1px solid var(--line2);border-radius:var(--r)"></div>
-        <textarea id="admin-inbox-texto" placeholder="Digite sua mensagem para o jogador..." class="admin-input" style="min-height:100px;resize:vertical"></textarea>
+        <textarea id="admin-inbox-texto" placeholder="Digite sua mensagem para o jogador..." class="admin-input" rows="1"></textarea>
       </div>
       <div class="admin-modal-foot">
         <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2);text-transform:none;letter-spacing:0" onclick="ADMIN.fecharModalInbox()">Cancelar</button>
@@ -840,7 +834,7 @@
       <div class="admin-modal-body">
         <input type="text" id="admin-glossario-termo" class="admin-input" placeholder="Termo (ex: SLA, ARR, Churn...)">
         <select id="admin-glossario-categoria" class="admin-input"></select>
-        <textarea id="admin-glossario-def" placeholder="Definição do termo..." class="admin-input admin-textarea" style="min-height:110px"></textarea>
+        <textarea id="admin-glossario-def" placeholder="Definição do termo..." class="admin-input admin-textarea" rows="1"></textarea>
       </div>
       <div class="admin-modal-foot">
         <button class="admin-btn" style="background:var(--bg3);border:1px solid var(--line2);color:var(--t2);text-transform:none;letter-spacing:0" onclick="ADMIN.fecharModalGlossario()">Cancelar</button>

@@ -2844,6 +2844,97 @@ const ADMIN = (() => {
       </div>`).join('');
   }
 
+  // Cópia local da lista de crises que o motor do jogo já usa pra sortear a
+  // situação inicial (Core/engine.js, SITUACOES_INICIAIS). O painel admin não
+  // carrega esse arquivo, então essa lista precisa ser atualizada aqui à mão
+  // se um dia mudar no jogo.
+  const _SITUACOES_INICIAIS = [
+    { id: 'batalha-judicial-trabalhista', titulo: 'Batalha Judicial Trabalhista', resumo: 'Processo trabalhista + caixa apertado', setores: ['varejo','logistica','industria','tecnologia'], effects: { financeiro: -3, rh: -4, processos: -1, conformidade: -2 } },
+    { id: 'invasao-mercado-internacional', titulo: 'Invasão do Mercado Internacional', resumo: 'Concorrente internacional com preços 35% menores', setores: ['varejo','tecnologia','logistica'], effects: { clientes: -5, margem: -2, financeiro: -2, marca: -2, reputacao: -2 } },
+    { id: 'colapso-lideranca', titulo: 'Colapso da Liderança', resumo: 'Diretoria inteira pediu demissão', setores: ['tecnologia','varejo','industria','logistica'], effects: { processos: -3, rh: -6, clientes: -2, produtividade: -2 } },
+    { id: 'vazamento-dados', titulo: 'Vazamento Massivo de Dados', resumo: '120 mil registros de clientes expostos na dark web', setores: ['tecnologia','varejo'], effects: { reputacao: -4, clientes: -6, seguranca: -3, financeiro: -2, digital: -2, marca: -3 } },
+    { id: 'explosao-demanda', titulo: 'Explosão de Demanda', resumo: 'Demanda triplicou em 30 dias — estrutura não aguenta', setores: ['varejo','logistica','industria','tecnologia'], effects: { rh: -3, processos: -3, estoque: -3, sla: -3, clientes: -1 } },
+    { id: 'fornecedor-faliu', titulo: 'Fornecedor Principal Faliu', resumo: 'Fornecedor exclusivo decretou falência — 12 dias de estoque', setores: ['varejo','industria','logistica'], effects: { estoque: -4, processos: -3, qualidade: -2, clientes: -2, financeiro: -2, manutencao: -1 } },
+    { id: 'recessao-juros', titulo: 'Recessão e Juros nas Alturas', resumo: 'PIB caiu 3,2% e taxa básica de juros chegou a 22%', setores: ['varejo','industria','logistica','tecnologia'], effects: { financeiro: -4, clientes: -3, margem: -3, inovacao: -1 } },
+    { id: 'crise-redes-sociais', titulo: 'Crise nas Redes Sociais', resumo: 'Post viral com 4,2 mi de visualizações destruindo a marca', setores: ['varejo','tecnologia'], effects: { marca: -4, clientes: -6, digital: -3, reputacao: -3, financeiro: -1 } },
+    { id: 'nova-regulamentacao', titulo: 'Nova Regulamentação Imposta', resumo: 'Lei publicada: 90 dias pra adequação total ou multa de R$2M', setores: ['industria','logistica','tecnologia'], effects: { conformidade: -3, financeiro: -3, processos: -2, seguranca: -1 } },
+    { id: 'colapso-entregas', titulo: 'Colapso na Cadeia de Entregas', resumo: 'Frota bloqueada + 800 entregas atrasadas', setores: ['logistica'], effects: { sla: -4, frota: -3, clientes: -3, financeiro: -2, tecnologia: -2 } },
+    { id: 'apagao-dados', titulo: 'Apagão de Dados Críticos', resumo: 'Servidor principal corrompido — 3 anos de dados perdidos', setores: ['tecnologia','logistica'], effects: { produtividade: -4, clientes: -5, financeiro: -2, tecnologia: -3, processos: -2 } },
+    { id: 'paralisacao-acidente', titulo: 'Paralisação por Acidente Grave', resumo: 'Fiscalização do MTE interdita linha de produção', setores: ['industria'], effects: { seguranca: -4, manutencao: -3, financeiro: -3, clientes: -2, conformidade: -3 } },
+  ];
+
+  function _lerIndicadoresIniciaisDoDOM(setor) {
+    const chaves = _INDICADORES_SETOR[setor] || [];
+    const valores = {};
+    chaves.forEach(k => {
+      const v = parseInt(document.getElementById(`hist-ind-${k}`)?.value, 10);
+      valores[k] = Number.isFinite(v) ? v : 10;
+    });
+    return valores;
+  }
+
+  // Pra cada crise marcada, confere se o efeito dela deixaria algum indicador
+  // inicial em 0 ou negativo. Recebe os valores já prontos (do DOM, na tela
+  // de edição, ou de campos.indicadoresIniciais, na hora de publicar).
+  function _checarCrisesZerariam(selecionadas, indicadoresIniciais) {
+    const valores = indicadoresIniciais || {};
+    const problemas = [];
+    _SITUACOES_INICIAIS.filter(c => (selecionadas || []).includes(c.id)).forEach(c => {
+      const zerados = [];
+      Object.entries(c.effects || {}).forEach(([ind, delta]) => {
+        if (valores[ind] === undefined) return;
+        const resultado = valores[ind] + delta;
+        if (resultado <= 0) zerados.push(`${ind} ficaria ${resultado} (${valores[ind]}${delta < 0 ? '' : '+'}${delta})`);
+      });
+      if (zerados.length) problemas.push({ id: c.id, titulo: c.titulo, zerados });
+    });
+    return problemas;
+  }
+
+  function _renderCrisesEditor(setor, selecionadas) {
+    const lista = _SITUACOES_INICIAIS.filter(c => c.setores.includes(setor));
+    const sel = new Set(selecionadas || []);
+    const wrap = document.getElementById('hist-crises-lista');
+    wrap.innerHTML = lista.map(c => `
+      <label class="hist-crise-row">
+        <input type="checkbox" class="hist-crise-check" value="${c.id}" ${sel.has(c.id) ? 'checked' : ''}>
+        <span class="hist-crise-info">
+          <span class="hist-crise-titulo">${_esc(c.titulo)}</span>
+          <div class="hist-crise-resumo">${_esc(c.resumo)}</div>
+          <div class="hist-crise-zerado" id="hist-crise-zerado-${c.id}"></div>
+        </span>
+      </label>`).join('') || '<div class="hist-autoria">Nenhuma crise cadastrada pra esse setor ainda.</div>';
+    _atualizarAvisoCrises();
+  }
+
+  function _atualizarAvisoCrises() {
+    const setor = _histEditandoDoc?.setor || _histSetorAtual;
+    const selecionadas = Array.from(document.querySelectorAll('.hist-crise-check:checked')).map(cb => cb.value);
+    const problemas = _checarCrisesZerariam(selecionadas, _lerIndicadoresIniciaisDoDOM(setor));
+
+    document.querySelectorAll('[id^="hist-crise-zerado-"]').forEach(el => { el.textContent = ''; });
+    problemas.forEach(p => {
+      const el = document.getElementById(`hist-crise-zerado-${p.id}`);
+      if (el) el.textContent = `⚠ zeraria: ${p.zerados.join('; ')}`;
+    });
+
+    const avisoGeral = document.getElementById('hist-crises-aviso');
+    if (avisoGeral) {
+      avisoGeral.textContent = problemas.length
+        ? `Ajuste os indicadores iniciais antes de publicar — crise(s) marcada(s) zerariam algum indicador.`
+        : '';
+    }
+  }
+
+  if (!window._crisesZeroCheckLigado) {
+    window._crisesZeroCheckLigado = true;
+    document.addEventListener('input', (e) => {
+      if (e.target.matches && (e.target.matches('.hist-crise-check') || e.target.closest('#hist-indicadores-lista'))) {
+        _atualizarAvisoCrises();
+      }
+    });
+  }
+
   
   function _setEditorReadonly(readonly) {
     document.querySelectorAll('#hist-view-editor input, #hist-view-editor textarea')
@@ -2892,11 +2983,13 @@ const ADMIN = (() => {
     const secoes = intro.secoes || [];
     const chaves = ['empresa', 'mercado', 'situacao', 'desafio'];
     chaves.forEach((chave, i) => {
-      document.getElementById(`hist-f-${chave}-titulo`).value = secoes[i]?.titulo || '';
-      document.getElementById(`hist-f-${chave}-corpo`).value = secoes[i]?.corpo || '';
+      const el = document.getElementById(`hist-f-${chave}-corpo`);
+      if (el) el.textContent = secoes[i]?.corpo || '';
     });
-    document.getElementById('hist-f-alerta-titulo').value = intro.alerta?.titulo || '';
     document.getElementById('hist-f-rodape').value = intro.rodape || '';
+    document.getElementById('hist-crises-lista').innerHTML =
+      `<div class="hist-autoria">Histórias nativas sorteiam entre todas as crises cadastradas pro setor — não é uma lista fixa por história.</div>`;
+    document.getElementById('hist-crises-aviso').textContent = '';
 
     const qtdRounds = _histNativaAtual.rounds ? _histNativaAtual.rounds.length : null;
     document.getElementById('hist-indicadores-lista').innerHTML = `
@@ -3055,11 +3148,14 @@ const ADMIN = (() => {
     document.getElementById('hist-editor-status-badge').textContent = '';
     document.getElementById('hist-editor-status-badge').className = 'admin-historia-badge';
 
-    ['badge','subtitulo','empresa-titulo','empresa-corpo','mercado-titulo','mercado-corpo',
-     'situacao-titulo','situacao-corpo','desafio-titulo','desafio-corpo','alerta-titulo','rodape']
-      .forEach(f => { const el = document.getElementById(`hist-f-${f}`); if (el) el.value = ''; });
+    ['badge','subtitulo','rodape'].forEach(f => { const el = document.getElementById(`hist-f-${f}`); if (el) el.value = ''; });
+    ['empresa','mercado','situacao','desafio'].forEach(chave => {
+      const el = document.getElementById(`hist-f-${chave}-corpo`);
+      if (el) el.textContent = '';
+    });
 
     _renderIndicadoresEditor(_histSetorAtual, null);
+    _renderCrisesEditor(_histSetorAtual, []);
     document.getElementById('hist-autoria-info').textContent = 'Ainda não salva.';
     document.getElementById('hist-aprovacao-info').textContent = '—';
     document.getElementById('hist-aprovacao-acoes').style.display = 'none';
@@ -3094,18 +3190,15 @@ const ADMIN = (() => {
 
     document.getElementById('hist-f-badge').value = h.badge || '';
     document.getElementById('hist-f-subtitulo').value = h.subtitulo || '';
-    document.getElementById('hist-f-empresa-titulo').value = h.secaoEmpresaTitulo || 'A Empresa';
-    document.getElementById('hist-f-empresa-corpo').value = h.secaoEmpresaCorpo || '';
-    document.getElementById('hist-f-mercado-titulo').value = h.secaoMercadoTitulo || 'Contexto de Mercado';
-    document.getElementById('hist-f-mercado-corpo').value = h.secaoMercadoCorpo || '';
-    document.getElementById('hist-f-situacao-titulo').value = h.secaoSituacaoTitulo || 'Situação Atual';
-    document.getElementById('hist-f-situacao-corpo').value = h.secaoSituacaoCorpo || '';
-    document.getElementById('hist-f-desafio-titulo').value = h.secaoDesafioTitulo || 'Desafio Estratégico';
-    document.getElementById('hist-f-desafio-corpo').value = h.secaoDesafioCorpo || '';
-    document.getElementById('hist-f-alerta-titulo').value = h.alertaTitulo || '';
+    ['empresa','mercado','situacao','desafio'].forEach(chave => {
+      const el = document.getElementById(`hist-f-${chave}-corpo`);
+      const campo = `secao${chave.charAt(0).toUpperCase()}${chave.slice(1)}Corpo`;
+      if (el) el.textContent = h[campo] || '';
+    });
     document.getElementById('hist-f-rodape').value = h.rodape || '';
 
     _renderIndicadoresEditor(h.setor, h.indicadoresIniciais || null);
+    _renderCrisesEditor(h.setor, h.crisesPermitidas || []);
 
     const contribuidores = Array.isArray(h.contribuidoresNomes) ? h.contribuidoresNomes : [];
     document.getElementById('hist-autoria-info').innerHTML =
@@ -3166,15 +3259,15 @@ const ADMIN = (() => {
       if (!sugestoes.length) return;
 
       const labelCampo = {
-        badge: 'Badge', subtitulo: 'Subtítulo',
-        secaoEmpresaCorpo: 'A Empresa', secaoMercadoCorpo: 'Contexto de Mercado',
-        secaoSituacaoCorpo: 'Situação Atual', secaoDesafioCorpo: 'Desafio Estratégico',
-        alertaTitulo: 'Alerta', rodape: 'Rodapé',
+        badge: 'Badge', subtitulo: 'Subtítulo', rodape: 'Rodapé',
       };
       wrap.innerHTML = `<div class="hist-field-lbl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> Sugestões pendentes</div>` + sugestoes.map(s => {
         const mudou = Object.keys(labelCampo)
           .filter(k => (s.campos?.[k] || '') !== (_histEditandoDoc?.[k] || ''))
           .map(k => labelCampo[k]);
+        const crisesA = (s.campos?.crisesPermitidas || []).slice().sort();
+        const crisesB = (_histEditandoDoc?.crisesPermitidas || []).slice().sort();
+        if (JSON.stringify(crisesA) !== JSON.stringify(crisesB)) mudou.push('Crise Ativa');
         return `
           <div class="hist-sugestao-card">
             <div class="hist-sugestao-head">
@@ -3246,21 +3339,14 @@ const ADMIN = (() => {
       const v = parseInt(document.getElementById(`hist-ind-${k}`)?.value, 10);
       indicadoresIniciais[k] = Number.isFinite(v) ? v : 10;
     });
+    const crisesPermitidas = Array.from(document.querySelectorAll('.hist-crise-check:checked')).map(cb => cb.value);
     return {
       setor,
       badge: g('hist-f-badge'),
       subtitulo: g('hist-f-subtitulo'),
-      secaoEmpresaTitulo: g('hist-f-empresa-titulo'),
-      secaoEmpresaCorpo: g('hist-f-empresa-corpo'),
-      secaoMercadoTitulo: g('hist-f-mercado-titulo'),
-      secaoMercadoCorpo: g('hist-f-mercado-corpo'),
-      secaoSituacaoTitulo: g('hist-f-situacao-titulo'),
-      secaoSituacaoCorpo: g('hist-f-situacao-corpo'),
-      secaoDesafioTitulo: g('hist-f-desafio-titulo'),
-      secaoDesafioCorpo: g('hist-f-desafio-corpo'),
-      alertaTitulo: g('hist-f-alerta-titulo'),
       rodape: g('hist-f-rodape'),
       indicadoresIniciais,
+      crisesPermitidas,
     };
   }
 
@@ -3268,14 +3354,12 @@ const ADMIN = (() => {
     const faltando = [];
     if (!campos.badge) faltando.push('badge');
     if (!campos.subtitulo) faltando.push('subtítulo');
-    if (!campos.secaoEmpresaCorpo) faltando.push('seção "A Empresa"');
-    if (!campos.secaoMercadoCorpo) faltando.push('seção "Contexto de Mercado"');
-    if (!campos.secaoSituacaoCorpo) faltando.push('seção "Situação Atual"');
-    if (!campos.secaoDesafioCorpo) faltando.push('seção "Desafio Estratégico"');
-    if (!campos.alertaTitulo) faltando.push('alerta');
     if (!campos.rodape) faltando.push('rodapé');
+    if (!campos.crisesPermitidas || !campos.crisesPermitidas.length) faltando.push('pelo menos 1 crise ativa marcada');
+    _checarCrisesZerariam(campos.crisesPermitidas, campos.indicadoresIniciais).forEach(p => {
+      faltando.push(`crise "${p.titulo}" zeraria: ${p.zerados.join('; ')}`);
+    });
     return faltando;
-    
   }
 
   function _fsFieldsFromObj(obj) {
@@ -3335,6 +3419,17 @@ const ADMIN = (() => {
     let faltando = [];
     if (publicar) {
       faltando = _checklistHistoriaFaltando(campos);
+      if (isNovo) {
+        faltando.push('salve a história e adicione os rounds antes de publicar');
+      } else {
+        try {
+          const { total, contagem, rounds } = await _contarRoundsHistoria(_histEditandoId);
+          faltando = faltando.concat(_checklistRoundsFaltando(total, contagem));
+          faltando = faltando.concat(_validarConteudoRounds(rounds));
+        } catch (e) {
+          faltando.push('não foi possível verificar os rounds — tente de novo');
+        }
+      }
       if (faltando.length) {
         document.getElementById('hist-checklist-aviso').textContent =
           `Faltando pra publicar: ${faltando.join(', ')}.`;
@@ -3431,6 +3526,12 @@ const ADMIN = (() => {
 
   async function aprovarHistoria() {
     if (!_histEditandoId || !_souOwner()) return;
+    const { total, contagem, rounds } = await _contarRoundsHistoria(_histEditandoId).catch(() => ({ total: 0, contagem: {}, rounds: [] }));
+    const faltandoRounds = _checklistRoundsFaltando(total, contagem).concat(_validarConteudoRounds(rounds));
+    if (faltandoRounds.length) {
+      _showAdminToast(`Não dá pra aprovar — faltando: ${faltandoRounds.join(', ')}.`, true);
+      return;
+    }
     await _opFeedback({
       etapas: ['Aprovando e publicando…'],
       executar: async () => {
@@ -3468,6 +3569,55 @@ const ADMIN = (() => {
 
   const _FASE_LABEL = { diagnostico: 'Diagnóstico', pressao: 'Pressão', decisao: 'Decisão' };
   const _FASE_MIN   = { diagnostico: 3, pressao: 4, decisao: 3 };
+  const _FASE_MAX   = 5;
+  const _TOTAL_MIN  = 10;
+  const _TOTAL_MAX  = 15;
+
+  // Busca a contagem de rounds por fase e os dados completos (usado pelo
+  // checklist de publicação, tanto pra contar quanto pra validar conteúdo).
+  async function _contarRoundsHistoria(histId) {
+    const res = await _querySub(`historias/${histId}`, {
+      structuredQuery: { from: [{ collectionId: 'rounds' }] }
+    });
+    const rounds = (Array.isArray(res) ? res : [])
+      .filter(r => r.document)
+      .map(r => ({ id: r.document.name.split('/').pop(), ..._parseFields(r.document.fields || {}) }));
+    const contagem = { diagnostico: 0, pressao: 0, decisao: 0 };
+    rounds.forEach(r => { if (contagem[r.fase] !== undefined) contagem[r.fase]++; });
+    return { total: rounds.length, contagem, rounds };
+  }
+
+  // Compara a contagem de rounds com as regras mín/máx e devolve o que falta.
+  function _checklistRoundsFaltando(total, contagem) {
+    const faltando = [];
+    if (total < _TOTAL_MIN) faltando.push(`mínimo ${_TOTAL_MIN} rounds no total (tem ${total})`);
+    if (total > _TOTAL_MAX) faltando.push(`máximo ${_TOTAL_MAX} rounds no total (tem ${total})`);
+    Object.keys(_FASE_MIN).forEach(f => {
+      if (contagem[f] < _FASE_MIN[f]) faltando.push(`mínimo ${_FASE_MIN[f]} rounds de ${_FASE_LABEL[f]} (tem ${contagem[f]})`);
+      if (contagem[f] > _FASE_MAX) faltando.push(`máximo ${_FASE_MAX} rounds de ${_FASE_LABEL[f]} (tem ${contagem[f]})`);
+    });
+    return faltando;
+  }
+
+  // Reconfere o conteúdo de cada round individualmente (não só a quantidade
+  // total) — protege contra rounds salvos antes dessas regras existirem, ou
+  // editados direto no banco por fora do editor.
+  function _validarConteudoRounds(rounds) {
+    const problemas = [];
+    (rounds || []).forEach(r => {
+      const nome = r.title || `round sem título (id ${r.id})`;
+      const choices = Array.isArray(r.choices) ? r.choices : [];
+      if (!r.title) problemas.push(`"${nome}": sem título`);
+      if (!r.description) problemas.push(`"${nome}": sem descrição`);
+      if (choices.length < 2) {
+        problemas.push(`"${nome}": menos de 2 choices`);
+      } else {
+        if (choices.some(c => !c.text)) problemas.push(`"${nome}": tem choice sem texto`);
+        if (!choices.some(c => c.avaliacao === 'boa')) problemas.push(`"${nome}": nenhuma choice avaliada como "boa"`);
+      }
+    });
+    return problemas;
+  }
 
   async function abrirRoundsHistoria() {
     if (!_histEditandoId) { _showAdminToast('Salve a história antes de criar rounds.', true); return; }
@@ -3492,9 +3642,9 @@ const ADMIN = (() => {
       _roundsListaCache.forEach(r => { if (contagem[r.fase] !== undefined) contagem[r.fase]++; });
       const total = _roundsListaCache.length;
       document.getElementById('hist-fase-contador').innerHTML = `
-        <span>Total: <b class="${(total < 10 || total > 15) ? 'falta' : ''}">${total}</b> (mín 10, máx 15)</span>
+        <span>Total: <b class="${(total < _TOTAL_MIN || total > _TOTAL_MAX) ? 'falta' : ''}">${total}</b> (mín ${_TOTAL_MIN}, máx ${_TOTAL_MAX})</span>
         ${Object.keys(_FASE_MIN).map(f => `
-          <span>${_FASE_LABEL[f]}: <b class="${contagem[f] < _FASE_MIN[f] ? 'falta' : ''}">${contagem[f]}</b> (mín ${_FASE_MIN[f]}, máx 5)</span>
+          <span>${_FASE_LABEL[f]}: <b class="${(contagem[f] < _FASE_MIN[f] || contagem[f] > _FASE_MAX) ? 'falta' : ''}">${contagem[f]}</b> (mín ${_FASE_MIN[f]}, máx ${_FASE_MAX})</span>
         `).join('')}
       `;
 
@@ -3607,19 +3757,68 @@ const ADMIN = (() => {
 
   
   
+  // Toda textarea do painel (dentro ou fora do editor de histórias) nasce do
+  // tamanho de 1 linha (rows="1" no HTML) e cresce sozinha conforme o texto.
+  const _AUTOGROW_SEL = 'textarea.admin-input, textarea.admin-textarea, textarea.admin-versao-textarea';
+
   function _autoGrow(el) {
     if (!el) return;
     el.style.height = '0px';
     el.style.height = el.scrollHeight + 'px';
   }
   function _autoGrowAll(root) {
-    (root || document).querySelectorAll('textarea.admin-input').forEach(_autoGrow);
+    (root || document).querySelectorAll(_AUTOGROW_SEL).forEach(_autoGrow);
   }
+
   if (!window._autoGrowLigado) {
     window._autoGrowLigado = true;
+
+    // Cresce ao digitar.
     document.addEventListener('input', (e) => {
-      if (e.target.matches && e.target.matches('textarea.admin-input')) _autoGrow(e.target);
+      if (e.target.matches && e.target.matches(_AUTOGROW_SEL)) _autoGrow(e.target);
     });
+
+    // Cresce também quando o valor é preenchido via JS (ex: ao abrir um round/
+    // história existente pra editar). Isso não dispara o evento 'input' nativo,
+    // então sem isso a caixa ficaria com a altura errada até o usuário digitar
+    // alguma coisa nela. Fica pego uma vez só, pra qualquer textarea do painel,
+    // então nenhum código futuro precisa lembrar de chamar autoGrow manualmente.
+    const _taProto = window.HTMLTextAreaElement && HTMLTextAreaElement.prototype;
+    const _taValueDesc = _taProto && Object.getOwnPropertyDescriptor(_taProto, 'value');
+    if (_taValueDesc && _taValueDesc.set) {
+      Object.defineProperty(_taProto, 'value', {
+        get: _taValueDesc.get,
+        set: function (v) {
+          _taValueDesc.set.call(this, v);
+          if (this.matches && this.matches(_AUTOGROW_SEL)) _autoGrow(this);
+        },
+        configurable: true,
+      });
+    }
+
+    // Cresce textareas que aparecem depois na tela (rounds, choices, modais),
+    // mesmo que o texto já venha pronto no HTML inserido (sem passar por
+    // 'input' nem por .value=). Rede de segurança pros _autoGrowAll() manuais
+    // que já existem em alguns pontos do código.
+    if (window.MutationObserver) {
+      new MutationObserver((mutations) => {
+        mutations.forEach((m) => {
+          (m.addedNodes || []).forEach((node) => {
+            if (node.nodeType !== 1) return;
+            if (node.matches && node.matches(_AUTOGROW_SEL)) _autoGrow(node);
+            if (node.querySelectorAll) node.querySelectorAll(_AUTOGROW_SEL).forEach(_autoGrow);
+          });
+        });
+      }).observe(document.body, { childList: true, subtree: true });
+    }
+
+    // Textareas que já estavam na página no carregamento.
+    const _autoGrowInicial = () => _autoGrowAll(document);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', _autoGrowInicial);
+    } else {
+      _autoGrowInicial();
+    }
   }
 
   
@@ -3689,6 +3888,17 @@ const ADMIN = (() => {
     })).filter(e => e.indicador);
   }
 
+  // Converte a lista de linhas do editor ({indicador,valor}[]) para o formato
+  // que o motor do jogo espera ({indicador: valor}), e vice-versa.
+  function _efeitosArrayToObj(arr) {
+    const obj = {};
+    (arr || []).forEach(e => { if (e && e.indicador) obj[e.indicador] = e.valor ?? 0; });
+    return obj;
+  }
+  function _efeitosObjToArray(obj) {
+    return Object.entries(obj || {}).map(([indicador, valor]) => ({ indicador, valor }));
+  }
+
   function adicionarEfeito(containerId) {
     const setor = _histEditandoDoc?.setor || _histSetorAtual;
     const container = document.getElementById(containerId);
@@ -3696,10 +3906,61 @@ const ADMIN = (() => {
     _cselRefreshAll(container);
   }
 
+  // Vocabulário de flags que o motor do jogo já reconhece (usadas nos textos de
+  // final da história). O autor pode escolher uma dessas OU digitar uma flag livre.
+  const _FLAGS_CONHECIDAS = [
+    'lideranca_toxica', 'ignorou_seguranca', 'crescimento_sem_caixa',
+    'demissao_em_massa', 'rh_negligenciado', 'crescimento_saudavel',
+    'investiu_em_inovacao', 'gestor_de_crise', 'gestor_esgotado',
+  ];
+  const _FASES_EMPRESA = [
+    { value: 'fundacao',     label: 'Fundação' },
+    { value: 'crescimento',  label: 'Crescimento' },
+    { value: 'crise',        label: 'Crise' },
+    { value: 'consolidacao', label: 'Consolidação' },
+    { value: 'expansao',     label: 'Expansão' },
+  ];
+
+  function _ensureFlagsDatalist() {
+    if (document.getElementById('admin-flags-conhecidas')) return;
+    const dl = document.createElement('datalist');
+    dl.id = 'admin-flags-conhecidas';
+    dl.innerHTML = _FLAGS_CONHECIDAS.map(f => `<option value="${f}">`).join('');
+    document.body.appendChild(dl);
+  }
+
+  function _flagRowHTML(valor) {
+    return `
+      <div class="round-flag-row">
+        <input type="text" class="admin-input rc-flag-valor" list="admin-flags-conhecidas" value="${_escAttr(valor || '')}" placeholder="nome_da_flag (lista ou livre)">
+        <button class="admin-btn-sm admin-btn-danger" type="button" onclick="this.closest('.round-flag-row').remove()">×</button>
+      </div>`;
+  }
+
+  function _lerFlagsDe(container) {
+    if (!container) return [];
+    return Array.from(container.querySelectorAll('.rc-flag-valor')).map(i => i.value.trim()).filter(Boolean);
+  }
+
+  function adicionarFlag(containerId) {
+    const container = document.getElementById(containerId);
+    container?.insertAdjacentHTML('beforeend', _flagRowHTML(''));
+  }
+
   function _renderChoiceCard(cid, c = {}) {
     const setor = _histEditandoDoc?.setor || _histSetorAtual;
-    const efRows  = (c.effects    && c.effects.length    ? c.effects    : [{}]).map(e => _efeitoRowHTML(setor, e.indicador || '', e.valor ?? 0)).join('');
-    const reqRows = (c.requisitos || []).map(r => _efeitoRowHTML(setor, r.indicador || '', r.valor ?? 0)).join('');
+    _ensureFlagsDatalist();
+    const effArr  = Array.isArray(c.effects) ? c.effects : _efeitosObjToArray(c.effects);
+    const reqArr  = Array.isArray(c.requisitos) ? c.requisitos : _efeitosObjToArray(c.requisitos?.indicadorMinimo);
+    const reqMaxArr = _efeitosObjToArray(Array.isArray(c.requisitos) ? {} : c.requisitos?.indicadorMaximo);
+    const semFlagsArr = Array.isArray(c.requisitos) ? [] : (c.requisitos?.semFlags || []);
+    const comFlagsArr = Array.isArray(c.requisitos) ? [] : (c.requisitos?.comFlags || []);
+    const faseEmpresaAtual = Array.isArray(c.requisitos) ? [] : (c.requisitos?.faseEmpresa || []);
+    const efRows  = (effArr.length ? effArr : [{}]).map(e => _efeitoRowHTML(setor, e.indicador || '', e.valor ?? 0)).join('');
+    const reqRows = reqArr.map(r => _efeitoRowHTML(setor, r.indicador || '', r.valor ?? 0)).join('');
+    const reqMaxRows = reqMaxArr.map(r => _efeitoRowHTML(setor, r.indicador || '', r.valor ?? 0)).join('');
+    const semFlagsRows = semFlagsArr.map(_flagRowHTML).join('');
+    const comFlagsRows = comFlagsArr.map(_flagRowHTML).join('');
     const g = c.gestorEffects || {};
     return `
       <div class="round-choice-card" data-cid="${cid}">
@@ -3742,14 +4003,34 @@ const ADMIN = (() => {
         </div>
 
         <label class="hist-field-lbl" style="margin-top:10px">Ensinamento</label>
-        <textarea class="admin-input rc-ensinamento" rows="2">${_esc(c.ensinamento || '')}</textarea>
+        <textarea class="admin-input rc-ensinamento" rows="1">${_esc(c.ensinamento || '')}</textarea>
 
         <label class="hist-field-lbl" style="margin-top:10px">Metodologia de referência <span style="text-transform:none;font-weight:400">(opcional)</span></label>
         <input type="text" class="admin-input rc-metodologia" placeholder='Ex: "Ciclo PDCA"' value="${_escAttr(c.metodologia || '')}">
 
         <label class="hist-field-lbl" style="margin-top:10px">Requisito mínimo de indicador <span style="text-transform:none;font-weight:400">(opcional)</span></label>
         <div class="rc-requisitos" id="req-${cid}">${reqRows}</div>
-        <button class="admin-btn-sm" type="button" onclick="ADMIN.adicionarEfeito('req-${cid}')">+ Requisito</button>
+        <button class="admin-btn-sm" type="button" onclick="ADMIN.adicionarEfeito('req-${cid}')">+ Requisito mín.</button>
+
+        <label class="hist-field-lbl" style="margin-top:10px">Requisito máximo de indicador <span style="text-transform:none;font-weight:400">(opcional)</span></label>
+        <div class="rc-requisitos-max" id="reqmax-${cid}">${reqMaxRows}</div>
+        <button class="admin-btn-sm" type="button" onclick="ADMIN.adicionarEfeito('reqmax-${cid}')">+ Requisito máx.</button>
+
+        <label class="hist-field-lbl" style="margin-top:10px">Só aparece SEM essas flags <span style="text-transform:none;font-weight:400">(opcional)</span></label>
+        <div class="rc-sem-flags" id="semflags-${cid}">${semFlagsRows}</div>
+        <button class="admin-btn-sm" type="button" onclick="ADMIN.adicionarFlag('semflags-${cid}')">+ Flag</button>
+
+        <label class="hist-field-lbl" style="margin-top:10px">Só aparece COM essas flags <span style="text-transform:none;font-weight:400">(opcional)</span></label>
+        <div class="rc-com-flags" id="comflags-${cid}">${comFlagsRows}</div>
+        <button class="admin-btn-sm" type="button" onclick="ADMIN.adicionarFlag('comflags-${cid}')">+ Flag</button>
+
+        <label class="hist-field-lbl" style="margin-top:10px">Só aparece nessa(s) fase(s) da empresa <span style="text-transform:none;font-weight:400">(opcional — nenhuma marcada = qualquer fase)</span></label>
+        <div class="round-fase-empresa-check" style="display:flex;flex-wrap:wrap;gap:8px">
+          ${_FASES_EMPRESA.map(f => `
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;text-transform:none">
+              <input type="checkbox" class="rc-fase-empresa" value="${f.value}" ${faseEmpresaAtual.includes(f.value) ? 'checked' : ''}> ${f.label}
+            </label>`).join('')}
+        </div>
       </div>`;
   }
 
@@ -3831,13 +4112,32 @@ const ADMIN = (() => {
     document.querySelector(`input[name="round-omissao-modo"][value="${modo}"]`).checked = true;
     document.getElementById('round-omissao-manual').style.display = modo === 'manual' ? '' : 'none';
     const setor = _histEditandoDoc?.setor || _histSetorAtual;
+    const omissaoArr = Array.isArray(r.omissaoEfeitos) ? r.omissaoEfeitos : _efeitosObjToArray(r.omissaoEfeitos);
     document.getElementById('round-omissao-efeitos-lista').innerHTML =
-      (r.omissaoEfeitos || []).map(e => _efeitoRowHTML(setor, e.indicador || '', e.valor ?? 0)).join('');
+      omissaoArr.map(e => _efeitoRowHTML(setor, e.indicador || '', e.valor ?? 0)).join('');
     document.getElementById('round-checklist-aviso').textContent = '';
 
     _renderChoicesEditor(Array.isArray(r.choices) && r.choices.length ? r.choices : [{}, {}]);
     _cselRefreshAll(document.getElementById('hist-view-round-editor'));
     _autoGrowAll(document.getElementById('hist-view-round-editor'));
+  }
+
+  // Monta o objeto de requisitos no mesmo formato usado pelos rounds nativos.
+  // Chaves de lista (faseEmpresa) só entram se tiver algo marcado — uma
+  // faseEmpresa vazia bloquearia a choice pra todo mundo, então é omitida.
+  function _lerRequisitosDe(card) {
+    const requisitos = {
+      indicadorMinimo: _efeitosArrayToObj(_lerEfeitosDe(card.querySelector('.rc-requisitos'))),
+    };
+    const max = _efeitosArrayToObj(_lerEfeitosDe(card.querySelector('.rc-requisitos-max')));
+    if (Object.keys(max).length) requisitos.indicadorMaximo = max;
+    const semFlags = _lerFlagsDe(card.querySelector('.rc-sem-flags'));
+    if (semFlags.length) requisitos.semFlags = semFlags;
+    const comFlags = _lerFlagsDe(card.querySelector('.rc-com-flags'));
+    if (comFlags.length) requisitos.comFlags = comFlags;
+    const faseEmpresa = Array.from(card.querySelectorAll('.rc-fase-empresa:checked')).map(cb => cb.value);
+    if (faseEmpresa.length) requisitos.faseEmpresa = faseEmpresa;
+    return requisitos;
   }
 
   function _lerChoicesDoDOM() {
@@ -3847,14 +4147,30 @@ const ADMIN = (() => {
       avaliacao: card.querySelector('.rc-avaliacao').value,
       ensinamento: card.querySelector('.rc-ensinamento').value.trim(),
       metodologia: card.querySelector('.rc-metodologia').value.trim(),
-      effects: _lerEfeitosDe(card.querySelector('.rc-efeitos')),
-      requisitos: _lerEfeitosDe(card.querySelector('.rc-requisitos')),
+      effects: _efeitosArrayToObj(_lerEfeitosDe(card.querySelector('.rc-efeitos'))),
+      requisitos: _lerRequisitosDe(card),
       gestorEffects: {
         capitalPolitico: parseInt(card.querySelector('.rc-g-capital').value, 10) || 0,
         esgotamento: parseInt(card.querySelector('.rc-g-esgotamento').value, 10) || 0,
         reputacaoInterna: parseInt(card.querySelector('.rc-g-reputacao').value, 10) || 0,
       },
     }));
+  }
+
+  // Confere se salvar esse round (novo ou mudando de fase) estouraria os
+  // limites de quantidade — chamado antes de gravar, pra travar na origem em
+  // vez de só avisar depois na hora de publicar a história.
+  async function _checarLimiteRound(histId, roundIdAtual, novaFase) {
+    const { rounds } = await _contarRoundsHistoria(histId);
+    const outros = rounds.filter(r => r.id !== roundIdAtual);
+    const totalDepois = outros.length + 1;
+    const contagemDepois = { diagnostico: 0, pressao: 0, decisao: 0 };
+    outros.forEach(r => { if (contagemDepois[r.fase] !== undefined) contagemDepois[r.fase]++; });
+    contagemDepois[novaFase] = (contagemDepois[novaFase] || 0) + 1;
+    const problemas = [];
+    if (totalDepois > _TOTAL_MAX) problemas.push(`passaria de ${_TOTAL_MAX} rounds no total (ficaria ${totalDepois})`);
+    if (contagemDepois[novaFase] > _FASE_MAX) problemas.push(`passaria de ${_FASE_MAX} rounds de ${_FASE_LABEL[novaFase]} (ficaria ${contagemDepois[novaFase]})`);
+    return problemas;
   }
 
   async function salvarRound() {
@@ -3879,6 +4195,18 @@ const ADMIN = (() => {
     }
     document.getElementById('round-checklist-aviso').textContent = '';
 
+    try {
+      const limiteProblemas = await _checarLimiteRound(_histEditandoId, _roundEditandoId, fase);
+      if (limiteProblemas.length) {
+        document.getElementById('round-checklist-aviso').textContent = `Não dá pra salvar: ${limiteProblemas.join(', ')}.`;
+        _showAdminToast('Limite de rounds da história atingido.', true);
+        return;
+      }
+    } catch (e) {
+      // não travar o usuário se a checagem falhar (ex: sem internet) — o
+      // checklist de publicação continua sendo a trava final de qualquer jeito.
+    }
+
     const modo = document.querySelector('input[name="round-omissao-modo"]:checked').value;
     const doc = {
       title: titulo,
@@ -3887,7 +4215,7 @@ const ADMIN = (() => {
       choices,
       omissaoTexto: document.getElementById('round-f-omissao-texto').value.trim(),
       omissaoModo: modo,
-      omissaoEfeitos: modo === 'manual' ? _lerEfeitosDe(document.getElementById('round-omissao-efeitos-lista')) : [],
+      omissaoEfeitos: modo === 'manual' ? _efeitosArrayToObj(_lerEfeitosDe(document.getElementById('round-omissao-efeitos-lista'))) : {},
       ordem: _roundEditandoDoc?.ordem ?? Date.now(),
     };
 
@@ -5371,7 +5699,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     novoRound, abrirEditorRound, salvarRound, excluirRound,
     excluirHistoria,
     abrirAprovacoesPendentes, habilitarNotificacoes, dispensarOverlayNotificacao,
-    adicionarChoice, removerChoice, adicionarEfeito, mudarModoOmissao,
+    adicionarChoice, removerChoice, adicionarEfeito, adicionarFlag, mudarModoOmissao,
     carregarGlossario, filtrarGlossario, abrirModalGlossario, fecharModalGlossario, salvarTermoGlossario, excluirTermoGlossario,
     toggleSecaoGlossario, abrirModalSecaoGlossario, fecharModalSecaoGlossario, salvarSecaoGlossario, excluirSecaoGlossario,
     importarGlossarioPadrao,
