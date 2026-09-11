@@ -898,7 +898,10 @@ textarea.admin-input { resize: none; overflow-y: hidden; transition: height .1s 
 .hist-secao-fixa-texto { font-size: .78rem; color: var(--t2); line-height: 1.5; margin: 2px 0 10px; }
 .hist-secao-fixa-texto:empty::before { content: "—"; color: var(--t3); }
 .hist-secao-textarea { font-size: .78rem; line-height: 1.5; margin: 2px 0 10px; }
-textarea.hist-secao-textarea { min-height: 0; }
+/* Dentro do editor de história, toda caixa de texto (Rodapé incluído) nasce
+   do mesmo tamanho compacto do Badge/Subtítulo — só o resto do painel
+   (rounds, mensagens, changelog etc.) usa o mínimo maior e mais confortável. */
+#hist-view-editor textarea.admin-input { min-height: 0; }
 
 .hist-crises-resumo-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
 .hist-crises-resumo-row .hist-autoria { flex: 1; min-width: 160px; }
