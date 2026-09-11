@@ -300,26 +300,27 @@
                 <div class="hist-secoes-grid">
                   <div>
                     <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M6.5 21V4a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v17"/><path d="M6 12H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> A Empresa</label>
-                    <p class="hist-secao-fixa-texto" id="hist-f-empresa-corpo"></p>
+                    <textarea id="hist-f-empresa-corpo" class="admin-input hist-secao-textarea" rows="3" placeholder="Descreva a empresa..."></textarea>
                   </div>
                   <div>
                     <label class="hist-field-lbl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg> Contexto de Mercado</label>
-                    <p class="hist-secao-fixa-texto" id="hist-f-mercado-corpo"></p>
+                    <textarea id="hist-f-mercado-corpo" class="admin-input hist-secao-textarea" rows="3" placeholder="Descreva o contexto de mercado..."></textarea>
                   </div>
                   <div>
                     <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Situação Atual</label>
-                    <p class="hist-secao-fixa-texto" id="hist-f-situacao-corpo"></p>
+                    <textarea id="hist-f-situacao-corpo" class="admin-input hist-secao-textarea" rows="3" placeholder="Descreva a situação atual..."></textarea>
                   </div>
                   <div>
                     <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Desafio Estratégico</label>
-                    <p class="hist-secao-fixa-texto" id="hist-f-desafio-corpo"></p>
+                    <textarea id="hist-f-desafio-corpo" class="admin-input hist-secao-textarea" rows="3" placeholder="Descreva o desafio estratégico..."></textarea>
                   </div>
                 </div>
 
                 <label class="hist-field-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/></svg> Crise Ativa <span class="req-mark">*</span></label>
-                <div class="hist-autoria">Marque quais crises já existentes podem ser sorteadas no início dessa história.</div>
-                <div id="hist-crises-lista"></div>
-                <div id="hist-crises-aviso" class="hist-checklist-aviso" style="margin-top:6px"></div>
+                <div class="hist-crises-resumo-row">
+                  <div class="hist-autoria" id="hist-crises-resumo">Nenhuma crise selecionada.</div>
+                  <button type="button" class="admin-btn-sm" id="hist-btn-crises" onclick="ADMIN.abrirModalCrises()">Selecionar crises</button>
+                </div>
 
                 <label class="hist-field-lbl">Rodapé <span class="req-mark">*</span></label>
                 <textarea id="hist-f-rodape" class="admin-input" rows="1"></textarea>
@@ -729,6 +730,24 @@
         <p class="admin-modal-desc" id="admin-liberar-desc"></p>
       </div>
       <div class="admin-modal-foot" id="admin-liberar-foot"></div>
+    </div>
+  </div>
+
+  
+  <div id="admin-modal-crises" class="admin-modal-overlay" style="display:none">
+    <div class="admin-modal-card">
+      <div class="admin-modal-head">
+        <span class="admin-modal-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/></svg> Selecionar Crises Ativas</span>
+        <button class="admin-modal-close" onclick="ADMIN.fecharModalCrises()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+      <div class="admin-modal-body">
+        <p class="admin-modal-desc">Marque quais crises já existentes podem ser sorteadas no início dessa história.</p>
+        <div id="hist-crises-lista"></div>
+        <div id="hist-crises-aviso" class="hist-checklist-aviso" style="margin-top:6px"></div>
+      </div>
+      <div class="admin-modal-foot">
+        <button class="admin-btn-sm admin-btn-ok" onclick="ADMIN.fecharModalCrises()">Concluído</button>
+      </div>
     </div>
   </div>
 

@@ -2907,6 +2907,24 @@ const ADMIN = (() => {
     _atualizarAvisoCrises();
   }
 
+  function _atualizarResumoCrises() {
+    const resumo = document.getElementById('hist-crises-resumo');
+    if (!resumo) return;
+    const total = document.querySelectorAll('.hist-crise-check').length;
+    const marcadas = document.querySelectorAll('.hist-crise-check:checked').length;
+    resumo.textContent = marcadas
+      ? `${marcadas} de ${total} crise${total === 1 ? '' : 's'} selecionada${marcadas === 1 ? '' : 's'}.`
+      : 'Nenhuma crise selecionada.';
+  }
+
+  function abrirModalCrises() {
+    document.getElementById('admin-modal-crises').style.display = 'flex';
+  }
+
+  function fecharModalCrises() {
+    document.getElementById('admin-modal-crises').style.display = 'none';
+  }
+
   function _atualizarAvisoCrises() {
     const setor = _histEditandoDoc?.setor || _histSetorAtual;
     const selecionadas = Array.from(document.querySelectorAll('.hist-crise-check:checked')).map(cb => cb.value);
@@ -2924,6 +2942,7 @@ const ADMIN = (() => {
         ? `Ajuste os indicadores iniciais antes de publicar — crise(s) marcada(s) zerariam algum indicador.`
         : '';
     }
+    _atualizarResumoCrises();
   }
 
   if (!window._crisesZeroCheckLigado) {
@@ -2939,6 +2958,8 @@ const ADMIN = (() => {
   function _setEditorReadonly(readonly) {
     document.querySelectorAll('#hist-view-editor input, #hist-view-editor textarea')
       .forEach(el => { el.disabled = readonly; });
+    const btnCrises = document.getElementById('hist-btn-crises');
+    if (btnCrises) btnCrises.style.display = readonly ? 'none' : '';
     document.getElementById('hist-editor-actions-normal').style.display = readonly ? 'none' : '';
     document.getElementById('hist-editor-actions-nativa').style.display = readonly ? 'flex' : 'none';
   }
@@ -2984,12 +3005,13 @@ const ADMIN = (() => {
     const chaves = ['empresa', 'mercado', 'situacao', 'desafio'];
     chaves.forEach((chave, i) => {
       const el = document.getElementById(`hist-f-${chave}-corpo`);
-      if (el) el.textContent = secoes[i]?.corpo || '';
+      if (el) el.value = secoes[i]?.corpo || '';
     });
     document.getElementById('hist-f-rodape').value = intro.rodape || '';
     document.getElementById('hist-crises-lista').innerHTML =
       `<div class="hist-autoria">Histórias nativas sorteiam entre todas as crises cadastradas pro setor — não é uma lista fixa por história.</div>`;
     document.getElementById('hist-crises-aviso').textContent = '';
+    document.getElementById('hist-crises-resumo').textContent = 'Sorteio automático (história nativa).';
 
     const qtdRounds = _histNativaAtual.rounds ? _histNativaAtual.rounds.length : null;
     document.getElementById('hist-indicadores-lista').innerHTML = `
@@ -3151,7 +3173,7 @@ const ADMIN = (() => {
     ['badge','subtitulo','rodape'].forEach(f => { const el = document.getElementById(`hist-f-${f}`); if (el) el.value = ''; });
     ['empresa','mercado','situacao','desafio'].forEach(chave => {
       const el = document.getElementById(`hist-f-${chave}-corpo`);
-      if (el) el.textContent = '';
+      if (el) el.value = '';
     });
 
     _renderIndicadoresEditor(_histSetorAtual, null);
@@ -3193,7 +3215,7 @@ const ADMIN = (() => {
     ['empresa','mercado','situacao','desafio'].forEach(chave => {
       const el = document.getElementById(`hist-f-${chave}-corpo`);
       const campo = `secao${chave.charAt(0).toUpperCase()}${chave.slice(1)}Corpo`;
-      if (el) el.textContent = h[campo] || '';
+      if (el) el.value = h[campo] || '';
     });
     document.getElementById('hist-f-rodape').value = h.rodape || '';
 
@@ -3345,6 +3367,10 @@ const ADMIN = (() => {
       badge: g('hist-f-badge'),
       subtitulo: g('hist-f-subtitulo'),
       rodape: g('hist-f-rodape'),
+      secaoEmpresaCorpo: g('hist-f-empresa-corpo'),
+      secaoMercadoCorpo: g('hist-f-mercado-corpo'),
+      secaoSituacaoCorpo: g('hist-f-situacao-corpo'),
+      secaoDesafioCorpo: g('hist-f-desafio-corpo'),
       indicadoresIniciais,
       crisesPermitidas,
     };
@@ -5691,6 +5717,7 @@ const _GLOSSARIO_PADRAO_SECOES = [
     carregarDashboard, mudarPeriodoDash,
     carregarHistorias, voltarParaSetores, abrirSetorHistorias, voltarParaLista,
     novaHistoria, abrirEditorHistoria, salvarHistoria, despublicarHistoria,
+    abrirModalCrises, fecharModalCrises,
     toggleHistoriaAtiva, aprovarHistoria, recusarHistoria,
     aceitarSugestao, recusarSugestao,
     visualizarHistoriaNativa, toggleHistoriaNativa, toggleHistoriaNativaLista,
