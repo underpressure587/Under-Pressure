@@ -648,21 +648,21 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
   
   if (!isGuest && _player?.uid) {
     const _salvarNoFirestore = () => {
-      if (!window.GSPSync) { mostrarAviso('⚠️ Firebase indisponível'); return; }
+      if (!window.GSPSync) { mostrarAviso('Firebase indisponível'); return; }
       const _statusEl = () => document.getElementById('result-cloud-status');
       if (_settings.cloudStatus !== false) {
-        if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().textContent = '☁️ Salvando na nuvem...'; }
+        if (_statusEl()) { _statusEl().style.display = 'block'; _statusEl().innerHTML = `${Icone('cloud',14)} Salvando na nuvem...`; }
       }
       Promise.all([
         window.GSPSync.salvarPartida(_player.uid, entrada),
         window.GSPSync.salvarNoPodio(_player.uid, entrada)
       ])
         .then(() => {
-          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().textContent = '✅ Salvo na nuvem!';
+          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().innerHTML = `${Icone('circle-check',14)} Salvo na nuvem!`;
         })
         .catch(e => {
           console.error('[GSP] Erro ao salvar resultado:', e);
-          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().textContent = '❌ Erro: ' + (e?.code || e?.message || 'desconhecido');
+          if (_settings.cloudStatus !== false && _statusEl()) _statusEl().innerHTML = `${Icone('circle-x',14)} Erro: ${_escapeHtml(e?.code || e?.message || 'desconhecido')}`;
         });
     };
     if (window.GSPSync) {
@@ -672,7 +672,7 @@ function _registrarResultado(score, scoreGestor, sector, companyName) {
       const poll = setInterval(() => {
         t++;
         if (window.GSPSync) { clearInterval(poll); _salvarNoFirestore(); }
-        else if (t >= 50) { clearInterval(poll); mostrarAviso('⚠️ Firebase não conectado'); }
+        else if (t >= 50) { clearInterval(poll); mostrarAviso('Firebase não conectado'); }
       }, 100);
     }
   }
@@ -755,13 +755,13 @@ function irParaHistoricoJogos() {
 }
 
 function _renderHistorico(lista, hist, isGuest) {
-  const icones = { tecnologia:"🚀", varejo:"🛒", logistica:"🚚", industria:"🏭" };
+  const icones = { tecnologia:Icone('rocket',15), varejo:Icone('shopping-cart',15), logistica:Icone('truck',15), industria:Icone('factory',15) };
   const labels = { tecnologia:"Tecnologia", varejo:"Varejo", logistica:"Logística", industria:"Indústria" };
 
   if (isGuest) {
     lista.innerHTML = `
       <div class="hist-guest-banner">
-        <div class="hist-guest-icon">☁️</div>
+        <div class="hist-guest-icon">${Icone('cloud',28)}</div>
         <div class="hist-guest-title">Histórico na nuvem</div>
         <div class="hist-guest-desc">Crie uma conta para salvar seu histórico online e acessar em qualquer dispositivo.</div>
         <button class="btn btn-primary hist-guest-btn" onclick="BetaUI.irParaAuth()">Criar conta grátis</button>
@@ -798,7 +798,7 @@ function _histCard(p, icones, labels) {
   const label   = p.score >= 70 ? "Excelente" : p.score >= 45 ? "Regular" : "Crítico";
   return `<div class="hist-card">
     <div class="hist-card-left">
-      <div class="hist-card-sector">${icones[p.sector]||"🏢"}</div>
+      <div class="hist-card-sector">${icones[p.sector]||Icone('building-2',15)}</div>
       <div class="hist-card-info">
         <div class="hist-card-company">${p.companyName}</div>
         <div class="hist-card-meta">${labels[p.sector]||p.sector} · ${data} às ${hora}</div>
@@ -920,7 +920,7 @@ function mostrarIntro(state, empresa) {
     container.innerHTML = secoes.map((s, i) => `
       <div class="intro-secao" data-idx="${i}" ${i === 0 ? "" : "hidden"}>
         <div class="intro-secao-header">
-          <span class="intro-secao-icone">${s.icone||"📌"}</span>
+          <span class="intro-secao-icone">${s.icone||Icone('pin',15)}</span>
           <span class="intro-secao-titulo">${s.titulo}</span>
         </div>
         <div class="intro-secao-corpo">${s.corpo}</div>
@@ -973,7 +973,7 @@ function _introRenderCrise() {
     criseEl.style.display = "";
     criseEl.innerHTML = `
       <div class="intro-crise-header">
-        <span class="intro-crise-badge">⚠ CRISE ATIVA</span>
+        <span class="intro-crise-badge">${Icone('triangle-alert',13)} CRISE ATIVA</span>
         <span class="intro-crise-titulo">${situacao.titulo}</span>
       </div>
       <div class="intro-crise-texto">${situacao.historia}</div>`;
@@ -1074,7 +1074,7 @@ function _mostrarToastAtualizacao(forcado) {
   toast.id = 'update-toast';
   toast.className = 'update-toast';
   toast.innerHTML = `
-    <span class="update-toast-icon">🔄</span>
+    <span class="update-toast-icon">${Icone('refresh-cw',16)}</span>
     <span>${forcado ? 'Atualização obrigatória disponível' : 'Nova versão disponível'}</span>
     <button class="update-toast-btn" onclick="location.reload()">Atualizar</button>
   `;
@@ -1198,7 +1198,7 @@ async function _mostrarOverlayBan(uid) {
   const uidDisplay = document.getElementById('ban-uid-display');
   const countdownEl = document.getElementById('ban-countdown');
   const progressBar = document.getElementById('ban-progress-bar');
-  if (!overlay) { mostrarAviso('🚫 Sua conta foi suspensa pelo administrador.'); return; }
+  if (!overlay) { mostrarAviso('Sua conta foi suspensa pelo administrador.'); return; }
 
   if (motivo && motivoBox && motivoTxt) {
     motivoTxt.textContent = motivo;
@@ -1245,10 +1245,10 @@ function _renderEmpresaTab() {
   const el = document.getElementById("empresa-tab-content");
   if (!el || !_introCache) return;
   const { intro, empresa, sector, situacao } = _introCache;
-  const icones = { tecnologia:"🚀", industria:"🏭", logistica:"🚚", varejo:"🛒" };
+  const icones = { tecnologia:Icone('rocket',15), industria:Icone('factory',15), logistica:Icone('truck',15), varejo:Icone('shopping-cart',15) };
   let html = `
     <div class="empresa-tab-header">
-      <span class="empresa-tab-badge">${icones[sector]||"🏢"} ${empresa.nome || sector}</span>
+      <span class="empresa-tab-badge">${icones[sector]||Icone('building-2',15)} ${empresa.nome || sector}</span>
       <h2 class="empresa-tab-titulo">${intro.titulo || intro.badge || ""}</h2>
       ${intro.subtitulo ? `<p class="empresa-tab-sub">${intro.subtitulo}</p>` : ""}
     </div>`;
@@ -1256,7 +1256,7 @@ function _renderEmpresaTab() {
     html += intro.secoes.map(s => `
       <div class="empresa-tab-secao">
         <div class="empresa-tab-secao-header">
-          <span class="empresa-tab-secao-icone">${s.icone||"📌"}</span>
+          <span class="empresa-tab-secao-icone">${s.icone||Icone('pin',15)}</span>
           <span class="empresa-tab-secao-titulo">${s.titulo}</span>
         </div>
         <div class="empresa-tab-secao-corpo">${s.corpo}</div>
@@ -1266,7 +1266,7 @@ function _renderEmpresaTab() {
     html += `
       <div class="empresa-tab-crise">
         <div class="empresa-tab-crise-header">
-          <span class="empresa-tab-crise-badge">⚠ CRISE ATIVA</span>
+          <span class="empresa-tab-crise-badge">${Icone('triangle-alert',13)} CRISE ATIVA</span>
           <span class="empresa-tab-crise-titulo">${situacao.titulo}</span>
         </div>
         <div class="empresa-tab-crise-corpo">${situacao.historia}</div>
@@ -1408,7 +1408,7 @@ function renderSidebar(state, empresa) {
   if (roundBadge) {
     const faseLabel = { diagnostico:"Diagnóstico", pressao:"Pressão", decisao:"Decisão Crítica",
                         fundacao:"Diagnóstico",crescimento:"Crescimento",
-                        crise:"⚠ Crise",consolidacao:"Consolidação",expansao:"Expansão" };
+                        crise:"Crise",consolidacao:"Consolidação",expansao:"Expansão" };
     const round = state.gameRounds?.[state.currentRound];
     const fase = round?.fase || state.storyState?.faseEmpresa;
     roundBadge.textContent = `Rod. ${state.currentRound+1}/${state.totalRounds} · ${faseLabel[fase]||""}`;
@@ -1492,7 +1492,7 @@ function renderSidebar(state, empresa) {
 
     
     if (newlyCritical.length && state.currentRound > 0) {
-      newlyCritical.forEach(label => _mostrarCriticalToast(`⚠ ${label} em nível crítico! Ação urgente necessária.`));
+      newlyCritical.forEach(label => _mostrarCriticalToast(`${label} em nível crítico! Ação urgente necessária.`));
     }
   }
   const strip = document.getElementById("game-gestor-strip");
@@ -1671,7 +1671,7 @@ function renderRodada(state, aposTrocaTela) {
 
   const faseLabel = { diagnostico:"Diagnóstico", pressao:"Pressão", decisao:"Decisão Crítica",
                       fundacao:"Diagnóstico",crescimento:"Crescimento",
-                      crise:"⚠ Crise",consolidacao:"Consolidação",expansao:"Expansão" };
+                      crise:"Crise",consolidacao:"Consolidação",expansao:"Expansão" };
   const fase = round?.fase || state.storyState?.faseEmpresa;
   document.getElementById("hist-round-badge").textContent =
     `Rodada ${state.currentRound+1} · ${faseLabel[fase]||""}`;
@@ -1688,8 +1688,8 @@ function renderRodada(state, aposTrocaTela) {
     const indAfetados = BetaImprevisto.descricaoIndicadores(ev, state.sector);
     const gestorAf    = BetaImprevisto.descricaoGestor(ev);
     let detalhes = ev.descricao;
-    if (indAfetados) detalhes += `<br><span class="ev-detail-ind">📊 Amplifica: ${indAfetados}</span>`;
-    if (gestorAf)    detalhes += `<br><span class="ev-detail-gestor">👔 Gestor: ${gestorAf}</span>`;
+    if (indAfetados) detalhes += `<br><span class="ev-detail-ind">${Icone('chart-column',13)} Amplifica: ${indAfetados}</span>`;
+    if (gestorAf)    detalhes += `<br><span class="ev-detail-gestor">${Icone('user',13)} Gestor: ${gestorAf}</span>`;
     evTxt.innerHTML = `<strong>${ev.titulo}</strong> — ${detalhes}`;
   } else if (banner) banner.classList.remove("visible");
 
@@ -1752,7 +1752,7 @@ function _renderHistoricoTab(state) {
         const efeitos = Object.entries(h.efeitos||{}).filter(([,v])=>v!==0).slice(0,3)
           .map(([k,v])=>`<span class="efeito-tag ${v>0?'efeito-pos':'efeito-neg'}">${v>0?"+":""}${v} ${BetaIndicadores.LABELS[k]||k}</span>`)
           .join(" ");
-        const emo = h.avaliacao==="boa"?"✅":h.avaliacao==="ruim"?"❌":"⚠️";
+        const emo = h.avaliacao==="boa"?Icone('circle-check',13,'var(--good)'):h.avaliacao==="ruim"?Icone('circle-x',13,'var(--danger)'):Icone('triangle-alert',13,'var(--warn)');
         return `<div class="historico-item">
           <div class="historico-item-round">${emo} Rod.${h.rodada} — ${h.titulo}</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${efeitos}</div>
@@ -1868,12 +1868,12 @@ function _gerarRecomendacoes(state) {
   Object.entries(ind).forEach(([k, v]) => {
     const b = bench[k]; if (!b) return;
     const label = BetaIndicadores.LABELS[k] || k;
-    if (v < b-3) recs.push({ titulo:`⚠ ${label} abaixo do mercado`, desc:`${label} (${v}) está ${b-v} pts abaixo da média do setor (${b}).` });
-    else if (v > b+3) recs.push({ titulo:`✅ ${label} acima da média`, desc:`${label} (${v}) está ${v-b} pts acima da média do setor (${b}). Mantenha.` });
+    if (v < b-3) recs.push({ titulo:`${Icone('triangle-alert',13,'var(--warn)')} ${label} abaixo do mercado`, desc:`${label} (${v}) está ${b-v} pts abaixo da média do setor (${b}).` });
+    else if (v > b+3) recs.push({ titulo:`${Icone('circle-check',13,'var(--good)')} ${label} acima da média`, desc:`${label} (${v}) está ${v-b} pts acima da média do setor (${b}). Mantenha.` });
   });
   const g = state.gestor;
-  if (g.esgotamento >= 7) recs.push({ titulo:"🔋 Esgotamento crítico", desc:"Priorize decisões que reduzam pressão e resgatem capital político." });
-  if (g.capitalPolitico <= 3) recs.push({ titulo:"🏛 Capital político baixo", desc:"O conselho está desconfiante. Decisões com retorno financeiro ou de clientes recuperam credibilidade." });
+  if (g.esgotamento >= 7) recs.push({ titulo:`${Icone('battery',13)} Esgotamento crítico`, desc:"Priorize decisões que reduzam pressão e resgatem capital político." });
+  if (g.capitalPolitico <= 3) recs.push({ titulo:`${Icone('landmark',13)} Capital político baixo`, desc:"O conselho está desconfiante. Decisões com retorno financeiro ou de clientes recuperam credibilidade." });
   return recs.slice(0, 4);
 }
 
@@ -1910,7 +1910,7 @@ function mostrarFeedbackOmissao({ faseLabel, rodadaTitulo, efeitos, efeitosGesto
 
   
   const badge = document.getElementById('fb-veredito-badge');
-  if (badge) { badge.className = 'verdict-badge verdict-ruim'; badge.textContent = '⏰'; }
+  if (badge) { badge.className = 'verdict-badge verdict-ruim'; badge.innerHTML = Icone('timer',22); }
 
   const lbl = document.getElementById('fb-veredito-label');
   if (lbl) { lbl.textContent = 'TEMPO ESGOTADO'; lbl.style.color = 'var(--danger)'; }
@@ -1942,7 +1942,7 @@ function mostrarFeedbackOmissao({ faseLabel, rodadaTitulo, efeitos, efeitosGesto
     const gestorChips = Object.entries(efeitosGestor || {})
       .filter(([, v]) => v !== 0)
       .map(([k, v]) => {
-        const labels = { capitalPolitico: '👔 Capital Político', esgotamento: '😓 Esgotamento' };
+        const labels = { capitalPolitico: `${Icone('landmark',13)} Capital Político`, esgotamento: `${Icone('battery',13)} Esgotamento` };
         const nome = labels[k] || k;
         const cor  = v > 0 ? 'var(--danger)' : 'var(--good)'; 
         return `<div class="fb-chip"><span class="fb-chip-val" style="color:${cor}">${v > 0 ? '+' : ''}${v}</span><span class="fb-chip-nome">${nome}</span></div>`;
@@ -2074,10 +2074,10 @@ function _iniciarTimer() {
   const el = document.getElementById("timer-display");
   if (!el) return;
   el.classList.add("active"); el.classList.remove("danger");
-  el.textContent = `⏱ ${_timerSegs}s`;
+  el.innerHTML = `${Icone('timer',14)} ${_timerSegs}s`;
   _timerInterval = setInterval(() => {
     _timerSegs--;
-    el.textContent = `⏱ ${_timerSegs}s`;
+    el.innerHTML = `${Icone('timer',14)} ${_timerSegs}s`;
     if (_timerSegs <= 10) el.classList.add("danger");
     if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) _escolherPorOmissao(); }
   }, 1000);
@@ -2167,7 +2167,7 @@ function _escolherPorOmissao() {
   
   const timerEl = document.getElementById('timer-display');
   if (timerEl) {
-    timerEl.textContent = '⏱ 0s';
+    timerEl.innerHTML = `${Icone('timer',14)} 0s`;
     timerEl.classList.add('danger', 'active');
     setTimeout(() => timerEl.classList.remove('active', 'danger'), 800);
   }
@@ -2195,11 +2195,11 @@ function mostrarFeedback(data, callback) {
   if (_omBanner) _omBanner.style.display = 'none';
 
   const corMap   = { boa:"var(--good)", media:"var(--warn)", ruim:"var(--danger)" };
-  const iconMap  = { boa:"✅", media:"⚠️", ruim:"❌" };
+  const iconMap  = { boa:Icone('circle-check',22,'var(--good)'), media:Icone('triangle-alert',22,'var(--warn)'), ruim:Icone('circle-x',22,'var(--danger)') };
   const labelMap = { boa:"BOA DECISÃO", media:"DECISÃO COM TRADE-OFFS", ruim:"MÁ DECISÃO" };
   const badgeClass = { boa:"verdict-boa", media:"verdict-media", ruim:"verdict-ruim" };
   const badge = document.getElementById("fb-veredito-badge");
-  if (badge) { badge.className=`verdict-badge ${badgeClass[data.avaliacao]||"verdict-media"}`; badge.textContent=iconMap[data.avaliacao]||"⚠️"; }
+  if (badge) { badge.className=`verdict-badge ${badgeClass[data.avaliacao]||"verdict-media"}`; badge.innerHTML=iconMap[data.avaliacao]||Icone('triangle-alert',22,'var(--warn)'); }
   const lbl = document.getElementById("fb-veredito-label");
   if (lbl) { lbl.textContent=labelMap[data.avaliacao]||"DECISÃO"; lbl.style.color=corMap[data.avaliacao]; }
   document.getElementById("fb-veredito-sub").textContent   = data.avaliacao==="boa"?"Decisão acertada":data.avaliacao==="ruim"?"Decisão equivocada":"Decisão com trade-offs";
@@ -2247,7 +2247,7 @@ function mostrarFeedback(data, callback) {
     const eg=data.efeitosGestor||{}, temEfeito=Object.values(eg).some(v=>v!==0);
     if (temEfeito) {
       gestorEl.style.display="";
-      const labels={reputacaoInterna:"🧑 Reputação",capitalPolitico:"🏛 Cap. Político",esgotamento:"🔋 Esgotamento"};
+      const labels={reputacaoInterna:`${Icone('user',13)} Reputação`,capitalPolitico:`${Icone('landmark',13)} Cap. Político`,esgotamento:`${Icone('battery',13)} Esgotamento`};
       const gestorChips = Object.entries(eg).filter(([,v])=>v!==0);
       if (gestorChips.length) {
         _animarChips('fb-gestor-grid', gestorChips.map(([k,v]) => {
@@ -2265,7 +2265,7 @@ function mostrarFeedback(data, callback) {
   const stEl=document.getElementById("fb-stakeholder");
   if (data.stakeholderReacao && stEl) {
     stEl.style.display="";
-    document.getElementById("fb-st-icon").textContent=data.stakeholderReacao.icone||"👤";
+    document.getElementById("fb-st-icon").innerHTML=data.stakeholderReacao.icone||Icone('user',20);
     document.getElementById("fb-st-nome").textContent=data.stakeholderReacao.nome||"";
     document.getElementById("fb-st-txt").textContent=data.stakeholderReacao.texto||"";
   } else if (stEl) { stEl.style.display="none"; }
@@ -2276,7 +2276,7 @@ function mostrarFeedback(data, callback) {
   
   const notifEl=document.getElementById("fb-notif"), notifLst=document.getElementById("fb-notif-lista");
   if (notifEl && notifLst) {
-    const notifs=[...(data.novasFlags||[]).map(f=>_textoFlag(f)),...(data.novasConquistas||[]).map(c=>`🏆 ${c}`)];
+    const notifs=[...(data.novasFlags||[]).map(f=>_textoFlag(f)),...(data.novasConquistas||[]).map(c=>`${Icone('trophy',13)} ${c}`)];
     if (notifs.length) { notifEl.style.display=""; notifLst.innerHTML=notifs.map(n=>`<div class="fb-notif-row">${n}</div>`).join(""); }
     else { notifEl.style.display="none"; }
   }
@@ -2285,7 +2285,7 @@ function mostrarFeedback(data, callback) {
   if (histEl && histLst && data.historico?.length) {
     histEl.style.display="";
     histLst.innerHTML=data.historico.slice(0,3).map(h=>{
-      const emo=h.avaliacao==="boa"?"✅":h.avaliacao==="ruim"?"❌":"⚠️";
+      const emo=h.avaliacao==="boa"?Icone('circle-check',13,'var(--good)'):h.avaliacao==="ruim"?Icone('circle-x',13,'var(--danger)'):Icone('triangle-alert',13,'var(--warn)');
       return `<div class="historico-item"><div class="historico-item-round">${emo} Rod.${h.rodada} — ${h.titulo}</div></div>`;
     }).join("");
   } else if (histEl) { histEl.style.display="none"; }
@@ -2377,14 +2377,14 @@ function renderResultado({ motivo, score, scoreGestor, gestor, indicators,
   if (cruciaisSec && cruciaisLst && decisoesCruciais?.length) {
     cruciaisSec.style.display="";
     cruciaisLst.innerHTML=decisoesCruciais.map(d=>{
-      const emo=d.avaliacao==="boa"?"✅":d.avaliacao==="ruim"?"❌":"⚠️";
+      const emo=d.avaliacao==="boa"?Icone('circle-check',13,'var(--good)'):d.avaliacao==="ruim"?Icone('circle-x',13,'var(--danger)'):Icone('triangle-alert',13,'var(--warn)');
       const efeitos=Object.entries(d.efeitos||{}).filter(([,v])=>v!==0).map(([k,v])=>{
         const cor=v>0?"var(--good)":"var(--danger)"; const nome=BetaIndicadores.LABELS[k]||k;
         return `<span style="color:${cor};font-size:.65rem;margin-right:8px">${v>0?"+":""}${v} ${nome}</span>`;
       }).join("");
       return `<div class="crucial-item">
         <div class="crucial-round">${emo} Rodada ${d.rodada} — ${d.titulo}</div>
-        <div class="crucial-escolha">"${d.escolha ?? '⏰ Omissão — tempo esgotado'}"</div>
+        <div class="crucial-escolha">"${d.escolha ?? `${Icone('timer',12)} Omissão — tempo esgotado`}"</div>
         <div style="margin:6px 0">${efeitos}</div>
         ${d.ensinamento?`<div style="font-size:.75rem;color:var(--t2);line-height:1.4;font-style:italic">${d.ensinamento}</div>`:""}
       </div>`;
@@ -2859,11 +2859,11 @@ function toggleFullscreen() {
 }
 function _atualizarBotaoFullscreen() {
   const isFs = !!document.fullscreenElement;
-  const label = isFs ? "✕ Sair" : "⛶ Ativar";
+  const label = isFs ? `${Icone('x',14)} Sair` : `${Icone('maximize',14)} Ativar`;
   const btn = document.getElementById("settings-fs-btn");
-  if (btn) btn.textContent = label;
+  if (btn) btn.innerHTML = label;
   const configBtn = document.getElementById("config-fs-btn");
-  if (configBtn) configBtn.textContent = label;
+  if (configBtn) configBtn.innerHTML = label;
 }
 document.addEventListener("fullscreenchange", _atualizarBotaoFullscreen);
 
@@ -2896,15 +2896,15 @@ function _showToast(msg, tipo = "info", duracao = 3200) {
   const div = document.createElement("div");
   div.className = "toast-msg";
   const cores = {
-    erro:    { bg:"rgba(231,76,60,.92)",  borda:"rgba(231,76,60,.5)",  icone:"❌" },
-    aviso:   { bg:"rgba(243,156,18,.92)", borda:"rgba(243,156,18,.5)", icone:"⚠️" },
-    ok:      { bg:"rgba(46,204,113,.92)", borda:"rgba(46,204,113,.5)", icone:"✅" },
-    info:    { bg:"var(--bg4)",           borda:"var(--line2)",        icone:"ℹ️" },
-    critico: { bg:"rgba(192,57,43,.95)",  borda:"rgba(192,57,43,.6)",  icone:"🚨" },
+    erro:    { bg:"rgba(231,76,60,.92)",  borda:"rgba(231,76,60,.5)",  icone:Icone('circle-x',16) },
+    aviso:   { bg:"rgba(243,156,18,.92)", borda:"rgba(243,156,18,.5)", icone:Icone('triangle-alert',16) },
+    ok:      { bg:"rgba(46,204,113,.92)", borda:"rgba(46,204,113,.5)", icone:Icone('circle-check',16) },
+    info:    { bg:"var(--bg4)",           borda:"var(--line2)",        icone:Icone('circle-help',16) },
+    critico: { bg:"rgba(192,57,43,.95)",  borda:"rgba(192,57,43,.6)",  icone:Icone('siren',16) },
   };
   const c = cores[tipo] || cores.info;
-  div.style.cssText = `background:${c.bg};border-color:${c.borda};`;
-  div.textContent = `${c.icone} ${msg}`;
+  div.style.cssText = `background:${c.bg};border-color:${c.borda};display:flex;align-items:center;gap:8px;`;
+  div.innerHTML = `${c.icone}<span>${_escapeHtml(msg)}</span>`;
   container.appendChild(div);
   setTimeout(() => {
     div.classList.add("removing");
@@ -2921,17 +2921,17 @@ function _mostrarCriticalToast(msg) { _showToast(msg, "critico", 3500); }
 
 function _textoFlag(flag) {
   const MAPA={
-    lideranca_toxica:"⚠️ Liderança Tóxica — padrão de decisões prejudicou o time",
-    crescimento_sem_caixa:"⚠️ Decisões ruins drenaram o caixa",
-    demissao_em_massa:"⚠️ Ondas de corte afetaram a cultura organizacional",
-    rh_negligenciado:"⚠️ RH negligenciado — nenhuma decisão favoreceu o time",
-    ignorou_seguranca:"⚠️ Vulnerabilidades de segurança foram ignoradas",
-    crescimento_saudavel:"🟢 Sequência de 5 decisões corretas",
-    investiu_em_inovacao:"🟢 Cultura de inovação estabelecida",
-    gestor_de_crise:"🔥 Empresa recuperada de situação crítica",
-    gestor_esgotado:"🔋 Esgotamento em nível crítico",
+    lideranca_toxica:`${Icone('triangle-alert',13,'var(--warn)')} Liderança Tóxica — padrão de decisões prejudicou o time`,
+    crescimento_sem_caixa:`${Icone('triangle-alert',13,'var(--warn)')} Decisões ruins drenaram o caixa`,
+    demissao_em_massa:`${Icone('triangle-alert',13,'var(--warn)')} Ondas de corte afetaram a cultura organizacional`,
+    rh_negligenciado:`${Icone('triangle-alert',13,'var(--warn)')} RH negligenciado — nenhuma decisão favoreceu o time`,
+    ignorou_seguranca:`${Icone('triangle-alert',13,'var(--warn)')} Vulnerabilidades de segurança foram ignoradas`,
+    crescimento_saudavel:`${Icone('dot',13,'var(--good)')} Sequência de 5 decisões corretas`,
+    investiu_em_inovacao:`${Icone('dot',13,'var(--good)')} Cultura de inovação estabelecida`,
+    gestor_de_crise:`${Icone('flame',13)} Empresa recuperada de situação crítica`,
+    gestor_esgotado:`${Icone('battery',13)} Esgotamento em nível crítico`,
   };
-  return MAPA[flag] || `🔔 ${flag}`;
+  return MAPA[flag] || `${Icone('bell',13)} ${flag}`;
 }
 
 
@@ -3030,7 +3030,7 @@ async function irParaPerfil() {
       const idCurto = '#' + _player.uid.substring(0, 8).toUpperCase();
       const email   = _player.email || '';
       metaRow.innerHTML = `
-        <div class="perfil-id-badge" onclick="BetaUI._copiarId('${idCurto}')" title="Clique para copiar">${idCurto} <span style="font-size:.65rem;opacity:.6">⎘</span></div>
+        <div class="perfil-id-badge" onclick="BetaUI._copiarId('${idCurto}')" title="Clique para copiar">${idCurto} <span style="font-size:.65rem;opacity:.6">${Icone('copy',11)}</span></div>
         ${email ? `<div class="perfil-email">${email}</div>` : ''}`;
     } else {
       metaRow.innerHTML = `<div class="perfil-id-badge" style="opacity:.5">Convidado</div>`;
@@ -3048,7 +3048,7 @@ async function irParaPerfil() {
   const setorCount = {};
   hist.forEach(h => { setorCount[h.sector] = (setorCount[h.sector] || 0) + 1; });
   const favEntry = Object.entries(setorCount).sort((a,b) => b[1]-a[1])[0];
-  const icones = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
+  const icones = { tecnologia:Icone('rocket',14), varejo:Icone('shopping-cart',14), logistica:Icone('truck',14), industria:Icone('factory',14) };
   const favLabel = favEntry ? `${icones[favEntry[0]]||''} ${favEntry[0]}` : '—';
 
   const sub = document.getElementById('perfil-subtitulo');
@@ -3085,7 +3085,7 @@ async function irParaPerfil() {
       const dots = pts.map((p, i) => {
         const cor = p.score >= 70 ? '#2ecc71' : p.score >= 45 ? '#f39c12' : '#e74c3c';
         return `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${cor}" stroke="var(--bg2)" stroke-width="1.5">
-          <title>${icones[p.sector]||''} ${p.score} pts</title>
+          <title>${p.sector||''} ${p.score} pts</title>
         </circle>`;
       }).join('');
       
@@ -3129,7 +3129,7 @@ async function irParaPerfil() {
     if (isGuest) {
       cqEl.innerHTML = `
         <div class="hist-guest-banner" style="margin:0;grid-column:1/-1">
-          <div class="hist-guest-icon">🏆</div>
+          <div class="hist-guest-icon">${Icone('trophy',28)}</div>
           <div class="hist-guest-title">Conquistas bloqueadas</div>
           <div class="hist-guest-desc">Crie uma conta para desbloquear conquistas e salvar seu progresso.</div>
           <button class="btn btn-primary hist-guest-btn" onclick="BetaUI.irParaAuth()">Criar conta grátis</button>
@@ -3137,7 +3137,7 @@ async function irParaPerfil() {
     } else {
       cqEl.innerHTML = conquistas.map(c => `
       <div class="perfil-conquista ${c.unlocked ? 'unlocked' : ''}">
-        <div class="perfil-conquista-icon">${c.unlocked ? c.icon : '🔒'}</div>
+        <div class="perfil-conquista-icon">${c.unlocked ? c.icon : Icone('lock',20)}</div>
         <div>
           <div class="perfil-conquista-nome">${c.nome}</div>
           <div class="perfil-conquista-desc">${c.desc}</div>
@@ -3171,7 +3171,7 @@ async function irParaPerfil() {
           const setorCount2 = {};
           c.forEach(h => { setorCount2[h.sector] = (setorCount2[h.sector] || 0) + 1; });
           const favEntry2 = Object.entries(setorCount2).sort((a,b) => b[1]-a[1])[0];
-          const icones2 = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
+          const icones2 = { tecnologia:Icone('rocket',14), varejo:Icone('shopping-cart',14), logistica:Icone('truck',14), industria:Icone('factory',14) };
           const favLabel2 = favEntry2 ? `${icones2[favEntry2[0]]||''} ${favEntry2[0]}` : '—';
           const subEl = document.getElementById('perfil-subtitulo');
           if (subEl) subEl.textContent = `${total2} mandato${total2 !== 1 ? 's' : ''} concluído${total2 !== 1 ? 's' : ''}`;
@@ -3196,16 +3196,16 @@ function _calcularConquistas(hist) {
   const total  = hist.length;
   const melhor = total ? Math.max(...hist.map(h => h.score)) : 0;
   return [
-    { icon:'🏆', nome:'Primeiro Mandato',    desc:'Complete 1 jogo',              unlocked: total >= 1  },
-    { icon:'⭐', nome:'Gestão Excelente',    desc:'Score acima de 70',             unlocked: melhor >= 70 },
-    { icon:'🔥', nome:'Veterano',            desc:'5 mandatos concluídos',         unlocked: total >= 5  },
-    { icon:'💼', nome:'Executivo Sênior',    desc:'10 mandatos concluídos',        unlocked: total >= 10 },
-    { icon:'🚀', nome:'Especialista Tech',   desc:'Vença com Tecnologia (70+)',    unlocked: hist.some(h => h.sector === 'tecnologia' && h.score >= 70) },
-    { icon:'🏭', nome:'Rei da Indústria',    desc:'Vença com Indústria (70+)',     unlocked: hist.some(h => h.sector === 'industria'  && h.score >= 70) },
-    { icon:'🚚', nome:'Mestre da Logística', desc:'Vença com Logística (70+)',     unlocked: hist.some(h => h.sector === 'logistica'  && h.score >= 70) },
-    { icon:'🛒', nome:'Czar do Varejo',      desc:'Vença com Varejo (70+)',        unlocked: hist.some(h => h.sector === 'varejo'     && h.score >= 70) },
-    { icon:'🌐', nome:'Gestor Completo',     desc:'Vença nos 4 setores',           unlocked: ['tecnologia','industria','logistica','varejo'].every(s => hist.some(h => h.sector === s && h.score >= 70)) },
-    { icon:'💯', nome:'Mandato Perfeito',    desc:'Score 90 ou mais',              unlocked: melhor >= 90 },
+    { icon:Icone('trophy',20), nome:'Primeiro Mandato',    desc:'Complete 1 jogo',              unlocked: total >= 1  },
+    { icon:Icone('star',20), nome:'Gestão Excelente',    desc:'Score acima de 70',             unlocked: melhor >= 70 },
+    { icon:Icone('flame',20), nome:'Veterano',            desc:'5 mandatos concluídos',         unlocked: total >= 5  },
+    { icon:Icone('briefcase',20), nome:'Executivo Sênior',    desc:'10 mandatos concluídos',        unlocked: total >= 10 },
+    { icon:Icone('rocket',20), nome:'Especialista Tech',   desc:'Vença com Tecnologia (70+)',    unlocked: hist.some(h => h.sector === 'tecnologia' && h.score >= 70) },
+    { icon:Icone('factory',20), nome:'Rei da Indústria',    desc:'Vença com Indústria (70+)',     unlocked: hist.some(h => h.sector === 'industria'  && h.score >= 70) },
+    { icon:Icone('truck',20), nome:'Mestre da Logística', desc:'Vença com Logística (70+)',     unlocked: hist.some(h => h.sector === 'logistica'  && h.score >= 70) },
+    { icon:Icone('shopping-cart',20), nome:'Czar do Varejo',      desc:'Vença com Varejo (70+)',        unlocked: hist.some(h => h.sector === 'varejo'     && h.score >= 70) },
+    { icon:Icone('globe',20), nome:'Gestor Completo',     desc:'Vença nos 4 setores',           unlocked: ['tecnologia','industria','logistica','varejo'].every(s => hist.some(h => h.sector === s && h.score >= 70)) },
+    { icon:Icone('medal',20,'#FFD700'), nome:'Mandato Perfeito',    desc:'Score 90 ou mais',              unlocked: melhor >= 90 },
   ];
 }
 
@@ -3274,7 +3274,7 @@ function irParaPodio() {
 
   
   if (!_player?.uid || _player?.tipo === 'guest') {
-    lista.innerHTML = `<div class="podio-empty">🔒 Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
+    lista.innerHTML = `<div class="podio-empty">${Icone('lock',16)} Faça login para ver o ranking global.<br><br><button class="btn btn-primary" style="margin:0 auto" onclick="BetaUI.irParaAuth()">Criar conta / Entrar</button></div>`;
     return;
   }
 
@@ -3286,7 +3286,7 @@ function irParaPodio() {
 
 function _buscarEAtualizarPodio(lista, setor) {
   if (!window.GSPSync) {
-    lista.innerHTML = `<div class="podio-empty">⚠️ Firebase não disponível. Verifique sua conexão.</div>`;
+    lista.innerHTML = `<div class="podio-empty">${Icone('triangle-alert',16)} Firebase não disponível. Verifique sua conexão.</div>`;
     return;
   }
 
@@ -3295,7 +3295,7 @@ function _buscarEAtualizarPodio(lista, setor) {
   if (!syncEl) {
     syncEl = document.createElement('div');
     syncEl.id = msgId; syncEl.className = 'podio-sync';
-    syncEl.textContent = '🔄 Atualizando ranking...';
+    syncEl.innerHTML = `${Icone('refresh-cw',13)} Atualizando ranking...`;
     lista.prepend(syncEl);
   }
 
@@ -3311,7 +3311,7 @@ function _buscarEAtualizarPodio(lista, setor) {
     if (_podioFiltro === (setor || 'all')) _renderPodio(lista, c, setor);
   }).catch(e => {
     const syncMsg = document.getElementById(msgId);
-    if (syncMsg) syncMsg.textContent = '⚠️ Erro ao carregar ranking. Tente novamente.';
+    if (syncMsg) syncMsg.innerHTML = `${Icone('triangle-alert',13)} Erro ao carregar ranking. Tente novamente.`;
     setTimeout(() => document.getElementById(msgId)?.remove(), 3000);
     console.warn('[GSP] _buscarEAtualizarPodio:', e);
   });
@@ -3319,7 +3319,7 @@ function _buscarEAtualizarPodio(lista, setor) {
 
 function _renderPodio(lista, podio, setor) {
   const isAll  = !setor || setor === 'all';
-  const icones = { tecnologia:'🚀', varejo:'🛒', logistica:'🚚', industria:'🏭' };
+  const icones = { tecnologia:Icone('rocket',14), varejo:Icone('shopping-cart',14), logistica:Icone('truck',14), industria:Icone('factory',14) };
 
   if (!podio.length) {
     lista.innerHTML = `<div class="podio-empty">Nenhuma partida no ranking ainda.<br>Complete um mandato para aparecer aqui.</div>`;
@@ -3346,7 +3346,7 @@ function _renderPodio(lista, podio, setor) {
     const isMe = _player?.uid && p.uid === _player.uid;
     const sub  = isAll
       ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
-      : `${icones[p.sector]||'🏢'} ${p.companyName}`;
+      : `${icones[p.sector]||Icone('building-2',14)} ${p.companyName}`;
     return `<div class="podio-top3-card ${cls} ${isMe ? 'podio-top3-me' : ''}" data-sector="${p.sector||''}">
       <div class="podio-top3-player">
         ${isMe ? '<div class="podio-top3-you">Você</div>' : ''}
@@ -3374,7 +3374,7 @@ function _renderPodio(lista, podio, setor) {
       const isMe = _player?.uid && p.uid === _player.uid;
       const sub  = isAll
         ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
-        : `${icones[p.sector]||'🏢'} ${p.companyName}`;
+        : `${icones[p.sector]||Icone('building-2',14)} ${p.companyName}`;
       return `<div class="podio-item ${isMe ? 'podio-item-me' : ''}" data-sector="${p.sector||''}">
         <div class="podio-rank">${i + 4}</div>
         <div class="podio-player">
@@ -3400,7 +3400,7 @@ function pausarJogo() {
   const state = BetaState.get();
   const info  = document.getElementById('pause-info');
   if (info && state) {
-    const fases = { fundacao:'Diagnóstico', crescimento:'Crescimento', crise:'⚠ Crise', consolidacao:'Consolidação', expansao:'Expansão' };
+    const fases = { fundacao:'Diagnóstico', crescimento:'Crescimento', crise:'Crise', consolidacao:'Consolidação', expansao:'Expansão' };
     const fase  = state.storyState?.faseEmpresa || '';
     info.textContent = `${state.companyName} · ${fases[fase]||fase} · Rodada ${state.currentRound+1}/${state.totalRounds}`;
   }
@@ -3419,7 +3419,7 @@ function continuarJogo() {
     if (el) { el.classList.add('active'); if (_timerSegs <= 10) el.classList.add('danger'); }
     _timerInterval = setInterval(() => {
       _timerSegs--;
-      if (el) el.textContent = `⏱ ${_timerSegs}s`;
+      if (el) el.innerHTML = `${Icone('timer',14)} ${_timerSegs}s`;
       if (_timerSegs <= 10 && el) el.classList.add('danger');
       if (_timerSegs <= 0) { _pararTimer(); if (!_escolhaFeita) _escolherPorOmissao(); }
     }, 1000);
@@ -3515,115 +3515,115 @@ function confirmarSaida() {
 const INDICADOR_INFO = {
   
   reputacaoInterna: {
-    titulo: '🧑 Reputação Interna',
+    titulo: `${Icone('user',14)} Reputação Interna`,
     desc: 'Reflete como o time percebe sua liderança. Decisões que prejudicam as pessoas reduzem a reputação; decisões inclusivas e transparentes aumentam.',
-    consequence: '⚠ Se chegar a 0, sua autoridade é questionada pelo conselho.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Se chegar a 0, sua autoridade é questionada pelo conselho.`,
   },
   capitalPolitico: {
-    titulo: '🏛 Capital Político',
+    titulo: `${Icone('landmark',14)} Capital Político`,
     desc: 'Sua credibilidade junto ao conselho e stakeholders externos. É consumido por decisões impopulares e reposicionamentos bruscos.',
-    consequence: '⚠ Se chegar a 0, o conselho encerra seu mandato antecipadamente.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Se chegar a 0, o conselho encerra seu mandato antecipadamente.`,
   },
   esgotamento: {
-    titulo: '🔋 Esgotamento',
+    titulo: `${Icone('battery',14)} Esgotamento`,
     desc: 'Mede o desgaste acumulado do gestor. Aumenta com crises mal resolvidas e alta pressão de trabalho.',
-    consequence: '🔴 Se chegar a 10, você é afastado por burnout e o mandato é encerrado imediatamente.',
+    consequence: `${Icone('circle-x',13,'var(--danger)')} Se chegar a 10, você é afastado por burnout e o mandato é encerrado imediatamente.`,
   },
   
   financeiro: {
-    titulo: '💰 Financeiro',
+    titulo: `${Icone('wallet',14)} Financeiro`,
     desc: 'Saúde financeira geral da empresa. Afetado por investimentos, cortes de custo e resultados operacionais.',
-    consequence: '⚠ Se chegar a 0, a empresa entra em crise de caixa e o mandato é encerrado.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Se chegar a 0, a empresa entra em crise de caixa e o mandato é encerrado.`,
   },
   rh: {
-    titulo: '👥 RH',
+    titulo: `${Icone('users',14)} RH`,
     desc: 'Representa o capital humano e o engajamento dos colaboradores. Impactado por políticas de pessoas e cultura organizacional.',
-    consequence: '⚠ Valores críticos geram aumento de turnover e queda de produtividade.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Valores críticos geram aumento de turnover e queda de produtividade.`,
   },
   clientes: {
-    titulo: '⭐ Clientes',
+    titulo: `${Icone('star',14)} Clientes`,
     desc: 'Satisfação e fidelidade da base de clientes. Afetado pela qualidade dos produtos, atendimento e experiência.',
-    consequence: '⚠ Valores críticos resultam em perda de receita e dano à reputação.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Valores críticos resultam em perda de receita e dano à reputação.`,
   },
   processos: {
-    titulo: '⚙️ Processos',
+    titulo: `${Icone('settings',14)} Processos`,
     desc: 'Eficiência operacional interna. Reflete a maturidade dos processos e a capacidade de execução.',
-    consequence: '⚠ Processos deficientes aumentam custos e reduzem a qualidade das entregas.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Processos deficientes aumentam custos e reduzem a qualidade das entregas.`,
   },
   
   margem: {
-    titulo: '📊 Margem Operacional',
+    titulo: `${Icone('chart-column',14)} Margem Operacional`,
     desc: 'Percentual de lucro sobre as vendas. Impactado por precificação, custos e mix de produtos.',
-    consequence: '⚠ Margens negativas comprometem a sustentabilidade financeira.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Margens negativas comprometem a sustentabilidade financeira.`,
   },
   estoque: {
-    titulo: '📦 Giro de Estoque',
+    titulo: `${Icone('package',14)} Giro de Estoque`,
     desc: 'Velocidade com que os produtos são vendidos. Alto giro indica eficiência; baixo giro gera capital parado.',
-    consequence: '⚠ Estoque parado aumenta custos e pode gerar obsolescência.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Estoque parado aumenta custos e pode gerar obsolescência.`,
   },
   marca: {
-    titulo: '🏷️ Força da Marca',
+    titulo: `${Icone('tag',14)} Força da Marca`,
     desc: 'Percepção e reconhecimento da marca no mercado. Construída por consistência, qualidade e comunicação.',
-    consequence: '⚠ Marca fraca reduz poder de precificação e atração de clientes.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Marca fraca reduz poder de precificação e atração de clientes.`,
   },
   digital: {
-    titulo: '🖥️ Canal Digital',
+    titulo: `${Icone('monitor',14)} Canal Digital`,
     desc: 'Presença e desempenho nos canais digitais de venda. Cada vez mais essencial para o varejo moderno.',
-    consequence: '⚠ Atraso digital cede espaço para concorrentes mais ágeis.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Atraso digital cede espaço para concorrentes mais ágeis.`,
   },
   
   sla: {
-    titulo: '⏱️ Cumprimento de SLA',
+    titulo: `${Icone('timer',14)} Cumprimento de SLA`,
     desc: 'Taxa de entregas dentro do prazo acordado. Principal métrica de confiabilidade para clientes.',
-    consequence: '⚠ SLA baixo gera multas contratuais e perda de contratos.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} SLA baixo gera multas contratuais e perda de contratos.`,
   },
   frota: {
-    titulo: '🚛 Estado da Frota',
+    titulo: `${Icone('truck',14)} Estado da Frota`,
     desc: 'Condição e disponibilidade dos veículos. Frota bem mantida garante operação confiável e segura.',
-    consequence: '⚠ Frota degradada aumenta paradas e custos de manutenção emergencial.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Frota degradada aumenta paradas e custos de manutenção emergencial.`,
   },
   
   manutencao: {
-    titulo: '🔧 Manutenção de Ativos',
+    titulo: `${Icone('wrench',14)} Manutenção de Ativos`,
     desc: 'Estado de conservação das máquinas e equipamentos produtivos. Manutenção preventiva reduz paradas.',
-    consequence: '⚠ Ativos degradados causam paradas de produção e acidentes.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Ativos degradados causam paradas de produção e acidentes.`,
   },
   qualidade: {
-    titulo: '🎯 Controle de Qualidade',
+    titulo: `${Icone('target',14)} Controle de Qualidade`,
     desc: 'Conformidade dos produtos com os padrões estabelecidos. Medido por taxas de defeito e retrabalho.',
-    consequence: '⚠ Qualidade baixa gera devoluções, recalls e perda de clientes.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Qualidade baixa gera devoluções, recalls e perda de clientes.`,
   },
   conformidade: {
-    titulo: '📋 Conformidade Regulatória',
+    titulo: `${Icone('clipboard-list',14)} Conformidade Regulatória`,
     desc: 'Aderência às normas e regulações do setor. Envolve licenças, certificações e auditorias.',
-    consequence: '⚠ Não conformidade pode resultar em multas, interdições e danos à reputação.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Não conformidade pode resultar em multas, interdições e danos à reputação.`,
   },
   
   produtividade: {
-    titulo: '⚡ Produtividade',
+    titulo: `${Icone('zap',14)} Produtividade`,
     desc: 'Velocidade e eficiência das entregas de tecnologia. Impactada por dívida técnica, processos e motivação.',
-    consequence: '⚠ Baixa produtividade atrasa lançamentos e aumenta custos.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Baixa produtividade atrasa lançamentos e aumenta custos.`,
   },
   reputacao: {
-    titulo: '📣 Reputação de Mercado',
+    titulo: `${Icone('megaphone',14)} Reputação de Mercado`,
     desc: 'Como a empresa é vista no ecossistema de tecnologia por clientes, parceiros e talentos.',
-    consequence: '⚠ Reputação negativa dificulta parcerias e contratações.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Reputação negativa dificulta parcerias e contratações.`,
   },
   inovacao: {
-    titulo: '🔬 Inovação',
+    titulo: `${Icone('microscope',14)} Inovação`,
     desc: 'Capacidade de desenvolver novos produtos e tecnologias. Motor de crescimento e diferenciação competitiva.',
-    consequence: '⚠ Sem inovação a empresa perde relevância para concorrentes mais ágeis.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Sem inovação a empresa perde relevância para concorrentes mais ágeis.`,
   },
   
   seguranca: {
-    titulo: '🦺 Segurança Operacional',
+    titulo: `${Icone('shield',14)} Segurança Operacional`,
     desc: 'Nível de segurança nas operações. Envolve prevenção de acidentes, normas e cultura de segurança.',
-    consequence: '⚠ Incidentes de segurança geram custos humanos, legais e reputacionais graves.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Incidentes de segurança geram custos humanos, legais e reputacionais graves.`,
   },
   tecnologia: {
-    titulo: '📡 TMS / Tecnologia',
+    titulo: `${Icone('satellite-dish',14)} TMS / Tecnologia`,
     desc: 'Uso de sistemas tecnológicos na operação logística. Permite rastreamento, roteirização e controle em tempo real.',
-    consequence: '⚠ Tecnologia defasada reduz visibilidade e eficiência da operação.',
+    consequence: `${Icone('triangle-alert',13,'var(--warn)')} Tecnologia defasada reduz visibilidade e eficiência da operação.`,
   },
 };
 
@@ -3643,7 +3643,7 @@ function abrirTooltipIndicador(key) {
   const title   = document.getElementById('tooltip-title');
   const body    = document.getElementById('tooltip-body');
   if (!overlay) return;
-  if (title) title.textContent = info.titulo;
+  if (title) title.innerHTML = info.titulo;
   if (body) body.innerHTML = `
     <div class="tooltip-val-block">
       <div class="tooltip-val-num" style="color:var(--s-text)">${val}<span style="font-size:.9rem;color:var(--t3)">/${maxVal}</span></div>
@@ -3675,7 +3675,7 @@ function abrirTooltipInfo(titulo, htmlCorpo) {
 function abrirInfoTimer() {
   abrirTooltipInfo('Timer por Rodada', `
     <p class="tooltip-body-text">Com o timer ativado, você tem <strong>90 segundos</strong> para tomar cada decisão. O tempo aparece na tela durante a rodada e fica vermelho nos últimos segundos.</p>
-    <div class="tooltip-consequence">⏰ Se o tempo esgotar sem você escolher uma opção, o jogo segue automaticamente com uma <strong>Decisão por Omissão</strong> — um resultado diferente de uma escolha ativa, geralmente pior, e que aumenta o <strong>Esgotamento</strong> do gestor.</div>
+    <div class="tooltip-consequence">${Icone('timer',14)} Se o tempo esgotar sem você escolher uma opção, o jogo segue automaticamente com uma <strong>Decisão por Omissão</strong> — um resultado diferente de uma escolha ativa, geralmente pior, e que aumenta o <strong>Esgotamento</strong> do gestor.</div>
     <p class="tooltip-body-text">Deixar o tempo esgotar repetidas vezes acumula esgotamento até o limite. Se isso acontecer, o gestor entra em <strong>Paralisia Decisória</strong> — um colapso por excesso de indecisão que encerra o mandato antes do previsto.</p>
   `);
 }
@@ -3683,7 +3683,7 @@ function abrirInfoTimer() {
 function abrirInfoModoTreino() {
   abrirTooltipInfo('Modo Treino', `
     <p class="tooltip-body-text">No Modo Treino, você joga normalmente, mas <strong>o resultado não conta</strong> para o pódio nem fica salvo no seu histórico de partidas.</p>
-    <div class="tooltip-consequence">🎓 Ideal para aprender as mecânicas, testar decisões diferentes ou simplesmente jogar sem a pressão de manter uma boa pontuação registrada.</div>
+    <div class="tooltip-consequence">${Icone('graduation-cap',14)} Ideal para aprender as mecânicas, testar decisões diferentes ou simplesmente jogar sem a pressão de manter uma boa pontuação registrada.</div>
   `);
 }
 
@@ -3939,7 +3939,7 @@ async function authRecuperar() {
   try {
     await window.GSPAuth.recuperarSenha(email);
     const ok = document.getElementById("auth-rec-ok");
-    if (ok) { ok.style.display = "block"; ok.textContent = "✅ E-mail enviado! Verifique sua caixa de entrada."; }
+    if (ok) { ok.style.display = "block"; ok.innerHTML = `${Icone('circle-check',14)} E-mail enviado! Verifique sua caixa de entrada.`; }
     mostrarSucesso("E-mail de recuperação enviado!");
   } catch(e) {
     const msg = _traduzirErroFirebase(e.code);
@@ -4125,7 +4125,7 @@ function _atualizarBadgeSala() {
   const badge = document.getElementById('home-sala-badge');
   if (!badge) return;
   if (_sala) {
-    badge.textContent = '🏟️ ' + (_sala.nome || _sala.codigo);
+    badge.innerHTML = `${Icone('landmark',13)} ` + (_sala.nome || _sala.codigo);
     badge.style.display = 'inline-flex';
   } else {
     badge.style.display = 'none';
@@ -4157,7 +4157,7 @@ async function _renderPainelAnfitriao() {
   const podioBtn = sala.podioVisivel
     ? `<button class="btn-secondary" disabled>Pódio já revelado</button>`
     : todos
-      ? `<button class="btn-primary" onclick="anfitriaoRevelarPodio()">🏆 Revelar Pódio</button>`
+      ? `<button class="btn-primary" onclick="anfitriaoRevelarPodio()">${Icone('trophy',14)} Revelar Pódio</button>`
       : `<button class="btn-secondary" disabled>Aguardando grupos (${grupos.filter(g=>g.statusCiclo==='concluido').length}/${grupos.length})</button>`;
 
   el.innerHTML = `
@@ -4165,8 +4165,8 @@ async function _renderPainelAnfitriao() {
       <div class="painel-anf-label">Sala: <strong>${sala.nome || sala.codigo}</strong> · Ciclo ${sala.cicloAtual || 1}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
         ${podioBtn}
-        <button class="btn-secondary" onclick="anfitriaoNovoCiclo()">🔄 Novo Ciclo</button>
-        <button class="btn-danger" onclick="anfitriaoEncerrarSala()">❌ Encerrar Sala</button>
+        <button class="btn-secondary" onclick="anfitriaoNovoCiclo()">${Icone('refresh-cw',14)} Novo Ciclo</button>
+        <button class="btn-danger" onclick="anfitriaoEncerrarSala()">${Icone('circle-x',14)} Encerrar Sala</button>
       </div>
     </div>
     <div class="painel-anf-section">
@@ -4185,7 +4185,7 @@ async function anfitriaoRevelarPodio() {
   if (!_sala || !_player?.uid) return;
   try {
     await window.GSPSalas.revelarPodio(_sala.codigo, _player.uid);
-    mostrarSucesso('✅ Pódio revelado!');
+    mostrarSucesso('Pódio revelado!');
     await _renderPainelAnfitriao();
   } catch(e) { mostrarAviso('Erro: ' + e.message); }
 }
@@ -4197,7 +4197,7 @@ async function anfitriaoNovoCiclo() {
     await window.GSPSalas.liberarNovoCiclo(_sala.codigo, _player.uid);
     _sala.cicloAtual = (_sala.cicloAtual || 1) + 1;
     LS.set(SK.SALA, _sala);
-    mostrarSucesso('✅ Novo ciclo liberado!');
+    mostrarSucesso('Novo ciclo liberado!');
     await _renderPainelAnfitriao();
   } catch(e) { mostrarAviso('Erro: ' + e.message); }
 }
@@ -4241,9 +4241,9 @@ async function abrirModalModo() {
 
   if (descEl) {
     if (salaAtual && grupoAtual) {
-      descEl.textContent = '🏟️ ' + (salaAtual.nome || salaAtual.codigo) + ' · 👥 ' + grupoAtual.nomeGrupo;
+      descEl.innerHTML = `${Icone('landmark',13)} ` + (salaAtual.nome || salaAtual.codigo) + ` · ${Icone('users',13)} ` + grupoAtual.nomeGrupo;
     } else if (salaAtual) {
-      descEl.textContent = '🏟️ ' + (salaAtual.nome || salaAtual.codigo) + ' — escolha um grupo';
+      descEl.innerHTML = `${Icone('landmark',13)} ` + (salaAtual.nome || salaAtual.codigo) + ' — escolha um grupo';
     } else {
       descEl.textContent = 'Jogue colaborativamente com sua equipe';
     }
@@ -4401,7 +4401,7 @@ async function confirmarCriarSala() {
 function copiarCodigoSala() {
   if (!_codigoSalaCriada) return;
   navigator.clipboard?.writeText(_codigoSalaCriada)
-    .then(() => mostrarSucesso('✅ Código copiado: ' + _codigoSalaCriada))
+    .then(() => mostrarSucesso('Código copiado: ' + _codigoSalaCriada))
     .catch(() => mostrarAviso('Código: ' + _codigoSalaCriada));
 }
 
@@ -4452,7 +4452,7 @@ async function _renderGerenciarGrupos() {
               `<option value="${og.nomeGrupo}">${og.nomeGrupo}</option>`
             ).join('');
             return `<div class="gerenciar-membro-row">
-              <span class="gerenciar-membro-nome">${isLider ? '👑 ' : ''}${m.nome || m.uid}</span>
+              <span class="gerenciar-membro-nome">${isLider ? Icone('crown',13)+' ' : ''}${m.nome || m.uid}</span>
               <div class="gerenciar-membro-acoes">
                 ${outrosGrupos.length ? `
                   <select class="gerenciar-select" id="mover-select-${m.uid}">
@@ -4461,7 +4461,7 @@ async function _renderGerenciarGrupos() {
                   </select>
                   <button class="anf-btn-sm" onclick="BetaUI.moverMembroGrupo('${m.uid}','${g.nomeGrupo}')">Mover</button>
                 ` : ''}
-                <button class="anf-btn-sm anf-btn-sm--danger" onclick="BetaUI.removerMembroGrupo('${m.uid}','${g.nomeGrupo}')">✕</button>
+                <button class="anf-btn-sm anf-btn-sm--danger" onclick="BetaUI.removerMembroGrupo('${m.uid}','${g.nomeGrupo}')">${Icone('x',13)}</button>
               </div>
             </div>`;
           }).join('')
@@ -4487,7 +4487,7 @@ async function moverMembroGrupo(uid, grupoAtual) {
   if (!grupoDestino) { mostrarAviso('Selecione o grupo de destino.'); return; }
   try {
     await window.GSPSalas.moverMembro(_sala.codigo, { uid, grupoAtual, grupoDestino });
-    mostrarSucesso('✅ Membro movido!');
+    mostrarSucesso('Membro movido!');
     await _renderGerenciarGrupos();
     await _carregarListaGrupos();
   } catch(e) { mostrarAviso('Erro: ' + e.message); }
@@ -4511,7 +4511,7 @@ async function removerMembroGrupo(uid, nomeGrupo) {
         membros: { arrayValue: { values: novosMembros.map(m => ({ stringValue: m })) } }
       }})
     });
-    mostrarSucesso('✅ Membro removido.');
+    mostrarSucesso('Membro removido.');
     await _renderGerenciarGrupos();
     await _carregarListaGrupos();
   } catch(e) { mostrarAviso('Erro: ' + e.message); }
@@ -4523,7 +4523,7 @@ async function removerMembroGrupo(uid, nomeGrupo) {
 let _inboxMensagens   = [];
 let _inboxUnsubscribe = null;
 const _FS_BASE = `https://firestore.googleapis.com/v1/projects/under-pressure-49320/databases/default/documents`;
-const _CAT_ICONS_PLAYER = { geral:'💬', aviso:'📢', conquista:'🎉', alerta:'⚠️' };
+const _CAT_ICONS_PLAYER = { geral:Icone('message-circle',13), aviso:Icone('megaphone',13), conquista:Icone('trophy',13), alerta:Icone('triangle-alert',13,'var(--warn)') };
 
 function _iniciarInbox(uid) {
   if (!uid) return;
@@ -4584,7 +4584,7 @@ async function _buscarMensagens(uid) {
 
     
     if (atual > anterior && anterior >= 0 && document.visibilityState !== undefined) {
-      _showToast('📬 Você tem um novo comunicado', 'ok', 4000);
+      _showToast('Você tem um novo comunicado', 'ok', 4000);
     }
 
     _atualizarBadgeInbox();
@@ -4636,15 +4636,15 @@ function _renderInboxMensagens() {
   }
 
   lista.innerHTML = _inboxMensagens.map(m => {
-    const catIcon = _CAT_ICONS_PLAYER[m.categoria] || '💬';
+    const catIcon = _CAT_ICONS_PLAYER[m.categoria] || Icone('message-circle',13);
     const data    = m.ts ? new Date(m.ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
-    const fixPin  = m.fixada ? '<span class="inbox-msg-fixada-tag">📌 Fixado</span>' : '';
+    const fixPin  = m.fixada ? `<span class="inbox-msg-fixada-tag">${Icone('pin',12)} Fixado</span>` : '';
     const lida_cl = m.lida ? 'lida' : 'nao-lida';
     const fix_cl  = m.fixada ? ' fixada' : '';
     const confirmar_btn = (!m.lida && m.exigirConfirmacao && !m.confirmada)
-      ? `<button class="inbox-confirmar-btn" onclick="BetaUI._confirmarLeitura('${m.id}')">✅ Entendido</button>`
+      ? `<button class="inbox-confirmar-btn" onclick="BetaUI._confirmarLeitura('${m.id}')">${Icone('circle-check',13)} Entendido</button>`
       : '';
-    const apagar_btn = `<button class="inbox-msg-apagar" onclick="BetaUI._apagarMsg('${m.id}')" title="Apagar">🗑️</button>`;
+    const apagar_btn = `<button class="inbox-msg-apagar" onclick="BetaUI._apagarMsg('${m.id}')" title="Apagar">${Icone('trash-2',14)}</button>`;
     
     
     
@@ -4879,7 +4879,7 @@ function _renderizarPerfilMsgs() {
   }
   if (titulo) titulo.style.display = '';
   lista.innerHTML = _inboxMensagens.map(m => {
-    const catIcon = _CAT_ICONS_PLAYER[m.categoria] || '💬';
+    const catIcon = _CAT_ICONS_PLAYER[m.categoria] || Icone('message-circle',13);
     const data    = m.ts ? new Date(m.ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
     return `
       <div style="background:var(--bg3);border:1px solid ${m.lida ? 'var(--line2)' : 'rgba(234,179,8,.3)'};border-radius:10px;padding:11px 13px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
@@ -4887,7 +4887,7 @@ function _renderizarPerfilMsgs() {
           <div style="font-size:.7rem;color:var(--t3);margin-bottom:4px">${catIcon} ${m.categoria} · ${data}</div>
           <div style="font-size:.83rem;color:${m.lida ? 'var(--t2)' : 'var(--t1)'};line-height:1.4">${m.texto || ''}</div>
         </div>
-        <button onclick="BetaUI._apagarMsg('${m.id}');BetaUI._renderPerfilMsgsPublic()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;flex-shrink:0;padding:2px">🗑️</button>
+        <button onclick="BetaUI._apagarMsg('${m.id}');BetaUI._renderPerfilMsgsPublic()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;flex-shrink:0;padding:2px">${Icone('trash-2',14)}</button>
       </div>`;
   }).join('');
 }
@@ -4942,7 +4942,7 @@ async function _verificarOnboarding(uid, nome) {
       
       
       
-      let texto = `Bem-vindo(a) ao Under Pressure, ${nome}! 🎮 Aqui você vai tomar decisões críticas como CEO e ver os resultados em tempo real. Boa sorte nos mandatos!`;
+      let texto = `Bem-vindo(a) ao Under Pressure, ${nome}! ${Icone('gamepad-2',13)} Aqui você vai tomar decisões críticas como CEO e ver os resultados em tempo real. Boa sorte nos mandatos!`;
       try {
         const rMsg = await fetch(`${_FS_BASE}/config/mensagemBoasVindas`, { headers });
         if (rMsg.ok) {

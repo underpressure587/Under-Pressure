@@ -4,14 +4,14 @@ const IndicadoresTecnologia = (() => {
 
     
     const LABELS = {
-        financeiro:   "💰 Financeiro",
-        rh:           "👥 RH",
-        clientes:     "⭐ Clientes",
-        qualidade:    "🎯 Controle de Qualidade",
-        produtividade:"⚡ Produtividade",
-        reputacao:    "📣 Reputação de Mercado",
-        inovacao:     "🔬 Inovação",
-        seguranca:    "🦺 Segurança Operacional"
+        financeiro:   `${Icone('wallet',14)} Financeiro`,
+        rh:           `${Icone('users',14)} RH`,
+        clientes:     `${Icone('star',14)} Clientes`,
+        qualidade:    `${Icone('target',14)} Controle de Qualidade`,
+        produtividade:`${Icone('zap',14)} Produtividade`,
+        reputacao:    `${Icone('megaphone',14)} Reputação de Mercado`,
+        inovacao:     `${Icone('microscope',14)} Inovação`,
+        seguranca:    `${Icone('shield',14)} Segurança Operacional`
     };
 
     
@@ -45,55 +45,55 @@ const IndicadoresTecnologia = (() => {
         
         if (ind.rh <= 5 && ind.produtividade > 1) {
             ind.produtividade = Math.max(0, ind.produtividade - 2);
-            log.push("🌡️ Clima crítico drena a produtividade do time.");
+            log.push(`${Icone('thermometer',12)} Clima crítico drena a produtividade do time.`);
         }
 
         
         if (ind.produtividade <= 5 && ind.qualidade > 1) {
             ind.qualidade = Math.max(0, ind.qualidade - 2);
-            log.push("⚡ Baixa produtividade compromete a qualidade das entregas.");
+            log.push(`${Icone('zap',12)} Baixa produtividade compromete a qualidade das entregas.`);
         }
 
         
         if (ind.qualidade <= 5 && ind.clientes > 1) {
             ind.clientes = Math.max(0, ind.clientes - 2);
-            log.push("🛠️ Produto instável deteriora a satisfação dos clientes.");
+            log.push(`${Icone('wrench',12)} Produto instável deteriora a satisfação dos clientes.`);
         }
 
         
         if (ind.clientes <= 5 && ind.financeiro > 1) {
             ind.financeiro = Math.max(0, ind.financeiro - 2);
-            log.push("⭐ Churn alto corrói a saúde financeira.");
+            log.push(`${Icone('star',12)} Churn alto corrói a saúde financeira.`);
         }
 
         
         if (ind.inovacao >= 15 && ind.reputacao < 20) {
             ind.reputacao = Math.min(20, ind.reputacao + 1);
-            log.push("🔬 Alta inovação eleva a reputação de mercado.");
+            log.push(`${Icone('microscope',12)} Alta inovação eleva a reputação de mercado.`);
         }
 
         
         if (ind.seguranca <= 4) {
             if (ind.reputacao > 1) {
                 ind.reputacao = Math.max(0, ind.reputacao - 3);
-                log.push("🔒 Falha crítica de segurança destrói a reputação.");
+                log.push(`${Icone('lock',12)} Falha crítica de segurança destrói a reputação.`);
             }
             if (ind.clientes > 1) {
                 ind.clientes = Math.max(0, ind.clientes - 2);
-                log.push("🔒 Clientes perdem confiança após incidente de segurança.");
+                log.push(`${Icone('lock',12)} Clientes perdem confiança após incidente de segurança.`);
             }
         }
 
         
         if (ind.financeiro <= 5 && ind.inovacao > 1) {
             ind.inovacao = Math.max(0, ind.inovacao - 2);
-            log.push("💰 Caixa apertado congela investimentos em inovação.");
+            log.push(`${Icone('wallet',12)} Caixa apertado congela investimentos em inovação.`);
         }
 
         
         if (ind.reputacao >= 16 && ind.clientes < 20) {
             ind.clientes = Math.min(20, ind.clientes + 1);
-            log.push("📣 Reputação forte aumenta confiança e retém clientes.");
+            log.push(`${Icone('megaphone',12)} Reputação forte aumenta confiança e retém clientes.`);
         }
 
         return log; 

@@ -79,11 +79,11 @@ const Protagonista = (() => {
         const esgotamento = state?.gestor?.esgotamento ?? 0;
         if (esgotamento >= 7 && Math.random() < 0.35) {
             const frase = FRASES_PREOCUPACAO[Math.floor(Math.random() * FRASES_PREOCUPACAO.length)];
-            return { nome: maisAfetado.nome, icone: "🟡", texto: frase };
+            return { nome: maisAfetado.nome, icone: Icone('dot',20,'#eab308'), texto: frase };
         }
 
         const pool  = saldo >= 0 ? FRASES_POS : FRASES_NEG;
-        const icone = saldo >= 0 ? "🟢" : "🔴";
+        const icone = saldo >= 0 ? Icone('dot',20,'#22c55e') : Icone('dot',20,'#ef4444');
         const texto = pool[Math.floor(Math.random() * pool.length)];
 
         return { nome: maisAfetado.nome, icone, texto };

@@ -90,7 +90,7 @@
             _mostrarOverlayBan(uid);
           } else if (typeof _forcarSaida === 'function') {
             
-            _forcarSaida('🚫 Sua conta foi suspensa pelo administrador.');
+            _forcarSaida('Sua conta foi suspensa pelo administrador.');
           }
           return;
         }

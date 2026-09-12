@@ -646,7 +646,7 @@ function _encerrar(motivo) {
     const decisoesCruciais = [...state.history]
         .map(h => ({
             ...h,
-            escolha: h.escolha === null ? '⏰ Omissão — tempo esgotado' : h.escolha,
+            escolha: h.escolha === null ? `${Icone('timer',12)} Omissão — tempo esgotado` : h.escolha,
             impacto: Object.values(h.efeitos || {}).reduce((a, v) => a + Math.abs(v), 0)
         }))
         .sort((a, b) => b.impacto - a.impacto)

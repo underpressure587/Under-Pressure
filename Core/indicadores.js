@@ -4,31 +4,31 @@ const BetaIndicadores = (() => {
 
     const LABELS = {
         
-        financeiro:    "💰 Financeiro",
-        rh:            "👥 RH",
-        clientes:      "⭐ Clientes",
-        processos:     "⚙️ Processos",
+        financeiro:    `${Icone('wallet',14)} Financeiro`,
+        rh:            `${Icone('users',14)} RH`,
+        clientes:      `${Icone('star',14)} Clientes`,
+        processos:     `${Icone('settings',14)} Processos`,
         
-        margem:        "📊 Margem Operacional",
-        estoque:       "📦 Giro de Estoque",
-        marca:         "🏷️ Força da Marca",
-        digital:       "🖥️ Canal Digital",
+        margem:        `${Icone('chart-column',14)} Margem Operacional`,
+        estoque:       `${Icone('package',14)} Giro de Estoque`,
+        marca:         `${Icone('tag',14)} Força da Marca`,
+        digital:       `${Icone('monitor',14)} Canal Digital`,
         
-        sla:           "⏱️ Cumprimento de SLA",
-        frota:         "🚛 Estado da Frota",
-        seguranca:     "🦺 Segurança Operacional",
-        tecnologia:    "📡 TMS / Tecnologia",
+        sla:           `${Icone('timer',14)} Cumprimento de SLA`,
+        frota:         `${Icone('truck',14)} Estado da Frota`,
+        seguranca:     `${Icone('shield',14)} Segurança Operacional`,
+        tecnologia:    `${Icone('satellite-dish',14)} TMS / Tecnologia`,
         
         
-        manutencao:    "🔧 Manutenção de Ativos",
-        qualidade:     "🎯 Controle de Qualidade",
-        conformidade:  "📋 Conformidade Regulatória",
+        manutencao:    `${Icone('wrench',14)} Manutenção de Ativos`,
+        qualidade:     `${Icone('target',14)} Controle de Qualidade`,
+        conformidade:  `${Icone('clipboard-list',14)} Conformidade Regulatória`,
         
-        clima:         "🧑‍💻 Clima Organizacional",
-        satisfacao:    "⭐ Satisfação do Cliente",
-        produtividade: "⚡ Produtividade",
-        reputacao:     "📣 Reputação de Mercado",
-        inovacao:      "🔬 Inovação",
+        clima:         `${Icone('laptop',14)} Clima Organizacional`,
+        satisfacao:    `${Icone('star',14)} Satisfação do Cliente`,
+        produtividade: `${Icone('zap',14)} Produtividade`,
+        reputacao:     `${Icone('megaphone',14)} Reputação de Mercado`,
+        inovacao:      `${Icone('microscope',14)} Inovação`,
     };
 
     

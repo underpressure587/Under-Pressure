@@ -32,7 +32,7 @@ const BetaImpacto = (() => {
     function descricao(effects) {
         return Object.entries(effects)
             .filter(([, v]) => v !== 0)
-            .map(([k, v]) => `${v > 0 ? "✅" : "❌"} ${NOMES[k] || k}: ${v > 0 ? "+" : ""}${v}`)
+            .map(([k, v]) => `${v > 0 ? Icone('circle-check',12,'var(--good)') : Icone('circle-x',12,'var(--danger)')} ${NOMES[k] || k}: ${v > 0 ? "+" : ""}${v}`)
             .join(" · ") || "Sem impacto nos indicadores.";
     }
 

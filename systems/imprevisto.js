@@ -9,7 +9,7 @@ const BetaImprevisto = (() => {
     const POOL = [
         {
             id: "greve",
-            titulo: "⚠️ Risco de Greve",
+            titulo: `${Icone('triangle-alert',13,'var(--warn)')} Risco de Greve`,
             descricao: "A equipe está agitada. Decisões que prejudiquem RH têm impacto dobrado.",
             modifierPorSetor: {
                 default: { rh: 2.0 },
@@ -19,7 +19,7 @@ const BetaImprevisto = (() => {
         },
         {
             id: "crise_cambial",
-            titulo: "💱 Crise Cambial",
+            titulo: `${Icone('arrow-left-right',13)} Crise Cambial`,
             descricao: "Oscilação do câmbio amplifica os efeitos financeiros.",
             modifierPorSetor: {
                 default: { financeiro: 1.5 },
@@ -29,7 +29,7 @@ const BetaImprevisto = (() => {
         },
         {
             id: "viral_positivo",
-            titulo: "📣 Campanha Viral",
+            titulo: `${Icone('megaphone',13)} Campanha Viral`,
             descricao: "A empresa ganhou atenção positiva. Ganhos com clientes são maiores.",
             modifierPorSetor: {
                 default: { clientes: 1.5 },
@@ -40,7 +40,7 @@ const BetaImprevisto = (() => {
         },
         {
             id: "auditoria",
-            titulo: "🔍 Auditoria Surpresa",
+            titulo: `${Icone('search',13)} Auditoria Surpresa`,
             descricao: "Auditores na casa. Decisões que impactam processos e conformidade têm efeito amplificado.",
             modifierPorSetor: {
                 tecnologia: { processos: 2.0, qualidade: 2.0, seguranca: 1.5 },
@@ -53,7 +53,7 @@ const BetaImprevisto = (() => {
         },
         {
             id: "investidor",
-            titulo: "💼 Visita de Investidor",
+            titulo: `${Icone('briefcase',13)} Visita de Investidor`,
             descricao: "Investidor presente. Ganhos financeiros são maiores, perdas também.",
             modifierPorSetor: {
                 default: { financeiro: 2.0 },
@@ -63,7 +63,7 @@ const BetaImprevisto = (() => {
         },
         {
             id: "rotatividade",
-            titulo: "🚪 Alta Rotatividade",
+            titulo: `${Icone('door-open',13)} Alta Rotatividade`,
             descricao: "Muitas saídas simultâneas. O indicador de pessoas está hipersensível.",
             
             modifierPorSetor: {
@@ -74,7 +74,7 @@ const BetaImprevisto = (() => {
         },
         {
             id: "acidente_operacional",
-            titulo: "🚨 Incidente Operacional",
+            titulo: `${Icone('siren',13)} Incidente Operacional`,
             descricao: "Ocorrência inesperada na operação. Decisões de segurança têm impacto dobrado.",
             modifierPorSetor: {
                 tecnologia: { seguranca: 2.0, qualidade: 1.5 },
@@ -87,7 +87,7 @@ const BetaImprevisto = (() => {
         },
         {
             id: "reconhecimento_setor",
-            titulo: "🏅 Reconhecimento do Setor",
+            titulo: `${Icone('medal',13,'#FFD700')} Reconhecimento do Setor`,
             descricao: "A empresa foi citada positivamente pela mídia especializada.",
             
             modifierPorSetor: {
@@ -183,24 +183,24 @@ const BetaImprevisto = (() => {
 
     
     const _LABELS_IND = {
-        financeiro:    "💰 Financeiro",
-        rh:            "👥 RH",
-        clientes:      "⭐ Clientes",
-        processos:     "⚙️ Processos",
-        margem:        "📊 Margem",
-        estoque:       "📦 Estoque",
-        marca:         "🏷️ Marca",
-        digital:       "🖥️ Digital",
-        sla:           "⏱️ SLA",
-        frota:         "🚛 Frota",
-        seguranca:     "🦺 Segurança",
-        tecnologia:    "📡 Tecnologia",
-        manutencao:    "🔧 Manutenção",
-        qualidade:     "🎯 Qualidade",
-        conformidade:  "📋 Conformidade",
-        produtividade: "⚡ Produtividade",
-        reputacao:     "📣 Reputação",
-        inovacao:      "🔬 Inovação",
+        financeiro:    `${Icone('wallet',13)} Financeiro`,
+        rh:            `${Icone('users',13)} RH`,
+        clientes:      `${Icone('star',13)} Clientes`,
+        processos:     `${Icone('settings',13)} Processos`,
+        margem:        `${Icone('chart-column',13)} Margem`,
+        estoque:       `${Icone('package',13)} Estoque`,
+        marca:         `${Icone('tag',13)} Marca`,
+        digital:       `${Icone('monitor',13)} Digital`,
+        sla:           `${Icone('timer',13)} SLA`,
+        frota:         `${Icone('truck',13)} Frota`,
+        seguranca:     `${Icone('shield',13)} Segurança`,
+        tecnologia:    `${Icone('satellite-dish',13)} Tecnologia`,
+        manutencao:    `${Icone('wrench',13)} Manutenção`,
+        qualidade:     `${Icone('target',13)} Qualidade`,
+        conformidade:  `${Icone('clipboard-list',13)} Conformidade`,
+        produtividade: `${Icone('zap',13)} Produtividade`,
+        reputacao:     `${Icone('megaphone',13)} Reputação`,
+        inovacao:      `${Icone('microscope',13)} Inovação`,
     };
 
     
@@ -229,9 +229,9 @@ const BetaImprevisto = (() => {
     function descricaoGestor(ev) {
         if (!ev?.gestorEffects) return "";
         const labels = {
-            reputacaoInterna: "🧑 Reputação",
-            capitalPolitico:  "🏛 Cap. Político",
-            esgotamento:      "🔋 Esgotamento",
+            reputacaoInterna: `${Icone('user',13)} Reputação`,
+            capitalPolitico:  `${Icone('landmark',13)} Cap. Político`,
+            esgotamento:      `${Icone('battery',13)} Esgotamento`,
         };
         return Object.entries(ev.gestorEffects)
             .filter(([, v]) => v !== 0)

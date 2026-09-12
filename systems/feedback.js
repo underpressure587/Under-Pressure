@@ -4,7 +4,7 @@
 const BetaFeedback = (() => {
 
     const COR    = { boa: "#22c55e", media: "#f59e0b", ruim: "#ef4444" };
-    const ROTULO = { boa: "✅ BOA DECISÃO", media: "⚠️ DECISÃO MÉDIA", ruim: "❌ MÁ DECISÃO" };
+    const ROTULO = { boa: `${Icone('circle-check',13,'var(--good)')} BOA DECISÃO`, media: `${Icone('triangle-alert',13,'var(--warn)')} DECISÃO MÉDIA`, ruim: `${Icone('circle-x',13,'var(--danger)')} MÁ DECISÃO` };
 
     function calcular({ choice, choiceIndex, avaliacaoContextual, contextoAvaliacao,
                         efeitosFinais, eventoAtivo, history, storyState, storyStateAnterior,

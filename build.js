@@ -5,6 +5,7 @@ const path = require('path');
 
 
 const ORDEM = [
+  { marcador: 'icons.js',                       arquivo: 'icons.js' },
   { marcador: 'core/state.js',                  arquivo: 'Core/state.js' },
   { marcador: 'core/indicadores.js',            arquivo: 'Core/indicadores.js' },
   { marcador: 'core/indicadores-tecnologia.js', arquivo: 'Core/indicadores-tecnologia.js' },

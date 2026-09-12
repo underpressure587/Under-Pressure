@@ -224,42 +224,42 @@ const StoryEngine = (() => {
         const capPol = gestor?.capitalPolitico ?? 5;
 
         
-        if (esg >= 9 && score >= 60)    return "😮‍💨 O Gestor que se Perdeu no Caminho";
-        if (capPol <= 1 && score >= 55) return "🏛️ Bom para a Empresa, Fatal para o Mandato";
+        if (esg >= 9 && score >= 60)    return `${Icone('wind',14)} O Gestor que se Perdeu no Caminho`;
+        if (capPol <= 1 && score >= 55) return `${Icone('landmark',14)} Bom para a Empresa, Fatal para o Mandato`;
 
         
         if (flags.includes("lideranca_toxica") && flags.includes("demissao_em_massa"))
-            return "😤 O Gestor do Caos";
+            return `${Icone('frown',14)} O Gestor do Caos`;
         if (flags.includes("ignorou_seguranca") && reputacao === "toxica")
-            return "⚠️ O Descuidado Operacional";
+            return `${Icone('triangle-alert',14)} O Descuidado Operacional`;
         if (flags.includes("crescimento_sem_caixa") && score < 45)
-            return "📉 O Visionário Imprudente";
+            return `${Icone('trending-down',14)} O Visionário Imprudente`;
         if (totalRuins > totalBoas && score < 40)
-            return "🌪️ O Capitão do Naufrágio";
+            return `${Icone('tornado',14)} O Capitão do Naufrágio`;
 
         
-        if (score >= 70 && sg >= 70)  return "🌟 O Gestor Completo";
-        if (score >= 70 && sg < 45)   return "⚙️ Eficiente, mas a que Custo?";
-        if (score < 45 && sg >= 70)   return "🧭 O Gestor que Sobreviveu ao Naufrágio";
+        if (score >= 70 && sg >= 70)  return `${Icone('star',14)} O Gestor Completo`;
+        if (score >= 70 && sg < 45)   return `${Icone('settings',14)} Eficiente, mas a que Custo?`;
+        if (score < 45 && sg >= 70)   return `${Icone('compass',14)} O Gestor que Sobreviveu ao Naufrágio`;
 
         
         if (flags.includes("gestor_de_crise") && score >= 65)
-            return "🔥 O Fênix da Gestão";
+            return `${Icone('flame',14)} O Fênix da Gestão`;
         if (flags.includes("crescimento_saudavel") && flags.includes("investiu_em_inovacao"))
-            return "🚀 O Arquiteto do Futuro";
+            return `${Icone('rocket',14)} O Arquiteto do Futuro`;
         if (score >= 80 && reputacao === "boa")
-            return "🏆 O Arquiteto Sustentável";
+            return `${Icone('trophy',14)} O Arquiteto Sustentável`;
         if (flags.includes("investiu_em_inovacao") && score >= 60)
-            return "💡 O Inovador Consistente";
+            return `${Icone('lightbulb',14)} O Inovador Consistente`;
 
         
-        if (estilo === "agressivo" && score >= 55) return "⚡ O Gestor de Alta Performance";
-        if (estilo === "agressivo" && score < 55)  return "🎲 O Apostador Serial";
-        if (estilo === "prudente"  && score >= 60) return "🧩 O Estrategista Cuidadoso";
-        if (estilo === "prudente"  && score < 60)  return "🐢 O Gestor Conservador";
-        if (estilo === "caotico")                  return "🌀 O Gestor Imprevisível";
+        if (estilo === "agressivo" && score >= 55) return `${Icone('zap',14)} O Gestor de Alta Performance`;
+        if (estilo === "agressivo" && score < 55)  return `${Icone('dices',14)} O Apostador Serial`;
+        if (estilo === "prudente"  && score >= 60) return `${Icone('puzzle',14)} O Estrategista Cuidadoso`;
+        if (estilo === "prudente"  && score < 60)  return `${Icone('turtle',14)} O Gestor Conservador`;
+        if (estilo === "caotico")                  return `${Icone('refresh-cw',14)} O Gestor Imprevisível`;
 
-        return "📋 O Gestor Pragmático";
+        return `${Icone('clipboard-list',14)} O Gestor Pragmático`;
     }
 
     function _construirDescricao(flags, conquistas, traumas, estilo, score, fase, reputacao, scoreGestor, gestor, totalBoas, totalRuins) {
