@@ -1245,10 +1245,10 @@ function _renderEmpresaTab() {
   const el = document.getElementById("empresa-tab-content");
   if (!el || !_introCache) return;
   const { intro, empresa, sector, situacao } = _introCache;
-  const icones = { tecnologia:Icone('rocket',15,'#FFC107'), industria:Icone('factory',15,'#FFC107'), logistica:Icone('truck',15,'#FFC107'), varejo:Icone('shopping-cart',15,'#FFC107') };
+  const icones = { tecnologia:Icone('rocket',15,'var(--s-primary)'), industria:Icone('factory',15,'var(--s-primary)'), logistica:Icone('truck',15,'var(--s-primary)'), varejo:Icone('shopping-cart',15,'var(--s-primary)') };
   let html = `
     <div class="empresa-tab-header">
-      <span class="empresa-tab-badge">${icones[sector]||Icone('building-2',15,'#FFC107')} ${empresa.nome || sector}</span>
+      <span class="empresa-tab-badge">${icones[sector]||Icone('building-2',15,'var(--s-primary)')} ${empresa.nome || sector}</span>
       <h2 class="empresa-tab-titulo">${intro.titulo || intro.badge || ""}</h2>
       ${intro.subtitulo ? `<p class="empresa-tab-sub">${intro.subtitulo}</p>` : ""}
     </div>`;
