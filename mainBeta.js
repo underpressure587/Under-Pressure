@@ -1443,9 +1443,16 @@ function renderSidebar(state, empresa) {
       const nameClass = isCritical ? ' critical-label' : '';
 
       
-      const labelParts = label.split(" ");
-      const indIcon = labelParts[0];
-      const indName = labelParts.slice(1).join(" ");
+      const svgEnd = label.indexOf("</svg>");
+      let indIcon, indName;
+      if (svgEnd !== -1) {
+        indIcon = label.slice(0, svgEnd + 6);
+        indName = label.slice(svgEnd + 6).trim();
+      } else {
+        const labelParts = label.split(" ");
+        indIcon = labelParts[0];
+        indName = labelParts.slice(1).join(" ");
+      }
       const benchVal = b ? `<span>Méd: ${b}</span><span style="color:${cor};font-weight:700">${vExibir}/20</span>` : `<span style="color:${cor};font-weight:600">${vExibir}/20</span>`;
       return `<div class="game-ind-row${rowClass}" data-ind="${k}" style="--ind-cor:${cor}" onclick="BetaUI.abrirTooltipIndicador('${k}')">
         <div class="game-ind-top">
