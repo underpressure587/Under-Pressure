@@ -32,6 +32,17 @@ const BetaIndicadores = (() => {
     };
 
     
+    
+    const NOMES_PLANOS = {
+        financeiro: "Financeiro", rh: "RH", clientes: "Clientes", processos: "Processos",
+        margem: "Margem Operacional", estoque: "Giro de Estoque", marca: "Força da Marca", digital: "Canal Digital",
+        sla: "Cumprimento de SLA", frota: "Estado da Frota", seguranca: "Segurança Operacional", tecnologia: "TMS / Tecnologia",
+        manutencao: "Manutenção de Ativos", qualidade: "Controle de Qualidade", conformidade: "Conformidade Regulatória",
+        clima: "Clima Organizacional", satisfacao: "Satisfação do Cliente", produtividade: "Produtividade",
+        reputacao: "Reputação de Mercado", inovacao: "Inovação",
+    };
+
+    
     const PESOS = {
         tecnologia: {
             financeiro: 0.20, clima: 0.10, satisfacao: 0.15,
@@ -172,11 +183,11 @@ const BetaIndicadores = (() => {
         const criticosAjudados  = positivos.filter(([k]) => nivel(indicators[k] ?? 10) === 'critico');
         const criticosPrejudicados = negativos.filter(([k]) => nivel(indicators[k] ?? 10) === 'critico');
         if (criticosAjudados.length > 0) {
-            const nomes = criticosAjudados.map(([k]) => LABELS[k] || k).join(', ');
+            const nomes = criticosAjudados.map(([k]) => NOMES_PLANOS[k] || k).join(', ');
             partes.push(`Ação decisiva em indicador crítico: ${nomes}`);
         }
         if (criticosPrejudicados.length > 0) {
-            const nomes = criticosPrejudicados.map(([k]) => LABELS[k] || k).join(', ');
+            const nomes = criticosPrejudicados.map(([k]) => NOMES_PLANOS[k] || k).join(', ');
             partes.push(`Risco: ${nomes} já está crítico e foi prejudicado`);
         }
 

@@ -1438,7 +1438,10 @@ function renderSidebar(state, empresa) {
 
       
       const isCritical = v <= 3;
-      if (isCritical && (prev === undefined || prev > 3)) newlyCritical.push(label);
+      if (isCritical && (prev === undefined || prev > 3)) {
+        const svgEndCrit = label.indexOf("</svg>");
+        newlyCritical.push(svgEndCrit !== -1 ? label.slice(svgEndCrit + 6).trim() : label);
+      }
       const rowClass = isCritical ? ' critical' : '';
       const nameClass = isCritical ? ' critical-label' : '';
 
