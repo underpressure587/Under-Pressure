@@ -755,7 +755,7 @@ function irParaHistoricoJogos() {
 }
 
 function _renderHistorico(lista, hist, isGuest) {
-  const icones = { tecnologia:Icone('rocket',15), varejo:Icone('shopping-cart',15), logistica:Icone('truck',15), industria:Icone('factory',15) };
+  const icones = { tecnologia:Icone('rocket',15,'#FFC107'), varejo:Icone('shopping-cart',15,'#FFC107'), logistica:Icone('truck',15,'#FFC107'), industria:Icone('factory',15,'#FFC107') };
   const labels = { tecnologia:"Tecnologia", varejo:"Varejo", logistica:"Logística", industria:"Indústria" };
 
   if (isGuest) {
@@ -798,7 +798,7 @@ function _histCard(p, icones, labels) {
   const label   = p.score >= 70 ? "Excelente" : p.score >= 45 ? "Regular" : "Crítico";
   return `<div class="hist-card">
     <div class="hist-card-left">
-      <div class="hist-card-sector">${icones[p.sector]||Icone('building-2',15)}</div>
+      <div class="hist-card-sector">${icones[p.sector]||Icone('building-2',15,'#FFC107')}</div>
       <div class="hist-card-info">
         <div class="hist-card-company">${p.companyName}</div>
         <div class="hist-card-meta">${labels[p.sector]||p.sector} · ${data} às ${hora}</div>
@@ -1245,10 +1245,10 @@ function _renderEmpresaTab() {
   const el = document.getElementById("empresa-tab-content");
   if (!el || !_introCache) return;
   const { intro, empresa, sector, situacao } = _introCache;
-  const icones = { tecnologia:Icone('rocket',15), industria:Icone('factory',15), logistica:Icone('truck',15), varejo:Icone('shopping-cart',15) };
+  const icones = { tecnologia:Icone('rocket',15,'#FFC107'), industria:Icone('factory',15,'#FFC107'), logistica:Icone('truck',15,'#FFC107'), varejo:Icone('shopping-cart',15,'#FFC107') };
   let html = `
     <div class="empresa-tab-header">
-      <span class="empresa-tab-badge">${icones[sector]||Icone('building-2',15)} ${empresa.nome || sector}</span>
+      <span class="empresa-tab-badge">${icones[sector]||Icone('building-2',15,'#FFC107')} ${empresa.nome || sector}</span>
       <h2 class="empresa-tab-titulo">${intro.titulo || intro.badge || ""}</h2>
       ${intro.subtitulo ? `<p class="empresa-tab-sub">${intro.subtitulo}</p>` : ""}
     </div>`;
@@ -3055,7 +3055,7 @@ async function irParaPerfil() {
   const setorCount = {};
   hist.forEach(h => { setorCount[h.sector] = (setorCount[h.sector] || 0) + 1; });
   const favEntry = Object.entries(setorCount).sort((a,b) => b[1]-a[1])[0];
-  const icones = { tecnologia:Icone('rocket',14), varejo:Icone('shopping-cart',14), logistica:Icone('truck',14), industria:Icone('factory',14) };
+  const icones = { tecnologia:Icone('rocket',14,'#FFC107'), varejo:Icone('shopping-cart',14,'#FFC107'), logistica:Icone('truck',14,'#FFC107'), industria:Icone('factory',14,'#FFC107') };
   const favLabel = favEntry ? `${icones[favEntry[0]]||''} ${favEntry[0]}` : '—';
 
   const sub = document.getElementById('perfil-subtitulo');
@@ -3144,7 +3144,7 @@ async function irParaPerfil() {
     } else {
       cqEl.innerHTML = conquistas.map(c => `
       <div class="perfil-conquista ${c.unlocked ? 'unlocked' : ''}">
-        <div class="perfil-conquista-icon">${c.unlocked ? c.icon : Icone('lock',20)}</div>
+        <div class="perfil-conquista-icon">${c.unlocked ? c.icon : Icone('lock',20,'#6b6875')}</div>
         <div>
           <div class="perfil-conquista-nome">${c.nome}</div>
           <div class="perfil-conquista-desc">${c.desc}</div>
@@ -3178,7 +3178,7 @@ async function irParaPerfil() {
           const setorCount2 = {};
           c.forEach(h => { setorCount2[h.sector] = (setorCount2[h.sector] || 0) + 1; });
           const favEntry2 = Object.entries(setorCount2).sort((a,b) => b[1]-a[1])[0];
-          const icones2 = { tecnologia:Icone('rocket',14), varejo:Icone('shopping-cart',14), logistica:Icone('truck',14), industria:Icone('factory',14) };
+          const icones2 = { tecnologia:Icone('rocket',14,'#FFC107'), varejo:Icone('shopping-cart',14,'#FFC107'), logistica:Icone('truck',14,'#FFC107'), industria:Icone('factory',14,'#FFC107') };
           const favLabel2 = favEntry2 ? `${icones2[favEntry2[0]]||''} ${favEntry2[0]}` : '—';
           const subEl = document.getElementById('perfil-subtitulo');
           if (subEl) subEl.textContent = `${total2} mandato${total2 !== 1 ? 's' : ''} concluído${total2 !== 1 ? 's' : ''}`;
@@ -3203,15 +3203,15 @@ function _calcularConquistas(hist) {
   const total  = hist.length;
   const melhor = total ? Math.max(...hist.map(h => h.score)) : 0;
   return [
-    { icon:Icone('trophy',20), nome:'Primeiro Mandato',    desc:'Complete 1 jogo',              unlocked: total >= 1  },
-    { icon:Icone('star',20), nome:'Gestão Excelente',    desc:'Score acima de 70',             unlocked: melhor >= 70 },
-    { icon:Icone('flame',20), nome:'Veterano',            desc:'5 mandatos concluídos',         unlocked: total >= 5  },
-    { icon:Icone('briefcase',20), nome:'Executivo Sênior',    desc:'10 mandatos concluídos',        unlocked: total >= 10 },
-    { icon:Icone('rocket',20), nome:'Especialista Tech',   desc:'Vença com Tecnologia (70+)',    unlocked: hist.some(h => h.sector === 'tecnologia' && h.score >= 70) },
-    { icon:Icone('factory',20), nome:'Rei da Indústria',    desc:'Vença com Indústria (70+)',     unlocked: hist.some(h => h.sector === 'industria'  && h.score >= 70) },
-    { icon:Icone('truck',20), nome:'Mestre da Logística', desc:'Vença com Logística (70+)',     unlocked: hist.some(h => h.sector === 'logistica'  && h.score >= 70) },
-    { icon:Icone('shopping-cart',20), nome:'Czar do Varejo',      desc:'Vença com Varejo (70+)',        unlocked: hist.some(h => h.sector === 'varejo'     && h.score >= 70) },
-    { icon:Icone('globe',20), nome:'Gestor Completo',     desc:'Vença nos 4 setores',           unlocked: ['tecnologia','industria','logistica','varejo'].every(s => hist.some(h => h.sector === s && h.score >= 70)) },
+    { icon:Icone('trophy',20,'#D4A853'), nome:'Primeiro Mandato',    desc:'Complete 1 jogo',              unlocked: total >= 1  },
+    { icon:Icone('star',20,'#D4A853'), nome:'Gestão Excelente',    desc:'Score acima de 70',             unlocked: melhor >= 70 },
+    { icon:Icone('flame',20,'#D4A853'), nome:'Veterano',            desc:'5 mandatos concluídos',         unlocked: total >= 5  },
+    { icon:Icone('briefcase',20,'#D4A853'), nome:'Executivo Sênior',    desc:'10 mandatos concluídos',        unlocked: total >= 10 },
+    { icon:Icone('rocket',20,'#D4A853'), nome:'Especialista Tech',   desc:'Vença com Tecnologia (70+)',    unlocked: hist.some(h => h.sector === 'tecnologia' && h.score >= 70) },
+    { icon:Icone('factory',20,'#D4A853'), nome:'Rei da Indústria',    desc:'Vença com Indústria (70+)',     unlocked: hist.some(h => h.sector === 'industria'  && h.score >= 70) },
+    { icon:Icone('truck',20,'#D4A853'), nome:'Mestre da Logística', desc:'Vença com Logística (70+)',     unlocked: hist.some(h => h.sector === 'logistica'  && h.score >= 70) },
+    { icon:Icone('shopping-cart',20,'#D4A853'), nome:'Czar do Varejo',      desc:'Vença com Varejo (70+)',        unlocked: hist.some(h => h.sector === 'varejo'     && h.score >= 70) },
+    { icon:Icone('globe',20,'#D4A853'), nome:'Gestor Completo',     desc:'Vença nos 4 setores',           unlocked: ['tecnologia','industria','logistica','varejo'].every(s => hist.some(h => h.sector === s && h.score >= 70)) },
     { icon:Icone('medal',20,'#FFD700'), nome:'Mandato Perfeito',    desc:'Score 90 ou mais',              unlocked: melhor >= 90 },
   ];
 }
@@ -3326,7 +3326,7 @@ function _buscarEAtualizarPodio(lista, setor) {
 
 function _renderPodio(lista, podio, setor) {
   const isAll  = !setor || setor === 'all';
-  const icones = { tecnologia:Icone('rocket',14), varejo:Icone('shopping-cart',14), logistica:Icone('truck',14), industria:Icone('factory',14) };
+  const icones = { tecnologia:Icone('rocket',14,'#FFC107'), varejo:Icone('shopping-cart',14,'#FFC107'), logistica:Icone('truck',14,'#FFC107'), industria:Icone('factory',14,'#FFC107') };
 
   if (!podio.length) {
     lista.innerHTML = `<div class="podio-empty">Nenhuma partida no ranking ainda.<br>Complete um mandato para aparecer aqui.</div>`;
@@ -3353,7 +3353,7 @@ function _renderPodio(lista, podio, setor) {
     const isMe = _player?.uid && p.uid === _player.uid;
     const sub  = isAll
       ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
-      : `${icones[p.sector]||Icone('building-2',14)} ${p.companyName}`;
+      : `${icones[p.sector]||Icone('building-2',14,'#FFC107')} ${p.companyName}`;
     return `<div class="podio-top3-card ${cls} ${isMe ? 'podio-top3-me' : ''}" data-sector="${p.sector||''}">
       <div class="podio-top3-player">
         ${isMe ? '<div class="podio-top3-you">Você</div>' : ''}
@@ -3381,7 +3381,7 @@ function _renderPodio(lista, podio, setor) {
       const isMe = _player?.uid && p.uid === _player.uid;
       const sub  = isAll
         ? `${p.totalJogos ?? 1} jogo${(p.totalJogos ?? 1) !== 1 ? 's' : ''}`
-        : `${icones[p.sector]||Icone('building-2',14)} ${p.companyName}`;
+        : `${icones[p.sector]||Icone('building-2',14,'#FFC107')} ${p.companyName}`;
       return `<div class="podio-item ${isMe ? 'podio-item-me' : ''}" data-sector="${p.sector||''}">
         <div class="podio-rank">${i + 4}</div>
         <div class="podio-player">

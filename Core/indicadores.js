@@ -4,31 +4,31 @@ const BetaIndicadores = (() => {
 
     const LABELS = {
         
-        financeiro:    `${Icone('wallet',14)} Financeiro`,
-        rh:            `${Icone('users',14)} RH`,
-        clientes:      `${Icone('star',14)} Clientes`,
-        processos:     `${Icone('settings',14)} Processos`,
+        financeiro:    `${Icone('wallet',14,'var(--s-primary)')} Financeiro`,
+        rh:            `${Icone('users',14,'var(--s-primary)')} RH`,
+        clientes:      `${Icone('star',14,'var(--s-primary)')} Clientes`,
+        processos:     `${Icone('settings',14,'var(--s-primary)')} Processos`,
         
-        margem:        `${Icone('chart-column',14)} Margem Operacional`,
-        estoque:       `${Icone('package',14)} Giro de Estoque`,
-        marca:         `${Icone('tag',14)} Força da Marca`,
-        digital:       `${Icone('monitor',14)} Canal Digital`,
+        margem:        `${Icone('chart-column',14,'var(--s-primary)')} Margem Operacional`,
+        estoque:       `${Icone('package',14,'var(--s-primary)')} Giro de Estoque`,
+        marca:         `${Icone('tag',14,'var(--s-primary)')} Força da Marca`,
+        digital:       `${Icone('monitor',14,'var(--s-primary)')} Canal Digital`,
         
-        sla:           `${Icone('timer',14)} Cumprimento de SLA`,
-        frota:         `${Icone('truck',14)} Estado da Frota`,
-        seguranca:     `${Icone('shield',14)} Segurança Operacional`,
-        tecnologia:    `${Icone('satellite-dish',14)} TMS / Tecnologia`,
+        sla:           `${Icone('timer',14,'var(--s-primary)')} Cumprimento de SLA`,
+        frota:         `${Icone('truck',14,'var(--s-primary)')} Estado da Frota`,
+        seguranca:     `${Icone('shield',14,'var(--s-primary)')} Segurança Operacional`,
+        tecnologia:    `${Icone('satellite-dish',14,'var(--s-primary)')} TMS / Tecnologia`,
         
         
-        manutencao:    `${Icone('wrench',14)} Manutenção de Ativos`,
-        qualidade:     `${Icone('target',14)} Controle de Qualidade`,
-        conformidade:  `${Icone('clipboard-list',14)} Conformidade Regulatória`,
+        manutencao:    `${Icone('wrench',14,'var(--s-primary)')} Manutenção de Ativos`,
+        qualidade:     `${Icone('target',14,'var(--s-primary)')} Controle de Qualidade`,
+        conformidade:  `${Icone('clipboard-list',14,'var(--s-primary)')} Conformidade Regulatória`,
         
-        clima:         `${Icone('laptop',14)} Clima Organizacional`,
-        satisfacao:    `${Icone('star',14)} Satisfação do Cliente`,
-        produtividade: `${Icone('zap',14)} Produtividade`,
-        reputacao:     `${Icone('megaphone',14)} Reputação de Mercado`,
-        inovacao:      `${Icone('microscope',14)} Inovação`,
+        clima:         `${Icone('laptop',14,'var(--s-primary)')} Clima Organizacional`,
+        satisfacao:    `${Icone('star',14,'var(--s-primary)')} Satisfação do Cliente`,
+        produtividade: `${Icone('zap',14,'var(--s-primary)')} Produtividade`,
+        reputacao:     `${Icone('megaphone',14,'var(--s-primary)')} Reputação de Mercado`,
+        inovacao:      `${Icone('microscope',14,'var(--s-primary)')} Inovação`,
     };
 
     

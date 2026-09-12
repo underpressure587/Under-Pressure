@@ -4,14 +4,14 @@ const IndicadoresTecnologia = (() => {
 
     
     const LABELS = {
-        financeiro:   `${Icone('wallet',14)} Financeiro`,
-        rh:           `${Icone('users',14)} RH`,
-        clientes:     `${Icone('star',14)} Clientes`,
-        qualidade:    `${Icone('target',14)} Controle de Qualidade`,
-        produtividade:`${Icone('zap',14)} Produtividade`,
-        reputacao:    `${Icone('megaphone',14)} Reputação de Mercado`,
-        inovacao:     `${Icone('microscope',14)} Inovação`,
-        seguranca:    `${Icone('shield',14)} Segurança Operacional`
+        financeiro:   `${Icone('wallet',14,'var(--s-primary)')} Financeiro`,
+        rh:           `${Icone('users',14,'var(--s-primary)')} RH`,
+        clientes:     `${Icone('star',14,'var(--s-primary)')} Clientes`,
+        qualidade:    `${Icone('target',14,'var(--s-primary)')} Controle de Qualidade`,
+        produtividade:`${Icone('zap',14,'var(--s-primary)')} Produtividade`,
+        reputacao:    `${Icone('megaphone',14,'var(--s-primary)')} Reputação de Mercado`,
+        inovacao:     `${Icone('microscope',14,'var(--s-primary)')} Inovação`,
+        seguranca:    `${Icone('shield',14,'var(--s-primary)')} Segurança Operacional`
     };
 
     
