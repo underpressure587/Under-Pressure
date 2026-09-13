@@ -2281,7 +2281,7 @@ function mostrarFeedback(data, callback) {
   } else if (stEl) { stEl.style.display="none"; }
   
   const evEl=document.getElementById("fb-evento"), evTxt=document.getElementById("fb-evento-texto");
-  if (data.eventoAtivo && evEl) { evEl.style.display=""; evTxt.textContent=`${data.eventoAtivo.titulo} amplificou os efeitos desta rodada.`; }
+  if (data.eventoAtivo && evEl) { evEl.style.display=""; evTxt.innerHTML=`${data.eventoAtivo.titulo} amplificou os efeitos desta rodada.`; }
   else if (evEl) { evEl.style.display="none"; }
   
   const notifEl=document.getElementById("fb-notif"), notifLst=document.getElementById("fb-notif-lista");
