@@ -1124,9 +1124,8 @@ onAuthStateChanged(auth, async user => {
   }
 
   
-  const bloqueado = window.ADMIN.iniciarSessaoAdmin();
-
   showApp(user);
+  const bloqueado = window.ADMIN.iniciarSessaoAdmin();
   if (!bloqueado) window.ADMIN.irParaHub();
 });
 
