@@ -97,9 +97,6 @@
       }
 
       
-      if (typeof _atualizarModoSala === 'function') _atualizarModoSala(cfg);
-
-      
       const ultima = window._ultimaMensagemGlobal || '';
       if (cfg.mensagem && cfg.mensagem !== ultima) {
         window._ultimaMensagemGlobal = cfg.mensagem;

@@ -28,7 +28,6 @@ const ORDEM = [
   { marcador: 'core/engine.js',                 arquivo: 'Core/engine.js' },
   { marcador: 'maintenance.js',                 arquivo: 'maintenance.js' },
   { marcador: 'mainBeta.js',                    arquivo: 'mainBeta.js' },
-  { marcador: 'sala-mode-new.js',               arquivo: 'sala-mode-new.js' },
 ];
 
 console.log('\n🔨 Gerando bundle.js...\n');
